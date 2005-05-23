@@ -1,0 +1,79 @@
+
+# /b[ab]*baa/
+# 1 -[b]-> 2
+# 2 -[a]-> 2
+# 2 -[b]-> 3
+# 3 -[a]-> 4
+# 3 -[b]-> 3
+# 4 -[a]-> 5
+# 4 -[b]-> 3
+# 5 -[a]-> 2
+# 5 -[b]-> 3
+# 5 -[$]-> 6
+# 6 = MATCH
+# 0 = FAIL
+
+.sub _main
+    .local pmc states
+    .const int orda = 97
+    .const int ordb = 98
+
+    states = new FixedPMCArray
+    states = 6
+    
+    # state 1
+    $P0 = new IntHash
+    $P0[ordb] = 2
+    states[1] = $P0
+
+    # state 2
+    $P0 = new IntHash
+    $P0[orda] = 2
+    $P0[ordb] = 3
+    states[2] = $P0
+
+    #state 3
+    $P0 = new IntHash
+    $P0[orda] = 4
+    $P0[ordb] = 3
+    states[3] = $P0
+
+    #state 4
+    $P0 = new IntHash
+    $P0[orda] = 5
+    $P0[ordb] = 3
+    states[4] = $P0
+
+    #state 5
+    $P0 = new IntHash
+    $P0[orda] = 2
+    $P0[ordb] = 3
+    $P0[36]   = 6
+    states[5] = $P0
+
+    .local string input
+    .local int state
+    .local int pos
+    getstdin $P1
+    readline input, $P1
+
+    pos = 0
+    state = 1
+again:
+    unless state goto fail
+    if state == 6 goto success
+    
+    ord $I0, input, pos
+    $P1 = states[state]
+    state = $P1[$I0]
+    inc pos
+    goto again
+
+fail:
+    print "Failure!\n"
+    end
+
+success:
+    print "Success!\n"
+    end
+.end

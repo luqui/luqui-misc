@@ -1,0 +1,27 @@
+$Tweak::max_limbs       = 3;
+$Tweak::gravity         = 8;
+$Tweak::length_rate     = 2;
+$Tweak::turn_length     = 10;
+$Tweak::turn_pause      = 1;
+$Tweak::num_blocks      = 10;
+$Tweak::impulse_scalar  = 12;
+$Tweak::field_width     = 64;
+$Tweak::field_height    = 48;
+$Tweak::viewport_width  = 64;
+$Tweak::viewport_height = 48;
+
+Block->make(v(5, 30), 4, 2);
+Block->make(v($Tweak::field_width-5, 30), 4, 2);
+
+for (my $x = 11; $x <= 53; $x += 8) {
+    for (my $y = 11; $y <= 41; $y += 6) {
+        Block->make(v($x, $y), 1, 1);
+    }
+}
+
+(
+    [ 5, 32 ],
+    [ $Tweak::field_width - 5, 32 ],
+);
+
+# vim: ft=perl :

@@ -1,0 +1,23 @@
+Class/Closure version 0.20
+==========================
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module has no dependencies that are not in the standard distribution.
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2004 Luke Palmer
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself. 
+

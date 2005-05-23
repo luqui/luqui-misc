@@ -1,0 +1,266 @@
+(***********************************************************************
+
+                    Mathematica-Compatible Notebook
+
+This notebook can be used on any computer system with Mathematica 4.0,
+MathReader 4.0, or any compatible application. The data for the notebook 
+starts with the line containing stars above.
+
+To get the notebook into a Mathematica-compatible application, do one of 
+the following:
+
+* Save the data starting with the line of stars above into a file
+  with a name ending in .nb, then open the file inside the application;
+
+* Copy the data starting with the line of stars above to the
+  clipboard, then use the Paste menu command inside the application.
+
+Data for notebooks contains only printable 7-bit ASCII and can be
+sent directly in email or through ftp in text mode.  Newlines can be
+CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+
+NOTE: If you modify the data for this notebook not in a Mathematica-
+compatible application, you must delete the line below containing the 
+word CacheID, otherwise Mathematica-compatible applications may try to 
+use invalid cache data.
+
+For more information on notebooks and Mathematica-compatible 
+applications, contact Wolfram Research:
+  web: http://www.wolfram.com
+  email: info@wolfram.com
+  phone: +1-217-398-0700 (U.S.)
+
+Notebook reader applications are available free of charge from 
+Wolfram Research.
+***********************************************************************)
+
+(*CacheID: 232*)
+
+
+(*NotebookFileLineBreakTest
+NotebookFileLineBreakTest*)
+(*NotebookOptionsPosition[      4983,        174]*)
+(*NotebookOutlinePosition[      5896,        203]*)
+(*  CellTagsIndexPosition[      5852,        199]*)
+(*WindowFrame->Normal*)
+
+
+
+Notebook[{
+Cell[BoxData[
+    \(TraditionalForm\`x\_t_[u_, 
+        v_] := \(cos(t)\) {\(sinh(u)\) \(cos(v)\), \ \(sinh(u)\) \(sin(v)\), 
+            v} + \(sin(
+            t)\) {\(-\(cosh(u)\)\) \(sin(v)\), \(cosh(u)\) \(cos(v)\), 
+            u}\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\` (*\ 6  a\ *) \)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`\[CapitalEpsilon] = \((\[PartialD]\_u x\_t[u, 
+                v])\) . \((\[PartialD]\_u x\_t[u, v])\) // 
+        FullSimplify\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(cosh\^2\)(u)\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`F = \((\[PartialD]\_u x\_t[u, 
+                v])\) . \((\[PartialD]\_v x\_t[u, v])\) // 
+        FullSimplify\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`0\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`G = \((\[PartialD]\_v x\_t[u, 
+                v])\) . \((\[PartialD]\_v x\_t[u, v])\) // 
+        FullSimplify\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(cosh\^2\)(u)\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \(TraditionalForm\` (*\ 6  b\ *) \)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`xuxxv = 
+      Cross[\[PartialD]\_u x\_t[u, v], \ \[PartialD]\_v x\_t[u, v]] // 
+        FullSimplify\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{\(cosh(u)\)\ \(sin(v)\), \(-\(cos(v)\)\)\ \(cosh(
+          u)\), \(cosh(u)\)\ \(sinh(u)\)}\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`U = 
+      xuxxv\/\@\(xuxxv . xuxxv\) // FullSimplify\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{\(\(cosh(u)\)\ \(sin(v)\)\)\/\@\(\(cosh\^4\)(u)\), \
+\(-\(\(\(cos(v)\)\ \(cosh(
+                u)\)\)\/\@\(\(cosh\^4\)(u)\)\)\), \(\(cosh(u)\)\ \
+\(sinh(u)\)\)\/\@\(\(cosh\^4\)(u)\)}\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`l = \((\[PartialD]\_\(u, u\)x\_t[u, v])\) . U // 
+        FullSimplify\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(-\@\(\(cosh\^4\)(u)\)\)\ \(\(sech\^2\)(u)\)\ \(sin(
+        t)\)\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`m = \((\[PartialD]\_\(u, v\)x\_t[u, v])\) . U // 
+        FullSimplify\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(-\(cos(t)\)\)\ \@\(\(cosh\^4\)(u)\)\ \(\(sech\^2\)(
+        u)\)\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`n = \((\[PartialD]\_\(v, v\)x\_t[u, v])\) . U // 
+        FullSimplify\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\@\(\(cosh\^4\)(u)\)\ \(\(sech\^2\)(u)\)\ \(sin(
+        t)\)\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`H = \(G\ l + \[CapitalEpsilon]\ n - 2  F\ m\)\/\(2 \((\
+\[CapitalEpsilon]\ G - F\^2)\)\)\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`0\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \(TraditionalForm\` (*\ 6  c\ *) \)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`<< Graphics`Animation`\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`Animate[
+      ParametricPlot3D[x\_t[u, v], {u, \(-2\), 2}, {v, 0, 2  \[Pi]}], {t, 0, 
+        2  \[Pi], \[Pi]/16}]\)], "Input"]
+},
+FrontEndVersion->"4.0 for X",
+ScreenRectangle->{{0, 1024}, {0, 768}},
+WindowSize->{520, 600},
+WindowMargins->{{150, Automatic}, {Automatic, 52}},
+PrintingPageRange->{Automatic, Automatic},
+PrintingOptions->{"PaperSize"->{612, 792},
+"PaperOrientation"->"Portrait",
+"PostScriptOutputFile":>FrontEnd`FileName[{$RootDirectory, "home", \
+"fibonaci"}, "Untitled-1.ps", CharacterEncoding -> "ISO8859-1"],
+"Magnification"->1}
+]
+
+
+(***********************************************************************
+Cached data follows.  If you edit this Notebook file directly, not using
+Mathematica, you must remove the line containing CacheID at the top of 
+the file.  The cache data will then be recreated when you save this file 
+from within Mathematica.
+***********************************************************************)
+
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+
+(*NotebookFileOutline
+Notebook[{
+Cell[1717, 49, 249, 5, 63, "Input"],
+Cell[1969, 56, 64, 1, 38, "Input"],
+
+Cell[CellGroupData[{
+Cell[2058, 61, 177, 3, 38, "Input"],
+Cell[2238, 66, 65, 1, 41, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[2340, 72, 161, 3, 38, "Input"],
+Cell[2504, 77, 52, 1, 37, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[2593, 83, 161, 3, 38, "Input"],
+Cell[2757, 88, 65, 1, 41, "Output"]
+}, Open  ]],
+Cell[2837, 92, 64, 1, 38, "Input"],
+
+Cell[CellGroupData[{
+Cell[2926, 97, 151, 3, 38, "Input"],
+Cell[3080, 102, 143, 2, 37, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[3260, 109, 103, 2, 68, "Input"],
+Cell[3366, 113, 235, 4, 70, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[3638, 122, 120, 2, 39, "Input"],
+Cell[3761, 126, 117, 2, 47, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[3915, 133, 120, 2, 39, "Input"],
+Cell[4038, 137, 117, 2, 47, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[4192, 144, 120, 2, 39, "Input"],
+Cell[4315, 148, 112, 2, 47, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[4464, 155, 138, 2, 67, "Input"],
+Cell[4605, 159, 52, 1, 37, "Output"]
+}, Open  ]],
+Cell[4672, 163, 64, 1, 38, "Input"],
+Cell[4739, 166, 72, 1, 38, "Input"],
+Cell[4814, 169, 165, 3, 61, "Input"]
+}
+]
+*)
+
+
+
+
+(***********************************************************************
+End of Mathematica Notebook file.
+***********************************************************************)
+

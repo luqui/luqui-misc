@@ -1,0 +1,53 @@
+$Tweak::max_limbs       = 2;
+$Tweak::gravity         = 8;
+$Tweak::length_rate     = 2;
+$Tweak::turn_length     = 10;
+$Tweak::turn_pause      = 1;
+$Tweak::num_blocks      = 10;
+$Tweak::impulse_scalar  = 12;
+$Tweak::field_width     = 96;
+$Tweak::field_height    = 48;
+$Tweak::viewport_width  = 64;
+$Tweak::viewport_height = 48;
+
+Block->make(v(5, 30), 4, 2);
+Block->make(v($Tweak::field_width-5, 30), 4, 2);
+
+Block->make(v(10, 28), 4, 2);
+#Block->make(v(14, 26), 4, 2);
+Block->make(v(18, 24), 4, 2);
+#Block->make(v(22, 22), 4, 2);
+Block->make(v(26, 20), 4, 2);
+#Block->make(v(30, 18), 4, 2);
+Block->make(v(34, 16), 4, 2);
+#Block->make(v(36, 14), 4, 2);
+Block->make(v(38, 12), 4, 2);
+#Block->make(v(40, 10), 4, 2);
+Block->make(v(41, 8), 4, 2);
+#Block->make(v(42, 6), 4, 2);
+Block->make(v(43, 4), 4, 2);
+Block->make(v(44, 2), 4, 2);
+
+Block->make(v(86, 28), 4, 2);
+#Block->make(v(82, 26), 4, 2);
+Block->make(v(78, 24), 4, 2);
+#Block->make(v(74, 22), 4, 2);
+Block->make(v(70, 20), 4, 2);
+#Block->make(v(66, 18), 4, 2);
+Block->make(v(62, 16), 4, 2);
+#Block->make(v(60, 14), 4, 2);
+Block->make(v(58, 12), 4, 2);
+#Block->make(v(56, 10), 4, 2);
+Block->make(v(55, 8), 4, 2);
+#Block->make(v(54, 6), 4, 2);
+Block->make(v(53, 4), 4, 2);
+Block->make(v(52, 2), 4, 2);
+
+Block->make(v(48, 40), 96, 2);
+
+(
+    [ 5, 32 ],
+    [ $Tweak::field_width - 5, 32 ],
+);
+
+# vim: ft=perl :

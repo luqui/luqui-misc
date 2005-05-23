@@ -1,0 +1,25 @@
+$Tweak::max_limbs       = 3;
+$Tweak::gravity         = 8;
+$Tweak::length_rate     = 2;
+$Tweak::turn_length     = 10;
+$Tweak::turn_pause      = 1;
+$Tweak::num_blocks      = 10;
+$Tweak::impulse_scalar  = 12;
+$Tweak::field_width     = 64;
+$Tweak::field_height    = 48;
+$Tweak::viewport_width  = 64;
+$Tweak::viewport_height = 48;
+
+Block->make(v(5, 30), 4, 2);
+Block->make(v($Tweak::field_width-5, 30), 4, 2);
+
+for (1..$Tweak::num_blocks) {
+    Block->make(v(rand() * ($Tweak::field_width-16) + 8, rand() * ($Tweak::field_height-6) + 6), 4, 2);
+}
+
+(
+    [ 5, 32 ],
+    [ $Tweak::field_width - 5, 32 ],
+);
+
+# vim: ft=perl :

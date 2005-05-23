@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+use File::Temp qw{tempdir};
+use Cwd;
+
+my $dir = tempdir(CLEANUP => 1);
+my $self = getcwd;
+
+my $imgc = "0000";
+for (@ARGV) {
+    my ($ext) = /\.([^\.]*)$/;
+    next unless $ext;
+    $imgc++;
+    my $file = /^\// ? $file : "$self/$_";
+
+    symlink $file, "$dir/$imgc.$ext";
+}
+
+system 'eog', $dir;

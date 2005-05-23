@@ -1,0 +1,4 @@
+Occ.	Occupational
+DD	Date of Dictation
+DT	Date of Transcription
+RD	Review Date

@@ -1,0 +1,113 @@
+grammar Perl::Grammar;
+
+## MAIN LANGUAGE
+# Everything down until <expression>
+
+rule program() { <statement_list> }
+
+# a statement_list usually is enclosed in curlies, except for in 
+# the main program
+rule statement_list() :w { 
+        <declaration>        <statement_list>?
+      | <statment_construct> <statement_list>?
+      | <expression> [ <statement_separator> <statement_list> ]?
+}
+
+# sub, method, class, grammar, etc.
+rule declaration() {...}
+
+# if, while, loop, etc.
+rule statement_construct() {...}
+
+## OPERATOR PRECEDENCE PARSER
+# The only operators that need attention here are those that take "nonstandard"
+# operands; i.e. ==> which takes a sub call, or ~~ which takes a lot of
+# different things.  Operators whose operands are other expressions will be
+# handled automatically.  It might be useful to inline an operator precedence
+# table here.
+
+## LEXER STUFF
+# Definition of <term> down to basic syntax, as well as basic token
+# names.  Don't inline tokens above; instead, name them here and refer
+# to them with rules. 
+
+# <term_hook> is called upon when expecting a term.
+rule term_hook() { <term> }
+
+rule term() :w { 
+        <open_expression_grouping> <expression> <close_expression_grouping>
+      | <variable>
+      | <literal>
+}
+
+# <operator_hook> is called upon when expecting an operator.
+rule operator_hook() {    # notice no :w
+        <dot_subscript>
+      | <ws>? <standard_operator>
+}
+
+# Handle the equivalence of $foo{bar} and $foo .{bar}, but not
+# $foo {bar}.
+rule dot_subscript() {    # again, no :w
+        <subscript_non_method>
+      | <ws>? <dot> <subscript>
+}
+
+# Anything nonalphabetic that comes after a dot, like <>, {}, [], etc.
+rule subscript_non_method() {...}
+
+# Anything at all that comes after a dot.
+# XXX: Still need to handle listop method calls: $foo.bar: 1,2,3;
+rule subscript() {
+        <qualified_identifier> <enclosed_argument_list>?
+      | <subscript_non_method>
+}
+
+rule enclosed_argument_list() {
+        <open_argument_list> <argument_list> <close_argument_list>
+}
+
+# The inside of the argument list of a sub call, not including parentheses.
+# Also, if it fits, the end of a listop, which ought to be the same thing
+# without the parentheses.
+rule argument_list() {...}
+
+# XXX still need to handle symbolics: $Foo::(expression)::bar
+rule qualified_identifier() {
+        [ <identifier> <'::'> ]* <identifier>
+}
+
+# This is intentionally not defined.  This will be defined dynamically,
+# and in different ways for the bootstrap and the main grammar.
+rule standard_operator() {...}
+
+## TOKENS
+rule identifier() { <<alpha>> \w* }
+rule statement_separator() { ; }
+rule open_expression_grouping() { \( }
+rule close_expression_grouping() { \) }
+rule open_argument_list() { \( }
+rule close_argument_list() { \) }
+rule dot() { \. }
+
+## RULES
+# This is the metagrammar for Perl 6 rules, from <pattern> down to
+# basic syntax.
+
+# <pattern> is the inside of a rule, excluding the initial slash or
+# braces or whatever the delimiter is.
+# XXX: How do we handle varying delimiters?
+rule pattern() { <pattern_component>* }
+
+# Any piece of a pattern: atoms, groups, quantified components, code blocks,
+# etc.
+rule pattern_component() {...}
+
+## TYPE SYSTEM
+# Definition of the type syntax, from <type> down to tokens.  This is too "low"
+# for signatures/siglets, which ought to be up in the main language section.
+
+# Any type: things that come between <my> and the variable, things that
+# introduce a parameter in a signature, etc.  Use <qualified_identifier> for
+# now in place of a previously declared type name.
+rule type() {...}

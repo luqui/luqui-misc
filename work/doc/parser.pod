@@ -1,0 +1,41 @@
+=head1 Preprocessor Algorithms
+
+=head2 Name Extraction Algorithm
+
+The preprocessor gets a surprising hit ratio when just using a simple
+heuristic.  That heuristic in particular is:
+
+    <title>? <first>? <middle>? <last> <suffix>?
+
+Where either of the combinations are present: C<title>; 
+C<first> C<middle>; C<first> C<suffix>.
+
+Each rule above has a small amount of complexity within it.  For
+example, the C<first> rule matches a "first name" like "E. Wayne".
+
+Each of these segments is canonicalized, and then compared on a case
+insensitive key-by-key bases.  For example, these are the same two
+people: "Robert R. Smith, M.D." and "Dr. Bob Smith".  It only knows the
+latter is a medical doctor after having seen the "M.D." portion of the
+former.
+
+Using this document as a test case, this algorithm seems not to need any
+further disambiguation, except for a special case of the rejection of
+"Vitamin" (and perhaps others in its class (If rapper "Vitamin C" comes
+in for a check up he'll be rejected C<:-)> ).  I suspect that this is
+true in general, and I just need more test documents to generalize my
+algorithm.
+
+=head2 Location Extraction Algorithm
+
+My plan for extracting location names is to cross check several
+different algorithms.  The process probably includes:
+
+    1. Look at capitalization to extract candidates
+    2. Extract known place names and classify them
+    3. Check against common patterns such as "<state> University", etc.
+
+This has the possiblity of introducing many more false positives than
+the algorithm above.  Fortunately, based on which aggregation algorithm
+is used, it should be easy to identify false positive candidates and
+delegate to the user.

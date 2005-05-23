@@ -1,0 +1,17 @@
+.sub _main
+    $P0 = new IntHash
+    $I0 = 100
+    
+again:
+    unless $I0 < 100000 goto quit
+    $P0[$I0] = $I0
+    inc $I0
+
+    $I1 = $I0 % 5000
+    if $I1 goto again
+    print $I0
+    print "\n"
+    goto again
+quit:
+    end
+.end

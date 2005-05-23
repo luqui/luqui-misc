@@ -1,0 +1,28 @@
+table {
+    background: #ccccff;
+}
+thead {
+    background: #80c080;
+}
+td {
+    padding: 0em 1em 0em 1em
+}
+
+a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #0000c0;
+}
+a:visited {
+    color: #400080;
+}
+a.header {
+    color: #0000c0;
+}
+
+h1 {
+    font-size: 12pt;
+    font-weight: bold;
+    text-decoration: none;
+    text-align: center;
+}

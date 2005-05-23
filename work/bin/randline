@@ -1,0 +1,2 @@
+#!/usr/bin/perl -p
+++$c*rand>1or$x=$_}$_=$x;{

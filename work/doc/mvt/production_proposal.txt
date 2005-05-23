@@ -1,0 +1,87 @@
+== TITLE ==
+
+RFC: Make MVT Mature
+
+== VERSION ==
+
+Maintainer: Luke Palmer <lrpalmer@gmail.com>
+Date: 16 May 2005
+Last Modified: 16 May 2005
+Version: 1
+
+== ABSTRACT ==
+
+This RFC proposes a set of changes that will convert the MVT codebase to use
+several widely accepted practices in code maturity.  The proposal consists
+of three stages:
+
+    1) Convert to development/release branching with subversion
+    2) Deploy a bug tracker
+    3) Build a unit test suite
+
+== DESCRIPTION ==
+
+MVT has a large code and user base.  It is typical of projects this size
+to adopt design machinery to keep development predictable and managable.
+I propose that MVT adopt this machinery in the stages described above.
+
+=== Stage 1:  Convert to development/release branching with subversion ===
+
+Adding new features to large projects can make them unstable, sometimes even
+unable to compile.  It is important, however, that all developers see these
+changes so that they can work on them.  But we would still like to fix bugs in
+release versions, and release a "bug-fix update" without releasing the new
+unstable features.  Therefore I propose a plan to implement a common system
+for dealing with this:
+
+The current CVS repository will be migrated to subversion (maintaining all
+version history).  At release points, when we feel we have made enough
+progress and the code is polished enough to unleash upon the public, we
+branch the code into two versions: the development version and the release
+version.  The development version will continue to be worked on as usual,
+but the release version will only accept bug fix changes --- no new features.
+After a week (or more if it seems to require that) of bug fixes to the release
+version, we tag that as the release and make it available for download.  It
+is recommended that we make releases every 1-3 months.
+
+I recommend that this be done in the next week, by Monday, 2005-05-23, so that
+there are no significant blocks to continuing development as usual.
+
+=== Stage 2: Deploy a bug tracker ===
+
+A bug tracker is a way for developers to communicate in a logged way about
+what needs to be done on the project that also allows the public to submit
+bug reports.  It is used in almost every major open source project as well
+as in most of Microsoft's and IBM's projects.  There are two predominant
+bug tracking systems:
+
+    * Bugzilla, used in the development of the Mozilla web browser.
+    * RT, used at NASA, Fotango, The Genome Sequencing Center, and
+      The Perl Foundation.
+
+Either one will achieve our goals, but I'll suggest BugZilla because it was
+so easy to get running.
+
+This should be done in the next two weeks, by Monday, 2005-05-30.
+
+=== Stage 3: Build a unit test suite ===
+
+A test suite is a set of small programs, managed by a testing utility such as
+JUnit, that tests the code base for correctness.  They ensure that new changes
+don't subtly break old modules in unpredictable ways. Test suites have been
+used in Mozilla, Python, and Ruby, and are cultural mores for any Perl
+application.  I propose that we build a test suite using JUnit for MVT.  This
+is an incremental process that may move very slowly or very quickly depending
+on the amount of time people are willing to invest in writing tests for
+existing modules.  We should adopt a policy, however, that any new modules
+have tests written for them with higher priority than for existing modules
+(preferrably written just after (or better, before) the module itself).
+
+This should be started shortly after Stage 1 and continued indefinitely.
+
+== REFERENCES ==
+
+http://subversion.tigris.org/     --  Subversion version control system
+http://www.bugzilla.org/          --  Bugzilla bug tracker
+http://www.bestpractical.com/rt/  --  RT bug tracker
+http://www.junit.org/             --  JUnit unit testing manager

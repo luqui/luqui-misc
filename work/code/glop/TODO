@@ -1,0 +1,11 @@
+Not arranged in any particular order.
+
+* Write more tests for ODE.pm
+
+* Research SGL (http://sgl.sf.net).
+
+* Test compilation of ODE.pm, OpenGL.pm, and SDL.pm on Windows
+
+* Think of abstractions and put them in ideas/
+
+* Find a 2D collision detection library, or write one.

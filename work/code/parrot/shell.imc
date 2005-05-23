@@ -1,0 +1,57 @@
+.sub _main
+    .local pmc cont
+    .local pmc stdin
+    .local pmc stdout
+    .local string line
+    .local string text
+    .local pmc compiler
+    .local pmc compiled
+    .local int dummy
+
+    getstdout stdout
+    pioctl dummy, stdout, 3, 0
+
+    getstdin stdin
+    compreg compiler, "PASM"
+
+    saveall
+    cleari
+    clearn
+    clears
+    clearp
+    P31 = new Continuation
+    set_addr P31, run
+    save P31
+    restoreall
+    restore cont
+    global "__cont" = cont
+
+read:
+    print "| "
+    readline line, stdin
+    if line == "\n" goto eval
+    if line == "" goto quit
+    text .= line
+    goto read
+eval:
+    text .= "end\n"
+    compile compiled, compiler, text
+    global "__code" = compiled
+
+    cont = global "__cont"
+    invoke cont
+
+run:
+    restoreall
+    P31 = global "__code"
+    invoke P31
+    saveall
+    P31 = new Continuation
+    set_addr P31, run
+    global "__cont" = P31
+    restoreall
+    goto read
+
+quit:
+    end
+.end

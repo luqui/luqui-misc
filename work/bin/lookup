@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+
+use strict;
+
+use URI::Escape qw<uri_escape>;
+
+sub usage {
+    print <<EOU;
+lookup: Usage: lookup command word [word2 ...]
+               lookup command ASK
+    Commands:
+        wikipedia  (wp)
+        google     (g)
+        cpan
+        dictionary (dict)
+EOU
+    exit 2;
+}
+
+sub browser {
+    my $url = $_[0];
+    exec "firefox -remote 'openURL($url,new-window)' || firefox '$url'";
+}
+
+my %commands = (
+    wikipedia => sub {
+        my $q = uri_escape(join(' ', @_));
+        browser "http://en.wikipedia.org/wiki/Special:Search?search=$q&go=Go";
+    },
+    google => sub {
+        my $q = uri_escape(join(' ', @_));
+        browser "http://www.google.com/search?q=$q";
+    },
+    cpan => sub {
+        my $q = uri_escape(join(' ', @_));
+        browser "http://search.cpan.org/search?query=$q&mode=all";
+    },
+    dictionary => sub {
+        exec 'gnome-dictionary', $_[0];
+    },
+);
+
+my %short = (
+    wp   => 'wikipedia',
+    g    => 'google',
+    dict => 'dictionary',
+);
+
+my $where = shift or usage;
+$where = $short{$where} || $where or usage;
+my $command = $commands{$where} or usage;
+
+if (@ARGV == 0 || @ARGV == 1 && $ARGV[0] eq 'ASK') {
+    @ARGV = split /\s+/, `zenity --entry --title=lookup --text="$where lookup"`;
+    exit if $? >> 8;
+}
+
+$command->(@ARGV);

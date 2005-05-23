@@ -1,0 +1,30 @@
+#!/bin/zsh
+
+set -e
+
+read pass
+datestr=`date +'%Y-%m-%d'`
+cd $HOME/backup
+echo "Creating $HOME/backup/$datestr"
+mkdir $datestr
+cd $datestr
+echo "Dumping work"
+svnadmin dump $HOME/svn > work.svndump
+echo "Creating $HOME/backup/$datestr/music"
+mkdir music
+echo "Copying Finale files"
+cp /mnt/win/Documents\ and\ Settings/fibonaci/My\ Documents/Music/*.MUS music
+echo "Dumping blog"
+ssh navi mysqldump -p$pass luquis_blog > blog.sql
+echo "Dumping 3070_wiki"
+ssh navi mysqldump -p$pass 3070_wiki > 3070_wiki.sql
+echo "Dumping thegame"
+ssh gamedev.cs.colorado.edu 'svnadmin hotcopy /var/svn/repos/thegame thegame; svnadmin dump -r 5:HEAD thegame; rm -rf thegame' > thegame.svndump
+cd ..
+echo "Building archive"
+tar -zc $datestr > $datestr.tar.gz
+echo "Archive size is `stat -c%s $datestr.tar.gz` bytes"
+echo "Transferring to navi"
+scp $datestr.tar.gz navi:backup
+echo "Cleaning up"
+rm -rf $datestr

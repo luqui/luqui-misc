@@ -1,0 +1,17 @@
+.sub _main
+    newclass $P0, "Foo"
+    
+    find_type $I0, "Foo"
+    new $P1, $I0
+    $I1 = $P1
+    print $I1
+    print "\n"
+    end
+.end
+
+.namespace [ "Foo" ]
+
+.sub __get_integer
+    print "Getting Integer Native\n"
+    .return(42)
+.end

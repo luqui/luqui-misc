@@ -1,0 +1,84 @@
+\documentclass[12pt]{article}
+
+\usepackage[black-square,define-standard-theorems,dont-number-theorems]{QED}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\begin{document}
+\noindent Luke Palmer \\
+2005-02-07 \\
+MATH 4230
+
+\begin{description}
+\item[(1.5.13)]
+\begin{gather*}
+\beta(s) = \left( \int_0^s{\cos{\theta(u)}\,du},
+                  \int_0^s{\sin{\theta(u)}\,du} \right) \\
+T(s) = \beta'(s) = (\cos{\theta(s)}, \sin{\theta(s)}) \\
+|\beta'(s)| = 1 
+\intertext{So $\beta$ is unit speed.}
+T'(s) = \kappa(s) N(s) = (-\theta'(s) \sin{\theta(s)}, \theta'(s) \cos{\theta(s)}) \\
+|T'(s)| = |\kappa(s) N(s)| = |\kappa(s)| = |\theta'(s)|  \\
+\theta(s) \equiv \int_0^s{\kappa(s)\,ds}\text{, so } \theta'(s) = \kappa(s).
+\end{gather*}
+
+\item[(1.5.15)]
+\begin{gather*}
+\theta(s) = \int_0^s{\kappa(u)\,du} = \int_0^s{\frac{du}{1+u^2}} = \tan^{-1}(s) \\
+\beta'(s) = (\cos{\tan^{-1}(s)}, \sin{\tan^{-1}(s)}) \\
+\beta(s) = (\sinh^{-1}(s), \sqrt{s^2+1}-1)
+\end{gather*}
+
+\item[(1.5.17)]
+
+\begin{Theorem}
+Given unit-speed parameterizations of curves $\alpha(s)$ and
+$\beta(s)$, with $\kappa_\alpha(s) = \kappa_\beta(s)$ and
+$\tau_\alpha(s) = \tau_\beta(s)$, $\alpha$ is equivalent to $\beta$
+under some rigid motion (translation and rotation).
+\end{Theorem}
+
+\begin{Proof}
+Define a unitary matrix $\mathbf{R}$ so that the Frenet frames
+$\mathbf{F}_\alpha(0) = \mathbf{R} \mathbf{F}_\beta(0)$.  Let $\beta^* =
+\mathbf{R}\beta$.
+
+Consider the function:
+
+\begin{align*}
+D(s) &= T_\alpha(s) \cdot T_{\beta^*}(s) +
+        N_\alpha(s) \cdot N_{\beta^*}(s) +
+        B_\alpha(s) \cdot B_{\beta^*}(s) \\
+     &= T_\alpha(s) \cdot \mathbf{R}T_\beta(s) +
+        N_\alpha(s) \cdot \mathbf{R}N_\beta(s) +
+        B_\alpha(s) \cdot \mathbf{R}B_\beta(s)
+\end{align*}
+
+Since $T$, $N$, and $B$ of both curves are unit-speed, and $\mathbf{R}$
+is unitary, $D(s) \le 3$ for every $s$ due to the triangle inequality.
+Also, $D(s_0) = 3$ only when $\mathbf{F}_\alpha = \mathbf{F}_{\beta^*}$.
+We've defined this to be true at $s = 0$, so $D(0) = 3$.
+
+Consider:
+
+\begin{align*}
+D'(s) = &T'_\alpha \cdot \mathbf{R}T_{\beta} + T_\alpha \cdot \mathbf{R}T'_{\beta} \\
+      + &N'_\alpha \cdot \mathbf{R}N_{\beta} + N_\alpha \cdot \mathbf{R}N'_{\beta} \\
+      + &B'_\alpha \cdot \mathbf{R}B_{\beta} + B_\alpha \cdot \mathbf{R}B'_{\beta} \\
+      = &\kappa N_\alpha \cdot \mathbf{R}T_{\beta} + T_\alpha \cdot \kappa \mathbf{R} N_\beta \\
+      + &(-\kappa T_\alpha + \tau B_\alpha) \cdot \mathbf{R} N_\beta + 
+            N_\alpha \cdot \mathbf{R} (-\kappa T_\beta +\tau B_\beta) \\
+      + &-\tau N_\alpha \cdot \mathbf{R} B_\beta - \tau B_\alpha \cdot \mathbf{R} N_\beta
+\intertext{...After expanding and eliminating common terms with opposite
+signs...}
+      = &0
+\end{align*}
+
+$D(s)$ never changes from 3, so the frenet frames correspond at all
+points.  For unit-speed curves, $T$ defines the derivative of the curve,
+so $\alpha$ and $\beta^*$ are equivalent under translation.
+
+\end{Proof}
+
+\end{description}
+\end{document}

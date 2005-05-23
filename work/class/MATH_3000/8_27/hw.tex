@@ -1,0 +1,116 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+
+\begin{document}
+\noindent Luke Palmer \\
+8/27/2004 \\
+MATH 3000
+
+\section*{Page 8}
+\begin{description}
+\item[2d] 
+  \begin{tabular}{lll|l}
+    $P$ & $Q$ & $R$ & $(P \wedge Q) \vee (P \wedge R)$ \\
+    \hline
+     F  &  F  &  F  &  F \\
+     F  &  F  &  T  &  F \\
+     F  &  T  &  F  &  F \\
+     F  &  T  &  T  &  F \\
+     T  &  F  &  F  &  F \\
+     T  &  F  &  T  &  T \\
+     T  &  T  &  F  &  T \\
+     T  &  T  &  T  &  T
+  \end{tabular}
+
+\item[3d] Not equivalent.  Counterexample: P false and Q false.
+
+\item[4d] True.
+
+\item[4h] False.
+
+\item[4j] True.  Equivalent to just $P$.
+
+\item[5b] We will win neither the first nor the second game.
+
+\item[5h] Sue will choose ice cream or she will not choose yogurt.
+
+\item[7a] $(A \vee B) \wedge \neg (A \wedge B)$  
+
+\item[7b] $\neg (C \vee A)$
+
+\item[7d] $A \wedge \neg C$
+
+\item[11a] This is neither.  In fact, this is equivalent to the equivalence
+operator $P \Leftrightarrow Q$.  It is not a tautology, as shown by the
+assignment P false Q true, and it is not a contradiction, as shown by the
+assignment P true Q true.
+
+\item[11b] This is a tautology, since $P \wedge \neg P$ is obviously a
+contradiction.
+
+\item[11d] This is a tautology.  It is a connected series of disjunctions, each
+of which covers each possible assignment of P and Q.
+\end{description}
+
+\section*{Page 16}
+
+\begin{description}
+
+\item[4b] False.
+
+\item[4f] True (regardless of the fact that I don't know when Euclid was born).
+
+\item[4h] False.
+
+\item[5d] False.
+
+\item[5e] True.
+
+\item[6g] 
+  \begin{tabular}{lll|l}
+    $P$ & $Q$ & $R$ & $(P \Rightarrow Q) \Rightarrow (R \vee \neg P)$ \\
+    \hline
+     F  &  F  &  F  &  F  \\
+     F  &  F  &  T  &  T  \\
+     F  &  T  &  F  &  F  \\
+     F  &  T  &  T  &  T  \\
+     T  &  F  &  F  &  T  \\
+     T  &  F  &  T  &  T  \\
+     T  &  T  &  F  &  F  \\
+     T  &  T  &  T  &  F
+  \end{tabular}
+
+\item[8b] $(n \text{ is prime}) \Rightarrow ((n = 2) \vee (n \text{ is odd}))$
+
+\item[8f] $(S \text{ is compact}) \Leftrightarrow 
+           ((S \text{ is closed}) \wedge (S \text{ is bounded}))$
+
+\item[8g] $(\mathbf{B} \text{ is invertible}) \Leftrightarrow
+           (\mathit{det} \mathbf{B} \ne 0)$
+
+\item[9d] The only way the former statement can be false is if P is true and
+          Q and R are both false.  This follows from the definition of
+          implication.  The same holds for the latter statement, as Q needs to
+          be false, and P and $\neg R$ both need to be true, requiring that 
+          R need be false.  The two statements therefore produce the same
+          outcome for all assignments of variables (true for most except this 
+          specific case), and are thus equivalent.
+
+\item[14b] Tautology.
+
+\item[14f] Neither (Q true, P false to make it false; Q false to make it true).
+
+\item[14m] Tautology.
+
+\item[15i] $M \Rightarrow (C \wedge \neg A)$ where (M: Fiorello will go to the 
+           movies; C: a comedy is playing; A: there \textit{are} 
+           advertizements at the beginning).
+
+\item[15ii] $\neg C \wedge ((T \wedge \neg N) \Rightarrow R)$ where (C: Mary 
+           will do the crossword; T: delivered on time; N: there are Cal Thomas
+           columns; R: she'll read the rest of it).
+
+\end{description}
+
+\end{document}

@@ -1,0 +1,116 @@
+#!/usr/bin/perl
+
+use strict;
+use lib glob '/home/fibonaci/devel/glop/blib/{lib,arch}';
+use Glop -pixwidth => 640,
+         -pixheight => 480,
+         -view => [ -16, -12, 16, 12 ],
+;
+use Glop::AutoGL;
+use Glop::Draw::Text;
+
+use Evaluator;
+use Parser;
+
+my $curgraph;
+
+my @green;
+my @blue;
+
+my $seed = shift || int(rand() * (1<<31));
+srand $seed;
+print "$seed\n";
+
+GREEN:
+for (1..5) {
+    my $cand = [ int(rand 31) - 15, int(rand 23) - 11 ];
+    for (@green) {
+        redo GREEN if $cand->[1] == $_->[1];
+    }
+    push @green, $cand;
+}
+
+BLUE:
+for (1..5) {
+    my $cand = [ int(rand 31) - 15, int(rand 23) - 11 ];
+    for (@green, @blue) {
+        redo BLUE if $cand->[0] == $_->[0] && $cand->[1] == $_->[1];
+    }
+    push @blue, $cand;
+}
+
+A Glop::Floater 
+    draw => sub {
+        for (@green) {
+            preserve {
+                glTranslate(@$_, 0);
+                glScale(0.5,0.5,1);
+                glColor(0,1,0);
+                Glop::Draw->Circle;
+            };
+        }
+        for (@blue) {
+            preserve {
+                glTranslate(@$_, 0);
+                glScale(0.5,0.5,1);
+                glColor(0,0,1);
+                Glop::Draw->Circle;
+            };
+        }
+    };
+
+A Glop::Floater 
+    draw => sub {
+        glColor(0.8,0.6,0.2);
+        for my $x (-16..16) {
+            for my $y (-12..12) {
+                if ($x == 0 || $y == 0) {
+                    glPointSize(2.0);
+                }
+                else {
+                    glPointSize(1.0);
+                }
+                glBegin(GL_POINTS);
+                glVertex($x, $y);
+                glEnd();
+            }
+        }
+    };
+
+Glop::Agent->InputBox(
+    font => 'Vera.ttf',
+    size => 72,
+    predraw => sub {
+        glColor(1,1,1);
+        glTranslate(-12, -11, 0);
+    },
+    enter => sub {
+        my $ret = Parser->parse($_[0]);
+        my $eval = Evaluator::Function->new($ret);
+        if ($eval) {
+            $curgraph->kill if $curgraph;
+            $curgraph = A Glop::Floater 
+                draw => sub {
+                    glColor(1,0,0);
+                    $eval->draw;
+                };
+        }
+        else {
+            my $text = Glop::Draw::Text->new("Parse Error", -size => 72);
+            Timed Glop::Floater 1 => sub {
+                my $alpha = $_[1] - $_[0];
+                preserve {
+                    glEnable(GL_BLEND);
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                    glColor(1,0,0, $alpha);
+                    glTranslate(-4, -10, 0);
+                    glScale(2,2,1);
+                    $text->draw;
+                    glDisable(GL_BLEND);
+                };
+            }
+        }
+    },
+);
+
+$KERNEL->run;

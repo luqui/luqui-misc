@@ -1,0 +1,17 @@
+# perl
+
+use strict;
+
+Widget::LineCharge->new(v(0, 0.5), v(0, 1), 64, 5e-4)->make;
+Widget::Wall->new(v(-32, 0), v(1, 0))->make;
+Widget::Wall->new(v(0, 48), v(0, -1))->make;
+Widget::Wall->new(v(32, 0), v(-1, 0))->make;
+Widget::DeathWall->new(v(0, 0), v(0, 1))->make;
+
+Block::Neutrino->new(v(-15, 35))->make;
+Block::AntiNeutrino->new(v(15, 35))->make;
+
+$::GLOBAL{electrocuter}->max(30);
+$::GLOBAL{electrocuter}->min(-10);
+
+1;

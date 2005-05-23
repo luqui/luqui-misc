@@ -1,0 +1,25 @@
+#include <iostream>
+
+// autoint macro
+#$macro '$' {
+    /\$\w+/ {
+        my $myblock = $block;
+        my $added = exists $myblock->{autoints}{$item[1]};
+        my $var = ($myblock->{autoints}{$item[1]} ||= "__autoint_" . ++our $varcounter);
+        {
+            execute => sub {
+                unshift @{$myblock->{chunks}}, "int $var;" unless $added;
+            },
+            generate => sub {
+                $var;
+            },
+        };      
+    }
+}
+
+int main() {
+    $foo = 1;
+    std::cout << $foo << "\n";
+}
+
+// vim: ft=cpp :

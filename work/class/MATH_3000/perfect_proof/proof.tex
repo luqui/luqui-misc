@@ -1,0 +1,40 @@
+\documentclass[12pt]{article}
+\usepackage[black-square,define-standard-theorems,dont-number-theorems]{QED}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\newcommand{\Dom}{\operatorname{Dom}}
+\newcommand{\Rng}{\operatorname{Rng}}
+
+\begin{document}
+
+\begin{Theorem}
+ For all functions $f: A \mapsto B,\; g,h: B \mapsto C$, $f$ is onto if
+  and only if $g \circ f = h \circ f \; \Rightarrow \; g = h$.
+\end{Theorem}
+
+\medskip
+
+\begin{Proof}
+\begin{description}
+\item[Part 1]  Given $f$ is onto, show $g \circ f = h \circ f$ 
+  implies $g = h$.
+
+Assume $g \circ f = h \circ f$.  Since $f$ is onto, for every $y \in B$
+there is an $x \in A$ such that $f(x) = y$.  $g(f(x)) = h(f(x))$, so
+$g(y) = h(y)$ and $g = h$.
+
+\item[Part 2]  Given $g \circ f = h \circ f$ implies $g = h$, show $f$
+  is onto.
+
+% XXX: This is more naturally done by contraposition.
+Suppose for the sake of contradiction that $g \circ f = h \circ f$
+implies $g = h$ and $f$ is not onto.  Then there exists $y \in B$ but $y
+\notin \Rng(f)$.  Let $g$ and $h$ be any functions such that $g
+\upharpoonright \Rng(f) = h \upharpoonright \Rng(f)$ and $g(y) \ne
+h(y)$.  Then $g \circ f = h \circ f$ but $g \ne h$, contradicting our
+assumption. \qed
+\end{description}
+\end{Proof}
+
+\end{document}

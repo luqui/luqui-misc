@@ -1,0 +1,140 @@
+#!/usr/bin/perl
+
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use lib glob '/home/fibonaci/devel/glop/blib/{lib,arch}';
+
+use Glop '-fullscreen',
+          -view => [ -32, 0, 32, 48 ],
+          -step => 0.02;
+use Glop::AutoGL;
+use Glop::Draw::Text;
+use ODE;
+
+use Paddle;
+use Ball;
+use Widget;
+use Electrocuter;
+use Collider;
+use Block;
+
+our %GLOBAL;
+our @SCHED;
+our %OPTIONS = (
+    field => 1,
+);
+
+sub title {
+    $KERNEL->new_state;
+    my $phase = 0;
+    my $text = Glop::Draw::Text->new("Electric Breakout", -size => 72);
+    Glop::Input->Key(
+        return => sub { main_menu() },
+    );
+    A Glop::Floater sub {
+        preserve {
+            $phase += 0.4 * STEP;
+            glColor(sin($phase/2),0,sin($phase));
+            glTranslate(-24,24,0);
+            glScale(6,6,0);
+            $text->draw;
+        };
+        if ($phase > 2 * 3.1415) {
+            main_menu();
+        }
+    };
+}
+
+sub main_menu {
+    $KERNEL->new_state;
+    Glop::Agent->Menu(
+        [ '1 Player' => sub { single_menu() } ],
+        [ 'Options'  => sub { options_menu() } ],
+        [ 'Quit'     => sub { $KERNEL->quit } ],
+        -size => 72,
+    );
+}
+
+sub options_menu {
+    $KERNEL->new_state;
+    Glop::Agent->Menu(
+        [ 'Field gradient ' . ($OPTIONS{field} ? "On" : "Off") => 
+            sub { $OPTIONS{field} = !$OPTIONS{field}; options_menu() } ],
+        [ 'Back' => sub { main_menu() } ],
+    );
+    Glop::Input->Key(
+        escape => sub { main_menu() },
+    );
+}
+
+sub single_menu {
+    $KERNEL->new_state;
+    Glop::Agent->Menu(
+        [ 'Level 1' => sub { single_level(1) } ],
+        [ 'Level 2' => sub { single_level(2) } ],
+        [ 'Level 3' => sub { single_level(3) } ],
+        [ 'Back'    => sub { main_menu() } ],
+        -size => 72,
+    );
+    Glop::Input->Key(
+        escape => sub { main_menu() },
+    );
+}
+
+sub single_level {
+    my ($level) = @_;
+    $KERNEL->new_state;
+    %GLOBAL = (
+        blocks          => 0,
+        level           => $level,
+        electric_k      => 1,
+        ode_world       => ODE::World->new,
+        collision_space => ODE::Geom::Space::Hash->new,
+        contact_group   => ODE::JointGroup->new,
+        electrocuter    => Electrocuter->new,
+        collider        => Collider->new,
+    );
+
+    if ($OPTIONS{field}) {
+        A Glop::Floater draw => sub {
+            $GLOBAL{electrocuter}->draw;
+        };
+    }
+    
+    local $@;  # that sucks
+    unless (do sprintf '%s/levels/s_%02d.lev', $FindBin::Bin, $level) {
+        $@ and die $@;
+        $KERNEL->quit;
+    }
+    Paddle->new(v(0,3), [0.5, 0.5, 0.5], [qw{ left right rctrl rshift }])->make;
+    Ball->new(v(0,12))->make;
+
+    A Glop::Floater step => sub { 
+        $GLOBAL{electrocuter}->run;
+        $GLOBAL{collision_space}->space_collide(sub { $GLOBAL{collider}->collider(@_); });
+        $GLOBAL{ode_world}->quickstep(STEP);
+        $GLOBAL{contact_group}->empty;
+        if ($GLOBAL{blocks} <= 0) {
+            single_menu();
+        }
+    };
+
+    Glop::Input->Key(
+        return  => sub { push @SCHED, sub { single_level($GLOBAL{level}) } },
+        escape => sub { push @SCHED, sub { single_menu() } },
+    );
+}
+
+title();
+
+my $c = 0;
+
+run $KERNEL sub {    
+    if (++$c % 500 == 0) {
+        print $KERNEL->frame_rate . " FPS\n";
+    }
+
+    (shift @SCHED)->() while @SCHED;
+};

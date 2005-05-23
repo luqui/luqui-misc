@@ -1,0 +1,19 @@
+examples/append.pl
+examples/qsort.pl
+t/alternation.t
+t/easy.t
+t/multi.t
+t/pad.t
+t/primitive.t
+t/sequence.t
+t/stack.t
+t/unify.t
+lib/Logic.pm
+lib/Logic/Basic.pm
+lib/Logic/Data.pm
+lib/Logic/Easy.pm
+lib/Logic/Stack.pm
+lib/Logic/Variable.pm
+README
+Makefile.PL
+META.yml                                 Module meta-data (added by MakeMaker)

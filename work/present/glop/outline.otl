@@ -1,0 +1,140 @@
+INTRODUCTION
+	Story / Hook
+		Frogger half a year ago in gamedev.  Easy project.
+		Sat down with C++ compiler and started hacking away.
+		Artist's picture of a cartoon frog.
+		Six hours pass and I have a frog that jumps around on a black screen.
+		SIX HOURS!  Insanity!
+	Relate to the audience
+		How many of you have written a game?
+		Know what I'm talking about -- weekend to write a pac man game.
+		Unless you use Flash, but Flash doesn't scale. 
+		Something has to be done about this.
+	Finish Story
+		Got the idea to create a library.
+		Evolved into the idea for a language called GLIC.
+		Around then I submitted my OSCON proposal.
+		2500 lines of code in, and still nothing function, decided wrong way.
+		Creating a new language; looks a lot like Perl; I love perl.
+		Why don't I just use Perl?!
+		2500 lines down the sink, start using SDL_Perl and OpenGL.
+		And here we are, in a very different place from that initial vision, 
+				but heading in a good direction.
+	Preview
+		Walk through some of the things Glop makes easy.
+		Then move in depth into some of the architectural choices.
+BODY
+	Some Easy Things
+		Perl says "The Easy Things Should Be Easy..."
+		Ideal has permeated all modern programming languages
+		Well, most modern programming languages
+		(Show Hello World in Java)
+		A Circle
+			Think about drawing a circle with C++, or pygame (OpenGL)
+				: glBegin(GL_TRIANGLE_FAN)
+				: glVertex(0,0);
+				: for ...
+			Something that can be easily abstracted
+			Your 15 minute experiment, _you_ have to abstract it
+			And of course you'd rather just not do it
+			Well, Glop abstracts it:
+				: # easy/01
+				: use Glop;
+				: run $KERNEL sub {
+				:     Glop::Draw->Circle;
+				: };
+		A Menu
+			That one's pretty easy, but what about something harder?
+			Something that you always "should do", but never do.
+			A menu.
+				: # easy/02
+				: use Glop;
+				: Glop::Actor->Menu(
+				:     [ 'Start Game' => sub { print "Starting Game\n" } ],
+				:     [ 'End Game'   => sub { $KERNEL->quit } ],
+				: );
+				: $KERNEL->run;
+			(Looks like crap, remember -size)
+			Back to Actors and that weird -> syntax later
+		States
+			If you've done serious game programming, create state classes
+			Relavent data in member variables
+			Set up a main loop routine
+			In Glop, a state is just a funny looking subroutine
+			Merge the previous examples
+				: # easy/03
+			There's a lot of stuff going on there that you'll learn about later
+	A short digression on execution speed
+		Games use a lot of processing power.
+		"Perl is slow"
+		Games spend 90% of the time in 10% of the code.
+		Perl is kind about letting you optimize that (Inline::C).
+		A lot of time will be used by OpenGL calls.
+		Glop has mechanisms to make optimizing that away really easy.
+		The point is: don't worry about speed.
+		There are always things you can do if your speed starts suffering.
+		And I'll talk about those later.
+		But many times, it won't be a problem. 
+	Architecture
+		Glop does some things that are rather non-conventional design-wise
+		I'll give you a preview of some of the nice things Glop has for you.
+		Class Arrow
+			Let's talk about that simple statement:
+				: Glop::Draw->Circle;
+			That automatically loads up Glop::Draw::Circle for you
+					and calls Glop::Draw::Circle->draw.
+			Why didn't I just do Glop::Draw::Circle->draw in the first place?
+				1) It reads horribly.
+				2) It requires another 'use' statement.
+			Don't want 'use' because of Glop's small module quantum.
+			This format is used in a lot of the subsystems.
+		Actor
+			We saw an Actor in example #2 and created a little one in example #3.
+			An Actor is a little object that the kernel keeps track of.
+			Anything you want to be on the screen should be an Actor.
+			Four methods:
+				'new' -> Obvious
+				'make' -> Creates (or takes existing) and adds to the kernel
+						including registering input, etc.
+				'step' -> Called every frame
+				'draw' -> Called every frame, after 'step' has been 
+						called on everybody
+			You usually create actors either from methods in other actors or
+					in the state setup routine.
+			Examples:
+				The Menu we saw
+				A ball that bounces around in a physically accurate way
+				The "Anonymous" actor, from which you easily create other actors
+			Custom Actor Example
+		Keyboard Input
+			Let's change that actor so that he moves where we tell him to
+			We'll use the Input architecture to do that.
+			Input objects are associated with the current game state.
+			If we're associating input with an actor, we should register in "make"
+			Input Example
+		Transient Queue
+			A common idiom in games is to queue up actions.
+			In pac man when I push left, I want him to wait until he can go left.
+			Also think about a monster that just runs in a little circle.
+			Glop::TransientQueue is a queue of continuous actions that eventually 
+					end: "Transients"
+			Let's make a monster that runs in little circles.
+		Cool Psychadelic Graphics and Optimizing
+			Enough boring stuff.
+			Playing around the other day.
+			Took 10 minutes (10 MINUTES!) to write a silly particle spiral.
+			It's just a hundred little octahedrons that move in an ever tightening spiral.
+			That would look pretty cool with more particles.
+			300...
+			1000?
+			Speed hit.  Look at source. Draw Routine.
+			Look for invariants: pieces of code that draw the same thing every time 
+					they execute.
+			These can be optimized; you don't even have to know how!
+			Slap an "invar" around them.
+			The first time through, "invar" creates a display list and stores the calls in it.
+			After that, it doesn't execute the code (warning), it just calls the display list
+					from your graphics card.  Nice and speedy.
+			Note that to speed it up, we just had to store a little octahedron; nothing fancy.
+			That's mostly how optimizing this kind of thing works.	
+CONCLUSION

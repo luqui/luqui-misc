@@ -1,0 +1,82 @@
+CONFIDENTIAL
+------------
+
+MEDICAL DOCUMENT PREPROCESSING
+STANDARDIZATION OF DOCUMENT SOURCE
+
+For Luke Palmer
+Job #1
+Normalize names and dates
+
+A. SOURCE TEXT
+
+   Source text oncdocs_01.txt is the original documents
+   with initial anonymization by the institution before
+   giving them to me.
+
+   However, this set of documents should not be released
+   to anybody else without consulting me.
+
+   Note that the first 10 characters of each line,
+   separated by backquotes, identify patient number
+   in this document, visit number of this patient
+   and MRN (Medical Record Number) of this patient.
+
+   For example,
+
+2`122`AC1234 `MCP extends to neutral. PIP lacks 7. Ring MCP extends to neutral and PIP
+
+   Patient number '2'
+   Visit number '122'
+   MNR of patient 'AC1234'
+   and the rest after the third backquote is the
+   actual text of the medical document.
+
+B. JOB #1, NORMALIZE NAMES AND DATES
+
+   For this first job, it is required our system to:
+
+(a) identify names (patient names, staffs and
+    physician names, institutions names, etc.).
+    In order to be able to recover whatever we
+    change the names, we put the info in a file,
+    named oncnames_01.txt, with two fields, one
+    is the original, and the other is the
+    arbitrary number, i.e. 'X' is for a patient,
+    'F' for a family member, 'Y' for a staff
+    or a physician, and 'Z' for a ward, branch,
+    or an institution.
+
+(b) identify geographical names (such as town,
+    state, business center, address, phone,
+    fax, ...).  Again, if we can do a code
+    assignment to have a round-trip conversion,
+    then choose 'G' in oncgeo_01.txt.
+
+(c) identify numbers and dates, and convert
+    them into the standard ANSI English
+    format, and store the conversion in
+    oncansi_01.txt.
+
+(e) identify abbreviations and give their
+    full spelled-out version after a tab.
+    Store the conversion in oncabbrevs_01.txt.
+
+(e) Separate the end-of-sentence period
+    by a blank.  Supply a blank and a period
+    if the line has no end-of-line period.
+
+    Put a period between the series of blanks
+    as in:
+    VITALS: BP 146/80    Pulse 68     Weight 177 lbs.
+    oWt 79.4    T 37.4    BP 146/78  P 100 and regular
+
+Our job is to exhaustively and automatically
+read in the original source text (oncdocs_01.txt),
+record all our changes to a standard format
+in oncnames_01.txt, oncgeo_01.txt, oncansi_01.txt,
+and oncabbrevs_01.txt, and generate oncdocs.std
+file with the new changes.
+
+Let me know if you have any questions.
+

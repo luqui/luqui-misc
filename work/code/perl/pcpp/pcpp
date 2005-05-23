@@ -1,0 +1,148 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+pcpp - Perl C(++) Preprocessor
+
+=head1 DESCRIPTION
+
+Allows you to write context-free macros for C and C++ programs.  Provides
+structure for scoped metainformation.  See macros.pcc.
+
+=head1 AUTHOR
+
+Luke Palmer <luke@luqui.org>
+
+=cut
+
+use Parse::RecDescent;
+
+sub execute {
+    my ($item) = @_;
+    if (ref $item eq 'ARRAY') {
+        my @item = @$item;
+        execute($_) for @item;
+    }
+    elsif (ref $item eq 'HASH') {
+        $item->{execute} && $item->{execute}->($item);
+    }
+    elsif (ref $item) {
+        $item->execute;
+    }
+}
+
+sub generate {
+    my ($item) = @_;
+    unless (ref $item) {
+        $item;
+    }
+    elsif (ref $item eq 'ARRAY') {
+        join '', map { generate($_) } @$item;
+    }
+    elsif (ref $item eq 'HASH') {
+        $item->{generate} && $item->{generate}->($item);
+    }
+    else {
+        $item->generate;
+    }
+}
+
+my $grammar = <<'#\'EOG';
+#\
+
+{
+    our $intro = 'cdisw{}#';
+    our $first = 1;
+
+    our $block = { 
+        up => undef,
+        chunks => 
+    };
+}
+
+program: chunks /\z/ { $item[1] }
+
+chunks: chunk_match(s?)
+
+chunk_match: macro
+           | directive
+           | block_structure
+           | <skip:''> text
+
+macro: <reject>
+
+directive: /^#\$/ directive_body
+
+directive_body: 'macro' intro_char(?) <perl_codeblock>
+    {
+        my $char = @{$item[2]} ? $item[2][0] : '';
+        if (length $char) {
+            if ($char eq '-') {
+                $intro =~ s/-?$/-/;
+            }
+            elsif ($char eq ']') {
+                $intro =~ s/^]?/]/;
+            }
+            else {
+                $intro .= $char;
+            }
+        }
+
+        $block = $item[3];
+        $block =~ s/^{\s*/macro: /;  $block =~ s/}$//;
+        if ($first) {
+            $thisparser->Replace($block);
+            $first = 0;
+        }
+        else {
+            $thisparser->Append($block);
+        }
+        '';
+    }
+# XXX include
+
+intro_char: /'.'/
+    { 
+        my ($char) = $item[1] =~ /'(.)'/;
+        $char;
+    }
+              
+block_structure: 
+     block
+    { $item[1]{type} = 'bare'; $item[1] }
+     | /\b(?:if|while)\b/ paren_expr block
+    { $item[3]{type} = $item[1]; $item[3] }
+     | /\bdo\b/ block /\bwhile\b/
+    { $item[2]{type} = 'do'; $item[2] }
+     | /\b(?:struct|class)\b/ class_name block
+    { $item[3]{type} = $item[1]; $item[3] }
+
+block: <rulevar: local $block = { up => $block }>
+
+block: '{' <commit> chunks '}'
+    { 
+      my $myblock = $block;
+      $myblock->{chunks}    = $item[3];
+      $myblock->{generate}  = sub { '{' . ::generate($myblock->{chunks}) . '}' };
+      $myblock->{execute}   = sub { ::execute($myblock->{chunks}) };
+      $myblock;
+    }
+
+paren_expr: /\([^()]*/ paren_expr(s?) /[^()]*\)/
+    { join '', $item[1], @{$item[2]}, $item[3] }
+
+class_name: /[a-zA-Z_]\w*/ template_expr(?)
+    { join '', $item[1], @{$item[2]} }
+
+template_expr: /<[^<>]*/ template_expr(s?) /[^<>]*>/
+    { join '', $item[1], @{$item[2]}, $item[3] }
+
+text: /[^$intro]+|[^}]/
+
+#'EOG
+
+my $parser = Parse::RecDescent->new($grammar);
+
+my $data = $parser->program(do { local $/; <> });
+::execute($data);
+print ::generate($data);

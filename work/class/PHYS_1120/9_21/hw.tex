@@ -1,0 +1,96 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+
+\begin{document}
+\noindent Luke Palmer \\
+Physics 1120 \\
+9/21/2004 Long Answer
+
+\section*{Part 1}
+
+Given an infinitely long cylinder with uniform charge density $\rho$,
+what is the electric field at some radius $r$ from the center line
+within the body of the cylinder?
+
+We'll use Gauss's law to solve this.  First, observe the lengthwise
+symmetry of the problem.  For every charge, there is another charge to
+cancel all nonradial components of the resulting field.  We have a
+radial electric field.
+
+Also note that the cylinder has no notion of angular orientation about
+its axis---it is symmetrical about its axis---so it is only reasonable
+for nature to have the magnitude of the electric field equal at each
+$r$.
+
+We'll choose a Gaussian surface such that $\cos{\theta}$ is either one
+or zero everywhere on the surface (where $\theta$ is the angle between
+the radial electric field and the area vector of the surface at that
+point).  An approprate surface is a cylinder with length $L$ and radius
+$r$ (since we're interested in the field at $r$).
+
+Gauss's law states:
+
+\[
+    \epsilon_0 \oint_S \mathbf{E} \cdot \mathbf{dA} = Q
+\]
+
+Where $Q$ is the charge enclosed by the Gaussian surface $S$.  
+
+The charge enclosed by our cylinder is $\pi r^2 L\rho$.  So we have:
+
+\[
+    \epsilon_0 \oint_S \mathbf{E} \cdot \mathbf{dA} = \pi r^2 L\rho
+\]
+
+Since the dot product is zero along the flat edges of our Gaussian
+surface (because the field is radial), we can consider only the curved
+part of the cylinder.  The magnitude of the electric field along that is
+constant, and $\cos{\theta}$ is always one, so:
+
+\begin{align*}
+    \epsilon_0 E \oint_S dA &= \pi r^2 L\rho \\
+    2 \epsilon_0 E \pi r L  &= \pi r^2 L\rho \\
+    E                       &= \frac{r \rho}{2 \epsilon_0}
+\end{align*}
+
+Notice that the result is independent of the length of the Gaussian
+surface, as well as the radius of the entire cylinder.  The electric
+field depends only on the charges whose radius is less than $r$. 
+
+\section*{Part 2}
+
+Halliday, Resnick, and Walker derive that the electric field at a
+distance $r$ away from an infinitely long line of charge with uniform
+linear charge density $\lambda$ is:
+
+\[
+    E = \frac{\lambda}{2\pi\epsilon_0 r}
+\]
+
+In order to see the similarity to the result that we just derived, we
+need to redefine a couple of things.  First, we need two radii: the
+distance at which we are trying to find the electric field $r$, and the
+radius of the cylinder $R$.  Going back to our equation:
+
+\begin{align*}
+    \epsilon_0 E \oint_S dA &= \pi R^2 L\rho \\
+    2 \epsilon_0 E \pi r L  &= \pi R^2 L\rho \\
+                 E          &= \frac{R^2 \rho}{2 \epsilon_0 r}
+\end{align*}
+
+We can define that the linear charge density $\lambda = \pi R^2\rho$
+(each $\lambda$ refers to a circular slice of the cylinder).  Then we
+simplify to:
+
+\[
+    E = \frac{\lambda}{2 \pi \epsilon_0 r}
+\]
+
+Which agrees.
+
+We must be careful to state that this is only when $r > R$, because
+otherwise our definition of $\lambda$ is incorrect.  When $r < R$,
+$\lambda = \pi r^2\rho$ instead.
+
+\end{document}

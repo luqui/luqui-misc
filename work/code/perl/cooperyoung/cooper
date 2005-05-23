@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+
+# cooper: An implementation of Cooper Young
+# http://en.wikipedia.org/CooperYoung
+# by Luke Palmer
+
+use strict;
+use Tk;
+
+my $height = shift || 8;
+my $width = shift || $height;
+my @grid;
+
+my $player = 'red';
+
+my $mw = MainWindow->new;
+
+for (1..$width) {
+    $mw->Label(-text => chr(ord('A') + $_-1))->grid(-row => 0, -column => $_);
+}
+
+for (1..$height) {
+    $mw->Label(-text => $_)->grid(-row => $_, -column => 0);
+}
+
+for my $row (1..$height) {
+    for my $col (1..$width) {
+        $grid[$row][$col] = $mw->Button(-command => sub { 
+                select_square($row, $col);
+            })->grid(-row => $row, -column => $col);
+    }
+}
+
+my $redrow  = ask("Red", "enter a secret row [1-$height]: ", 1..$height);
+my $bluecol = ask("Blue", "enter a secret column [A-" . chr(ord('A') + $width-1) . "]: ",
+                        'A'..chr(ord('A') + $width-1));
+
+sub select_square {
+    my ($row, $col) = @_;
+
+    $grid[$row][$col]->configure(
+        -background => $player,
+        -state => 'disabled',
+    );
+    
+    if ($row == $redrow && $col eq ord($bluecol) - ord('A') + 1) {
+        $mw->messageBox(-title => 'Winner!', -message => "\u$player wins!");
+        exit;
+    }
+    
+    $player = $player eq 'red' ? 'blue' : 'red';
+}
+
+sub ask {
+    my ($player, $question, @answers) = @_;
+
+    require Tk::DialogBox;
+    require Tk::LabEntry;
+
+    my $ans;
+    my $dlg = $mw->DialogBox(
+        -title => "$player",
+        -buttons => [ 'Ok' ],
+        -default_button => 'Ok',
+    );
+    $dlg->add('LabEntry', -textvariable => \$ans, -label => "$question",
+             -show => '*', -width => 20)->pack;
+    
+    for (;;) {
+        $dlg->Show();
+        if (my ($x) = grep { lc $_ eq lc $ans } @answers) {
+            return $x;
+        }
+    }
+}
+
+MainLoop;

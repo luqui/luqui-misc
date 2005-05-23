@@ -1,0 +1,104 @@
+dV                   T_DV
+dQ                   T_DQ
+dMass*               T_DMASSSTAR
+dBodyID              T_DBODYID
+dBodyID_NEW          T_NEWDBODYID
+dWorldID             T_DWORLDID
+dJointID             T_DJOINTID
+dJointID_NEW         T_NEWDJOINTID
+dJointGroupID        T_DJOINTGROUPID
+ContactGeom          T_CONTACTGEOM
+dGeomID              T_DGEOMID
+dGeomID_NEW          T_NEWDGEOMID
+dSpaceID             T_DGEOMID
+dSpaceID_NEW         T_NEWDGEOMID
+
+INPUT
+T_DV
+        if (sv_isa($arg, \"ODE::Vector\")) {
+            $var = ($type)SvPV_nolen(SvRV($arg));
+        }
+        else {
+            Perl_croak(aTHX_ \"$var is not of type $ntype\");
+        }
+T_DQ
+        if (sv_isa($arg, \"ODE::Quaternion\")) {
+            $var = ($type)SvPV_nolen(SvRV($arg));
+        }
+        else {
+            Perl_croak(aTHX_ \"$var is not of type $ntype\");
+        }
+T_DMASSSTAR
+        if (sv_isa($arg, \"ODE::Mass\")) {
+            $var = ($type)SvPV_nolen(SvRV($arg));
+        }
+        else {
+            Perl_croak(aTHX_ \"$var is not of type $ntype\");
+        }
+T_DBODYID
+        $var = SvROK($arg)
+            ? ($type) SvIV(SvRV($arg)) : NULL;
+T_DWORLDID
+        $var = SvROK($arg)
+            ? ($type) SvIV(SvRV($arg)) : NULL;
+T_DJOINTID
+        $var = SvROK($arg)
+            ? ($type) SvIV(SvRV($arg)) : NULL;
+T_DJOINTGROUPID
+        $var = SvROK($arg)
+            ? ($type) SvIV(SvRV($arg)) : NULL;
+T_CONTACTGEOM
+        if (sv_isa($arg, \"ODE::ContactGeom\")) {
+            $var = ($type)SvPV_nolen(SvRV($arg));
+        }
+        else {
+            Perl_croak(aTHX_ \"$var is not of type $ntype\");
+        }
+T_DGEOMID
+        $var = SvROK($arg)
+            ? ($type) SvIV(SvRV($arg)) : NULL;
+
+OUTPUT
+T_DV
+        sv_setref_pvn($arg, "ODE::Vector", (void*)$var, sizeof(dVector3));
+T_DQ
+        sv_setref_pvn($arg, "ODE::Quaternion", (void*)$var, sizeof(dQuaternion));
+T_DMASSSTAR
+        sv_setref_pvn($arg, "ODE::Mass", (void*)$var, sizeof(dMass));
+T_DBODYID
+        if ($var) {
+            $arg = _get_body_sv($var);
+        }
+T_NEWDBODYID
+        if ($var) {
+            dBodySetData($var, (void*)newSViv((IV)$var));
+            $arg = _get_body_sv($var);
+        }
+T_DWORLDID
+        if ($var) {
+            sv_setref_pv($arg, "ODE::World", (void*)$var);
+        }
+T_DJOINTID
+        if ($var) {
+            $arg = _get_joint_sv($var);
+        }
+T_NEWDJOINTID
+        if ($var) {
+            dJointSetData($var, (void*)newSViv((IV)$var));
+            $arg = _get_joint_sv($var);
+        }
+T_DJOINTGROUPID
+        if ($var) {
+            sv_setref_pv($arg, "ODE::JointGroup", (void*)$var);
+        }
+T_CONTACTGEOM
+        sv_setref_pvn($arg, "ODE::ContactGeom", (void*)$var, sizeof(dContactGeom));
+T_DGEOMID
+        if ($var) {
+            $arg = _get_geom_sv((dGeomID)$var);
+        }
+T_NEWDGEOMID
+        if ($var) {
+            dGeomSetData((dGeomID)$var, (void*)newSViv((IV)$var));
+            $arg = _get_geom_sv((dGeomID)$var);
+        }

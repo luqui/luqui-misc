@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+portage-catalog - Create a greppable file of descriptions of portage programs
+
+=head1 USAGE
+
+    % portage-catalog > portage.catalog
+    % grep "perl" portage.catalog
+
+=head1 AUTHOR
+
+Luke Palmer <lrpalmer at gmail dot com>
+
+=cut
+
+use strict;
+
+use File::Find::Rule;
+use Perl6::Slurp;
+
+my %seen;
+
+File::Find::Rule
+    ->file
+    ->name('*.ebuild')
+    ->exec(sub {
+        my (undef, $path, $full) = @_;
+        $path =~ s[/usr/portage/][];
+        my $text = slurp($full);
+        my ($desc) = $text =~ /DESCRIPTION="((?:\\.|[^"\\]+)*)"/;
+        return if grep { $_ eq $desc } @{$seen{$path}};
+        push @{$seen{$path}}, $desc;
+        print "$path: $desc\n";
+    })
+    ->in('/usr/portage');

@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+for (@ARGV) {
+    if ($_ eq '--libs') {
+        print "-framework SDL ";
+    }
+    elsif ($_ eq '--cflags') { }
+    elsif ($_ eq '--version') {
+        print "1.2.8 ";
+    }
+}
+
+print "\n";

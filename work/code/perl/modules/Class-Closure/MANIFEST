@@ -1,0 +1,8 @@
+.cvsignore
+Closure.pm
+MANIFEST			This list of files
+Makefile.PL
+README
+TODO
+benchmark.pl
+test.pl

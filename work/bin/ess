@@ -89,8 +89,16 @@ elsif ($ARGV[0] eq 'schedule' || $ARGV[0] eq 's') {
         print "ESS $number: " . getshow($pagetext, $number) . "\n";
     }
     else {
-        for my $number ('01'..$numcasts) {
-            print "ESS $number: " . getshow($pagetext, $number) . "\n";
+        for my $key (sort { $casts{$a}[0] <=> $casts{$b}[0] } keys %casts) {
+            my $nick = '';
+            for (keys %aliases) {
+                if ($aliases{$_} eq $key) { 
+                    $nick = $_;
+                    last;
+                }
+            }
+            my $number = $casts{$key}[0];
+            printf "%-20s | %s\n", ($nick||$key), getshow($pagetext, $number);
         }
     }
 }

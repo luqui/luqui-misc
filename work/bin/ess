@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+
+my %casts = (
+    'family guy'    => [ '01', 'http://bart.ess.tv:11411' ],
+    'south park'    => [ '02', 'http://bart.ess.tv:12521' ],
+    'aqua teen hunger force' => [ '03', 'http://bart.ess.tv:13631' ],
+    'futurama'      => [ '04', 'http://lisa.ess.tv:11411' ],
+    'that 70s show' => [ '05', 'http://lisa.ess.tv:12521' ],
+    'smallville'    => [ '06', 'http://lisa.ess.tv:13631' ],
+    'x-files'       => [ '07', 'http://lisa.ess.tv:14741' ],
+    'scrubs'        => [ '08', 'http://maggie.ess.tv:11411' ],
+    'duckman'       => [ '09', 'http://maggie.ess.tv:12521' ],
+    'simpsons'      => [ '10', 'http://maggie.ess.tv:13631' ],
+    'upright citizens brigade' => [ '11', 'http://marge.ess.tv:11411' ],
+    'invader zim'   => [ '12', 'http://marge.ess.tv:12521' ],
+    'angel'         => [ '13', 'http://marge.ess.tv:13631' ],
+    'red dwarf'     => [ '14', 'http://marge.ess.tv:14741' ],
+    'mystery science theater 3000' => [ '15', 'http://marge.ess.tv:15851' ],
+    'harvey birdman' => [ '16', 'http://marge.ess.tv:16961' ],
+    'curb your enthusiasm' => [ '17', 'http://marge.ess.tv:18081' ],
+    'venture bros' => [ '18', 'http://marge.ess.tv:19291' ],
+    'arrested development' => [ '19', 'http://moe.ess.tv:11411' ],
+    'whose line is it anyway' => [ '20', 'http://moe.ess.tv:12521' ],
+    'seinfeld'      => [ '21', 'http://moe.ess.tv:13631' ],
+    'ren and stimpy' => [ '22', 'http://barney.ess.tv:12521' ],
+    'pinky and the brain' => [ '23', 'http://barney.ess.tv:13631' ],
+    'chapelles show' => [ '24', 'http://barney.ess.tv:14741' ],
+    'star trek'      => [ '25', 'http://barney.ess.tv:15851' ],
+    'lost'           => [ '26', 'http://patty.ess.tv:11411' ],
+    'rockos modern life' => [ '27', 'http://apu.ess.tv:11411' ],
+    'home movies'    => [ '28', 'http://apu.ess.tv:12521' ],
+);
+
+my $numcasts = '28';
+
+my %aliases = (
+    fg     => 'family guy',
+    sp     => 'south park',
+    athf   => 'aqua teen hunger force',
+    '70s'  => 'that 70s show',
+    ucb    => 'upright citizens brigade',
+    zim    => 'invader zim',
+    rd     => 'red dwarf',
+    mst3k  => 'mystery science theater 3000',
+    birdman => 'harvey birdman',
+    cye    => 'curb your enthusiasm',
+    venture => 'the venture bros',
+    arrested => 'arrested development',
+    whoseline => 'whose line is it anyway',
+    rns     => 'ren and stimpy',
+    brain   => 'pinky and the brain',
+    chapelle => 'chapelles show',
+    st      => 'star trek',
+    rml     => 'rockos modern life',
+    hm      => 'home movies',
+);
+
+sub getshow {
+    my ($pagetext, $num) = @_;
+    my ($text) = $pagetext =~ /ESS $num.*?<br>(?:currently playing: )?(.*?)<br>/ 
+        or die "Couldn't match pattern for ESS $num";
+    return $text;
+}
+
+if ($ARGV[0] eq 'watch' || $ARGV[0] eq 'w') {
+    shift;
+    my $show = join ' ', @ARGV;
+    my $name = $aliases{$show} || $show;
+    die "Unknown show: $show\n" unless $casts{$name};
+    
+    exit if fork;
+    exec "mplayer -cache 512 '$casts{$name}[1]'";
+    die "Exec failed: $!";
+}
+elsif ($ARGV[0] eq 'schedule' || $ARGV[0] eq 's') {
+    shift;
+
+    open my $esspage, '-|', 'wget -o /dev/null -O - http://everyshowsucks.com/schedule.php'
+            or die "Couldn't fork wget: $!\n";
+    my $pagetext = do { undef $/; <$esspage> };
+    close $esspage or die "Couldn't read from wget: $!\n";
+
+    if (@ARGV) {
+        my $show = join ' ', @ARGV;
+        my $name = $aliases{$show} || $show;
+        die "Unknown show: $show\n" unless $casts{$name};
+
+        my $number = $casts{$name}[0];
+        print "ESS $number: " . getshow($pagetext, $number) . "\n";
+    }
+    else {
+        for my $number ('01'..$numcasts) {
+            print "ESS $number: " . getshow($pagetext, $number) . "\n";
+        }
+    }
+}

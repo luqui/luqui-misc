@@ -102,3 +102,11 @@ elsif ($ARGV[0] eq 'schedule' || $ARGV[0] eq 's') {
         }
     }
 }
+else {
+    print <<USAGE;
+ess: Usage:
+    ess schedule [station]
+    ess watch station
+USAGE
+    return 2;
+}

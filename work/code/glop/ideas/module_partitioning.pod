@@ -1,0 +1,88 @@
+=head1 TITLE
+
+Glop Modules - description of the module partitioning.
+
+=head1 AUTHOR
+
+Luke Palmer
+
+=head1 Introduction
+
+Glop is split up into several sections to allow for flexible abstraction
+in games.  These are:
+
+=over
+
+=item * Modules
+
+Perl modules included in Bundle::Glop, on which Glop is built.
+
+=item * Engines
+
+Gameloops and architectures built around gameloops. 
+
+=item * Effects
+
+Graphics and sound effects encapsulated in modules.
+
+=item * Utilities
+
+Convenience features.
+
+=back
+
+=head1 Modules
+
+These are external perl modules that Glop is built upon. I am taking a
+maximalist point of view, where modules that could be potentially useful
+are included.  Within reason, of course.
+
+The modules included so far are L<ODE>, L<SDL>, L<PDL>, L<TLA> C<:-)>.
+
+=head1 Engines
+
+These are complete, self-running portions of games.  Some examples:
+
+=over
+
+=item * Platformer Engine
+
+Ad minimum, it would manage geometry on the screen, loading and
+unloading as needed.  Ad maximum, it would include an entire game, with
+only the graphics to be filled in (it may provide rudimentary graphics
+as well).  But it is necessarily reusable, to be thought of as an
+"engine," not as a "game."
+
+=item * Menu System
+
+This will be the first engine I will implement.  It provides a
+declarative system for selecting menu items and changing option values.
+For example:
+
+    my $menu = new Glop::Engine::Menu [
+                    'New Game' => \&new_game,
+                    'Load Game' => \&load_game,
+                    'Quit' => sub { exit },
+                ], { 
+                    font => Glop::Font::OldEnglish->new,
+                };
+    $game->add($menu);
+
+Or some such.
+
+=back
+
+=head1 Effects
+
+Encapsulated graphical effects and objects. For instance, a sphere (part
+of the core distribution), a skin-skeleton mapping system, an explosion,
+a vector graphics renderer, etc.
+
+I<Effects> also includes sound effects.  Not like "Boom", but like
+"flange" or "highpass."
+
+=head1 Utilities
+
+These include all other useful game abstractions.  In here will be
+things like the standard quantize function (like a snap-to-grid).  This
+is also where the collision detectors will be.

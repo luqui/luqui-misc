@@ -1,0 +1,253 @@
+Index: include/ode/common.h
+===================================================================
+RCS file: /cvsroot/opende/ode/include/ode/common.h,v
+retrieving revision 1.35
+diff -u -u -r1.35 common.h
+--- include/ode/common.h	6 May 2004 21:02:22 -0000	1.35
++++ include/ode/common.h	3 Sep 2004 16:18:52 -0000
+@@ -206,7 +206,8 @@
+   dJointTypeHinge2,
+   dJointTypeFixed,
+   dJointTypeNull,
+-  dJointTypeAMotor
++  dJointTypeAMotor,
++  dJointTypePlane2D
+ };
+ 
+ 
+Index: include/ode/objects.h
+===================================================================
+RCS file: /cvsroot/opende/ode/include/ode/objects.h,v
+retrieving revision 1.44
+diff -u -u -r1.44 objects.h
+--- include/ode/objects.h	19 Jun 2004 15:44:22 -0000	1.44
++++ include/ode/objects.h	3 Sep 2004 16:18:52 -0000
+@@ -171,6 +171,7 @@
+ dJointID dJointCreateHinge2 (dWorldID, dJointGroupID);
+ dJointID dJointCreateUniversal (dWorldID, dJointGroupID);
+ dJointID dJointCreateFixed (dWorldID, dJointGroupID);
++dJointID dJointCreatePlane2D (dWorldID, dJointGroupID);
+ dJointID dJointCreateNull (dWorldID, dJointGroupID);
+ dJointID dJointCreateAMotor (dWorldID, dJointGroupID);
+ 
+@@ -215,6 +216,9 @@
+ void dJointSetAMotorParam (dJointID, int parameter, dReal value);
+ void dJointSetAMotorMode (dJointID, int mode);
+ void dJointAddAMotorTorques (dJointID, dReal torque1, dReal torque2, dReal torque3);
++void dJointSetPlane2DXParam (dJointID, int parameter, dReal value);
++void dJointSetPlane2DYParam (dJointID, int parameter, dReal value);
++void dJointSetPlane2DAngleParam (dJointID, int parameter, dReal value);
+ 
+ void dJointGetBallAnchor (dJointID, dVector3 result);
+ void dJointGetBallAnchor2 (dJointID, dVector3 result);
+Index: ode/src/joint.cpp
+===================================================================
+RCS file: /cvsroot/opende/ode/ode/src/joint.cpp,v
+retrieving revision 1.55
+diff -u -u -r1.55 joint.cpp
+--- ode/src/joint.cpp	18 May 2004 18:08:04 -0000	1.55
++++ ode/src/joint.cpp	3 Sep 2004 16:18:53 -0000
+@@ -2662,6 +2662,154 @@
+   dJointTypeFixed};
+ 
+ //****************************************************************************
++// 2D constraint joint
++// Code by psero@gmx.de
++
++# define        VoXYZ(v1, o1, x, y, z) \
++                    ( \
++                        (v1)[0] o1 (x), \
++                        (v1)[1] o1 (y), \
++                        (v1)[2] o1 (z)  \
++                    )
++
++static double   Midentity[3][3] =
++                {
++                    {   1,  0,  0   },
++                    {   0,  1,  0   },
++                    {   0,  0,  1,  }
++                };
++
++
++
++static void     plane2dInit (dxJointPlane2D *j)
++{
++    /* MINFO ("plane2dInit ()"); */
++    j->motor_x.init (j->world);
++    j->motor_y.init (j->world);
++    j->motor_angle.init (j->world);
++}
++
++
++
++static void     plane2dGetInfo1 (dxJointPlane2D *j, dxJoint::Info1 *info)
++{
++  /* MINFO ("plane2dGetInfo1 ()"); */
++
++  info->nub = 3;
++  info->m = 3;
++
++  if (j->motor_x.fmax > 0)
++      j->row_motor_x = info->m ++;
++  if (j->motor_y.fmax > 0)
++      j->row_motor_y = info->m ++;
++  if (j->motor_angle.fmax > 0)
++      j->row_motor_angle = info->m ++;
++}
++
++
++
++static void     plane2dGetInfo2 (dxJointPlane2D *joint, dxJoint::Info2 *info)
++{
++    int         r0 = 0,
++                r1 = info->rowskip,
++                r2 = 2 * r1;
++    dReal       eps = info->fps * info->erp;
++
++    /* MINFO ("plane2dGetInfo2 ()"); */
++
++/*
++    v = v1, w = omega1
++    (v2, omega2 not important (== static environment))
++
++    constraint equations:
++        xz = 0
++        wx = 0
++        wy = 0
++
++    <=> ( 0 0 1 ) (vx)   ( 0 0 0 ) (wx)   ( 0 )
++        ( 0 0 0 ) (vy) + ( 1 0 0 ) (wy) = ( 0 )
++        ( 0 0 0 ) (vz)   ( 0 1 0 ) (wz)   ( 0 )
++        J1/J1l           Omega1/J1a
++*/
++
++    // fill in linear and angular coeff. for left hand side:
++
++    VoXYZ (&info->J1l[r0], =, 0, 0, 1);
++    VoXYZ (&info->J1l[r1], =, 0, 0, 0);
++    VoXYZ (&info->J1l[r2], =, 0, 0, 0);
++
++    VoXYZ (&info->J1a[r0], =, 0, 0, 0);
++    VoXYZ (&info->J1a[r1], =, 1, 0, 0);
++    VoXYZ (&info->J1a[r2], =, 0, 1, 0);
++
++    // error correction (against drift):
++
++    // a) linear vz, so that z (== pos[2]) == 0
++    info->c[0] = eps * -joint->node[0].body->pos[2];
++
++# if 0
++    // b) angular correction? -> left to application !!!
++    dReal       *body_z_axis = &joint->node[0].body->R[8];
++    info->c[1] = eps * +atan2 (body_z_axis[1], body_z_axis[2]); // wx error
++    info->c[2] = eps * -atan2 (body_z_axis[0], body_z_axis[2]); // wy error
++# endif
++
++    // if the slider is powered, or has joint limits, add in the extra row:
++
++    if (joint->row_motor_x > 0)
++        joint->motor_x.addLimot (
++            joint, info, joint->row_motor_x, Midentity[0], 0);
++
++    if (joint->row_motor_y > 0)
++        joint->motor_y.addLimot (
++            joint, info, joint->row_motor_y, Midentity[1], 0);
++
++    if (joint->row_motor_angle > 0)
++        joint->motor_angle.addLimot (
++            joint, info, joint->row_motor_angle, Midentity[2], 1);
++}
++
++
++
++dxJoint::Vtable __dplane2d_vtable =
++{
++  sizeof (dxJointPlane2D),
++  (dxJoint::init_fn*) plane2dInit,
++  (dxJoint::getInfo1_fn*) plane2dGetInfo1,
++  (dxJoint::getInfo2_fn*) plane2dGetInfo2,
++  dJointTypePlane2D
++};
++
++
++extern "C" void dJointSetPlane2DXParam (dxJointPlane2D *joint,
++                      int parameter, dReal value)
++{
++  dUASSERT (joint, "bad joint argument");
++  dUASSERT (joint->vtable == &__dplane2d_vtable, "joint is not a plane2d");
++  joint->motor_x.set (parameter, value);
++}
++
++
++extern "C" void dJointSetPlane2DYParam (dxJointPlane2D *joint,
++                      int parameter, dReal value)
++{
++  dUASSERT (joint, "bad joint argument");
++  dUASSERT (joint->vtable == &__dplane2d_vtable, "joint is not a plane2d");
++  joint->motor_y.set (parameter, value);
++}
++
++
++
++extern "C" void dJointSetPlane2DAngleParam (dxJointPlane2D *joint,
++                      int parameter, dReal value)
++{
++  dUASSERT (joint, "bad joint argument");
++  dUASSERT (joint->vtable == &__dplane2d_vtable, "joint is not a plane2d");
++  joint->motor_angle.set (parameter, value);
++}
++
++
++//****************************************************************************
+ // null joint
+ 
+ static void nullGetInfo1 (dxJointNull *j, dxJoint::Info1 *info)
+Index: ode/src/joint.h
+===================================================================
+RCS file: /cvsroot/opende/ode/ode/src/joint.h,v
+retrieving revision 1.37
+diff -u -u -r1.37 joint.h
+--- ode/src/joint.h	19 May 2004 05:30:34 -0000	1.37
++++ ode/src/joint.h	3 Sep 2004 16:18:53 -0000
+@@ -255,6 +255,20 @@
+ };
+ extern struct dxJoint::Vtable __dfixed_vtable;
+ 
++// 2D constraint
++// by psero@gmx.de
++
++struct dxJointPlane2D : public dxJoint
++{
++    int                 row_motor_x;
++    int                 row_motor_y;
++    int                 row_motor_angle;
++    dxJointLimitMotor   motor_x;    
++    dxJointLimitMotor   motor_y;
++    dxJointLimitMotor   motor_angle;
++};
++extern struct dxJoint::Vtable __dplane2d_vtable;
++
+ 
+ // null joint, for testing only
+ 
+Index: ode/src/ode.cpp
+===================================================================
+RCS file: /cvsroot/opende/ode/ode/src/ode.cpp,v
+retrieving revision 1.45
+diff -u -u -r1.45 ode.cpp
+--- ode/src/ode.cpp	26 May 2004 01:14:25 -0000	1.45
++++ ode/src/ode.cpp	3 Sep 2004 16:18:53 -0000
+@@ -949,6 +949,13 @@
+   return createJoint (w,group,&__dfixed_vtable);
+ }
+ 
++// Plane2D joint by psero@gmx.de
++dxJoint * dJointCreatePlane2D (dWorldID w, dJointGroupID group)
++{
++  dAASSERT (w);
++  return createJoint (w,group,&__dplane2d_vtable);
++}
++
+ 
+ dxJoint * dJointCreateNull (dWorldID w, dJointGroupID group)
+ {

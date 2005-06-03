@@ -57,7 +57,7 @@ float colorcolor[][3] = {
 
 void init_sdl()
 {
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE);
 //    screen = SDL_SetVideoMode(1024, 768, 32, SDL_FULLSCREEN | SDL_OPENGL);
     screen = SDL_SetVideoMode(1024, 768, 32, SDL_OPENGL);
     
@@ -155,7 +155,7 @@ bool color_transform(int a, int b, int* ao, int* bo)
 
 bool can_stick(int color1, int color2)
 {
-    if ((color1 &= 4) ^ (color2 &= 4)) return false;
+    if ((color1 & 4) ^ (color2 & 4)) return false;
     return !((color1 & 2) ^ (color2 & 2));
 }
 
@@ -165,7 +165,7 @@ void sanity_check(Particle* p)
     int numjs = dBodyGetNumJoints(body);
     for (int i = 0; i < numjs; i++) {
         dJointID joint = dBodyGetJoint(body, i);
-        if (dJointGetType(joint) == dJointTypeContact) continue;
+        if (!joint || dJointGetType(joint) == dJointTypeContact) continue;
         
         dBodyID ba = dJointGetBody(joint, 0);
         dBodyID bb = dJointGetBody(joint, 1);
@@ -344,7 +344,8 @@ int main()
     dCreatePlane(space, 0, 0, -1, -SCRBACK);
     
     for (int i = 0; i < NUMPARTICLES; i++) {
-        int color = lrand48() % 5;
+        //int color = lrand48() % 5;
+        int color = 0;
         if (color > 3) color = 8;
         new_particle(
                 randrange(SCRLEFT, SCRRIGHT),

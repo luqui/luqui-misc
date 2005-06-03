@@ -1,3 +1,49 @@
+/* Here is the basis measurement table:
+ * A: <E,F>     |     C: <E,H>
+ * B: <G,H>     |     D: <F,G>
+ * ---------------------------
+ * E: <A,B>     |     G: <A,D>
+ * F: <C,D>     |     H: <B,C>
+ * 
+ * Here's how it ends up working out:
+ *   A, E  ==>  A,      E
+ *   A, F  ==>  C|D,    F
+ *   A, G  ==>  A,      E|F
+ *   A, H  ==>  B|C,    E|F
+ *   B, E  ==>  B,      G|H
+ *   B, F  ==>  C|D,    G|H
+ *   B, G  ==>  A|D,    G
+ *   B, H  ==>  B,      H
+ *   C, E  ==>  A|B,    E
+ *   C, F  ==>  C,      H|E
+ *   C, G  ==>  D|A,    H|E
+ *   C, H  ==>  C,      H
+ *   D, E  ==>  B|A,    F|G
+ *   D, F  ==>  D,      F
+ *   D, G  ==>  D,      G
+ *   D, H  ==>  B|C,    F|G
+ * 
+ * Number-letter mapping:
+ * A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, ROCK=8
+ *
+ * Interactions:
+ * A-A inverse-square attract
+ * B-B inverse-square attract
+ * A-B inverse-square repel
+ *
+ * C-C inverse-square repel
+ * D-D inverse-square repel
+ * C-D inverse-square attract
+ *
+ * E-E inverse-square attract
+ * F-F inverse-square attract
+ * E-F attract magnitude = sin(d)/d
+ *
+ * G-G inverse-square repel
+ * H-H inverse-square repel
+ * G-H attract magnitude = sin(d)/d
+ */
+
 #include <SDL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -20,13 +66,16 @@ const float SCRBOT   = 0;
 const float SCRTOP   = 30;
 const float SCRFRONT = 0;
 const float SCRBACK  = 30;
-const int NUMPARTICLES = 600;
+const int NUMPARTICLES = 1;
 const float MAG = 600;
 const float STRONGMIN = -1;
 const float STRONGMAX = 0;
-const float VELRANGE = 0;
+const float VELRANGE = 20;
 const float STEP = 0.003;
 const int ROCK = 8;
+const int MAXSTICK = 4;
+const int ROCKMAXSTICK = 2 * MAXSTICK - 2;
+const float DELAY = 1.0/100.0;
 
 // colors 0-8 (9 colors)
 struct Particle {
@@ -116,6 +165,19 @@ void events()
                          5);
         }
     }
+    for (int i = 0; i < 9; i++) {
+        if (keys[SDLK_0 + i]) {
+            new_particle(
+                    randrange(SCRLEFT, SCRRIGHT),
+                    randrange(SCRBOT, SCRTOP),
+                    randrange(SCRFRONT, SCRBACK),
+                    randrange(-VELRANGE, VELRANGE),
+                    randrange(-VELRANGE, VELRANGE),
+                    randrange(-VELRANGE, VELRANGE),
+                    i);
+            std::cout << "Number of particles: " << particles.size() << "\n";
+        }
+    }
 }
 
 int basis_transform(int a, int b) 
@@ -153,8 +215,13 @@ bool color_transform(int a, int b, int* ao, int* bo)
     return true;
 }
 
-bool can_stick(int color1, int color2)
+bool can_stick(Particle* p1, Particle* p2)
 {
+    int color1 = p1->color;
+    int color2 = p2->color;
+    if (dBodyGetNumJoints(p1->body) > (color1 == ROCK ? ROCKMAXSTICK : MAXSTICK)
+      ||dBodyGetNumJoints(p2->body) > (color2 == ROCK ? ROCKMAXSTICK : MAXSTICK))
+        return false;
     if (color1 == ROCK || color2 == ROCK) return true;
     if ((color1 & 4) ^ (color2 & 4)) return false;
     return !((color1 & 2) ^ (color2 & 2));
@@ -164,18 +231,32 @@ void sanity_check(Particle* p)
 {
     dBodyID body = p->body;
     int numjs = dBodyGetNumJoints(body);
+    
+    dJointID* destroy_joints = new dJointID [numjs];
+    int num_destroy_joints = 0;
+
     for (int i = 0; i < numjs; i++) {
         dJointID joint = dBodyGetJoint(body, i);
-        if (!joint || dJointGetType(joint) == dJointTypeContact) continue;
+        if (dJointGetType(joint) == dJointTypeContact) continue;
+
+        if (numjs > MAXSTICK && i < numjs - MAXSTICK) {
+            destroy_joints[num_destroy_joints++] = joint;
+            continue;
+        }
         
         dBodyID ba = dJointGetBody(joint, 0);
         dBodyID bb = dJointGetBody(joint, 1);
         Particle* dudea = (Particle*)dBodyGetData(ba);
         Particle* dudeb = (Particle*)dBodyGetData(bb);
-        if (!can_stick(dudea->color, dudeb->color)) {
-            dJointDestroy(joint);
+        if (!can_stick(dudea, dudeb)) {
+            destroy_joints[num_destroy_joints++] = joint;
         }
     }
+
+    for (int i = 0; i < num_destroy_joints; i++) {
+        dJointDestroy(destroy_joints[i]);
+    }
+    delete[] destroy_joints;
 }
 
 // 0-1 are gay
@@ -311,7 +392,7 @@ void collide_callback(void* data, dGeomID g1, dGeomID g2)
                     sanity_check(p2);
                 }
                 else {
-                    if (!can_stick(p1->color, p2->color)) return;
+                    if (!can_stick(p1, p2)) return;
                     dJointID joint = dJointCreateFixed(world, NULL);
                     dJointAttach(joint, p1->body, p2->body);
                     dJointSetFixed(joint);
@@ -358,16 +439,13 @@ int main()
     dCreatePlane(space, 0, 0, -1, -SCRBACK);
     
     for (int i = 0; i < NUMPARTICLES; i++) {
-        //int color = lrand48() % 5;
-        int color = lrand48() % 8;
-        //if (color > 3) color = 8;
+        int color = lrand48() % 9;
+        //int color = 0;
+        //if (color == 4) color = 8;
         new_particle(
-                /*randrange(SCRLEFT, SCRRIGHT),
+                randrange(SCRLEFT, SCRRIGHT),
                 randrange(SCRBOT, SCRTOP),
-                randrange(SCRFRONT, SCRBACK),*/
-                randrange(14, 16),
-                randrange(14, 16),
-                randrange(14, 16),
+                randrange(SCRFRONT, SCRBACK),
                 randrange(-VELRANGE, VELRANGE),
                 randrange(-VELRANGE, VELRANGE),
                 randrange(-VELRANGE, VELRANGE),
@@ -375,7 +453,12 @@ int main()
     }
 
     timest = SDL_GetTicks();
+
+    Uint32 pretime = SDL_GetTicks();
     while (true) {
+        while (SDL_GetTicks() - pretime < 1000 * DELAY);
+        pretime = SDL_GetTicks();
+        
         frames++;
         draw();
         events();

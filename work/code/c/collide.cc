@@ -67,6 +67,21 @@ void init_sdl()
     glMatrixMode(GL_MODELVIEW);
 }
 
+void new_particle(float x, float y, float z, float vx, float vy, float vz, int color)
+{
+    particles.push_back(new Particle);
+    Particle* part = particles.back();
+    part->body = dBodyCreate(world);
+    dBodySetPosition(part->body, x, y, z);
+    dBodySetLinearVel(part->body, vx, vy, vz);
+
+    part->geom = dCreateSphere(space, 0.2);
+    dGeomSetBody(part->geom, part->body);
+    part->color = color;
+    dBodySetData(part->body, part);
+    dGeomSetData(part->geom, part);
+}
+
 void events()
 {
     SDL_Event e;
@@ -289,23 +304,16 @@ int main()
     dCreatePlane(space, 0, 0, -1, -SCRBACK);
     
     for (int i = 0; i < NUMPARTICLES; i++) {
-        particles.push_back(new Particle);
-        particles[i]->body = dBodyCreate(world);
-        dBodySetPosition(particles[i]->body, 
-                         randrange(SCRLEFT, SCRRIGHT),
-                         randrange(SCRBOT, SCRTOP),
-                         randrange(SCRFRONT, SCRBACK));
-        dBodySetLinearVel(particles[i]->body,
-                         randrange(-VELRANGE, VELRANGE),
-                         randrange(-VELRANGE, VELRANGE),
-                         randrange(-VELRANGE, VELRANGE));
-
-        particles[i]->geom = dCreateSphere(space, 0.2);
-        dGeomSetBody(particles[i]->geom, particles[i]->body);
-        particles[i]->color = lrand48() % 5;  // XXX
-        if (particles[i]->color == 4) particles[i]->color = 8;
-        dBodySetData(particles[i]->body, particles[i]);
-        dGeomSetData(particles[i]->geom, particles[i]);
+        int color = lrand48() % 5;
+        if (color == 4) color = 8;
+        new_particle(
+                randrange(SCRLEFT, SCRRIGHT),
+                randrange(SCRBOT, SCRTOP),
+                randrange(SCRFRONT, SCRBACK),
+                randrange(-VELRANGE, VELRANGE),
+                randrange(-VELRANGE, VELRANGE),
+                randrange(-VELRANGE, VELRANGE),
+                color);
     }
 
     timest = SDL_GetTicks();

@@ -140,6 +140,16 @@ double randrange(double lo, double hi) {
     return drand48() * (hi - lo) + lo;
 }
 
+void clear_particles()
+{
+    for (int i = 0; i < particles.size(); i++) {
+        dGeomDestroy(particles[i]->geom);
+        dBodyDestroy(particles[i]->body);
+        delete particles[i];
+    }
+    particles.clear();
+}
+
 void events()
 {
     SDL_Event e;
@@ -149,11 +159,12 @@ void events()
                 if (e.key.keysym.sym == SDLK_ESCAPE) {
                     double dtime = (SDL_GetTicks() - timest) / 1000;
                     std::cout << "FPS: " << frames / dtime << "\n";
+                    clear_particles();
                     SDL_Quit();
                     exit(0);
                 }
                 else if (e.key.keysym.sym == SDLK_c) {
-                    particles.clear();
+                    clear_particles();
                 }
             }
         }
@@ -162,24 +173,23 @@ void events()
     if (keys[SDLK_LEFT]) zrot += 90 * STEP;
     if (keys[SDLK_RIGHT]) zrot -= 90 * STEP;
 
-    static int counter = 0;
-    if (keys[SDLK_SPACE]) {
-        if ((++counter %= 2) == 0) {
-            new_particle(0.1, 0.1, 0.1,
-                         randrange(30,50), randrange(30,50), randrange(30,50),
-                         5);
-        }
-    }
     for (int i = 0; i < 9; i++) {
         if (keys[SDLK_KP0 + i]) {
-            new_particle(
-                    randrange(SCRLEFT, SCRRIGHT),
-                    randrange(SCRBOT, SCRTOP),
-                    randrange(SCRFRONT, SCRBACK),
-                    randrange(-VELRANGE, VELRANGE),
-                    randrange(-VELRANGE, VELRANGE),
-                    randrange(-VELRANGE, VELRANGE),
-                    i);
+            if (keys[SDLK_SPACE]) {
+                new_particle(0.1, 0.1, 0.1,
+                             randrange(30,50), randrange(30,50), randrange(30,50),
+                             i);
+            }
+            else {
+                new_particle(
+                        randrange(SCRLEFT, SCRRIGHT),
+                        randrange(SCRBOT, SCRTOP),
+                        randrange(SCRFRONT, SCRBACK),
+                        randrange(-VELRANGE, VELRANGE),
+                        randrange(-VELRANGE, VELRANGE),
+                        randrange(-VELRANGE, VELRANGE),
+                        i);
+            }
             std::cout << "Number of particles: " << particles.size() << "\n";
         }
     }

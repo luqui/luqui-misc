@@ -6,6 +6,11 @@
 #include <ode/ode.h>
 #include <iostream>
 #include <math.h>
+#include <deque>
+#include <vector>
+
+using std::deque;
+using std::vector;
 
 SDL_Surface* screen;
 
@@ -31,7 +36,7 @@ struct Particle {
 };
 
 dWorldID world;
-Particle particles[NUMPARTICLES];
+vector<Particle*> particles;
 dSpaceID space;
 dJointGroupID contacts;
 Uint32 timest;
@@ -128,13 +133,13 @@ bool color_transform(int a, int b, int* ao, int* bo)
 // 8 is rock
 void step()
 {
-    for (int i = 0; i < NUMPARTICLES; i++) {
-        const dReal* ipos = dBodyGetPosition(particles[i].body);
-        const dReal* ivel = dBodyGetLinearVel(particles[i].body);
-        for (int j = 0; j < NUMPARTICLES; j++) {
+    for (int i = 0; i < particles.size(); i++) {
+        const dReal* ipos = dBodyGetPosition(particles[i]->body);
+        const dReal* ivel = dBodyGetLinearVel(particles[i]->body);
+        for (int j = 0; j < particles.size(); j++) {
 
             if (i == j) continue;
-            const dReal* jpos = dBodyGetPosition(particles[j].body);
+            const dReal* jpos = dBodyGetPosition(particles[j]->body);
             
             dVector3 v;  v[0] = jpos[0] - ipos[0];
                          v[1] = jpos[1] - ipos[1];
@@ -143,44 +148,44 @@ void step()
             vlen = vlen * vlen * vlen / MAG;
             v[0] /= vlen; v[1] /= vlen; v[2] /= vlen;
 
-            switch (particles[i].color) {
+            switch (particles[i]->color) {
             case 0:
             case 1:
-                if (particles[j].color != 0 && particles[j].color != 1) break;
-                if (particles[j].color == particles[i].color) {
-                    dBodyAddForce(particles[j].body, -v[0], -v[1], -v[2]);
+                if (particles[j]->color != 0 && particles[j]->color != 1) break;
+                if (particles[j]->color == particles[i]->color) {
+                    dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
                 }
                 else {
-                    dBodyAddForce(particles[j].body, v[0], v[1], v[2]);
+                    dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
                 }
                 break;
             case 2:
             case 3:
-                if (particles[j].color != 2 && particles[j].color != 3) break;
-                if (particles[j].color == particles[i].color) {
-                    dBodyAddForce(particles[j].body, v[0], v[1], v[2]);
+                if (particles[j]->color != 2 && particles[j]->color != 3) break;
+                if (particles[j]->color == particles[i]->color) {
+                    dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
                 }
                 else {
-                    dBodyAddForce(particles[j].body, -v[0], -v[1], -v[2]);
+                    dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
                 }
             case 4:
             case 5:
-                if (particles[j].color != 4 && particles[j].color != 5) break;
-                if (particles[j].color == particles[i].color) {
-                    dBodyAddForce(particles[j].body, -v[0], -v[1], -v[2]);
+                if (particles[j]->color != 4 && particles[j]->color != 5) break;
+                if (particles[j]->color == particles[i]->color) {
+                    dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
                 }
                 else {
-                    dBodyAddForce(particles[j].body, v[0], v[1], v[2]);
+                    dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
                 }
                 break;
             case 6:
             case 7:
-                if (particles[j].color != 6 && particles[j].color != 7) break;
-                if (particles[j].color == particles[i].color) {
-                    dBodyAddForce(particles[j].body, v[0], v[1], v[2]);
+                if (particles[j]->color != 6 && particles[j]->color != 7) break;
+                if (particles[j]->color == particles[i]->color) {
+                    dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
                 }
                 else {
-                    dBodyAddForce(particles[j].body, -v[0], -v[1], -v[2]);
+                    dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
                 }
             }
         }
@@ -204,9 +209,9 @@ void draw()
     glEnd();
     glPointSize(2.0);
     glBegin(GL_POINTS);
-    for (int i = 0; i < NUMPARTICLES; i++) {
-        const dReal* pos = dBodyGetPosition(particles[i].body);
-        float* color = colorcolor[particles[i].color];
+    for (int i = 0; i < particles.size(); i++) {
+        const dReal* pos = dBodyGetPosition(particles[i]->body);
+        float* color = colorcolor[particles[i]->color];
         glColor3f(color[0],color[1],color[2]);
         glVertex3f(pos[0], pos[1], pos[2]);
     }
@@ -284,22 +289,23 @@ int main()
     dCreatePlane(space, 0, 0, -1, -SCRBACK);
     
     for (int i = 0; i < NUMPARTICLES; i++) {
-        particles[i].body = dBodyCreate(world);
-        dBodySetPosition(particles[i].body, 
+        particles.push_back(new Particle);
+        particles[i]->body = dBodyCreate(world);
+        dBodySetPosition(particles[i]->body, 
                          randrange(SCRLEFT, SCRRIGHT),
                          randrange(SCRBOT, SCRTOP),
                          randrange(SCRFRONT, SCRBACK));
-        dBodySetLinearVel(particles[i].body,
+        dBodySetLinearVel(particles[i]->body,
                          randrange(-VELRANGE, VELRANGE),
                          randrange(-VELRANGE, VELRANGE),
                          randrange(-VELRANGE, VELRANGE));
 
-        particles[i].geom = dCreateSphere(space, 0.2);
-        dGeomSetBody(particles[i].geom, particles[i].body);
-        particles[i].color = lrand48() % 5;  // XXX
-        if (particles[i].color == 4) particles[i].color = 8;
-        dBodySetData(particles[i].body, &particles[i]);
-        dGeomSetData(particles[i].geom, &particles[i]);
+        particles[i]->geom = dCreateSphere(space, 0.2);
+        dGeomSetBody(particles[i]->geom, particles[i]->body);
+        particles[i]->color = lrand48() % 5;  // XXX
+        if (particles[i]->color == 4) particles[i]->color = 8;
+        dBodySetData(particles[i]->body, particles[i]);
+        dGeomSetData(particles[i]->geom, particles[i]);
     }
 
     timest = SDL_GetTicks();

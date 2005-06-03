@@ -20,7 +20,7 @@ const float SCRBOT   = 0;
 const float SCRTOP   = 30;
 const float SCRFRONT = 0;
 const float SCRBACK  = 30;
-const int NUMPARTICLES = 300;
+const int NUMPARTICLES = 600;
 const float MAG = 600;
 const float STRONGMIN = -1;
 const float STRONGMAX = 0;
@@ -155,6 +155,7 @@ bool color_transform(int a, int b, int* ao, int* bo)
 
 bool can_stick(int color1, int color2)
 {
+    if (color1 == ROCK || color2 == ROCK) return true;
     if ((color1 & 4) ^ (color2 & 4)) return false;
     return !((color1 & 2) ^ (color2 & 2));
 }
@@ -192,12 +193,14 @@ void step()
             if (i == j) continue;
             const dReal* jpos = dBodyGetPosition(particles[j]->body);
             
-            dVector3 v;  v[0] = jpos[0] - ipos[0];
-                         v[1] = jpos[1] - ipos[1];
-                         v[2] = jpos[2] - ipos[2];
-            dReal vlen = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-            vlen = vlen * vlen * vlen / MAG;
-            v[0] /= vlen; v[1] /= vlen; v[2] /= vlen;
+            dVector3 ov;  ov[0] = jpos[0] - ipos[0];
+                          ov[1] = jpos[1] - ipos[1];
+                          ov[2] = jpos[2] - ipos[2];
+            dReal vlen = sqrt(ov[0]*ov[0] + ov[1]*ov[1] + ov[2]*ov[2]);
+            dReal div = vlen * vlen * vlen / MAG;
+            dVector3 v;   v[0] = ov[0] / div;
+                          v[1] = ov[1] / div;
+                          v[2] = ov[2] / div;
 
             switch (particles[i]->color) {
             case 0:
@@ -220,24 +223,35 @@ void step()
                     dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
                 }
             case 4:
-            case 5:
+            case 5: {
+                dReal shelldiv = vlen / sin(vlen) * vlen / MAG;
+                dVector3 shellv; shellv[0] = ov[0] / shelldiv;
+                                 shellv[1] = ov[1] / shelldiv;
+                                 shellv[2] = ov[2] / shelldiv;
                 if (particles[j]->color != 4 && particles[j]->color != 5) break;
                 if (particles[j]->color == particles[i]->color) {
                     dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
                 }
                 else {
-                    dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
+                    dBodyAddForce(particles[j]->body, -shellv[0], -shellv[1], -shellv[2]);
                 }
                 break;
+            }
             case 6:
-            case 7:
+            case 7: {
+                dReal shelldiv = vlen / sin(vlen) * vlen / MAG;
+                dVector3 shellv; shellv[0] = ov[0] / shelldiv;
+                                 shellv[1] = ov[1] / shelldiv;
+                                 shellv[2] = ov[2] / shelldiv;
                 if (particles[j]->color != 6 && particles[j]->color != 7) break;
                 if (particles[j]->color == particles[i]->color) {
                     dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
                 }
                 else {
-                    dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
+                    dBodyAddForce(particles[j]->body, -shellv[0], -shellv[1], -shellv[2]);
                 }
+                break;
+            }
             }
         }
     }
@@ -345,12 +359,15 @@ int main()
     
     for (int i = 0; i < NUMPARTICLES; i++) {
         //int color = lrand48() % 5;
-        int color = 0;
-        if (color > 3) color = 8;
+        int color = lrand48() % 8;
+        //if (color > 3) color = 8;
         new_particle(
-                randrange(SCRLEFT, SCRRIGHT),
+                /*randrange(SCRLEFT, SCRRIGHT),
                 randrange(SCRBOT, SCRTOP),
-                randrange(SCRFRONT, SCRBACK),
+                randrange(SCRFRONT, SCRBACK),*/
+                randrange(14, 16),
+                randrange(14, 16),
+                randrange(14, 16),
                 randrange(-VELRANGE, VELRANGE),
                 randrange(-VELRANGE, VELRANGE),
                 randrange(-VELRANGE, VELRANGE),

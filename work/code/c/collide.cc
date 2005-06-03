@@ -142,8 +142,7 @@ int basis_transform(int a, int b)
 
 bool color_transform(int a, int b, int* ao, int* bo)
 {
-    //if (!((a & 4) ^ (b & 4)) || a == ROCK || b == ROCK) {
-    if (a < 4 && b < 4 || a >= 4 && b >= 4 || a == ROCK || b == ROCK) {
+    if (!((a & 4) ^ (b & 4)) || a == ROCK || b == ROCK) {
         *ao = a;
         *bo = b;
         return false;
@@ -152,6 +151,30 @@ bool color_transform(int a, int b, int* ao, int* bo)
     *ao = basis_transform(b, a);
     *bo = basis_transform(a, b);
     return true;
+}
+
+bool can_stick(int color1, int color2)
+{
+    if ((color1 &= 4) ^ (color2 &= 4)) return false;
+    return !((color1 & 2) ^ (color2 & 2));
+}
+
+void sanity_check(Particle* p)
+{
+    dBodyID body = p->body;
+    int numjs = dBodyGetNumJoints(body);
+    for (int i = 0; i < numjs; i++) {
+        dJointID joint = dBodyGetJoint(body, i);
+        if (dJointGetType(joint) == dJointTypeContact) continue;
+        
+        dBodyID ba = dJointGetBody(joint, 0);
+        dBodyID bb = dJointGetBody(joint, 1);
+        Particle* dudea = (Particle*)dBodyGetData(ba);
+        Particle* dudeb = (Particle*)dBodyGetData(bb);
+        if (!can_stick(dudea->color, dudeb->color)) {
+            dJointDestroy(joint);
+        }
+    }
 }
 
 // 0-1 are gay
@@ -269,10 +292,16 @@ void collide_callback(void* data, dGeomID g1, dGeomID g2)
             
             // /* FIXED
             if (!color_transform(p1->color, p2->color, &p1->color, &p2->color)) {
-                if (dAreConnected(p1->body, p2->body)) return;
-                dJointID joint = dJointCreateFixed(world, NULL);
-                dJointAttach(joint, p1->body, p2->body);
-                dJointSetFixed(joint);
+                if (dAreConnected(p1->body, p2->body)) {
+                    sanity_check(p1);
+                    sanity_check(p2);
+                }
+                else {
+                    if (!can_stick(p1->color, p2->color)) return;
+                    dJointID joint = dJointCreateFixed(world, NULL);
+                    dJointAttach(joint, p1->body, p2->body);
+                    dJointSetFixed(joint);
+                }
             }
         }
         else {

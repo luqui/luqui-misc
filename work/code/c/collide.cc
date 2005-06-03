@@ -66,7 +66,7 @@ const float SCRBOT   = 0;
 const float SCRTOP   = 30;
 const float SCRFRONT = 0;
 const float SCRBACK  = 30;
-const int NUMPARTICLES = 1;
+const int NUMPARTICLES = 0;
 const float MAG = 600;
 const float STRONGMIN = -1;
 const float STRONGMAX = 0;
@@ -76,6 +76,8 @@ const int ROCK = 8;
 const int MAXSTICK = 4;
 const int ROCKMAXSTICK = 2 * MAXSTICK - 2;
 const float DELAY = 1.0/100.0;
+const float DAMP_THRESHOLD = 50;
+const float DAMP_CONSTANT = 2;
 
 // colors 0-8 (9 colors)
 struct Particle {
@@ -150,6 +152,9 @@ void events()
                     SDL_Quit();
                     exit(0);
                 }
+                else if (e.key.keysym.sym == SDLK_c) {
+                    particles.clear();
+                }
             }
         }
     }
@@ -166,7 +171,7 @@ void events()
         }
     }
     for (int i = 0; i < 9; i++) {
-        if (keys[SDLK_0 + i]) {
+        if (keys[SDLK_KP0 + i]) {
             new_particle(
                     randrange(SCRLEFT, SCRRIGHT),
                     randrange(SCRBOT, SCRTOP),
@@ -259,18 +264,24 @@ void sanity_check(Particle* p)
     delete[] destroy_joints;
 }
 
-// 0-1 are gay
-// 2-3 are straight
-// 4-5 are gay
-// 6-7 are straight
-// 8 is rock
+void damp(Particle* p)
+{
+    const dReal* vel = dBodyGetLinearVel(p->body);
+    dReal speed = sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]);
+    if (speed > DAMP_THRESHOLD) {
+        dReal fmag = -(speed - 50) / (DAMP_CONSTANT * speed);
+        dBodyAddForce(p->body, fmag * vel[0], fmag * vel[1], fmag * vel[2]);
+    }
+}
+
 void step()
 {
     for (int i = 0; i < particles.size(); i++) {
+        damp(particles[i]);
+        
         const dReal* ipos = dBodyGetPosition(particles[i]->body);
         const dReal* ivel = dBodyGetLinearVel(particles[i]->body);
         for (int j = 0; j < particles.size(); j++) {
-
             if (i == j) continue;
             const dReal* jpos = dBodyGetPosition(particles[j]->body);
             
@@ -404,7 +415,7 @@ void collide_callback(void* data, dGeomID g1, dGeomID g2)
                 dContact contact;
                 contact.surface.mode = dContactBounce;
                 contact.surface.mu = 0;
-                contact.surface.bounce = 1;
+                contact.surface.bounce = 0.75;
                 contact.geom = cts[0];
                 dJointID joint = dJointCreateContact(world, contacts, &contact);
                 dJointAttach(joint, dGeomGetBody(g1), dGeomGetBody(g2));
@@ -465,7 +476,7 @@ int main()
         step();
 
         dSpaceCollide(space, NULL, &collide_callback);
-        dWorldQuickStep(world, STEP);
+        dWorldStep(world, STEP);
         dJointGroupEmpty(contacts);
     }
 }

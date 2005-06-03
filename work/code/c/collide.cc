@@ -58,13 +58,16 @@ float colorcolor[][3] = {
 void init_sdl()
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
-    screen = SDL_SetVideoMode(1024, 768, 32, SDL_FULLSCREEN | SDL_OPENGL);
+//    screen = SDL_SetVideoMode(1024, 768, 32, SDL_FULLSCREEN | SDL_OPENGL);
+    screen = SDL_SetVideoMode(1024, 768, 32, SDL_OPENGL);
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45.0, 4.0/3.0, 1, 500);
     gluLookAt(50, 50, 50, 0, 0, 0, 1, 0, 0);
     glMatrixMode(GL_MODELVIEW);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
 }
 
 void new_particle(float x, float y, float z, float vx, float vy, float vz, int color)
@@ -80,6 +83,10 @@ void new_particle(float x, float y, float z, float vx, float vy, float vz, int c
     part->color = color;
     dBodySetData(part->body, part);
     dGeomSetData(part->geom, part);
+}
+
+double randrange(double lo, double hi) {
+    return drand48() * (hi - lo) + lo;
 }
 
 void events()
@@ -100,10 +107,15 @@ void events()
     Uint8* keys = SDL_GetKeyState(0);
     if (keys[SDLK_LEFT]) zrot += 90 * STEP;
     if (keys[SDLK_RIGHT]) zrot -= 90 * STEP;
-}
 
-double randrange(double lo, double hi) {
-    return drand48() * (hi - lo) + lo;
+    static int counter = 0;
+    if (keys[SDLK_SPACE]) {
+        if ((++counter %= 2) == 0) {
+            new_particle(0.1, 0.1, 0.1,
+                         randrange(30,50), randrange(30,50), randrange(30,50),
+                         5);
+        }
+    }
 }
 
 int basis_transform(int a, int b) 
@@ -130,7 +142,8 @@ int basis_transform(int a, int b)
 
 bool color_transform(int a, int b, int* ao, int* bo)
 {
-    if (!((a & 4) ^ (b & 4)) || a == ROCK || b == ROCK) {
+    //if (!((a & 4) ^ (b & 4)) || a == ROCK || b == ROCK) {
+    if (a < 4 && b < 4 || a >= 4 && b >= 4 || a == ROCK || b == ROCK) {
         *ao = a;
         *bo = b;
         return false;
@@ -210,7 +223,7 @@ void step()
 void draw()
 {
     //glClearColor(0.25, 0.25, 0.25, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     glRotatef(zrot, 1, 0, 0);
     glColor3f(1,1,1);
@@ -243,9 +256,6 @@ void collide_callback(void* data, dGeomID g1, dGeomID g2)
     int numcts = dCollide(g1, g2, 1, cts, sizeof(dContactGeom));
     if (numcts) {
         if ((p1 = (Particle*)dGeomGetData(g1)) && (p2 = (Particle*)dGeomGetData(g2))) {
-            if (!(p1->color == 8 || p2->color == 8) && 
-                  (p1->color & 4) ^ (p2->color & 4)) return;
-            if (dAreConnected(p1->body, p2->body)) return;
             /* HINGE 
             dJointID joint = dJointCreateHinge(world, NULL)
             dJointAttach(joint, p1->body, p2->body);
@@ -259,6 +269,7 @@ void collide_callback(void* data, dGeomID g1, dGeomID g2)
             
             // /* FIXED
             if (!color_transform(p1->color, p2->color, &p1->color, &p2->color)) {
+                if (dAreConnected(p1->body, p2->body)) return;
                 dJointID joint = dJointCreateFixed(world, NULL);
                 dJointAttach(joint, p1->body, p2->body);
                 dJointSetFixed(joint);
@@ -305,7 +316,7 @@ int main()
     
     for (int i = 0; i < NUMPARTICLES; i++) {
         int color = lrand48() % 5;
-        if (color == 4) color = 8;
+        if (color > 3) color = 8;
         new_particle(
                 randrange(SCRLEFT, SCRRIGHT),
                 randrange(SCRBOT, SCRTOP),

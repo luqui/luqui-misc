@@ -88,11 +88,20 @@ struct Particle {
 
 dWorldID world;
 vector<Particle*> particles;
+vector< vector<int> > force_lists;
 dSpaceID space;
 dJointGroupID contacts;
 Uint32 timest;
 int frames = 0;
 float zrot = 0;
+
+int colorlist[9] = {
+    0, 0,
+    1, 1, 
+    2, 2,
+    3, 3,
+    -1
+};
 
 float colorcolor[][3] = {
     { 1, 0, 0 },
@@ -134,6 +143,10 @@ void new_particle(float x, float y, float z, float vx, float vy, float vz, int c
     part->color = color;
     dBodySetData(part->body, part);
     dGeomSetData(part->geom, part);
+
+    if (colorlist[part->color] >= 0) {
+        force_lists[colorlist[part->color]].push_back(particles.size()-1);
+    }
 }
 
 double randrange(double lo, double hi) {
@@ -142,6 +155,7 @@ double randrange(double lo, double hi) {
 
 void clear_particles()
 {
+    force_lists = vector< vector<int> >(4);
     for (int i = 0; i < particles.size(); i++) {
         dGeomDestroy(particles[i]->geom);
         dBodyDestroy(particles[i]->body);
@@ -293,72 +307,81 @@ void step()
 {
     for (int i = 0; i < particles.size(); i++) {
         damp(particles[i]);
-        
-        const dReal* ipos = dBodyGetPosition(particles[i]->body);
-        const dReal* ivel = dBodyGetLinearVel(particles[i]->body);
-        for (int j = 0; j < particles.size(); j++) {
-            if (i == j) continue;
-            const dReal* jpos = dBodyGetPosition(particles[j]->body);
-            
-            dVector3 ov;  ov[0] = jpos[0] - ipos[0];
-                          ov[1] = jpos[1] - ipos[1];
-                          ov[2] = jpos[2] - ipos[2];
-            dReal vlen = sqrt(ov[0]*ov[0] + ov[1]*ov[1] + ov[2]*ov[2]);
-            dReal div = vlen * vlen * vlen / MAG;
-            dVector3 v;   v[0] = ov[0] / div;
-                          v[1] = ov[1] / div;
-                          v[2] = ov[2] / div;
+    }
 
-            switch (particles[i]->color) {
-            case 0:
-            case 1:
-                if (particles[j]->color != 0 && particles[j]->color != 1) break;
-                if (particles[j]->color == particles[i]->color) {
-                    dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
+    for (int list = 0; list < force_lists.size(); list++) {
+        
+        for (int li = 0; li < force_lists[list].size(); li++) {
+            int i = force_lists[list][li];
+            
+            const dReal* ipos = dBodyGetPosition(particles[i]->body);
+            const dReal* ivel = dBodyGetLinearVel(particles[i]->body);
+            for (int lj = 0; lj < force_lists[list].size(); lj++) {
+                int j = force_lists[list][lj];
+
+                if (i == j) continue;
+                const dReal* jpos = dBodyGetPosition(particles[j]->body);
+                
+                dVector3 ov;  ov[0] = jpos[0] - ipos[0];
+                              ov[1] = jpos[1] - ipos[1];
+                              ov[2] = jpos[2] - ipos[2];
+                dReal vlen = sqrt(ov[0]*ov[0] + ov[1]*ov[1] + ov[2]*ov[2]);
+                dReal div = vlen * vlen * vlen / MAG;
+                dVector3 v;   v[0] = ov[0] / div;
+                              v[1] = ov[1] / div;
+                              v[2] = ov[2] / div;
+
+                switch (particles[i]->color) {
+                case 0:
+                case 1:
+                    if (particles[j]->color != 0 && particles[j]->color != 1) break;
+                    if (particles[j]->color == particles[i]->color) {
+                        dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
+                    }
+                    else {
+                        dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
+                    }
+                    break;
+                case 2:
+                case 3:
+                    if (particles[j]->color != 2 && particles[j]->color != 3) break;
+                    if (particles[j]->color == particles[i]->color) {
+                        dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
+                    }
+                    else {
+                        dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
+                    }
+                case 4:
+                case 5: {
+                    dReal shelldiv = vlen / sin(vlen) * vlen / MAG;
+                    dVector3 shellv; shellv[0] = ov[0] / shelldiv;
+                                     shellv[1] = ov[1] / shelldiv;
+                                     shellv[2] = ov[2] / shelldiv;
+                    if (particles[j]->color != 4 && particles[j]->color != 5) break;
+                    if (particles[j]->color == particles[i]->color) {
+                        dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
+                    }
+                    else {
+                        dBodyAddForce(particles[j]->body, -shellv[0], -shellv[1], -shellv[2]);
+                    }
+                    break;
                 }
-                else {
-                    dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
+                case 6:
+                case 7: {
+                    dReal shelldiv = vlen / sin(vlen) * vlen / MAG;
+                    dVector3 shellv; shellv[0] = ov[0] / shelldiv;
+                                     shellv[1] = ov[1] / shelldiv;
+                                     shellv[2] = ov[2] / shelldiv;
+                    if (particles[j]->color != 6 && particles[j]->color != 7) break;
+                    if (particles[j]->color == particles[i]->color) {
+                        dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
+                    }
+                    else {
+                        dBodyAddForce(particles[j]->body, -shellv[0], -shellv[1], -shellv[2]);
+                    }
+                    break;
                 }
-                break;
-            case 2:
-            case 3:
-                if (particles[j]->color != 2 && particles[j]->color != 3) break;
-                if (particles[j]->color == particles[i]->color) {
-                    dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
                 }
-                else {
-                    dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
-                }
-            case 4:
-            case 5: {
-                dReal shelldiv = vlen / sin(vlen) * vlen / MAG;
-                dVector3 shellv; shellv[0] = ov[0] / shelldiv;
-                                 shellv[1] = ov[1] / shelldiv;
-                                 shellv[2] = ov[2] / shelldiv;
-                if (particles[j]->color != 4 && particles[j]->color != 5) break;
-                if (particles[j]->color == particles[i]->color) {
-                    dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
-                }
-                else {
-                    dBodyAddForce(particles[j]->body, -shellv[0], -shellv[1], -shellv[2]);
-                }
-                break;
-            }
-            case 6:
-            case 7: {
-                dReal shelldiv = vlen / sin(vlen) * vlen / MAG;
-                dVector3 shellv; shellv[0] = ov[0] / shelldiv;
-                                 shellv[1] = ov[1] / shelldiv;
-                                 shellv[2] = ov[2] / shelldiv;
-                if (particles[j]->color != 6 && particles[j]->color != 7) break;
-                if (particles[j]->color == particles[i]->color) {
-                    dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
-                }
-                else {
-                    dBodyAddForce(particles[j]->body, -shellv[0], -shellv[1], -shellv[2]);
-                }
-                break;
-            }
             }
         }
     }
@@ -464,6 +487,7 @@ int main()
     dCreatePlane(space, 0, 0, 1, SCRFRONT);
     dCreatePlane(space, 0, 0, -1, -SCRBACK);
     
+    clear_particles();
     for (int i = 0; i < NUMPARTICLES; i++) {
         int color = lrand48() % 9;
         //int color = 0;
@@ -491,7 +515,7 @@ int main()
         step();
 
         dSpaceCollide(space, NULL, &collide_callback);
-        dWorldStep(world, STEP);
+        dWorldQuickStep(world, STEP);
         dJointGroupEmpty(contacts);
     }
 }

@@ -107,7 +107,7 @@ void init_sdl()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45.0, 4.0/3.0, 1, 500);
-    gluLookAt(50, 50, 50, 0, 0, 0, 1, 0, 0);
+    gluLookAt(60, 60, 60, 0, 0, 0, 1, 0, 0);
     glMatrixMode(GL_MODELVIEW);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -222,7 +222,7 @@ int basis_transform(int a, int b)
 
 bool color_transform(int a, int b, int* ao, int* bo)
 {
-    if (!(LIT(a) ^ LIT(b)) || RCK(a) || RCK(b)) {
+    if (LIT(a) == LIT(b) || RCK(a) || RCK(b)) {
         *ao = a;
         *bo = b;
         return false;
@@ -242,7 +242,8 @@ bool can_stick(Particle* p1, Particle* p2)
         return false;
     if (RCK(color1) || RCK(color2)) return true;
     if (LIT(color1) ^ LIT(color2)) return false;
-    return !(GAY(color1) ^ GAY(color2));
+    if (GAY(color1) ^ GAY(color2)) return false;
+    return GAY(color1) ^ POS(color1) ^ POS(color2);
 }
 
 void sanity_check(Particle* p)
@@ -326,7 +327,7 @@ void step()
                 case B:
                 case E:
                 case F:
-                    if (particles[j]->color == particles[i]->color) {
+                    if (POS(particles[j]->color) == POS(particles[i]->color)) {
                         dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
                     }
                     else {
@@ -337,7 +338,7 @@ void step()
                 case D:
                 case G:
                 case H:
-                    if (particles[j]->color == particles[i]->color) {
+                    if (POS(particles[j]->color) == POS(particles[i]->color)) {
                         dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
                     }
                     else {

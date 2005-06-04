@@ -97,11 +97,11 @@ float zrot = 0;
 float colorcolor[][3] = {
     { 1, 0, 0 },
     { 0, 1, 0 },
-    { 0, 0, 1 },
+    { 0.5, 0.5, 1 },
     { 1, 1, 0 },
     { 0.5, 0, 0 },
     { 0, 0.5, 0 },
-    { 0, 0, 0.5 },
+    { 0.25, 0.25, 0.5 },
     { 0.5, 0.5, 0 },
     { 1, 1, 1 }
 };
@@ -109,8 +109,7 @@ float colorcolor[][3] = {
 void init_sdl()
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE);
-//    screen = SDL_SetVideoMode(1024, 768, 32, SDL_FULLSCREEN | SDL_OPENGL);
-    screen = SDL_SetVideoMode(1024, 768, 32, SDL_OPENGL);
+    screen = SDL_SetVideoMode(1024, 768, 32, SDL_FULLSCREEN | SDL_OPENGL);
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -174,6 +173,11 @@ void events()
     if (keys[SDLK_RIGHT]) zrot -= 90 * STEP;
 
     for (int i = 0; i < 9; i++) {
+        if (SDL_GetModState() & KMOD_CTRL) {
+            if (frames % 20 != 0) {
+                continue;
+            }
+        }
         if (keys[SDLK_KP0 + i]) {
             if (keys[SDLK_SPACE]) {
                 new_particle(0.1, 0.1, 0.1,
@@ -365,7 +369,7 @@ void draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     glRotatef(zrot, 1, 0, 0);
-    glColor3f(1,1,1);
+    glColor3f(0.5,0.5,0.5);
     glBegin(GL_LINES);
         glVertex3f(SCRLEFT, SCRBOT, SCRFRONT);
         glVertex3f(SCRRIGHT, SCRBOT, SCRFRONT);

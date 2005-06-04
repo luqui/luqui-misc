@@ -118,6 +118,7 @@ void init_sdl()
     glMatrixMode(GL_MODELVIEW);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+    SDL_ShowCursor(0);
 }
 
 void new_particle(float x, float y, float z, float vx, float vy, float vz, int color)

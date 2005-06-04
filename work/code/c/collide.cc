@@ -1,48 +1,23 @@
-/* Here is the basis measurement table:
- * A: <E,F>     |     C: <E,H>
- * B: <G,H>     |     D: <F,G>
- * ---------------------------
- * E: <A,B>     |     G: <A,D>
- * F: <C,D>     |     H: <B,C>
- * 
- * Here's how it ends up working out:
- *   A, E  ==>  A,      E
- *   A, F  ==>  C|D,    F
- *   A, G  ==>  A,      E|F
- *   A, H  ==>  B|C,    E|F
- *   B, E  ==>  B,      G|H
- *   B, F  ==>  C|D,    G|H
- *   B, G  ==>  A|D,    G
- *   B, H  ==>  B,      H
- *   C, E  ==>  A|B,    E
- *   C, F  ==>  C,      H|E
- *   C, G  ==>  D|A,    H|E
- *   C, H  ==>  C,      H
- *   D, E  ==>  B|A,    F|G
- *   D, F  ==>  D,      F
- *   D, G  ==>  D,      G
- *   D, H  ==>  B|C,    F|G
- * 
- * Number-letter mapping:
- * A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, ROCK=8
+/* THE ELEMENTARY PARTICLE TABLE
  *
- * Interactions:
- * A-A inverse-square attract
- * B-B inverse-square attract
- * A-B inverse-square repel
+ *         +-------------------------------------------+
+ *         |        GAY          |        STR          |
+ *         +---------------------+---------------------+
+ *         |    POS   |   NEG    |    POS   |   NEG    |
+ * +-------+----------+----------+----------+----------+
+ * |       |    A     |     B    |     C    |    D     |
+ * |  LIT  | F,G -> E | E,H -> F | E,H -> G | F,G -> H |
+ * |       | H -> F|G | G -> E|H | F -> E|H | E -> F|G |
+ * +-------+----------+----------+----------+----------+
+ * |       |    E     |     F    |     G    |    H     |
+ * |  DRK  | B,C -> D | A,D -> C | A,D -> B | B,C -> A |
+ * |       | A -> B|C | B -> A|D | C -> A|D | D -> B|C |
+ * +-------+----------+----------+----------+----------+
  *
- * C-C inverse-square repel
- * D-D inverse-square repel
- * C-D inverse-square attract
- *
- * E-E inverse-square attract
- * F-F inverse-square attract
- * E-F attract magnitude = sin(d)/d
- *
- * G-G inverse-square repel
- * H-H inverse-square repel
- * G-H attract magnitude = sin(d)/d
- */
+ * LIT, DRK (bit 2) are the types of ALIGNMENT
+ * GAY, STR (bit 1) are the types of SEXUALITY
+ * POS, NEG (bit 0) are the types of CHARGE
+ */ 
 
 #include <SDL.h>
 #include <GL/gl.h>
@@ -72,12 +47,21 @@ const float STRONGMIN = -1;
 const float STRONGMAX = 0;
 const float VELRANGE = 20;
 const float STEP = 0.003;
-const int ROCK = 8;
 const int MAXSTICK = 4;
 const int ROCKMAXSTICK = 2 * MAXSTICK - 2;
 const float DELAY = 1.0/100.0;
 const float DAMP_THRESHOLD = 50;
 const float DAMP_CONSTANT = 2;
+
+const int A = 0, B = 1, C = 2, D = 3, E = 4, F = 5, G = 6, H = 7, R = 8;
+#define LIT(x) (!((x) & 4))
+#define DRK(x) (!LIGHT(x))
+#define GAY(x) (!((x) & 2))
+#define STR(x) (!GAY(x))
+#define POS(x) (!((x) & 1))
+#define NEG(x) (!POS(x))
+#define RCK(x) ((x) == 8)
+
 
 // colors 0-8 (9 colors)
 struct Particle {
@@ -153,6 +137,10 @@ double randrange(double lo, double hi) {
     return drand48() * (hi - lo) + lo;
 }
 
+int randsel(int a, int b) {
+    return lrand48() % 2 ? a : b;
+}
+
 void clear_particles()
 {
     force_lists = vector< vector<int> >(4);
@@ -214,31 +202,27 @@ void events()
     }
 }
 
+// Return what a turns b into
 int basis_transform(int a, int b) 
 {
-    int na = a & 3;
-    int nb = b & 3;
-
-    // HAHAHAHA UNDOCUMENTED
-    switch (na) {
-    case 0:
-        if (nb == 0 || nb == 1) return b;
-        else return (lrand48() % 2) | (b & 4);
-    case 1:
-        if (nb == 2 || nb == 3) return b;
-        else return (lrand48() % 2 + 2) | (b & 4);
-    case 2:
-        if (nb == 0 || nb == 3) return b;
-        else return (3 * (lrand48() % 2)) | (b & 4);
-    case 3:
-        if (nb == 1 || nb == 2) return b;
-        else return (lrand48() % 2 + 1) | (b & 4);
+    if (RCK(a) || RCK(b)) return b;
+    
+    switch (a) {
+    case A: return b == H ? randsel(F, G) : E;
+    case B: return b == G ? randsel(E, H) : F;
+    case C: return b == F ? randsel(E, H) : G;
+    case D: return b == E ? randsel(F, G) : H;
+    case E: return b == A ? randsel(B, C) : D;
+    case F: return b == B ? randsel(A, D) : C;
+    case G: return b == C ? randsel(A, D) : B;
+    case H: return b == D ? randsel(B, C) : A;
     }
+    abort();
 }
 
 bool color_transform(int a, int b, int* ao, int* bo)
 {
-    if (!((a & 4) ^ (b & 4)) || a == ROCK || b == ROCK) {
+    if (!(LIT(a) ^ LIT(b)) || RCK(a) || RCK(b)) {
         *ao = a;
         *bo = b;
         return false;
@@ -253,12 +237,12 @@ bool can_stick(Particle* p1, Particle* p2)
 {
     int color1 = p1->color;
     int color2 = p2->color;
-    if (dBodyGetNumJoints(p1->body) > (color1 == ROCK ? ROCKMAXSTICK : MAXSTICK)
-      ||dBodyGetNumJoints(p2->body) > (color2 == ROCK ? ROCKMAXSTICK : MAXSTICK))
+    if (dBodyGetNumJoints(p1->body) > (RCK(color1) ? ROCKMAXSTICK : MAXSTICK)
+      ||dBodyGetNumJoints(p2->body) > (RCK(color2) ? ROCKMAXSTICK : MAXSTICK))
         return false;
-    if (color1 == ROCK || color2 == ROCK) return true;
-    if ((color1 & 4) ^ (color2 & 4)) return false;
-    return !((color1 & 2) ^ (color2 & 2));
+    if (RCK(color1) || RCK(color2)) return true;
+    if (LIT(color1) ^ LIT(color2)) return false;
+    return !(GAY(color1) ^ GAY(color2));
 }
 
 void sanity_check(Particle* p)
@@ -320,6 +304,12 @@ void step()
                 int j = force_lists[list][lj];
 
                 if (i == j) continue;
+
+                // Particles in different alignments don't interact
+                if (LIT(particles[i]->color) ^ LIT(particles[j]->color)) continue;
+                // Particles in different sexualities don't interact
+                if (GAY(particles[i]->color) ^ GAY(particles[j]->color)) continue;
+
                 const dReal* jpos = dBodyGetPosition(particles[j]->body);
                 
                 dVector3 ov;  ov[0] = jpos[0] - ipos[0];
@@ -332,9 +322,10 @@ void step()
                               v[2] = ov[2] / div;
 
                 switch (particles[i]->color) {
-                case 0:
-                case 1:
-                    if (particles[j]->color != 0 && particles[j]->color != 1) break;
+                case A:  // gay particles
+                case B:
+                case E:
+                case F:
                     if (particles[j]->color == particles[i]->color) {
                         dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
                     }
@@ -342,45 +333,17 @@ void step()
                         dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
                     }
                     break;
-                case 2:
-                case 3:
-                    if (particles[j]->color != 2 && particles[j]->color != 3) break;
+                case C:  // straight particles
+                case D:
+                case G:
+                case H:
                     if (particles[j]->color == particles[i]->color) {
                         dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
                     }
                     else {
                         dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
                     }
-                case 4:
-                case 5: {
-                    dReal shelldiv = vlen / sin(vlen) * vlen / MAG;
-                    dVector3 shellv; shellv[0] = ov[0] / shelldiv;
-                                     shellv[1] = ov[1] / shelldiv;
-                                     shellv[2] = ov[2] / shelldiv;
-                    if (particles[j]->color != 4 && particles[j]->color != 5) break;
-                    if (particles[j]->color == particles[i]->color) {
-                        dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
-                    }
-                    else {
-                        dBodyAddForce(particles[j]->body, -shellv[0], -shellv[1], -shellv[2]);
-                    }
                     break;
-                }
-                case 6:
-                case 7: {
-                    dReal shelldiv = vlen / sin(vlen) * vlen / MAG;
-                    dVector3 shellv; shellv[0] = ov[0] / shelldiv;
-                                     shellv[1] = ov[1] / shelldiv;
-                                     shellv[2] = ov[2] / shelldiv;
-                    if (particles[j]->color != 6 && particles[j]->color != 7) break;
-                    if (particles[j]->color == particles[i]->color) {
-                        dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
-                    }
-                    else {
-                        dBodyAddForce(particles[j]->body, -shellv[0], -shellv[1], -shellv[2]);
-                    }
-                    break;
-                }
                 }
             }
         }
@@ -407,7 +370,7 @@ void draw()
     for (int i = 0; i < particles.size(); i++) {
         const dReal* pos = dBodyGetPosition(particles[i]->body);
         float* color = colorcolor[particles[i]->color];
-        glColor3f(color[0],color[1],color[2]);
+        glColor3f(color[0], color[1], color[2]);
         glVertex3f(pos[0], pos[1], pos[2]);
     }
     glEnd();
@@ -423,18 +386,6 @@ void collide_callback(void* data, dGeomID g1, dGeomID g2)
     int numcts = dCollide(g1, g2, 1, cts, sizeof(dContactGeom));
     if (numcts) {
         if ((p1 = (Particle*)dGeomGetData(g1)) && (p2 = (Particle*)dGeomGetData(g2))) {
-            /* HINGE 
-            dJointID joint = dJointCreateHinge(world, NULL)
-            dJointAttach(joint, p1->body, p2->body);
-            const dReal* p1pos = dBodyGetPosition(p1->body);
-            const dReal* p2pos = dBodyGetPosition(p2->body);
-            dJointSetHingeAnchor(joint, (p1pos[0]+p2pos[0])/2,
-                                        (p1pos[1]+p2pos[1])/2,
-                                        (p1pos[2]+p2pos[2])/2);
-            dJointSetHingeAxis(joint, 0, 0, 1);
-            // */
-            
-            // /* FIXED
             if (!color_transform(p1->color, p2->color, &p1->color, &p2->color)) {
                 if (dAreConnected(p1->body, p2->body)) {
                     sanity_check(p1);
@@ -488,23 +439,8 @@ int main()
     dCreatePlane(space, 0, 0, -1, -SCRBACK);
     
     clear_particles();
-    for (int i = 0; i < NUMPARTICLES; i++) {
-        int color = lrand48() % 9;
-        //int color = 0;
-        //if (color == 4) color = 8;
-        new_particle(
-                randrange(SCRLEFT, SCRRIGHT),
-                randrange(SCRBOT, SCRTOP),
-                randrange(SCRFRONT, SCRBACK),
-                randrange(-VELRANGE, VELRANGE),
-                randrange(-VELRANGE, VELRANGE),
-                randrange(-VELRANGE, VELRANGE),
-                color);
-    }
-
-    timest = SDL_GetTicks();
-
-    Uint32 pretime = SDL_GetTicks();
+    
+    Uint32 pretime = timest = SDL_GetTicks();
     while (true) {
         while (SDL_GetTicks() - pretime < 1000 * DELAY);
         pretime = SDL_GetTicks();

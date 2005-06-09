@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use lib glob '/home/fibonaci/devel/glop/blib/{lib,arch}';
+use lib glob '/home/fibonaci/devel/misc/luke/work/code/glop/blib/{lib,arch}';
 use Glop '-fullscreen',
           -view => [ 0, 0, 200, 200 ];
 

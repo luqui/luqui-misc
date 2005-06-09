@@ -3,12 +3,35 @@ ODE version 0.01
 
 INSTALLATION
 
-To install this module type the following:
+To install this module, first checkout ode somewhere:
+
+    % cvs -d :pserver:anonymous@cvs.sourceforge.net:/cvsroot/opende co ode
+
+Build it:
+
+    % cd ODE_INSTALL_DIR
+    % cp config/user-settings.example config/user-settings
+    ( look over user-settings and verify their sanity )
+    % make ode-lib
+
+Then come back and edit Makefile.PL, and set the $oderoot at the
+top of the file to the path where you checked out ode (the
+ODE_INSTALL_DIR above). Then type the following:
 
    perl Makefile.PL
    make
    make test
    make install
+
+BUGS
+
+If you get the message
+
+    no library found (probably harmless): libstdc++
+
+When you run the Makefile.PL, run make like so:
+
+    make EXTRALIBS=-lstdc++ LDLOADLIBS=-lstdc++
 
 COPYRIGHT AND LICENCE
 
@@ -17,5 +40,3 @@ Copyright (C) 2004 by Luke Palmer
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.3 or,
 at your option, any later version of Perl 5 you may have available.
-
-

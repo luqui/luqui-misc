@@ -166,6 +166,7 @@ BEGIN {
 
 package Glop;
 
+use Glop::Hacks;
 use Glop::Floater;
 use Glop::Kernel;
 use Glop::Role;
@@ -231,11 +232,11 @@ sub view {
             gluOrtho2D(@view[0,2,1,3]);
         }
         elsif (@view == 2 || @view == 3) { # 3D
-            my ($eye, $center, $up) = map { v(@$_) } @view;
-            if ($up == v()) {
-                $up = ($center - $eye) x v(1,0,0);
+            my ($eye, $center, $up) = map { Glop::v(@$_) } @view;
+            if ($up == Glop::v()) {
+                $up = ($center - $eye) x Glop::v(1,0,0);
                 if ($up == 0) {  # ugh
-                    $up = ($center - $eye) x v(0,1,0);
+                    $up = ($center - $eye) x Glop::v(0,1,0);
                 }
             }
             gluPerspective(45, 4/3, 0.1, 100);
@@ -248,6 +249,8 @@ sub view {
 }
 
 INIT { __PACKAGE__->init(@$init_args) if $init_args; }
+
+package Glop;
 
 sub v {
     ODE::Vector->new(@_);

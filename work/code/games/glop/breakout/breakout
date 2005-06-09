@@ -4,7 +4,7 @@ use strict;
 
 use FindBin;
 use lib "$FindBin::Bin";
-use lib glob '/home/fibonaci/devel/glop/blib/{lib,arch}';
+use lib glob '/home/fibonaci/devel/misc/luke/work/code/glop/blib/{lib,arch}';
 
 use Glop '-fullscreen',
           -view => [ -32, 0, 32, 48 ],

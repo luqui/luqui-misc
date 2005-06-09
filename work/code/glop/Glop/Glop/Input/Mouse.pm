@@ -24,7 +24,7 @@ sub handle {
         $self->{event_handlers}{MOTION}->($e);
     }
     else {
-        my $idx = 2**($e->button-1);
+        my $idx = $e->button;
         $self->{event_handlers}{$idx} && $self->{event_handlers}{$idx}->($e);
     }
     1;

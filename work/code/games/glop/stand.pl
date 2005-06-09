@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
-use lib glob '/home/fibonaci/devel/glop/blib/{lib,arch}';
+use lib glob '/home/fibonaci/devel/misc/luke/work/code/glop/blib/{lib,arch}';
 use Glop 
     '-fullscreen',
     -view => [ [ 30, 30, 50 ], [ 16, 12, 0 ], [ 0, 1, 0 ] ],

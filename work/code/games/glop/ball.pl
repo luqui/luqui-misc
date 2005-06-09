@@ -2,7 +2,7 @@
 
 use Carp;
 
-use lib glob '/home/fibonaci/devel/glop/blib/{lib,arch}';
+use lib glob '/home/fibonaci/devel/misc/luke/work/code/glop/blib/{lib,arch}';
 use Glop qw{ -fullscreen },
          -view => [ -32, -24, 32, 24 ];
 use Glop::AutoGL;

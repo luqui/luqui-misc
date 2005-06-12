@@ -133,12 +133,16 @@ void new_particle(float x, float y, float z, float vx, float vy, float vz, int c
     }
 }
 
+double drand() {
+    return double(rand() % RAND_MAX) / RAND_MAX;
+}
+
 double randrange(double lo, double hi) {
-    return drand48() * (hi - lo) + lo;
+    return drand() * (hi - lo) + lo;
 }
 
 int randsel(int a, int b) {
-    return lrand48() % 2 ? a : b;
+    return rand() % 2 ? a : b;
 }
 
 void clear_particles()

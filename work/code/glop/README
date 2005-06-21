@@ -1,0 +1,7 @@
+Read the README in ODE/, and then follow normal perl module installation 
+procedures:
+
+    % perl Makefile.PL
+    (see note about this stage in ODE/README)
+    % make
+    % make install

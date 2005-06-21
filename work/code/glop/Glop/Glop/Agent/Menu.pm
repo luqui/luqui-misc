@@ -23,7 +23,9 @@ sub new {
     
     my @menu = map {
         my ($text, $code, %inopt) = @$_;
-        my %fontopt;
+        my %fontopt = (
+            -size => 72,
+        );
         $outopt{$_} and $fontopt{$_} = $outopt{$_} for qw{-font -size};
         $inopt{$_}  and $fontopt{$_} = $inopt{$_}  for qw{-font -size};
         my $textobj = Glop::Draw::Text->new($text, %fontopt);

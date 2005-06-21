@@ -1,112 +1,84 @@
 #!/usr/bin/perl
 
-my %casts = (
-    'family guy'    => [ '01', 'http://bart.ess.tv:11411' ],
-    'south park'    => [ '02', 'http://bart.ess.tv:12521' ],
-    'aqua teen hunger force' => [ '03', 'http://bart.ess.tv:13631' ],
-    'futurama'      => [ '04', 'http://lisa.ess.tv:11411' ],
-    'that 70s show' => [ '05', 'http://lisa.ess.tv:12521' ],
-    'smallville'    => [ '06', 'http://lisa.ess.tv:13631' ],
-    'x-files'       => [ '07', 'http://lisa.ess.tv:14741' ],
-    'scrubs'        => [ '08', 'http://maggie.ess.tv:11411' ],
-    'duckman'       => [ '09', 'http://maggie.ess.tv:12521' ],
-    'simpsons'      => [ '10', 'http://maggie.ess.tv:13631' ],
-    'upright citizens brigade' => [ '11', 'http://marge.ess.tv:11411' ],
-    'invader zim'   => [ '12', 'http://marge.ess.tv:12521' ],
-    'angel'         => [ '13', 'http://marge.ess.tv:13631' ],
-    'red dwarf'     => [ '14', 'http://marge.ess.tv:14741' ],
-    'mystery science theater 3000' => [ '15', 'http://marge.ess.tv:15851' ],
-    'harvey birdman' => [ '16', 'http://marge.ess.tv:16961' ],
-    'curb your enthusiasm' => [ '17', 'http://marge.ess.tv:18081' ],
-    'venture bros' => [ '18', 'http://marge.ess.tv:19291' ],
-    'arrested development' => [ '19', 'http://moe.ess.tv:11411' ],
-    'whose line is it anyway' => [ '20', 'http://moe.ess.tv:12521' ],
-    'seinfeld'      => [ '21', 'http://moe.ess.tv:13631' ],
-    'ren and stimpy' => [ '22', 'http://barney.ess.tv:12521' ],
-    'pinky and the brain' => [ '23', 'http://barney.ess.tv:13631' ],
-    'chapelles show' => [ '24', 'http://barney.ess.tv:14741' ],
-    'star trek'      => [ '25', 'http://barney.ess.tv:15851' ],
-    'lost'           => [ '26', 'http://patty.ess.tv:11411' ],
-    'rockos modern life' => [ '27', 'http://apu.ess.tv:11411' ],
-    'home movies'    => [ '28', 'http://apu.ess.tv:12521' ],
-);
+use XML::Simple;
+use Getopt::Long;
 
-my $numcasts = '28';
-
-my %aliases = (
-    fg     => 'family guy',
-    sp     => 'south park',
-    athf   => 'aqua teen hunger force',
-    '70s'  => 'that 70s show',
-    ucb    => 'upright citizens brigade',
-    zim    => 'invader zim',
-    rd     => 'red dwarf',
-    mst3k  => 'mystery science theater 3000',
-    birdman => 'harvey birdman',
-    cye    => 'curb your enthusiasm',
-    venture => 'the venture bros',
-    arrested => 'arrested development',
-    whoseline => 'whose line is it anyway',
-    rns     => 'ren and stimpy',
-    brain   => 'pinky and the brain',
-    chapelle => 'chapelles show',
-    st      => 'star trek',
-    rml     => 'rockos modern life',
-    hm      => 'home movies',
-);
-
-sub getshow {
-    my ($pagetext, $num) = @_;
-    my ($text) = $pagetext =~ /ESS $num.*?<br>(?:currently playing: )?(.*?)<br>/ 
-        or die "Couldn't match pattern for ESS $num";
-    return $text;
+my $feed;
+{
+    open my $pipe, '-|', 'wget -o /dev/null -O - http://ess.tv/ess.rss';
+    my $text = do { local $/; <$pipe> };
+    close $pipe or die "wget died: $!\n";
+    $feed = XMLin($text) or die "Couldn't parse XML\n";
 }
 
-if ($ARGV[0] eq 'watch' || $ARGV[0] eq 'w') {
-    shift;
-    my $show = join ' ', @ARGV;
-    my $name = $aliases{$show} || $show;
-    die "Unknown show: $show\n" unless $casts{$name};
-    
-    exit if fork;
-    exec "mplayer -cache 512 '$casts{$name}[1]'";
-    die "Exec failed: $!";
-}
-elsif ($ARGV[0] eq 'schedule' || $ARGV[0] eq 's') {
-    shift;
 
-    open my $esspage, '-|', 'wget -o /dev/null -O - http://everyshowsucks.com/schedule.php'
-            or die "Couldn't fork wget: $!\n";
-    my $pagetext = do { undef $/; <$esspage> };
-    close $esspage or die "Couldn't read from wget: $!\n";
-
-    if (@ARGV) {
-        my $show = join ' ', @ARGV;
-        my $name = $aliases{$show} || $show;
-        die "Unknown show: $show\n" unless $casts{$name};
-
-        my $number = $casts{$name}[0];
-        print "ESS $number: " . getshow($pagetext, $number) . "\n";
+sub select_show {
+    my ($crit) = @_;
+    if ($crit =~ /\d+/) {
+        return $crit-1;
     }
     else {
-        for my $key (sort { $casts{$a}[0] <=> $casts{$b}[0] } keys %casts) {
-            my $nick = '';
-            for (keys %aliases) {
-                if ($aliases{$_} eq $key) { 
-                    $nick = $_;
-                    last;
-                }
+        my @matches;
+        for my $i (0..@{$feed->{channel}{item}}-1) {
+            if ($feed->{channel}{item}[$i]{description} =~ /$crit/i) {
+                push @matches, $i;
             }
-            my $number = $casts{$key}[0];
-            printf "%-20s | %s\n", ($nick||$key), getshow($pagetext, $number);
+        }
+        if (@matches == 0) {
+            print "No match found for '$crit'\n";
+            exit 1;
+        }
+        else {
+            return @matches;
         }
     }
 }
-else {
-    print <<USAGE;
-ess: Usage:
-    ess s[chedule] [station]
-    ess w[atch]     station
-USAGE
-    exit 2;
+
+sub show_desc {
+    my ($num) = @_;
+    print $feed->{channel}{item}[$num]{description}, "\n";
+}
+
+sub show_title {
+    my ($num) = @_;
+    printf "ESS %02d: %s\n", $num+1, $feed->{channel}{item}[$num]{title}, "\n";
+}
+
+sub usage {
+    print <<EOU;
+Usage: ess command [args]
+  Commands:
+  ess watch <criterion>      Watch the specified show
+  ess schedule [criterion]   Show what is playing on the given channel 
+                             or on all channels if not specified
+EOU
+    exit;
+}
+
+
+my $options = GetOptions();
+
+my $cmd = shift;
+if ($cmd eq 'watch' || $cmd eq 'w') {
+    my $show = shift or usage;
+    my @shows = select_show($show);
+    if (@shows > 1) {
+        print "Multiple shows found for criterion '$show'\n";
+        exit 1;
+    }
+    my $link = $feed->{channel}{item}[$shows[0]]{link};
+    $link =~ s/\/listen.pls$//;
+    exec "mplayer -cache 512 '$link'";
+    die "couldn't fork mplayer: $!\n";
+}
+elsif ($cmd eq 'schedule' || $cmd eq 's') {
+    if (my $show = shift) {
+        my @shows = select_show($show);
+        show_title($_) for @shows;
+    }
+    else {
+        for (0..@{$feed->{channel}{item}}-1) {
+            show_title($_);
+        }
+    }
 }

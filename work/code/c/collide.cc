@@ -47,13 +47,13 @@ const float STRONGMIN = -1;
 const float STRONGMAX = 0;
 const float VELRANGE = 20;
 const float STEP = 0.003;
-const int MAXSTICK = 4;
+const int MAXSTICK = 10;
 const int ROCKMAXSTICK = 2 * MAXSTICK - 2;
 const float DELAY = 1.0/100.0;
-const float DAMP_THRESHOLD = 50;
-const float DAMP_CONSTANT = 2;
+const float DAMP_THRESHOLD = 0;
+const float DAMP_CONSTANT = 1;
 
-const int A = 0, B = 1, C = 2, D = 3, E = 4, F = 5, G = 6, H = 7, R = 8;
+const int A = 0, B = 1, C = 2;
 #define LIT(x) (!((x) & 4))
 #define DRK(x) (!LIGHT(x))
 #define GAY(x) (!((x) & 2))
@@ -66,7 +66,6 @@ const int A = 0, B = 1, C = 2, D = 3, E = 4, F = 5, G = 6, H = 7, R = 8;
 // colors 0-8 (9 colors)
 struct Particle {
     dBodyID body;
-    dGeomID geom;
     int color;
 };
 
@@ -78,24 +77,15 @@ dJointGroupID contacts;
 Uint32 timest;
 int frames = 0;
 float zrot = 0;
+bool interact_q = true;
 
-int colorlist[9] = {
-    0, 0,
-    1, 1, 
-    2, 2,
-    3, 3,
-    -1
+int colorlist[3] = {
+    0, 0, 0
 };
 
 float colorcolor[][3] = {
     { 1, 0, 0 },
-    { 0, 1, 0 },
-    { 0.5, 0.5, 1 },
-    { 1, 1, 0 },
-    { 0.5, 0, 0 },
-    { 0, 0.5, 0 },
-    { 0.25, 0.25, 0.5 },
-    { 0.5, 0.5, 0 },
+    { 0, 0.5, 1 },
     { 1, 1, 1 }
 };
 
@@ -122,11 +112,8 @@ void new_particle(float x, float y, float z, float vx, float vy, float vz, int c
     dBodySetPosition(part->body, x, y, z);
     dBodySetLinearVel(part->body, vx, vy, vz);
 
-    part->geom = dCreateSphere(space, 0.2);
-    dGeomSetBody(part->geom, part->body);
     part->color = color;
     dBodySetData(part->body, part);
-    dGeomSetData(part->geom, part);
 
     if (colorlist[part->color] >= 0) {
         force_lists[colorlist[part->color]].push_back(particles.size()-1);
@@ -147,9 +134,8 @@ int randsel(int a, int b) {
 
 void clear_particles()
 {
-    force_lists = vector< vector<int> >(4);
+    force_lists = vector< vector<int> >(1);
     for (int i = 0; i < particles.size(); i++) {
-        dGeomDestroy(particles[i]->geom);
         dBodyDestroy(particles[i]->body);
         delete particles[i];
     }
@@ -172,6 +158,9 @@ void events()
                 else if (e.key.keysym.sym == SDLK_c) {
                     clear_particles();
                 }
+                else if (e.key.keysym.sym == SDLK_i) { 
+                    interact_q = !interact_q;
+                }
             }
         }
     }
@@ -179,7 +168,7 @@ void events()
     if (keys[SDLK_LEFT]) zrot += 90 * STEP;
     if (keys[SDLK_RIGHT]) zrot -= 90 * STEP;
 
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 3; i++) {
         if (SDL_GetModState() & KMOD_CTRL) {
             if (frames % 20 != 0) {
                 continue;
@@ -206,37 +195,6 @@ void events()
     }
 }
 
-// Return what a turns b into
-int basis_transform(int a, int b) 
-{
-    if (RCK(a) || RCK(b)) return b;
-    
-    switch (a) {
-    case A: return b == H ? randsel(F, G) : E;
-    case B: return b == G ? randsel(E, H) : F;
-    case C: return b == F ? randsel(E, H) : G;
-    case D: return b == E ? randsel(F, G) : H;
-    case E: return b == A ? randsel(B, C) : D;
-    case F: return b == B ? randsel(A, D) : C;
-    case G: return b == C ? randsel(A, D) : B;
-    case H: return b == D ? randsel(B, C) : A;
-    }
-    abort();
-}
-
-bool color_transform(int a, int b, int* ao, int* bo)
-{
-    if (LIT(a) == LIT(b) || RCK(a) || RCK(b)) {
-        *ao = a;
-        *bo = b;
-        return false;
-    }
-
-    *ao = basis_transform(b, a);
-    *bo = basis_transform(a, b);
-    return true;
-}
-
 bool can_stick(Particle* p1, Particle* p2)
 {
     int color1 = p1->color;
@@ -244,7 +202,7 @@ bool can_stick(Particle* p1, Particle* p2)
     if (dBodyGetNumJoints(p1->body) > (RCK(color1) ? ROCKMAXSTICK : MAXSTICK)
       ||dBodyGetNumJoints(p2->body) > (RCK(color2) ? ROCKMAXSTICK : MAXSTICK))
         return false;
-    if (RCK(color1) || RCK(color2)) return true;
+    if (RCK(color1) || RCK(color2)) return false;
     if (LIT(color1) ^ LIT(color2)) return false;
     if (GAY(color1) ^ GAY(color2)) return false;
     return GAY(color1) ^ POS(color1) ^ POS(color2);
@@ -287,7 +245,7 @@ void damp(Particle* p)
     const dReal* vel = dBodyGetLinearVel(p->body);
     dReal speed = sqrt(vel[0]*vel[0] + vel[1]*vel[1] + vel[2]*vel[2]);
     if (speed > DAMP_THRESHOLD) {
-        dReal fmag = -(speed - 50) / (DAMP_CONSTANT * speed);
+        dReal fmag = -(speed - DAMP_THRESHOLD) / (DAMP_CONSTANT * speed);
         dBodyAddForce(p->body, fmag * vel[0], fmag * vel[1], fmag * vel[2]);
     }
 }
@@ -297,6 +255,8 @@ void step()
     for (int i = 0; i < particles.size(); i++) {
         damp(particles[i]);
     }
+    
+    if (!interact_q) return;
 
     for (int list = 0; list < force_lists.size(); list++) {
         
@@ -310,45 +270,57 @@ void step()
 
                 if (i == j) continue;
 
-                // Particles in different alignments don't interact
-                if (LIT(particles[i]->color) ^ LIT(particles[j]->color)) continue;
-                // Particles in different sexualities don't interact
-                if (GAY(particles[i]->color) ^ GAY(particles[j]->color)) continue;
-
                 const dReal* jpos = dBodyGetPosition(particles[j]->body);
                 
                 dVector3 ov;  ov[0] = jpos[0] - ipos[0];
                               ov[1] = jpos[1] - ipos[1];
                               ov[2] = jpos[2] - ipos[2];
-                dReal vlen = sqrt(ov[0]*ov[0] + ov[1]*ov[1] + ov[2]*ov[2]);
-                dReal div = vlen * vlen * vlen / MAG;
-                dVector3 v;   v[0] = ov[0] / div;
-                              v[1] = ov[1] / div;
-                              v[2] = ov[2] / div;
+                dReal r = sqrt(ov[0]*ov[0] + ov[1]*ov[1] + ov[2]*ov[2]);
+                dReal scale = 0;
 
-                switch (particles[i]->color) {
-                case A:  // gay particles
+                static const dReal AA_MAG = 1 * MAG;
+                static const dReal AB_MAG = 0.2 * MAG;
+                static const dReal AB_PARAM = 2;
+                static const dReal AB_R = 10;
+                static const dReal AC_MAG = 1 * MAG;
+                static const dReal AC_R = 0.5;
+                static const dReal BB_MAG = AA_MAG;
+                
+                int icolor = particles[i]->color;
+                int jcolor = particles[j]->color;
+                if (icolor > jcolor) {
+                    int tmp = icolor;
+                    icolor = jcolor;
+                    jcolor = tmp;
+                }
+                
+                switch (icolor) {
+                case A: 
+                    if (jcolor == A) {
+                        scale = AA_MAG / (r*r);
+                    }
+                    else if (jcolor == B) {
+                        const dReal rs = 2 / (AB_PARAM * AB_R);
+                        scale = -AB_MAG * (AB_PARAM / (rs*rs*r*r) - 2 / (rs*rs*rs*r*r*r));
+                    }
+                    else if (jcolor == C) {
+                        scale = AC_MAG * (-cos(M_PI * r / AC_R) / (r*r)
+                                         - M_PI * sin(M_PI * r / AC_R) / (AC_R * r));
+                    }
+                    break;
                 case B:
-                case E:
-                case F:
-                    if (POS(particles[j]->color) == POS(particles[i]->color)) {
-                        dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
-                    }
-                    else {
-                        dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
+                    if (jcolor == B) {
+                        scale = BB_MAG / (r*r);
                     }
                     break;
-                case C:  // straight particles
-                case D:
-                case G:
-                case H:
-                    if (POS(particles[j]->color) == POS(particles[i]->color)) {
-                        dBodyAddForce(particles[j]->body, v[0], v[1], v[2]);
-                    }
-                    else {
-                        dBodyAddForce(particles[j]->body, -v[0], -v[1], -v[2]);
-                    }
-                    break;
+                }
+                
+                if (scale != 0) {
+                    ov[0] = scale * ov[0] / r;
+                    ov[1] = scale * ov[1] / r;
+                    ov[2] = scale * ov[2] / r;
+
+                    dBodyAddForce(particles[j]->body, ov[0], ov[1], ov[2]);
                 }
             }
         }
@@ -382,42 +354,6 @@ void draw()
     SDL_GL_SwapBuffers();
 }
 
-void collide_callback(void* data, dGeomID g1, dGeomID g2)
-{
-    Particle* p1;
-    Particle* p2;
-    
-    dContactGeom cts[1];
-    int numcts = dCollide(g1, g2, 1, cts, sizeof(dContactGeom));
-    if (numcts) {
-        if ((p1 = (Particle*)dGeomGetData(g1)) && (p2 = (Particle*)dGeomGetData(g2))) {
-            if (!color_transform(p1->color, p2->color, &p1->color, &p2->color)) {
-                if (dAreConnected(p1->body, p2->body)) {
-                    sanity_check(p1);
-                    sanity_check(p2);
-                }
-                else {
-                    if (!can_stick(p1, p2)) return;
-                    dJointID joint = dJointCreateFixed(world, NULL);
-                    dJointAttach(joint, p1->body, p2->body);
-                    dJointSetFixed(joint);
-                }
-            }
-        }
-        else {
-            for (int i = 0; i < numcts; i++) {
-                dContact contact;
-                contact.surface.mode = dContactBounce;
-                contact.surface.mu = 0;
-                contact.surface.bounce = 0.75;
-                contact.geom = cts[0];
-                dJointID joint = dJointCreateContact(world, contacts, &contact);
-                dJointAttach(joint, dGeomGetBody(g1), dGeomGetBody(g2));
-            }
-        }
-    }
-}
-
 int main()
 {
     init_sdl();
@@ -433,15 +369,15 @@ int main()
     dVector3 extents; extents[0] = SCRRIGHT - SCRLEFT;
                       extents[1] = SCRTOP - SCRBOT;
                       extents[2] = 2;
-    //space = dHashSpaceCreate(NULL);
-    space = dQuadTreeSpaceCreate(NULL, center, extents, 5);
 
+    // /* BOUNDARY
     dCreatePlane(space, 1, 0, 0, SCRLEFT);
     dCreatePlane(space, -1, 0, 0, -SCRRIGHT);
     dCreatePlane(space, 0, 1, 0, SCRBOT);
     dCreatePlane(space, 0, -1, 0, -SCRTOP);
     dCreatePlane(space, 0, 0, 1, SCRFRONT);
     dCreatePlane(space, 0, 0, -1, -SCRBACK);
+    // */
     
     clear_particles();
     
@@ -455,7 +391,6 @@ int main()
         events();
         step();
 
-        dSpaceCollide(space, NULL, &collide_callback);
         dWorldQuickStep(world, STEP);
         dJointGroupEmpty(contacts);
     }

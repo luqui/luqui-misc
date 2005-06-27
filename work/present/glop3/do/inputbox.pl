@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use lib glob '/home/fibonaci/devel/misc/luke/work/code/glop/blib/{lib,arch}';
+use site;
 use Glop qw{-fullscreen},
          -view => [ 0, -3, 8, 3 ];
 

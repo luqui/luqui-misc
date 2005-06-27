@@ -2,7 +2,7 @@
 
 for (@ARGV) {
     if ($_ eq '--libs') {
-        print "-framework SDL ";
+        print "-framework SDL -framework Cocoa -framework OpenGL ";
     }
     elsif ($_ eq '--cflags') { }
     elsif ($_ eq '--version') {

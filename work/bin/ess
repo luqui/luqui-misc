@@ -4,23 +4,56 @@ use XML::Simple;
 use Getopt::Long;
 
 my $feed;
-{
+
+my $options = GetOptions();
+
+my $cmd = shift;
+if ($cmd eq 'watch' || $cmd eq 'w') {
+    get_feed();
+    my $show = shift or usage;
+    my @shows = select_show($show);
+    if (@shows > 1) {
+        print "Multiple shows found for criterion '$show'\n";
+        exit 1;
+    }
+    my $link = $feed->{channel}{item}[$shows[0]]{link};
+    $link =~ s/\/listen.pls$//;
+    exec "mplayer -cache 512 '$link'";
+    die "couldn't fork mplayer: $!\n";
+}
+elsif ($cmd eq 'schedule' || $cmd eq 's') {
+    get_feed();
+    if (my $show = shift) {
+        my @shows = select_show($show);
+        show_title($_) for @shows;
+    }
+    else {
+        for (0..@{$feed->{channel}{item}}-1) {
+            show_title($_);
+        }
+    }
+}
+else {
+    usage();
+}
+
+sub get_feed {
+    return if $feed;
     open my $pipe, '-|', 'wget -o /dev/null -O - http://ess.tv/ess.rss';
     my $text = do { local $/; <$pipe> };
     close $pipe or die "wget died: $!\n";
     $feed = XMLin($text) or die "Couldn't parse XML\n";
 }
 
-
 sub select_show {
     my ($crit) = @_;
-    if ($crit =~ /\d+/) {
+    if ($crit =~ /^\d+$/) {
         return $crit-1;
     }
     else {
         my @matches;
         for my $i (0..@{$feed->{channel}{item}}-1) {
-            if ($feed->{channel}{item}[$i]{description} =~ /$crit/i) {
+            if ($feed->{channel}{item}[$i]{title} =~ /$crit/i) {
                 push @matches, $i;
             }
         }
@@ -32,11 +65,6 @@ sub select_show {
             return @matches;
         }
     }
-}
-
-sub show_desc {
-    my ($num) = @_;
-    print $feed->{channel}{item}[$num]{description}, "\n";
 }
 
 sub show_title {
@@ -53,32 +81,4 @@ Usage: ess command [args]
                              or on all channels if not specified
 EOU
     exit;
-}
-
-
-my $options = GetOptions();
-
-my $cmd = shift;
-if ($cmd eq 'watch' || $cmd eq 'w') {
-    my $show = shift or usage;
-    my @shows = select_show($show);
-    if (@shows > 1) {
-        print "Multiple shows found for criterion '$show'\n";
-        exit 1;
-    }
-    my $link = $feed->{channel}{item}[$shows[0]]{link};
-    $link =~ s/\/listen.pls$//;
-    exec "mplayer -cache 512 '$link'";
-    die "couldn't fork mplayer: $!\n";
-}
-elsif ($cmd eq 'schedule' || $cmd eq 's') {
-    if (my $show = shift) {
-        my @shows = select_show($show);
-        show_title($_) for @shows;
-    }
-    else {
-        for (0..@{$feed->{channel}{item}}-1) {
-            show_title($_);
-        }
-    }
 }

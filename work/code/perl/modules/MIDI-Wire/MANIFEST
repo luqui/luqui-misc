@@ -1,0 +1,6 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/MIDI-Wire.t
+lib/MIDI/Wire.pm

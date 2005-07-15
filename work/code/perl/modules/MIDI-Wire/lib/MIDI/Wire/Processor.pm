@@ -1,6 +1,5 @@
 package MIDI::Wire::Processor;
 
-use 5.006001;
 use strict;
 use warnings;
 
@@ -16,6 +15,8 @@ our %EVENT = (
     0xe0 => { name => 'raw_pitch_wheel',        args => 2 },
     0xf0 => { name => 'raw_fnib',               args => 0 },
 );
+
+sub init { }
 
 sub next {
     my ($self) = @_;

@@ -1,6 +1,6 @@
 package MIDI::Wire;
 
-use 5.006001;
-use strict;
-use warnings;
+our $VERSION = '0.01';
 
+use MIDI::Wire::Processor;
+use MIDI::Wire::DeviceReader;

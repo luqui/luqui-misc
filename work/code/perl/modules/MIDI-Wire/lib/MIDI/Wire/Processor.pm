@@ -6,8 +6,8 @@ use warnings;
 use Carp;
 
 our %EVENT = (
-    0x80 => { name => 'raw_note_on',            args => 2 },
-    0x90 => { name => 'raw_note_off',           args => 2 },
+    0x80 => { name => 'raw_note_off',           args => 2 },
+    0x90 => { name => 'raw_note_on',            args => 2 },
     0xa0 => { name => 'raw_key_aftertouch',     args => 2 },
     0xb0 => { name => 'raw_controller',         args => 2 },
     0xc0 => { name => 'raw_patch',              args => 1 },
@@ -125,7 +125,7 @@ our %FNIB = (
 
 sub raw_fnib {
     my ($self, $cmd) = @_;
-    my $meth = $FNIB{$cmd}{meth};
+    my $meth = $FNIB{$cmd}{name};
     my $args = $FNIB{$cmd}{args};
     my @args = map { $self->read_byte } 1..$args;
     $self->$meth($cmd, @args);
@@ -143,3 +143,5 @@ sub raw_continue       { }
 sub raw_stop           { }
 sub raw_active_sensing { }
 sub raw_system_event   { }
+
+1;

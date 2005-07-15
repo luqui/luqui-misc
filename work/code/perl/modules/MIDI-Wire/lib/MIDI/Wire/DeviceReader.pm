@@ -15,7 +15,7 @@ sub init {
         $fh = $opts{input};
     }
     else {
-        open $fh, $opts{input}, O_RDONLY
+        sysopen $fh, $opts{input}, O_RDONLY
             or croak "Couldn't open $opts{input} for reading: $!";
     }
     $self->{__PACKAGE__ . "/fh"} = $fh;
@@ -31,3 +31,5 @@ sub read_byte {
         return;
     }
 }
+
+1;

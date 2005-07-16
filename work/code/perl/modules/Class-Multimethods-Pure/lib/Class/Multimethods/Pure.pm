@@ -5,6 +5,72 @@ use strict;
 use warnings;
 no warnings 'uninitialized';
 
+use Carp;
+
+our %MULTI;
+our %MULTIPARAM;
+
+sub _internal_multi {
+    my $name = shift or return;
+    
+    if (@_) {
+        my @params;
+        until (!@_ || ref $_[0] eq 'CODE') {
+            if ($_[0] =~ /^-/) {
+                my ($k, $v) = splice @_, 0, 2;
+                $k =~ s/^-//;
+                $MULTIPARAM{$k} = $v;
+            }
+            else {
+                push @params, shift;
+            }
+        }
+        
+        return () unless @_;
+        
+        my $code = shift;
+
+        my $multi = $MULTI{$name} ||= 
+                Class::Multimethods::Pure::Method->new(
+                    name => $name,
+                    Dispatcher => $MULTIPARAM{$name}{Dispatcher},
+                    Variant => $MULTIPARAM{$name}{Variant},
+                );
+        
+        $multi->add_variant($code, \@params);
+    }
+
+    my $pkg = caller 2;
+    {
+        no strict 'refs';
+        no warnings 'redefine';
+        *{"$pkg\::$name"} = sub {
+            my $code = $MULTI{$name}->find_variant([@_])->code;
+            goto &$code;
+        };
+    }
+    
+    @_;
+}
+
+sub multi {
+    if (_internal_multi(@_)) {
+        croak "Usage: blah blah blah";
+    }
+}
+
+sub import {
+    my $class = shift;
+    if (@_) {
+        while (@_ = _internal_multi(@_)) { }
+    }
+    else {
+        my $pkg = caller;
+        no strict 'refs';
+        *{"$pkg\::multi"} = \&multi;
+    }
+}
+
 package Class::Multimethods::Pure::Dispatcher;
 
 use Scalar::Util qw<blessed looks_like_number>;

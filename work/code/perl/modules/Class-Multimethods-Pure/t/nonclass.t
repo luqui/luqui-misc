@@ -1,9 +1,9 @@
-use Test::More tests => 10;
+use Test::More tests => 9;
 use Data::Dumper;
 
 BEGIN { use_ok('Class::Multimethods::Pure') }
 
-ok(my $method = Class::Multimethods::Pure::Method->new(name => 'foo'), 'New method');
+#ok(my $method = Class::Multimethods::Pure::Method->new(name => 'foo'), 'New method');
 
 my $sref = \my $sderef;
 my @vars = (
@@ -19,11 +19,12 @@ my @vars = (
 
 for (@vars) {
     my $cur = $_;
-    $method->add_variant(sub { $cur->[0] }, [ $cur->[1] ]);
+    multi foo => $cur->[1] 
+              => sub { $cur->[0] };
 }
 
 for (@vars) {
-    is($method->find_variant([$_->[2]])->code->($_->[2]), $_->[0], "$_->[1] works");
+    is(foo($_->[2]), $_->[0], "multi ($_->[1])");
 }
 
 # vim: ft=perl :

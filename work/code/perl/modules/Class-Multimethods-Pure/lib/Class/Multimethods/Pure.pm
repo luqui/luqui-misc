@@ -3,7 +3,7 @@ package Class::Multimethods::Pure;
 use 5.006001;
 use strict;
 use warnings;
-no warnings 'undefined';
+no warnings 'uninitialized';
 
 package Class::Multimethods::Pure::Dispatcher;
 
@@ -73,8 +73,9 @@ use Carp;
 sub new {
     my ($class, %o) = @_;
     bless {
-        name => $o{name} || croak "Multi needs a 'name'",
-        params => $o{params} || croak "Multi needs a list of 'params' types",
+        name => $o{name} || croak("Multi needs a 'name'"),
+        params => $o{params} || croak("Multi needs a list of 'params' types"),
+        code => $o{code} || croak("Multi needs a 'code'ref"),
         Dispatcher => $o{Dispatcher} || 'Class::Multimethods::Pure::Dispatcher',
     } => ref $class || $class;
 }
@@ -87,6 +88,11 @@ sub name {
 sub params {
     my ($self) = @_;
     @{$self->{params}};
+}
+
+sub code {
+    my ($self) = @_;
+    $self->{code};
 }
 
 sub Dispatcher {
@@ -103,8 +109,8 @@ sub less {
     croak "Cannot compare two variants with different dispatchers"
         unless $dispatcher eq $b->Dispatcher;
         
-    my @args = $a->args;
-    my @brgs = $b->args;
+    my @args = $a->params;
+    my @brgs = $b->params;
     croak "Multis must have the same number of invocants"
         unless @args == @brgs;
     
@@ -144,7 +150,7 @@ use Carp;
 sub new {
     my ($class, %o) = @_;
     bless { 
-        name => $o{name} || croak "Multi needs a name",
+        name => $o{name} || croak("Multi needs a name"),
         variants => [], 
         Dispatcher => $o{Dispatcher} || 'Class::Multimethods::Pure::Dispatcher',
         Variant => $o{Variant} || 'Class::Multimethods::Pure::Variant',
@@ -153,10 +159,11 @@ sub new {
 }
 
 sub add_variant { 
-    my ($self, $code, $args, %o) = @_;
+    my ($self, $code, $params) = @_;
     push @{$self->{variants}}, 
         $self->{Variant}->new(name => $self->{name}, 
-                              args => $args,
+                              params => $params,
+                              code => $code,
                               Dispatcher => $self->{Dispatcher});
     undef $self->{graph};
 }
@@ -215,7 +222,7 @@ sub find_variant {
     my ($self, $args) = @_;
 
     my $graph = $self->compile;
-    my @vars = _find_variant_find($graph, $args);
+    my @vars = $self->_find_variant_find($graph, $args);
     if (@vars == 1) {
         return $vars[0];
     }
@@ -227,3 +234,5 @@ sub find_variant {
             join '', map { "    " . $_->string . "\n" } @vars;
     }
 }
+
+1;

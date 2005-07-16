@@ -23,7 +23,7 @@ for (@vars) {
 }
 
 for (@vars) {
-    is($method->find_variant([$_->[2]])->code->($_->[2]), $_->[0], 'Matches');
+    is($method->find_variant([$_->[2]])->code->($_->[2]), $_->[0], "$_->[1] works");
 }
 
 # vim: ft=perl :

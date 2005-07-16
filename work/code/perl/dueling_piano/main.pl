@@ -33,6 +33,8 @@ sub new {
         lscore => 0,
         rscore => 0,
         pot    => 0,
+        lplayed => 0,
+        rplayed => 0,
     } => ref $class || $class;
     for (@ISA) {
         my $meth = "$_\::init";
@@ -101,6 +103,14 @@ our %SCORE = (
 
 sub score {
     my ($self, $left, $right) = @_;
+
+    $self->{lplayed} = 1 if @$left;
+    $self->{rplayed} = 1 if @$right;
+    
+    unless ($self->{lplayed} && $self->{rplayed}) {
+        print ".\n";
+        return;
+    }
 
     my @lint = $self->get_intervals(@$left);
     my @rint = $self->get_intervals(@$right);

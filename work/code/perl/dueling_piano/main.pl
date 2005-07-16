@@ -33,8 +33,8 @@ sub new {
         lscore => 0,
         rscore => 0,
         pot    => 0,
-        lplayed => 0,
-        rplayed => 0,
+        leftnote => $opts{leftnote},
+        rightnote => $opts{rightnote},
     } => ref $class || $class;
     for (@ISA) {
         my $meth = "$_\::init";
@@ -104,20 +104,12 @@ our %SCORE = (
 sub score {
     my ($self, $left, $right) = @_;
 
-    $self->{lplayed} = 1 if @$left;
-    $self->{rplayed} = 1 if @$right;
-    
-    unless ($self->{lplayed} && $self->{rplayed}) {
-        print ".\n";
-        return;
-    }
-
     my @lint = $self->get_intervals(@$left);
     my @rint = $self->get_intervals(@$right);
     my @all  = $self->get_intervals(@$left, @$right);
 
-    my $lplose = 0;
-    my $rplose = 0;
+    my $lplose = !@$left;
+    my $rplose = !@$right;
     
     for (@lint) {
         if ($SCORE{$_} eq 'lose') {
@@ -163,6 +155,22 @@ sub score {
             $self->{pot} += $SCORE{$_};
         }
         print "\n";
+        
+        print $left->[0] % 12 . " / " . $right->[-1] % 12 . " ($self->{leftnote} / $self->{rightnote})\n";
+        if ($left->[0]   % 12 == $self->{leftnote}
+         && $right->[-1] % 12 == $self->{leftnote}) {
+            print "\e[1;32mLEFT WINS\e[0m\n";
+            $self->{lscore} += $self->{pot};
+            $self->{pot} = 0;
+            $self->finish;
+        }
+        elsif ($left->[0]   % 12 == $self->{rightnote}
+           &&  $right->[-1] % 12 == $self->{rightnote}) {
+            print "\e[1;32mRIGHT WINS\e[0m\n";
+            $self->{rscore} += $self->{pot};
+            $self->{pot} = 0;
+            $self->finish;
+        }
     }
 
     $self->print_score;
@@ -173,7 +181,51 @@ sub print_score {
     print "\e[1;33m$self->{pot}\e[0m        $self->{lscore} - $self->{rscore}\n";
 }
 
+sub finish {
+    my ($self) = @_;
+    $self->print_score;
+    my $winner;
+    if ($self->{lscore} > $self->{rscore}) {
+        $winner = "LEFT";
+    }
+    elsif ($self->{lscore} < $self->{rscore}) {
+        $winner = "RIGHT";
+    }
+    else {
+        print "\e[1;32mIT'S ACTUALLY A TIE\e[0m\n";
+        exit;
+    }
+
+    print "\e[1;32m$winner ACTUALLY WINS\e[0m\n";
+    exit;
+}
+
 package main;
 
-my $midi = Receiver->new(input => '/dev/midi');
+our %PITCH = qw<a 9 b 11 c 0 d 2 e 4 f 5 g 7>;
+our %ACC   = ('' => 0, '#' => 1, 'b' => -1);
+
+sub askmod {
+    my ($player) = @_;
+    print "$player, enter your secret note: ";
+    chomp(my $note = lc <STDIN>);
+    if ($note =~ /([a-g])([#b]?)/) {
+        print "\e[2J\n";
+        ($PITCH{$1} + $ACC{$2}) % 12;
+    }
+    else {
+        goto &askmod;
+    }
+}
+
+my $leftpitch = askmod('Left player');
+my $rightpitch = askmod('Right player');
+
+print "Press enter on the metronome beat.\n";
+<STDIN>;
+
+my $midi = Receiver->new(input => '/dev/midi',
+                         leftnote => $leftpitch,
+                         rightnote => $rightpitch);
+                    
 while (1) { $midi->next }

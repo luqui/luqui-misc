@@ -221,11 +221,20 @@ sub new {
         Dispatcher => $o{Dispatcher} || 'Class::Multimethods::Pure::Dispatcher',
         Variant => $o{Variant} || 'Class::Multimethods::Pure::Variant',
         graph => undef,
+        params => undef,
     } => ref $class || $class;
 }
 
 sub add_variant { 
     my ($self, $code, $params) = @_;
+
+    if (defined $self->{params}) {
+        croak "Disagreeing number of parameters" if $self->{params} != @$params;
+    }
+    else {
+        $self->{params} = @$params;
+    }
+
     push @{$self->{variants}}, 
         $self->{Variant}->new(name => $self->{name}, 
                               params => $params,

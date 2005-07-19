@@ -95,6 +95,13 @@ sub subset {
     $SUBSET->call($self, $other);
 }
 
+my $EQUAL = Class::Multimethods::Pure::Method->new;
+
+sub equal {
+    my ($self, $other) = @_;
+    $EQUAL->call($self, $other);
+}
+
 sub matches;
 sub string;
 
@@ -110,7 +117,7 @@ sub string;
     $SUBSET->add_variant( 
         [ $pkg->('Type::Package'), $pkg->('Type::Package') ] => sub {
              my ($a, $b) = @_;
-             $a->name eq $b->name ? (1, 0) : ($a->name->isa($b->name), 1);
+             $a->name->isa($b->name);
      });
     
     $SUBSET->add_variant(
@@ -120,27 +127,68 @@ sub string;
     });
     
     $SUBSET->add_variant(
-            [ $pkg->('Type::Junction'), $pkg->('Type') ] => sub {
-                 my ($a, $b) = @_;
-                 $a->logic(map { $_->subset($b) } $a->values);
+        [ $pkg->('Type::Junction'), $pkg->('Type') ] => sub {
+             my ($a, $b) = @_;
+             $a->logic(map { $_->subset($b) } $a->values);
     });
 
     $SUBSET->add_variant(
-            [ $pkg->('Type'), $pkg->('Type::Junction') ] => sub {
-                 my ($a, $b) = @_;
-                 $b->logic(map { $a->subset($_) } $b->values);
+        [ $pkg->('Type'), $pkg->('Type::Junction') ] => sub {
+             my ($a, $b) = @_;
+             $b->logic(map { $a->subset($_) } $b->values);
     });
 
     # :-( disambiguator.  Turns out leftmost (or rightmost) would be just fine here.
     $SUBSET->add_variant(
-            [ $pkg->('Type::Junction'), $pkg->('Type::Junction') ] => sub {
-                 my ($a, $b) = @_;
-                 # just like (Junction, Type)
-                 $a->logic(map { $_->subset($b) } $a->values);
+        [ $pkg->('Type::Junction'), $pkg->('Type::Junction') ] => sub {
+             my ($a, $b) = @_;
+             # just like (Junction, Type)
+             $a->logic(map { $_->subset($b) } $a->values);
      });
 
-     $SUBSET->compile;
+    #############
+     
+    $EQUAL->add_variant(
+        [ $pkg->('Type'), $pkg->('Type') ] => sub {
+            0;
+    });
+
+    $EQUAL->add_variant(
+        [ $pkg->('Type::Package'), $pkg->('Type::Package') ] => sub {
+            my ($a, $b) = @_;
+            $a->name eq $b->name;
+    });
+
+    $EQUAL->add_variant(
+        [ $pkg->('Type::Unblessed'), $pkg->('Type::Unblessed') ] => sub {
+            my ($a, $b) = @_;
+            $a->name eq $b->name;
+    });
+
+    $EQUAL->add_variant(
+        [ $pkg->('Type::Junction'), $pkg->('Type') ] => sub {
+            my ($a, $b) = @_;
+            $a->logic(map { $_->equal($b) } $a->values);
+    });
+
+    $EQUAL->add_variant(
+        [ $pkg->('Type'), $pkg->('Type::Junction') ] => sub {
+            my ($a, $b) = @_;
+            $b->logic(map { $a->equal($_) } $b->values);
+    });
+
+    # disambiguator.  See above.
+    $EQUAL->add_variant(
+        [ $pkg->('Type::Junction'), $pkg->('Type::Junction') ] => sub {
+            my ($a, $b) = @_;
+            # same as (Junction, Type)
+            $a->logic(map { $_->equal($b) } $a->values);
+    });
+
+    use Data::Dumper;
+    print Dumper($SUBSET->compile);
 }
+
 
 package Class::Multimethods::Pure::Type::Package;
 
@@ -161,10 +209,22 @@ sub subset {
     my ($self, $other) = @_;
     
     if (ref $self eq __PACKAGE__ && ref $other eq __PACKAGE__) {
-        $self->string->isa($other->string);
+        $self->name->isa($other->name);
     }
     else {
         $self->SUPER::subset($other);
+    }
+}
+
+# Again, bootstrapping.
+sub equal {
+    my ($self, $other) = @_;
+
+    if (ref $self eq __PACKAGE__ && ref $other eq __PACKAGE__) {
+        $self->name eq $other->name;
+    }
+    else {
+        $self->SUPER::equal($other);
     }
 }
 
@@ -340,9 +400,11 @@ sub less {
     
     my $proper = 0;
     for my $i (0..$#args) {
-        my ($cmp, $isproper) = $args[$i]->subset($brgs[$i]);
+        my $cmp = $args[$i]->subset($brgs[$i]);
         return 0 unless $cmp;
-        $proper = 1 if $isproper;
+        if ($cmp && !$proper) {
+            $proper = !$args[$i]->equal($brgs[$i]);
+        }
     }
 
     return $proper;
@@ -363,8 +425,7 @@ sub matches {
 
 sub string {
     my ($self) = @_;
-    $self->name . "(" . join(', ', 
-        map { $_->string } $self->params) . ")";
+    "(" . join(', ', map { $_->string } $self->params) . ")";
 }
 
 package Class::Multimethods::Pure::Method;

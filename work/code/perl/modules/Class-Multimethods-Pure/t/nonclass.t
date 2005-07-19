@@ -1,4 +1,4 @@
-use Test::More tests => 9;
+use Test::More tests => 7;
 use Data::Dumper;
 
 BEGIN { use_ok('Class::Multimethods::Pure') }
@@ -7,8 +7,8 @@ BEGIN { use_ok('Class::Multimethods::Pure') }
 
 my $sref = \my $sderef;
 my @vars = (
-    [ 'A', '$', "Hello" ],
-    [ 'B', '#', "345" ],
+    #[ 'A', '$', "Hello" ],
+    #[ 'B', '#', "345" ],
     [ 'C', 'ARRAY', [1,2,3] ],
     [ 'D', 'HASH', { a => 'b' } ],
     [ 'E', 'SCALAR', $sref ],

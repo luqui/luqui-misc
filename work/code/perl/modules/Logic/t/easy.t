@@ -49,19 +49,13 @@ eval {
 } || ok(0, 'bind threw exception when should have returned false');
 
 eval {
-    print "A\n";
     var my $X;
-    print "B\n";
     my $count = 0;
-    print "C\n";
     Logic->for($X, 1..10)->bind($X, sub {
-    print "D\n";
         $count++;
         fail unless $X == 6;
     });
-    print "E\n";
     is($count, 6, 'bind with closure');
-    print "F\n";
     1;
 } || ok(0, "for predicate failed when it shouldn't have");
     

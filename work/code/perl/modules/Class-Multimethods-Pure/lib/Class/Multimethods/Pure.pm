@@ -47,7 +47,7 @@ sub _internal_multi {
         $multi->add_variant(\@params, $code);
     }
 
-    my $pkg = caller 2;
+    my $pkg = caller 1;
     {
         no strict 'refs';
         no warnings 'redefine';
@@ -93,11 +93,14 @@ sub import {
             *{"$pkg\::$export"} = \&{__PACKAGE__ . "::$export"};
         }
     }
-    else {
+    elsif (!defined $cmd) {
         for my $export (@exports) {
             no strict 'refs';
             *{"$pkg\::$export"} = \&{__PACKAGE__ . "::$export"};
         }
+    }
+    else {
+        croak "Unknown command: $cmd";
     }
 }
 

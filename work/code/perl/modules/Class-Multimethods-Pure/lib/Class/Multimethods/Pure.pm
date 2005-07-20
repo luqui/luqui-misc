@@ -164,14 +164,29 @@ sub string;
     });
 
     $SUBSET->add_variant(
-        [ $pkg->('Type::Any'), $pkg->('Type') ] => sub { 0 });
+        [ $pkg->('Type::Any'), $pkg->('Type::Normal') ] => sub { 0 });
 
     $SUBSET->add_variant(
-        [ $pkg->('Type'), $pkg->('Type::Any') ] => sub { 1 });
+        [ $pkg->('Type::Normal'), $pkg->('Type::Any') ] => sub { 1 });
 
     $SUBSET->add_variant(
         [ $pkg->('Type::Any'), $pkg->('Type::Any') ] => sub { 1 });
 
+    $SUBSET->add_variant(
+        [ $pkg->('Type::Subtype'), $pkg->('Type::Normal') ] => sub {
+            my ($a, $b) = @_;
+            $a->base->subset($b);
+        });
+
+    $SUBSET->add_variant(
+        [ $pkg->('Type::Normal'), $pkg->('Type::Subtype') ] => sub { 0 });
+
+    $SUBSET->add_variant(
+        [ $pkg->('Type::Subtype'), $pkg->('Type::Subtype') ] => sub {
+            my ($a, $b) = @_;
+            $a == $b || $a->base->subtype($b);
+        });
+    
     $SUBSET->add_variant(
         [ $pkg->('Type::Junction'), $pkg->('Type') ] => sub {
              my ($a, $b) = @_;
@@ -184,7 +199,6 @@ sub string;
              $b->logic(map { $a->subset($_) } $b->values);
     });
 
-    # :-( disambiguator.  Turns out leftmost (or rightmost) would be just fine here.
     $SUBSET->add_variant(
         [ $pkg->('Type::Junction'), $pkg->('Type::Junction') ] => sub {
              my ($a, $b) = @_;
@@ -215,6 +229,12 @@ sub string;
         [ $pkg->('Type::Any'), $pkg->('Type::Any') ] => sub { 1 });
 
     $EQUAL->add_variant(
+        [ $pkg->('Type::Subtype'), $pkg->('Type::Subtype') ] => sub {
+            my ($a, $b) = @_;
+            $a->base == $b->base && $a->condition == $b->condition;
+    });
+
+    $EQUAL->add_variant(
         [ $pkg->('Type::Junction'), $pkg->('Type') ] => sub {
             my ($a, $b) = @_;
             $a->logic(map { $_->equal($b) } $a->values);
@@ -226,7 +246,6 @@ sub string;
             $b->logic(map { $a->equal($_) } $b->values);
     });
 
-    # disambiguator.  See above.
     $EQUAL->add_variant(
         [ $pkg->('Type::Junction'), $pkg->('Type::Junction') ] => sub {
             my ($a, $b) = @_;
@@ -289,10 +308,16 @@ sub string {
     $self->name;
 }
 
+package Class::Multimethods::Pure::Type::Normal;
+
+# Non-junctive thingies
+
+use base 'Class::Multimethods::Pure::Type';
+
 package Class::Multimethods::Pure::Type::Unblessed;
 
 # SCALAR, ARRAY, etc.
-use base 'Class::Multimethods::Pure::Type';
+use base 'Class::Multimethods::Pure::Type::Normal';
 use Carp;
 
 our %SPECIAL = (
@@ -338,7 +363,7 @@ package Class::Multimethods::Pure::Type::Any;
 
 # Anything whatever
 
-use base 'Class::Multimethods::Pure::Type';
+use base 'Class::Multimethods::Pure::Type::Normal';
 
 sub new {
     my ($class) = @_;
@@ -354,7 +379,7 @@ package Class::Multimethods::Pure::Type::Subtype;
 
 # A restricted type
 
-use base 'Class::Multimethods::Pure::Type';
+use base 'Class::Multimethods::Pure::Type::Normal';
 
 sub new {
     my ($class, $base, $condition) = @_;

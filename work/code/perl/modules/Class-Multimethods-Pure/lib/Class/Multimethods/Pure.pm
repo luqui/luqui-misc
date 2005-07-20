@@ -171,7 +171,7 @@ sub string;
 
     $SUBSET->add_variant(
         [ $pkg->('Type::Any'), $pkg->('Type::Any') ] => sub { 1 });
-    
+
     $SUBSET->add_variant(
         [ $pkg->('Type::Junction'), $pkg->('Type') ] => sub {
              my ($a, $b) = @_;
@@ -348,6 +348,35 @@ sub new {
 sub matches {
     my ($self, $obj) = @_;
     1;
+}
+
+package Class::Multimethods::Pure::Type::Subtype;
+
+# A restricted type
+
+use base 'Class::Multimethods::Pure::Type';
+
+sub new {
+    my ($class, $base, $condition) = @_;
+    bless {
+        base => $base,
+        condition => $condition,
+    } => ref $class || $class;
+}
+
+sub base {
+    my ($self) = @_;
+    $self->{base};
+}
+
+sub condition {
+    my ($self) = @_;
+    $self->{condition};
+}
+
+sub matches {
+    my ($self, $obj) = @_;
+    $self->base->matches($obj) && $self->condition->($obj);
 }
 
 package Class::Multimethods::Pure::Type::Junction;

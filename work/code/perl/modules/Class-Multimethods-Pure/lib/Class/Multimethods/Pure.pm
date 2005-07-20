@@ -185,10 +185,11 @@ sub string;
     $SUBSET->add_variant(
         [ $pkg->('Type::Subtypable'), $pkg->('Type::Subtype') ] => sub { 0 });
 
+    our $indent = 0;
     $SUBSET->add_variant(
         [ $pkg->('Type::Subtype'), $pkg->('Type::Subtype') ] => sub {
             my ($a, $b) = @_;
-            $a == $b || $a->base->subset($b);
+            $a->equal($b) || $a->base->subset($b);
         });
     
     $SUBSET->add_variant(
@@ -382,6 +383,11 @@ sub matches {
     1;
 }
 
+sub string {
+    my ($self) = @_;
+    "Any";
+}
+
 package Class::Multimethods::Pure::Type::Subtype;
 
 # A restricted type
@@ -409,6 +415,11 @@ sub condition {
 sub matches {
     my ($self, $obj) = @_;
     $self->base->matches($obj) && $self->condition->($obj);
+}
+
+sub string {
+    my ($self) = @_;
+    "where(" . $self->base->string . ", {@{[$self->condition]}})";
 }
 
 package Class::Multimethods::Pure::Type::Junction;

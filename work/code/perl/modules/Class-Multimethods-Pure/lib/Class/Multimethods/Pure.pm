@@ -184,9 +184,6 @@ sub string;
             # same as (Junction, Type)
             $a->logic(map { $_->equal($b) } $a->values);
     });
-
-    use Data::Dumper;
-    print Dumper($SUBSET->compile);
 }
 
 
@@ -458,44 +455,67 @@ sub add_variant {
     undef $self->{graph};
 }
 
-sub _compile_make_node {
-    my ($self, $variant, $cache, $fathered) = @_;
+sub _compile_find_longest_path {
+    my ($self, $src, $dest, $graph) = @_;
 
-    return $cache->{$variant} if $cache->{$variant};
+    return 0 if $src == $dest;
     
-    my @children;
-    for (@{$self->{variants}}) {
-        if ($variant->less($_)) {
-            my $child = $self->_compile_make_node($_, $cache, $fathered);
-            push @children, $child;
-            $fathered->{$child} = 1;
-        }
+    my $max = -1e999;
+    for (@{$graph->[$src]}) {
+        my $dist = 1+$self->_compile_find_longest_path($_, $dest, $graph);
+        if ($dist > $max) { $max = $dist }
     }
-    
-    $cache->{$variant} = {
-        value => $variant,
-        children => \@children,
-    };
+    return $max;
 }
 
 sub compile {
     my ($self) = @_;
-    
+
     return $self->{graph} if $self->{graph};
     
-    my ($fathered, $cache) = ({}, {});
-    my @nodes = map { $self->_compile_make_node($_, $cache, $fathered) }
-                    @{$self->{variants}};
-    
-    my @heads = grep { !$fathered->{$_} } @nodes;
-    confess "Ack! No heads!" unless @heads;
+    # this is a slow-as-shit transitive reduction algorithm
+    # it's possible to make it much faster -- linear time, even
+    my $graph = [];
+    for my $i (0..@{$self->{variants}}-1) {
+        for my $j (0..@{$self->{variants}}-1) {
+            if ($self->{variants}[$i]->less($self->{variants}[$j])) {
+                push @{$graph->[$i]}, $j;
+            }
+        }
+    }
 
-    my $head = {
+    my $longest = [];
+    for my $i (0..@{$self->{variants}}-1) {
+        for my $j (0..@{$self->{variants}}-1) {
+            $longest->[$i][$j] = $self->_compile_find_longest_path($i, $j, $graph);
+        }
+    }
+
+    my $structure = [];
+    for my $i (0..@{$self->{variants}}-1) {
+        $structure->[$i]{value} = $self->{variants}[$i];
+        $structure->[$i]{children} = [];
+    }
+
+    my @parent;
+    for my $i (0..@{$self->{variants}}-1) {
+        for my $j (0..@{$self->{variants}}-1) {
+            if ($longest->[$i][$j] == 1 && grep { $_ == $j } @{$graph->[$i]}) {
+                push @{$structure->[$i]{children}}, $structure->[$j];
+                $parent[$j]++;
+            }
+        }
+    }
+    
+    my @heads;
+    for my $i (0..@{$self->{variants}}-1) {
+        push @heads, $structure->[$i] unless $parent[$i];
+    }
+
+    $self->{graph} = {
         value => undef,
         children => \@heads,
     };
-
-    $self->{graph} = $head;
 }
 
 sub _find_variant_find {

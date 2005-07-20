@@ -434,7 +434,7 @@ sub new {
     bless { 
         variants => [], 
         Variant => $o{Variant} || 'Class::Multimethods::Pure::Variant',
-        graph => undef,
+        list => undef,
         params => undef,
     } => ref $class || $class;
 }
@@ -452,97 +452,55 @@ sub add_variant {
     push @{$self->{variants}}, 
         $self->{Variant}->new(params => $params,
                               code => $code);
-    undef $self->{graph};
-}
-
-sub _compile_find_longest_path {
-    my ($self, $src, $dest, $graph) = @_;
-
-    return 0 if $src == $dest;
-    
-    my $max = -1e999;
-    for (@{$graph->[$src]}) {
-        my $dist = 1+$self->_compile_find_longest_path($_, $dest, $graph);
-        if ($dist > $max) { $max = $dist }
-    }
-    return $max;
+    undef $self->{vlist};
 }
 
 sub compile {
     my ($self) = @_;
 
-    return $self->{graph} if $self->{graph};
+    return $self->{vlist} if $self->{vlist};
     
-    # this is a slow-as-shit transitive reduction algorithm
-    # it's possible to make it much faster -- linear time, even
-    my $graph = [];
-    for my $i (0..@{$self->{variants}}-1) {
-        for my $j (0..@{$self->{variants}}-1) {
-            if ($self->{variants}[$i]->less($self->{variants}[$j])) {
-                push @{$graph->[$i]}, $j;
+    my @q = 0..@{$self->{variants}}-1;
+    my @bin = (0) x @q;
+
+    while (@q) {
+        my $i = shift @q;
+        
+        for my $j (grep { $bin[$_] == $bin[$i] } 0..@{$self->{variants}}-1) {
+            if ($self->{variants}[$j]->less($self->{variants}[$i])) {
+                $bin[$i]++;
+                push @q, $i;
+                last;
             }
         }
     }
 
-    my $longest = [];
+    my @list;
     for my $i (0..@{$self->{variants}}-1) {
-        for my $j (0..@{$self->{variants}}-1) {
-            $longest->[$i][$j] = $self->_compile_find_longest_path($i, $j, $graph);
-        }
+        push @{$list[$bin[$i]]}, $self->{variants}[$i];
     }
 
-    my $structure = [];
-    for my $i (0..@{$self->{variants}}-1) {
-        $structure->[$i]{value} = $self->{variants}[$i];
-        $structure->[$i]{children} = [];
-    }
-
-    my @parent;
-    for my $i (0..@{$self->{variants}}-1) {
-        for my $j (0..@{$self->{variants}}-1) {
-            if ($longest->[$i][$j] == 1 && grep { $_ == $j } @{$graph->[$i]}) {
-                push @{$structure->[$i]{children}}, $structure->[$j];
-                $parent[$j]++;
-            }
-        }
-    }
-    
-    my @heads;
-    for my $i (0..@{$self->{variants}}-1) {
-        push @heads, $structure->[$i] unless $parent[$i];
-    }
-
-    $self->{graph} = {
-        value => undef,
-        children => \@heads,
-    };
-}
-
-sub _find_variant_find {
-    my ($self, $node, $args) = @_;
-    
-    if (my $var = $node->{value}) {
-        return $var if $var->matches($args);
-    }
-
-    map { $self->_find_variant_find($_, $args) } @{$node->{children}};
+    $self->{vlist} = \@list;
+    $self->{vlist}
 }
 
 sub find_variant {
     my ($self, $args) = @_;
 
-    my $graph = $self->compile;
-    my @vars = $self->_find_variant_find($graph, $args);
-    if (@vars == 1) {
-        return $vars[0];
+    my $list = $self->compile;
+
+    for my $set (@$list) {
+        my @matches = grep { $_->matches($args) } @$set;
+        if (@matches == 1) {
+            return $matches[0];
+        }
+        elsif (@matches > 1) {
+            croak "Ambiguous method call for args (@$args):\n" .
+                join '', map { "    " . $_->string . "\n" } @matches;
+        }
     }
-    elsif (@vars == 0) {
-        croak "No method found for args (@$args)";
-    }
-    else {
-        croak "Ambiguous method call for args (@$args):\n" .
-            join '', map { "    " . $_->string . "\n" } @vars;
-    }
+    
+    croak "No method found for args (@$args)";
 }
 
 sub call {

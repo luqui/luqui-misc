@@ -72,16 +72,45 @@ sub multi {
     }
 }
 
+our @exports = qw<multi All Any None>;
+
 sub import {
     my $class = shift;
-    if (@_) {
+    my $cmd   = shift;
+    
+    my $pkg = caller;
+
+    if ($cmd eq 'multi') {
         while (@_ = _internal_multi(@_)) { }
     }
-    else {
-        my $pkg = caller;
-        no strict 'refs';
-        *{"$pkg\::multi"} = \&multi;
+    elsif ($cmd eq 'import') {
+        for my $export (@_) {
+            unless (grep { $_ eq $export } @exports) {
+                croak "$export is not exported from " . __PACKAGE__;
+            }
+            
+            no strict 'refs';
+            *{"$pkg\::$export"} = \&{__PACKAGE__ . "::$export"};
+        }
     }
+    else {
+        for my $export (@exports) {
+            no strict 'refs';
+            *{"$pkg\::$export"} = \&{__PACKAGE__ . "::$export"};
+        }
+    }
+}
+
+sub All {
+    Class::Multimethods::Pure::Type::Conjunction->new(@_);
+}
+
+sub Any {
+    Class::Multimethods::Pure::Type::Disjunction->new(@_);
+}
+
+sub None {
+    Class::Multimethods::Pure::Type::Injunction->new(@_);
 }
 
 package Class::Multimethods::Pure::Type;

@@ -266,7 +266,7 @@ sub new {
     croak "$name is not a valid unblessed type" 
         unless $SPECIAL{$name};
     bless {
-        type => $name,
+        name => $name,
     } => ref $class || $class;
 }
 

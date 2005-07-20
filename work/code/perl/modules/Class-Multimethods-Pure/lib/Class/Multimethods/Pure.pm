@@ -72,7 +72,7 @@ sub multi {
     }
 }
 
-our @exports = qw<multi All Any None>;
+our @exports = qw<multi all any none Any>;
 
 sub import {
     my $class = shift;
@@ -104,16 +104,20 @@ sub import {
     }
 }
 
-sub All {
+sub all {
     Class::Multimethods::Pure::Type::Conjunction->new(@_);
 }
 
-sub Any {
+sub any {
     Class::Multimethods::Pure::Type::Disjunction->new(@_);
 }
 
-sub None {
+sub none {
     Class::Multimethods::Pure::Type::Injunction->new(@_);
+}
+
+sub Any {
+    Class::Multimethods::Pure::Type::Any->new;
 }
 
 package Class::Multimethods::Pure::Type;
@@ -143,7 +147,8 @@ sub string;
 
     $SUBSET->add_variant(
         [ $pkg->('Type'), $pkg->('Type') ] => sub {
-             0;
+             my ($a, $b) = @_;
+             $a == $b;
     });
     
     $SUBSET->add_variant( 
@@ -157,6 +162,15 @@ sub string;
              my ($a, $b) = @_;
              $a->name eq $b->name;
     });
+
+    $SUBSET->add_variant(
+        [ $pkg->('Type::Any'), $pkg->('Type') ] => sub { 0 });
+
+    $SUBSET->add_variant(
+        [ $pkg->('Type'), $pkg->('Type::Any') ] => sub { 1 });
+
+    $SUBSET->add_variant(
+        [ $pkg->('Type::Any'), $pkg->('Type::Any') ] => sub { 1 });
     
     $SUBSET->add_variant(
         [ $pkg->('Type::Junction'), $pkg->('Type') ] => sub {
@@ -196,6 +210,9 @@ sub string;
             my ($a, $b) = @_;
             $a->name eq $b->name;
     });
+
+    $EQUAL->add_variant(
+        [ $pkg->('Type::Any'), $pkg->('Type::Any') ] => sub { 1 });
 
     $EQUAL->add_variant(
         [ $pkg->('Type::Junction'), $pkg->('Type') ] => sub {
@@ -315,6 +332,22 @@ sub matches {
 sub string {
     my ($self) = @_;
     $self->name;
+}
+
+package Class::Multimethods::Pure::Type::Any;
+
+# Anything whatever
+
+use base 'Class::Multimethods::Pure::Type';
+
+sub new {
+    my ($class) = @_;
+    bless { } => ref $class || $class;
+}
+
+sub matches {
+    my ($self, $obj) = @_;
+    1;
 }
 
 package Class::Multimethods::Pure::Type::Junction;

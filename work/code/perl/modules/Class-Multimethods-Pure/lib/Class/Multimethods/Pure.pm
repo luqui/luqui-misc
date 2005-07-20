@@ -72,7 +72,7 @@ sub multi {
     }
 }
 
-our @exports = qw<multi all any none Any>;
+our @exports = qw<multi all any none subtype Any>;
 
 sub import {
     my $class = shift;
@@ -118,6 +118,10 @@ sub none {
 
 sub Any {
     Class::Multimethods::Pure::Type::Any->new;
+}
+
+sub subtype {
+    Class::Multimethods::Pure::Type::Subtype->new(@_);
 }
 
 package Class::Multimethods::Pure::Type;
@@ -173,18 +177,18 @@ sub string;
         [ $pkg->('Type::Any'), $pkg->('Type::Any') ] => sub { 1 });
 
     $SUBSET->add_variant(
-        [ $pkg->('Type::Subtype'), $pkg->('Type::Normal') ] => sub {
+        [ $pkg->('Type::Subtype'), $pkg->('Type::Subtypable') ] => sub {
             my ($a, $b) = @_;
             $a->base->subset($b);
         });
 
     $SUBSET->add_variant(
-        [ $pkg->('Type::Normal'), $pkg->('Type::Subtype') ] => sub { 0 });
+        [ $pkg->('Type::Subtypable'), $pkg->('Type::Subtype') ] => sub { 0 });
 
     $SUBSET->add_variant(
         [ $pkg->('Type::Subtype'), $pkg->('Type::Subtype') ] => sub {
             my ($a, $b) = @_;
-            $a == $b || $a->base->subtype($b);
+            $a == $b || $a->base->subset($b);
         });
     
     $SUBSET->add_variant(
@@ -311,13 +315,16 @@ sub string {
 package Class::Multimethods::Pure::Type::Normal;
 
 # Non-junctive thingies
-
 use base 'Class::Multimethods::Pure::Type';
+
+package Class::Multimethods::Pure::Type::Subtypable;
+
+use base 'Class::Multimethods::Pure::Type::Normal';
 
 package Class::Multimethods::Pure::Type::Unblessed;
 
 # SCALAR, ARRAY, etc.
-use base 'Class::Multimethods::Pure::Type::Normal';
+use base 'Class::Multimethods::Pure::Type::Subtypable';
 use Carp;
 
 our %SPECIAL = (
@@ -379,7 +386,7 @@ package Class::Multimethods::Pure::Type::Subtype;
 
 # A restricted type
 
-use base 'Class::Multimethods::Pure::Type::Normal';
+use base 'Class::Multimethods::Pure::Type::Subtypable';
 
 sub new {
     my ($class, $base, $condition) = @_;

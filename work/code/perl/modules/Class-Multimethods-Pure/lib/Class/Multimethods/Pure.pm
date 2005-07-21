@@ -278,23 +278,26 @@ sub string;
             $a->base == $b->base && $a->condition == $b->condition;
     });
 
+    my $jequal = sub {
+        my ($a, $b) = @_;
+        !$a->logic(map { !$_->subset($b) } $a->values)
+        && $a->logic(map { $b->subset($_) } $a->values);
+    };
+
+    
     $EQUAL->add_variant(
         [ $pkg->('Type::Junction'), $pkg->('Type') ] => sub {
-            my ($a, $b) = @_;
-            $a->logic(map { $_->equal($b) } $a->values);
+            $jequal->($_[0], $_[1]);
     });
 
     $EQUAL->add_variant(
         [ $pkg->('Type'), $pkg->('Type::Junction') ] => sub {
-            my ($a, $b) = @_;
-            $b->logic(map { $a->equal($_) } $b->values);
+            $jequal->($_[1], $_[0]);
     });
 
     $EQUAL->add_variant(
         [ $pkg->('Type::Junction'), $pkg->('Type::Junction') ] => sub {
-            my ($a, $b) = @_;
-            # same as (Junction, Type)
-            $a->logic(map { $_->equal($b) } $a->values);
+            $jequal->($_[0], $_[1]);
     });
 }
 
@@ -958,7 +961,7 @@ equal).
 
 =back
 
-A particular candidate matches a variant A if:
+A particular argument list matches a variant A if:
 
 =over
 
@@ -971,6 +974,10 @@ Each argument is an element of the corresponding parameter type.
 For every variant B, if B matches then A < B.
 
 =back
+
+In other words, we define "is more specific than" in the most
+conservative possible terms.  One method is more specific than the other
+only when I<all> of its parameters are either equal or more specific.
 
 [1] Unlike Manhattan Distance as implemented by L<Class::Multimethods>,
 which does what you want more often, but does what you don't want

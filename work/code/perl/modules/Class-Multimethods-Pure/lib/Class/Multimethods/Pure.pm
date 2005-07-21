@@ -924,3 +924,54 @@ export some of these, use the C<import> command:
 
 This will accept a null list for you folks who don't like to import
 anything.
+
+=head2 Semantics
+
+I've put off explaining the method for determing which method to call
+until now.  That's mostly because it will either do exactly what you
+want, or yell at you for being ambiguous[1].  I'll take a moment to
+define it precisely and mathematically, and then explain what that means
+for Mere Mortals.
+
+First, think of a class simply as the set of all of its possible
+instances.  When you say C<Foo> is derived from  C<Bar>, you're saying
+that "anything that is a C<Foo> is also a C<Bar>", and therefore that
+C<Foo> is a subset of C<Bar>.  
+
+Now define a partial order C<< < >> on the variants of a multimethod.
+This will represent the relationship "is more specific than".  This is
+defined as follows:
+
+Variant A < variant B if and only if
+
+=over
+
+=item * 
+
+Every parameter type in A is a subset of the corresponding parameter in
+B.
+
+=item *
+
+At least one of them is a proper subset (that is, a subset but not
+equal).
+
+=back
+
+A particular candidate matches a variant A if:
+
+=over
+
+=item *
+
+Each argument is an element of the corresponding parameter type.
+
+=item *
+
+For every variant B, if B matches then A < B.
+
+=back
+
+[1] Unlike Manhattan Distance as implemented by L<Class::Multimethods>,
+which does what you want more often, but does what you don't want
+sometimes without saying a word.

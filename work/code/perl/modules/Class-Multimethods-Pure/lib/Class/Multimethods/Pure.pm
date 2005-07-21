@@ -7,6 +7,8 @@ no warnings 'uninitialized';
 
 use Carp;
 
+our $VERSION = '0.01';
+
 our %MULTI;
 our %MULTIPARAM;
 

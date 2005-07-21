@@ -2,5 +2,9 @@ Changes
 Makefile.PL
 MANIFEST
 README
-t/Class-Multimethods-Pure.t
 lib/Class/Multimethods/Pure.pm
+t/export.t
+t/junction.t
+t/nonclass.t
+t/smd.t
+t/subtype.t

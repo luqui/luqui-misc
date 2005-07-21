@@ -105,15 +105,21 @@ sub import {
 }
 
 sub all {
-    Class::Multimethods::Pure::Type::Conjunction->new(@_);
+    Class::Multimethods::Pure::Type::Conjunction->new(
+        Class::Multimethods::Pure::Type->promote(@_)
+    );
 }
 
 sub any {
-    Class::Multimethods::Pure::Type::Disjunction->new(@_);
+    Class::Multimethods::Pure::Type::Disjunction->new(
+        Class::Multimethods::Pure::Type->promote(@_)
+    );
 }
 
 sub none {
-    Class::Multimethods::Pure::Type::Injunction->new(@_);
+    Class::Multimethods::Pure::Type::Injunction->new(
+        Class::Multimethods::Pure::Type->promote(@_)
+    );
 }
 
 sub Any {
@@ -121,21 +127,51 @@ sub Any {
 }
 
 sub subtype {
-    Class::Multimethods::Pure::Type::Subtype->new(@_);
+    Class::Multimethods::Pure::Type::Subtype->new(
+        Class::Multimethods::Pure::Type->promote($_[0]), $_[1]
+    );
 }
 
 package Class::Multimethods::Pure::Type;
 
 use Carp;
+use Scalar::Util qw<blessed>;
 
-my $SUBSET = Class::Multimethods::Pure::Method->new;
+our $PROMOTE = Class::Multimethods::Pure::Method->new;
+
+sub promote {
+    my ($class, @types) = @_;
+    map { $PROMOTE->call($_) } @types;
+}
+
+{
+    my $pkg = sub { "Class::Multimethods::Pure::Type::$_[0]"->new(@_[1..$#_]) };
+    $PROMOTE->add_variant(
+        [ $pkg->('Subtype', $pkg->('Any'), sub { blessed $_[0] }) ] => sub {
+            $_[0];
+    });
+    
+    $PROMOTE->add_variant(
+        [ $pkg->('Subtype', $pkg->('Any'), 
+            sub { Class::Multimethods::Pure::Type::Unblessed->is_unblessed($_[0]) }) ]
+        => sub { 
+            Class::Multimethods::Pure::Type::Unblessed->new($_[0])
+    });
+
+    $PROMOTE->add_variant(
+        [ $pkg->('Any') ] => sub {
+            Class::Multimethods::Pure::Type::Package->new($_[0])
+    });
+}
+
+our $SUBSET = Class::Multimethods::Pure::Method->new;
 
 sub subset {
     my ($self, $other) = @_;
     $SUBSET->call($self, $other);
 }
 
-my $EQUAL = Class::Multimethods::Pure::Method->new;
+our $EQUAL = Class::Multimethods::Pure::Method->new;
 
 sub equal {
     my ($self, $other) = @_;
@@ -145,7 +181,7 @@ sub equal {
 sub matches;
 sub string;
 
-{
+{   
     my $pkg = sub { Class::Multimethods::Pure::Type::Package->new(
                             'Class::Multimethods::Pure::' . $_[0]) };
 
@@ -155,6 +191,8 @@ sub string;
              $a == $b;
     });
     
+    # If you change this, remember to change Type::Package::subset
+    # which is used in the bootstrap.
     $SUBSET->add_variant( 
         [ $pkg->('Type::Package'), $pkg->('Type::Package') ] => sub {
              my ($a, $b) = @_;
@@ -218,6 +256,7 @@ sub string;
             0;
     });
 
+    # If you change this, you should also change the bootstrap, Type::Package::equal.
     $EQUAL->add_variant(
         [ $pkg->('Type::Package'), $pkg->('Type::Package') ] => sub {
             my ($a, $b) = @_;
@@ -274,7 +313,9 @@ sub new {
     } => ref $class || $class;
 }
 
-# This is overridden for bootstrapping purposes.
+# This is overridden for bootstrapping purposes.  If you change
+# logic here, you should change it in the multimethod above
+# too.
 sub subset {
     my ($self, $other) = @_;
     

@@ -979,6 +979,102 @@ In other words, we define "is more specific than" in the most
 conservative possible terms.  One method is more specific than the other
 only when I<all> of its parameters are either equal or more specific.
 
+A couple of notes:
+
+=over
+
+=item * 
+
+Both A and B are more specific than any(A, B), unless one is a subset of
+the other, in which case the junction is equivalent the more general
+one.
+
+=item *
+
+all(A, B) is more specific than both A and B, unless one is a subset of
+the other, in which case the junction is equivalent to the more specific
+one.
+
+=item *
+
+A subtype with base type X is always more specific than X.  This is true
+even if the constraint is C<sub { 1 }>, unfortunately.  That's one of
+those halting problem thingamajiggers.
+
+=item *
+
+Everything is more specific than C<Any>, except C<Any> itself.
+
+=back
+
 [1] Unlike Manhattan Distance as implemented by L<Class::Multimethods>,
 which does what you want more often, but does what you don't want
 sometimes without saying a word.
+
+=head2 Combinator Factoring
+
+One of the things that I find myself wanting to do most when working
+with multimethods is to have combinator types.  These are types that
+simply call the multimethod again for some list of aggregated objects
+and perform some operation on them (like a Junction). They're easy
+to make if they're by themselves.
+
+    multi foo ('Junction', 'Object') {...}
+    multi foo ('Object', 'Junction') {...}
+    multi foo ('Junction', 'Junction') {...}
+
+However, you find yourself in a major pickle if you want to have more of
+them.  For instance:
+
+    multi foo ('Kunction', 'Object') {...}
+    multi foo ('Object', 'Kunction') {...}
+    multi foo ('Kunction', 'Kunction') {...}
+
+Now they're both combinators, but the module yells at you if you pass
+(Kunction, Junction), because there are two methods that would satisfy
+that.
+
+The way to define precedence with these combinators is similar to the
+way you define precedence in a recursive descent grammar.  You create a
+cascade of empty classes at the top of your heirarchy, and derive each
+of your generics from a different one of those:
+
+    package AnyObject;
+    package JunctionObject;
+        use base 'AnyObject';
+    package KunctionObject;
+        use base 'JunctionObject';
+    package Object;
+        use base 'KunctionObject';
+        # derive all other classes from Object
+    
+    package Junction;
+        use base 'JunctionObject';
+        ...
+    package Kunction;
+        use base 'KunctionObject';
+        ...
+
+Now define your multis using these:
+
+    multi foo ('Junction', 'JunctionObject') {...}
+    multi foo ('JunctionObject', 'Junction') {...}
+    multi foo ('Junction', 'Junction') {...}
+    multi foo ('Kunction', 'KunctionObject') {...}
+    multi foo ('KunctionObject', 'Kunction') {...}
+    multi foo ('Kunction', 'Kunction') {...}
+
+Then the upper one (Junction in this case) will get threaded first,
+because a Junction is not a KunctionObject, so it doesn't fit in the
+latter three methods.
+
+=head1 AUTHOR
+
+Luke Palmer <lrpalmer@gmail.com>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2005 Luke Palmer.  All rights reserved.
+This module is free software.  It may be used, redistributed,
+and/or modified under the terms of the Perl Artistic License:
+http://www.perl.com/perl/misc/Artistic.html

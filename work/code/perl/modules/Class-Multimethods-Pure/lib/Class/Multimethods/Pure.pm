@@ -68,7 +68,7 @@ sub make_wrapper {
 
 sub multi {
     if (_internal_multi(@_)) {
-        croak "Usage: blah blah blah";
+        croak "Usage: multi name => (Arg1, Arg2, ...) => sub { code };";
     }
 }
 
@@ -104,29 +104,29 @@ sub import {
     }
 }
 
-sub all {
+sub all(@) {
     Class::Multimethods::Pure::Type::Conjunction->new(
         Class::Multimethods::Pure::Type->promote(@_)
     );
 }
 
-sub any {
+sub any(@) {
     Class::Multimethods::Pure::Type::Disjunction->new(
         Class::Multimethods::Pure::Type->promote(@_)
     );
 }
 
-sub none {
+sub none(@) {
     Class::Multimethods::Pure::Type::Injunction->new(
         Class::Multimethods::Pure::Type->promote(@_)
     );
 }
 
-sub Any {
+sub Any() {
     Class::Multimethods::Pure::Type::Any->new;
 }
 
-sub subtype {
+sub subtype($$) {
     Class::Multimethods::Pure::Type::Subtype->new(
         Class::Multimethods::Pure::Type->promote($_[0]), $_[1]
     );
@@ -689,3 +689,238 @@ sub call {
 }
 
 1;
+
+=head1 TITLE
+
+Class::Multimethods::Pure - Method-ordered multimethod dispatch
+
+=head1 SYNOPSIS
+
+    use Class::Multimethods::Pure;
+
+    package A;
+        sub magic { rand() > 0.5 }
+    package B;
+        use base 'A';
+    package C;
+        use base 'A';
+    
+    BEGIN {
+        multi foo => ('A', 'A') => sub {
+            "Generic catch-all";
+        };
+
+        multi foo => ('A', 'B') => sub {
+            "More specific";
+        };
+        
+        multi foo => (subtype('A', sub { $_[0]->magic }), 'A') => sub { 
+            "This gets called half the time instead of catch-all";
+        };
+
+        multi foo => (any('B', 'C'), 'A') => sub {
+            "Accepts B or C as the first argument, but not A"
+        };
+    }
+
+=head1 DESCRIPTION
+
+=head2 Introduciton to Multimethods
+
+When you see the perl expression:
+
+    $animal->speak;
+
+You're asking for C<speak> to be performed on C<$animal>, based on
+C<$animal>'s current type.  For instance, if C<$animal> were a Tiger, it
+would say "Roar", whereas if C<$animal> were a Dog, it would say "Woof".
+The information of the current type of C<$animal> need not be known by
+the caller, which is what makes this mechanism powerful.
+
+Now consider a space-shooter game.  You want to create a routine
+C<collide> that does something based on the types of I<two> arguments.
+For instance, if a Bullet hits a Ship, you want to deliver some damage,
+but if a Ship hits an Asteroid, you want it to bounce off.  You could
+write it like this:
+
+    sub collide {
+        my ($a, $b) = @_;
+        if ($a->isa('Bullet') && $b->isa('Ship')) {...}
+        elsif ($a->isa('Ship') && $b->isa('Asteroid')) {...}
+        ...
+    }
+
+Just as you could have written C<speak> that way.  But, above being
+ugly, this prohibits the easy addition of new types.  You first have to
+create the type in one file, and then remember to add it to this list.
+
+However, there is an analog to methods for multiple arguments, called
+I<multimethods>.  This allows the logic for a routine that dispatches on
+multiple arguments to be spread out, so that you can include the
+relevant logic for the routine in the file for the type you just added.
+
+=head2 Usage
+
+You can define multimethods with the "multi" declarator:
+
+    use Class::Multimethods::Pure;
+
+    multi collide => ('Bullet', 'Ship') => sub {
+        my ($a, $b) = @_;  ...
+    };
+
+    multi collide => ('Ship', 'Asteroid') => sub {
+        my ($a, $b) = @_;  ...
+    };
+
+It is usually wise to put such declarations within a BEGIN block, so
+they behave more like Perl treats subs (you can call them without
+parentheses and you can use them before you define them).
+
+If you think BEGIN looks ugly, then you can define them inline as you
+use the module:
+
+    use Class::Multimethods::Pure
+        multi => collide => ('Bullet', 'Ship') => sub {...};
+
+But you miss out on a couple of perks if you do that.  See 
+L</Special Types> below.
+
+After these are declared, you can call C<collide> like a regular
+subroutine:
+
+    collide($ship, $asteroid);
+
+If you defined any variant of a multimethod within a package, then the
+multi can also be called as a method on any object of that package (and
+any package derived from it). It will be passed as the first argument.
+
+    $ship->collide($asteroid);  # same as above
+
+If you want to allow a multi to be called as a method on some package
+without defining any variants in that package, use the null declaration:
+
+    multi 'collide';
+    # or
+    use Class::Multimethods::Pure multi => collide;
+
+This is also used to import a particular multi into your scope without
+defining any variants there.
+
+All multis are global; that is, C<collide> always refers to the same
+multi, no matter where/how it is defined.  Allowing scoped multis is on
+the TODO list.  But you still have to import it (as shown above) to use
+it.
+
+=head2 Non-package Types
+
+In addition to any package name, there are a few special names that
+represent unblessed references.  These are the strings returned by
+C<ref> when given an unblessed reference.   For the record:
+
+    SCALAR
+    ARRAY
+    HASH
+    CODE
+    REF
+    GLOB
+    LVALUE
+
+For example:
+
+    multi pretty => ('ARRAY') => sub {
+        "[ " . join(', ', map { pretty($_) } @{$_[0]}) . " ]";
+    };
+    multi pretty => ('HASH')  => sub {
+        my $hash = shift;
+        "{ " . join(', ', 
+                map { "$_ => " . pretty($hash->{$_}) } keys %$hash)
+        . " }";
+    };
+
+=head2 Special Types
+
+There are several types which don't refer to any package.  These are
+Junctive types, Any, and Subtypes.
+
+Junctive types represent combinations of types.  C<any('Ship',
+'Asteroid')> represents an object that is of either (or both) of the
+classes C<Ship> and C<Asteroid>.  C<all('Horse', 'Bird')> represents an
+object that is of both types C<Horse> and C<Bird> (probably some sort of
+pegasus).  Finally, C<none('Dog')> represents an object that is I<not> a
+C<Dog> (or anything derived from C<Dog>).
+
+For example:
+
+    multi fly => ('Horse') => sub { die "Horses don't fly!" };
+    multi fly => ('Bird')  => sub { "Flap flap chirp" };
+    multi fly => (all('Horse', 'Bird')) => sub { "Flap flap whinee" };
+
+The C<Any> type represents anything at all, object or not.  Use it like
+so:
+
+    multi fly => (Any) => sub { die "Most things can't fly." };
+
+Note that it is not a string.  If you give it the string "Any", it will
+refer to the C<Any> package, which generally doesn't exist.  C<Any> is a
+function that takes no arguments and returns an C<Any> type object.
+
+Finally, there is a C<subtype> function which allows you to specify
+constrained types.  It takes two arguments: another type and a code
+reference.  The code reference is called on the argument that is being
+tested for that type (after checking that the first argument---the base
+type---is satisfied), and if it returns true, then the argument is of
+that type.  For example:
+
+    my $ZeroOne = subtype(Any, sub { $_[0] < 2 });
+
+We have just defined a type object that is only true when its argument
+is less than two and placed it in the type variable C<$ZeroOne>.  Now we
+can define the Fibonacci sequence function:
+
+    multi fibo => (Any) => sub { fibo($_[0]-1) + fibo($_[0]-2) };
+    multi fibo => ($ZeroOne) => sub { 1 };
+
+Of course, we didn't have to use a type variable; we could have just put
+the C<subtype> call right where C<$ZeroOne> appears in the definition.
+
+Consider the follwing declarations:
+
+    multi describe => (subtype(Any, sub { $_[0] > 10 })) => sub {
+        "Big";
+    };
+    multi describe => (subtype(Any, sub { $_[0] == 42 })) => sub {
+        "Forty-two";
+    };
+
+Calling C<describe(42)> causes an ambiguity error, stating that both
+variants of C<describe> match.  We can clearly see that the latter is
+more specific than the former (see L</Semantics> for a precise
+definition of how this relates to dispatch), but getting the computer to
+see that involves solving the halting problem.
+
+So we have to make explicit the relationships between the two subtypes,
+using type variables:
+
+    my $Big      = subtype(Any,  sub { $_[0] > 10 });
+    my $FortyTwo = subtype($Big, sub { $_[0] == 42 });
+    multi describe => ($Big) => sub {
+        "Big";
+    };
+    multi describe => ($FortyTwo) => sub {
+        "Forty-two";
+    };
+
+Here we have specified that C<$FortyTwo> is more specific than C<$Big>,
+since it is a subtype of C<$Big>.  Now calling C<describe(42)> results
+in "Forty-two".
+
+In order to get the definitions of C<all>, C<any>, C<none>, C<Any>, and
+C<subtype>, you need to import them from the module.  This happens by
+default if you use the module with no arguments.  If you only want to
+export some of these, use the C<import> command:
+
+    use Class::Multimethods::Pure import => [qw<Any subtype>];
+
+This will accept a null list for you folks who don't like to import
+anything.

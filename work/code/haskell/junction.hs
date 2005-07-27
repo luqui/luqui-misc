@@ -1,21 +1,29 @@
-import Complex
-import Random
+import System.Random
+import Data.Map as Map
+import Data.Complex
 
 type Amplitude = Complex Float
 
-data Superposition a = 
-    Superposition [(Amplitude, a)]
+data Ord a => Superposition a = 
+    Superposition (Map a Amplitude)
 
-_select :: Int -> a -> [(Amplitude, a)] -> IO a
+superpose :: Ord a => [(a, Amplitude)] -> Superposition a
+superpose xs = Superposition (Map.fromListWith (+) xs)
+
+_select :: Ord a => Int -> a -> [(a, Amplitude)] -> IO a
 _select _ cur [] = return cur
-_select num cur ((prob, val):rest) = do
+_select num cur ((val, prob):rest) = do
     sel <- randomRIO (0,1)
     if sel <= magnitude prob / realToFrac num
         then _select (num+1) val rest
         else _select (num+1) cur rest
 
-select :: Superposition a -> IO a
-select (Superposition ((prob, val):rest)) =
-    _select 2 val rest
+select :: Ord a => Superposition a -> IO a
+select (Superposition set) =
+    let ((val, _):rest) = Map.assocs set
+        in _select 2 val rest
 
-main = print =<< (select $ Superposition [(1 :+ 0, "hi"), (0 :+ 1, "ack")])
+main = print =<< (select $ superpose $ 
+    [("hi",  1   :+ 0), 
+     ("lo",  1   :+ 0),
+     ("lo", (-1) :+ 0)])

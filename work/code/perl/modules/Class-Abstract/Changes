@@ -1,6 +1,0 @@
-Revision history for Perl extension Class::Abstract.
-
-0.01  Thu Feb 10 20:00:43 2005
-	- original version; created by h2xs 1.23 with options
-		-X -b 5.6.1 -n Class::Abstract
-

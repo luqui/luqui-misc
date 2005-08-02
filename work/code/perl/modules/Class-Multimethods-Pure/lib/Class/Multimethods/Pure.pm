@@ -68,6 +68,7 @@ sub make_wrapper {
     };
 }
 
+# exports a multimethod with a given name and arguments
 sub multi {
     if (_internal_multi(@_)) {
         croak "Usage: multi name => (Arg1, Arg2, ...) => sub { code };";
@@ -139,6 +140,8 @@ package Class::Multimethods::Pure::Type;
 use Carp;
 use Scalar::Util qw<blessed>;
 
+# The promote multimethod is where the logic is to turn the string "Foo::Bar"
+# into a Type::Package object.
 our $PROMOTE = Class::Multimethods::Pure::Method->new;
 
 sub promote {
@@ -147,25 +150,31 @@ sub promote {
 }
 
 {
-    my $pkg = sub { "Class::Multimethods::Pure::Type::$_[0]"->new(@_[1..$#_]) };
-    $PROMOTE->add_variant(
-        [ $pkg->('Subtype', $pkg->('Any'), sub { blessed $_[0] }) ] => sub {
-            $_[0];
-    });
+    # I put each subtype into a variable so that you can extend the subtypes easily.
     
+    my $pkg = sub { "Class::Multimethods::Pure::Type::$_[0]"->new(@_[1..$#_]) };
+
+    # Anything that is blessed is probably already a Type object
+    our $PROMOTE_BLESSED = $pkg->('Subtype', $pkg->('Any'), sub { blessed $_[0] });
+    $PROMOTE->add_variant([ $PROMOTE_BLESSED ] => sub { $_[0] });
+    
+    # ARRAY, HASH, etc. get an Unblessed type for unblessed references.
+    our $PROMOTE_UNBLESSED = $pkg->('Subtype', $pkg->('Any'),
+                                sub { Class::Multimethods::Pure::Type::Unblessed->is_unblessed($_[0]) });
     $PROMOTE->add_variant(
-        [ $pkg->('Subtype', $pkg->('Any'), 
-            sub { Class::Multimethods::Pure::Type::Unblessed->is_unblessed($_[0]) }) ]
-        => sub { 
+        [ $PROMOTE_UNBLESSED ] => sub { 
             Class::Multimethods::Pure::Type::Unblessed->new($_[0])
     });
 
+    # Anything else gets turned into a package.
     $PROMOTE->add_variant(
         [ $pkg->('Any') ] => sub {
             Class::Multimethods::Pure::Type::Package->new($_[0])
     });
 }
 
+# The subset multimethod is the most important multi used in the core.  It
+# determines whether the left class is a subset of the right class.
 our $SUBSET = Class::Multimethods::Pure::Method->new;
 
 sub subset {
@@ -173,6 +182,8 @@ sub subset {
     $SUBSET->call($self, $other);
 }
 
+# And in order to determine proper subset, we have a method to determine
+# whether the two arguments represent the same set of instances.
 our $EQUAL = Class::Multimethods::Pure::Method->new;
 
 sub equal {
@@ -203,7 +214,7 @@ sub string;
     
     $SUBSET->add_variant(
         [ $pkg->('Type::Unblessed'), $pkg->('Type::Unblessed') ] => sub {
-             my ($a, $b) = @_;
+
              $a->name eq $b->name;
     });
 
@@ -255,7 +266,8 @@ sub string;
      
     $EQUAL->add_variant(
         [ $pkg->('Type'), $pkg->('Type') ] => sub {
-            0;
+            my ($a, $b) = @_;
+            $a == $b;
     });
 
     # If you change this, you should also change the bootstrap, Type::Package::equal.
@@ -282,8 +294,8 @@ sub string;
 
     my $jequal = sub {
         my ($a, $b) = @_;
-        !$a->logic(map { !$_->subset($b) } $a->values)
-        && $a->logic(map { $b->subset($_) } $a->values);
+          !$a->logic(map { !$_->subset($b) } $a->values)
+        && $a->logic(map {  $b->subset($_) } $a->values);
     };
 
     
@@ -531,6 +543,10 @@ sub string {
 }
 
 package Class::Multimethods::Pure::Type::Injunction;
+# The none() type has some very, very strange behavior when you think
+# about it.  In particular, note that none() (with no arguments) is
+# at both the top and bottom of the type lattice.  Perhaps none()
+# should not be allowed, or should require arguments.
 
 # A none type
 use base 'Class::Multimethods::Pure::Type::Junction';
@@ -1069,6 +1085,89 @@ Now define your multis using these:
 Then the upper one (Junction in this case) will get threaded first,
 because a Junction is not a KunctionObject, so it doesn't fit in the
 latter three methods.
+
+=head2 Extending
+
+Class::Multimethods::Pure was written to be extended in many ways, but
+with a focus on adding new types of, er, types.  Let's say you want to
+add Perl 6-ish roles to the Class::Multimethods::Pure dispatcher.  You
+need to do five things:
+
+=over
+
+=item * 
+
+Create a class, say My::Role derived from
+Class::Multimethods::Pure::Type.  
+
+=item * 
+
+Define the method My::Role::matches, which takes a scalar and returns
+whether it is a member of that class (including subclasses, etc.).
+
+=item *
+
+Define the method My::Role::string, which returns a reasonable string
+representation of the type, for the user's sake.
+
+=item *
+
+Define the multimethod "equal" on your type, which returns true if
+the two arguments are logically the same type.  This module avoids
+polluting the multimethod namespace by putting the multi in a package
+variable called $Class::Multimethods::Pure::Type::EQUAL.  Define the
+method like so:
+
+    $Class::Multimethods::Pure::Type::EQUAL->add_variant(
+        [ 'My::Role', 'My::Role' ] => sub {
+            # check whether $_[0] and $_[1] are the same type
+        });
+
+=item *
+
+Define as many multimethod variants of "subset" as necessary, which
+return whether an object which is a member of the left type implies that
+it is a member of the right type.  Construct a
+Class::Multimethods::Pure::Type::Package type for your type for the
+multimethod.  For a role, you'd need to define:
+
+    $Class::Multimethods::Pure::Type::SUBSET->add_variant(
+        [ Class::Multimethods::Pure::Type::Package->new('My::Role'),
+          Class::Multimethods::Pure::Type::Package->new('My::Role') ] =>
+        sub {...});
+
+And:
+
+    $Class::Multimethods::Pure::Type::SUBSET->add_variant(
+        [ Class::Multimethods::Pure::Type::Package->new(
+              'Class::Multimethods::Pure::Type::Package'),
+          Class::Multimethods::Pure::Type::Package->new('My::Role') ] =>
+        sub {...});
+
+(Ugh, I wish my module name weren't so long).
+
+=back
+
+After you have defined these, you have fulfilled the
+Class::Multimethods::Pure::Type interface, and now you can pass an
+object of type My::Role to multi() and it will be dispatched using the
+pure-ordered scheme.  It is nice to give the user a concise constructor
+for your object type.
+
+You can also automatically promote strings into objects by defining
+variants on the (unary) multimethod
+$Class::Multimethods::Pure::Type::PROMOTE.  So to promote strings that
+happen to be the names of roles, do:
+
+    $Class::Multimethods::Pure::Type::PROMOTE->add_variant(
+        [ Class::Multimethods::Pure::Type::Subtype->new(
+            Class::Multimethods::Pure::Type::Any->new,
+            sub { is_a_role_name($_[0]) }) 
+        ] => 
+            sub { My::Role->new($_[0]) });
+
+Now when you pass strings to "multi", if is_a_role_name returns true on
+them, they will be promoted to a My::Role object.
 
 =head1 AUTHOR
 

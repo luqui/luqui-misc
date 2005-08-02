@@ -182,13 +182,9 @@ sub subset {
     $SUBSET->call($self, $other);
 }
 
-# And in order to determine proper subset, we have a method to determine
-# whether the two arguments represent the same set of instances.
-our $EQUAL = Class::Multimethods::Pure::Method->new;
-
 sub equal {
     my ($self, $other) = @_;
-    $EQUAL->call($self, $other);
+    subset($self, $other) && subset($other, $self);
 }
 
 sub matches;
@@ -236,11 +232,11 @@ sub string;
     $SUBSET->add_variant(
         [ $pkg->('Type::Subtypable'), $pkg->('Type::Subtype') ] => sub { 0 });
 
-    our $indent = 0;
     $SUBSET->add_variant(
         [ $pkg->('Type::Subtype'), $pkg->('Type::Subtype') ] => sub {
             my ($a, $b) = @_;
-            $a->equal($b) || $a->base->subset($b);
+            $a->base->subset($b) || 
+                $a->base->subset($b->base) && $a->condition == $b->condition;
         });
     
     $SUBSET->add_variant(
@@ -261,58 +257,6 @@ sub string;
              # just like (Junction, Type)
              $a->logic(map { $_->subset($b) } $a->values);
      });
-
-    #############
-     
-    $EQUAL->add_variant(
-        [ $pkg->('Type'), $pkg->('Type') ] => sub {
-            my ($a, $b) = @_;
-            $a == $b;
-    });
-
-    # If you change this, you should also change the bootstrap, Type::Package::equal.
-    $EQUAL->add_variant(
-        [ $pkg->('Type::Package'), $pkg->('Type::Package') ] => sub {
-            my ($a, $b) = @_;
-            $a->name eq $b->name;
-    });
-
-    $EQUAL->add_variant(
-        [ $pkg->('Type::Unblessed'), $pkg->('Type::Unblessed') ] => sub {
-            my ($a, $b) = @_;
-            $a->name eq $b->name;
-    });
-
-    $EQUAL->add_variant(
-        [ $pkg->('Type::Any'), $pkg->('Type::Any') ] => sub { 1 });
-
-    $EQUAL->add_variant(
-        [ $pkg->('Type::Subtype'), $pkg->('Type::Subtype') ] => sub {
-            my ($a, $b) = @_;
-            $a->base == $b->base && $a->condition == $b->condition;
-    });
-
-    my $jequal = sub {
-        my ($a, $b) = @_;
-          !$a->logic(map { !$_->subset($b) } $a->values)
-        && $a->logic(map {  $b->subset($_) } $a->values);
-    };
-
-    
-    $EQUAL->add_variant(
-        [ $pkg->('Type::Junction'), $pkg->('Type') ] => sub {
-            $jequal->($_[0], $_[1]);
-    });
-
-    $EQUAL->add_variant(
-        [ $pkg->('Type'), $pkg->('Type::Junction') ] => sub {
-            $jequal->($_[1], $_[0]);
-    });
-
-    $EQUAL->add_variant(
-        [ $pkg->('Type::Junction'), $pkg->('Type::Junction') ] => sub {
-            $jequal->($_[0], $_[1]);
-    });
 }
 
 
@@ -341,18 +285,6 @@ sub subset {
     }
     else {
         $self->SUPER::subset($other);
-    }
-}
-
-# Again, bootstrapping.
-sub equal {
-    my ($self, $other) = @_;
-
-    if (ref $self eq __PACKAGE__ && ref $other eq __PACKAGE__) {
-        $self->name eq $other->name;
-    }
-    else {
-        $self->SUPER::equal($other);
     }
 }
 
@@ -599,7 +531,7 @@ sub less {
         my $cmp = $args[$i]->subset($brgs[$i]);
         return 0 unless $cmp;
         if ($cmp && !$proper) {
-            $proper = !$args[$i]->equal($brgs[$i]);
+            $proper = !$brgs[$i]->subset($args[$i]);
         }
     }
 
@@ -1091,7 +1023,7 @@ latter three methods.
 Class::Multimethods::Pure was written to be extended in many ways, but
 with a focus on adding new types of, er, types.  Let's say you want to
 add Perl 6-ish roles to the Class::Multimethods::Pure dispatcher.  You
-need to do five things:
+need to do four things:
 
 =over
 
@@ -1109,19 +1041,6 @@ whether it is a member of that class (including subclasses, etc.).
 
 Define the method My::Role::string, which returns a reasonable string
 representation of the type, for the user's sake.
-
-=item *
-
-Define the multimethod "equal" on your type, which returns true if
-the two arguments are logically the same type.  This module avoids
-polluting the multimethod namespace by putting the multi in a package
-variable called $Class::Multimethods::Pure::Type::EQUAL.  Define the
-method like so:
-
-    $Class::Multimethods::Pure::Type::EQUAL->add_variant(
-        [ 'My::Role', 'My::Role' ] => sub {
-            # check whether $_[0] and $_[1] are the same type
-        });
 
 =item *
 

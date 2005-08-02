@@ -214,7 +214,7 @@ sub string;
     
     $SUBSET->add_variant(
         [ $pkg->('Type::Unblessed'), $pkg->('Type::Unblessed') ] => sub {
-
+             my ($a, $b) = @_;
              $a->name eq $b->name;
     });
 

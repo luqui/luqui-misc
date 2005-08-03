@@ -7,7 +7,7 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.01';
+our $VERSION = '0.03';
 
 our %MULTI;
 our %MULTIPARAM;
@@ -636,7 +636,7 @@ sub call {
 
 1;
 
-=head1 TITLE
+=head1 NAME
 
 Class::Multimethods::Pure - Method-ordered multimethod dispatch
 

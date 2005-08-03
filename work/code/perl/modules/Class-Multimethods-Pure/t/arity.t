@@ -1,4 +1,4 @@
-use Test::More tests => 7;
+use Test::More tests => 8;
 
 BEGIN { use_ok('Class::Multimethods::Pure') }
 
@@ -20,5 +20,15 @@ multi bar => (Foo, Foo) => sub { "two" };
 is(bar(Foo->new),           "one", "single argument");
 is(bar(Foo->new, Foo->new), "two", "double argument");
 is(bar(Foo->new, Bar->new), "one", "single argument+extraneous");
+
+multi qsort => () => sub { () };
+multi qsort => (Any) => sub {
+    my $x = shift;
+    my @pre  = grep { $_ <  $x } @_;
+    my @post = grep { $_ >= $x } @_;
+    return qsort(@pre), $x, qsort(@post);
+};
+
+is_deeply([qsort(5,3,7,1,2,6,4)], [1..7], "quicksort");
 
 # vim: ft=perl :

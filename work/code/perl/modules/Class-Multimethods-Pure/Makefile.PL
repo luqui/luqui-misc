@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME           => 'Class::Multimethods::Pure',
     VERSION_FROM   => 'lib/Class/Multimethods/Pure.pm', 
-    PREREQ_PM      => { Attribute::Handlers => 0 }, 
+    PREREQ_PM      => { }, 
     ABSTRACT_FROM  => 'lib/Class/Multimethods/Pure.pm',
     AUTHOR         => 'Luke Palmer <lrpalmer@gmail.com>',
 );

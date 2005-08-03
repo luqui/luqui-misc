@@ -8,3 +8,4 @@ t/junction.t
 t/nonclass.t
 t/smd.t
 t/subtype.t
+META.yml                                 Module meta-data (added by MakeMaker)

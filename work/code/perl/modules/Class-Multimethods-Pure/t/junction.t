@@ -22,6 +22,10 @@ package main;
         "B|D";
     };
 
+    multi foo => subtype(qw<A>, sub { 0 }) => sub {
+        "Never!";
+    };
+
     is(foo(A->new), "Generic");
     is(foo(B->new), "B|D");
     is(foo(C->new), "Generic");

@@ -259,11 +259,19 @@ sub string;
      });
 }
 
+package Class::Multimethods::Pure::Type::Normal;
+
+# Non-junctive thingies
+use base 'Class::Multimethods::Pure::Type';
+
+package Class::Multimethods::Pure::Type::Subtypable;
+
+use base 'Class::Multimethods::Pure::Type::Normal';
 
 package Class::Multimethods::Pure::Type::Package;
 
 # A regular package type
-use base 'Class::Multimethods::Pure::Type';
+use base 'Class::Multimethods::Pure::Type::Normal';
 
 use Scalar::Util qw<blessed>;
 
@@ -302,15 +310,6 @@ sub string {
     my ($self) = @_;
     $self->name;
 }
-
-package Class::Multimethods::Pure::Type::Normal;
-
-# Non-junctive thingies
-use base 'Class::Multimethods::Pure::Type';
-
-package Class::Multimethods::Pure::Type::Subtypable;
-
-use base 'Class::Multimethods::Pure::Type::Normal';
 
 package Class::Multimethods::Pure::Type::Unblessed;
 

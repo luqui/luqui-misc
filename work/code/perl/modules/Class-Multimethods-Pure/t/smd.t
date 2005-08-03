@@ -1,5 +1,4 @@
 use Test::More tests => 4;
-use Data::Dumper;
 
 BEGIN { use_ok('Class::Multimethods::Pure') }
 

@@ -566,20 +566,12 @@ sub new {
     bless { 
         variants => [], 
         Variant => $o{Variant} || 'Class::Multimethods::Pure::Variant',
-        list => undef,
-        params => undef,
+        vlist => undef,
     } => ref $class || $class;
 }
 
 sub add_variant { 
     my ($self, $params, $code) = @_;
-
-    if (defined $self->{params}) {
-        croak "Disagreeing number of parameters" if $self->{params} != @$params;
-    }
-    else {
-        $self->{params} = @$params;
-    }
 
     push @{$self->{variants}}, 
         $self->{Variant}->new(params => $params,

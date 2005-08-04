@@ -1,4 +1,4 @@
-use Test::More tests => 12;
+use Test::More tests => 21;
 
 BEGIN { use_ok('Symbol::Opaque') }
 
@@ -33,6 +33,31 @@ defsym('bar');
     my $x = "hello";
     ok(!( foo($x) << foo(42) ), "binding fails on already-defined variables");
     is($x, "hello", "x is preserved");
+}
+
+{
+    my $x;
+    ok(foo($x, $x) << foo(3, 3), "binding succeeds on nonlinear queries");
+    is($x, 3, "and it bound correctly");
+}
+
+{
+    my $x;
+    ok(!( foo($x, $x) << foo(3, 4) ), "binding fails on nonlinear queries");
+    ok(!defined $x, "and x didn't get bound");
+}
+
+{
+    my $x;
+    ok(foo($x, bar($x)) << foo(foo(3), bar(foo(3))), "a more complex nonlinear query");
+    ok(foo(my $y) << $x, "the correct thing matched");
+    is($y, 3, "even");
+}
+
+{
+    my $x;
+    ok(!( foo($x, bar($x)) << foo(foo(3), bar(3)) ), "a more complex nonlinear failing query");
+    ok(!defined $x, "x not bound");
 }
 
 # vim: ft=perl :

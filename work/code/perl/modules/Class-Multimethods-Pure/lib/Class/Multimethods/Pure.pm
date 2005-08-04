@@ -607,6 +607,20 @@ sub compile {
     $self->{vlist}
 }
 
+# returns a string that represents the compiled singular ordering
+sub debug_compiled {
+    my ($self, $name) = @_;
+    my $compiled = $self->compile;
+    my $debug = "====$name====\n";
+    for my $set (reverse @$compiled) {
+        for (@$set) {
+            $debug .= $_->string . "\n";
+        }
+        $debug .= "----\n";
+    }
+    $debug;
+}
+
 sub find_variant {
     my ($self, $args) = @_;
 

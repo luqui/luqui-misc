@@ -7,7 +7,7 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 our %MULTI;
 our %MULTIPARAM;
@@ -631,10 +631,11 @@ package Class::Multimethods::Pure::Method::DominatingOrder;
 # XXX this algorithm is fundamentally flawed
 
 use base 'Class::Multimethods::Pure::Method';
-use Carp;
+use Carp qw<cluck croak>;
 
 sub new {
     my ($class, %o) = @_;
+    cluck "The DominatingOrder dispatcher is deprecated: it doesn't detect ambiguities in all cases";
     bless { 
         variants => [], 
         Variant => $o{Variant} || 'Class::Multimethods::Pure::Variant',

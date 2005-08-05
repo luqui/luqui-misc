@@ -3,9 +3,11 @@ Makefile.PL
 MANIFEST
 README
 lib/Class/Multimethods/Pure.pm
+t/arity.t
 t/export.t
 t/junction.t
 t/nonclass.t
+t/other.t
 t/smd.t
 t/subtype.t
 META.yml                                 Module meta-data (added by MakeMaker)

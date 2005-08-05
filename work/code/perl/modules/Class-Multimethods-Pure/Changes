@@ -10,3 +10,11 @@ Revision history for Perl extension Class::Multimethods::Pure.
 
 0.03  Wed Aug 3 00:05:00 2005
         - added support for multis with varying numbers of invocants
+
+0.04  Fri Aug 5 13:16:00 2005
+        - added multiple dispatchers support
+        - renamed the old default dispatcher DominatingOrder
+        - made a new, slow, simple dispatcher called Slow, and made it the default
+                because it actually works
+        - DominatingOrder is deprecated
+        - began work on a new dispatcher

@@ -558,6 +558,21 @@ sub string {
 
 package Class::Multimethods::Pure::Method;
 
+sub new {   # this needs to be overridden by subclasses
+    Class::Multimethods::Pure::Method::DominatingOrder->new(@_[1..$#_]);
+}
+
+sub call {
+    my $self = shift;
+
+    my $code = $self->find_variant(\@_)->code;
+    goto &$code;
+}
+
+package Class::Multimethods::Pure::Method::DominatingOrder;
+# XXX this algorithm is fundamentally flawed
+
+use base 'Class::Multimethods::Pure::Method';
 use Carp;
 
 sub new {
@@ -638,13 +653,6 @@ sub find_variant {
     }
     
     croak "No method found for args (@$args)";
-}
-
-sub call {
-    my $self = shift;
-
-    my $code = $self->find_variant(\@_)->code;
-    goto &$code;
 }
 
 1;

@@ -559,7 +559,7 @@ sub string {
 package Class::Multimethods::Pure::Method;
 
 sub new {   # this needs to be overridden by subclasses
-    Class::Multimethods::Pure::Method::DominatingOrder->new(@_[1..$#_]);
+    Class::Multimethods::Pure::Method::Slow->new(@_[1..$#_]);
 }
 
 sub call {
@@ -567,6 +567,64 @@ sub call {
 
     my $code = $self->find_variant(\@_)->code;
     goto &$code;
+}
+
+package Class::Multimethods::Pure::Method::Slow;
+
+use base 'Class::Multimethods::Pure::Method';
+use Carp;
+
+sub new {
+    my ($class, %o) = @_;
+    bless {
+        variants => [],
+        Variant => $o{Variant} || 'Class::Multimethods::Pure::Variant',
+    } => ref $class || $class;
+}
+
+sub add_variant {
+    my ($self, $params, $code) = @_;
+    
+    push @{$self->{variants}}, 
+        $self->{Variant}->new(params => $params,
+                              code => $code);
+}
+
+sub find_variant {
+    my ($self, $args) = @_;
+    
+    my @cand;
+    VARIANT:
+    for my $variant (@{$self->{variants}}) {
+        if ($variant->matches($args)) {
+            for (@cand) {
+                if ($_->less($variant)) {
+                    # we're dominated: don't enter the list
+                    next VARIANT;
+                }
+            }
+            # okay, we're in
+            for (my $i = 0; $i < @cand; $i++) {
+                if ($variant->less($cand[$i])) {
+                    # we dominate this variant: take it out of the list
+                    splice @cand, $i, 1;
+                    $i--;
+                }
+            }
+            push @cand, $variant;
+        }
+    }
+
+    if (@cand == 1) {
+        return $cand[0];
+    }
+    elsif (@cand == 0) {
+        croak "No method found for args (@$args)";
+    }
+    else {
+        croak "Ambiguous method call for args (@$args):\n" .
+            join '', map { "    " . $_->string . "\n" } @cand;
+    }
 }
 
 package Class::Multimethods::Pure::Method::DominatingOrder;

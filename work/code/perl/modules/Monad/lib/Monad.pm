@@ -9,6 +9,7 @@ use Filter::Simple;
 use Text::Balanced qw<extract_codeblock>;
 use PPI;
 use PPI::Dumper;
+use Monad::List;
 
 FILTER {
     local %PPI::Token::Operator::OPERATOR = (
@@ -44,7 +45,7 @@ sub monadize {
     $doc->prune('PPI::Token::Comment');
     my ($block) = $doc->children;
     my @top = $block->children;
-    my $final = 'do{';
+    my $final = '{';
     my $tail;
 
     my $nstmts = grep { $_->isa('PPI::Statement') } @top;

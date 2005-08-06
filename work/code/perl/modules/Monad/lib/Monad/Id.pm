@@ -21,7 +21,7 @@ sub RETURN {
 
 sub get {
     my ($self) = @_;
-    @$self;
+    wantarray ? @$self : $self->[0];
 }
 
 1;

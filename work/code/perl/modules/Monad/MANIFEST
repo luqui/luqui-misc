@@ -1,6 +1,5 @@
-Changes
 Makefile.PL
 MANIFEST
 README
-t/Monad.t
+test.pl
 lib/Monad.pm

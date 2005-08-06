@@ -48,20 +48,14 @@ sub monadize {
     my $final = '{';
     my $tail;
 
-    my $nstmts = grep { $_->isa('PPI::Statement') } @top;
-    my $stmtct = 0;
-
     for (@top) {
         if ($_->isa('PPI::Statement')) {
             my $str = $_;
             $str =~ s/;\s*$//;
             if ($str =~ /^\s*\^/) {
                 $str =~ s/\^//;
-                $final .= "$str;";
-                $stmtct++;
-            }
-            elsif (++$stmtct == $nstmts) {
-                $final .= "$str";
+                $final .= "Monad::BIND(do{$str}, sub { ";
+                $tail .= "})";
             }
             elsif ($str =~ /<-/) {
                 my ($left, $right) = split /<-/, $str;
@@ -69,8 +63,7 @@ sub monadize {
                 $tail .= "})";
             }
             else {
-                $final .= "Monad::BIND(do{$str}, sub { ";
-                $tail .= "})";
+                $final .= "$str;";
             }
         }
         else {

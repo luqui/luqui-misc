@@ -1,8 +1,9 @@
-use Test::More tests => 6;
+use Test::More tests => 13;
 
 BEGIN { 
     use_ok('Monad');
     use_ok('Monad::Id');
+    use_ok('Monad::Coro');
 }
 
 sub mul2 {
@@ -50,5 +51,22 @@ sub multis {
 }
 
 is_deeply(multis(), [8,16,3,5], "nested do blocks");
+
+sub next3 {
+    my ($first) = @_;
+    DO {
+        ^yield $first+1;
+        ^yield $first+2;
+        ^yield $first+3;
+    }
+}
+
+my $coro = Monad::Coro->new(\&next3);
+is($coro->start(1), 2, "coro");
+ok(!$coro->done,       "coro not done");
+is($coro->next,     3, "coro");
+is($coro->next,     4, "coro");
+ok(!defined $coro->next, "coro stops");
+ok($coro->done,       "done");
 
 # vim: ft=perl :

@@ -44,7 +44,7 @@ sub monadize {
     $doc->prune('PPI::Token::Comment');
     my ($block) = $doc->children;
     my @top = $block->children;
-    my $final = '{';
+    my $final = 'do{';
     my $tail;
 
     my $nstmts = grep { $_->isa('PPI::Statement') } @top;
@@ -64,11 +64,11 @@ sub monadize {
             }
             elsif ($str =~ /<-/) {
                 my ($left, $right) = split /<-/, $str;
-                $final .= "do{$right}->BIND(sub { ($left) = \@_; ";
+                $final .= "Monad::BIND(do{$right}, sub { ($left) = \@_; ";
                 $tail .= "})";
             }
             else {
-                $final .= "do{$str}->BIND(sub { ";
+                $final .= "Monad::BIND(do{$str}, sub { ";
                 $tail .= "})";
             }
         }
@@ -77,6 +77,16 @@ sub monadize {
         }
     }
     $final .= "$tail}";
+}
+
+sub BIND {
+    my ($monad, $function) = @_;
+    if (ref $monad eq 'ARRAY') {    # make the list monad pervasive
+        Monad::List::BIND($monad, $function);
+    }
+    else {
+        $monad->BIND($function);
+    }
 }
 
 1;

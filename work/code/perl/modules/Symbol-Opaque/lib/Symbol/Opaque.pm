@@ -1,6 +1,6 @@
 package Symbol::Opaque;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use 5.006001;
 use strict;
@@ -115,10 +115,8 @@ package Symbol::Opaque::Ops;
 use Class::Multimethods::Pure multi => 'UNIFY';
 
 use overload
-    '<<' => sub { 
-        my $ret = ! !UNIFY($_[0], $_[1]);
-        $ret 
-    },
+    '<<' => sub { ! !UNIFY($_[0], $_[1]) },
+    '>>' => sub { ! !UNIFY($_[1], $_[0]) },
     '""' => sub { overload::StrVal($_[0]) },
 ;
 
@@ -265,16 +263,14 @@ variable more than once:
     foo($x, $x) << foo(4, 4);  # true; $x = 4
     foo($x, $x) << foo(4, 5);  # false
 
-Unification of arrays and hashes is only performed I<referentially>.  So:
+Unification of arrays is performed by comparing them elementwise, just like the
+arguments of a structure.
 
-    foo([1,2,3]) << foo([1,2,3]);  # FALSE!
-
-But:
-
-    my $array = [1,2,3];
-    foo($array) << foo($array);    # true
-
-It is possible implement this if somebody wants it.
+Unification of hashes is done like so:  Every key that the target (left) hash
+has, the source (right) hash must also, and their values must unify.  However,
+the source hash may have keys that the target hash does not, and the two hashes
+will still unify.  This is so you can support "property lists", and unify
+against structures that have certain properties.
 
 =head1 SEE ALSO
 

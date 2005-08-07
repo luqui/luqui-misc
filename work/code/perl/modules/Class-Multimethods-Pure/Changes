@@ -22,3 +22,6 @@ Revision history for Perl extension Class::Multimethods::Pure.
 0.05  Sat Aug 6 18:50:00 2005
         - added the unblessed types IO, FORMAT, and Regexp
         - thanks rgs
+
+0.06  Set Aug 6 21:05:00 2005
+        - fixed a bug where a subtype would not be considered a subset of its parent

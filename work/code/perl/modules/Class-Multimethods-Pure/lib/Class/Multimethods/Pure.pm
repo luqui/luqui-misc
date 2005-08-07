@@ -7,7 +7,7 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 our %MULTI;
 our %MULTIPARAM;
@@ -271,7 +271,7 @@ use base 'Class::Multimethods::Pure::Type::Normal';
 package Class::Multimethods::Pure::Type::Package;
 
 # A regular package type
-use base 'Class::Multimethods::Pure::Type::Normal';
+use base 'Class::Multimethods::Pure::Type::Subtypable';
 
 use Scalar::Util qw<blessed>;
 

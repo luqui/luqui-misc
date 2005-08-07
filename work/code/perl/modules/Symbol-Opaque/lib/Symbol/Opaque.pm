@@ -5,38 +5,133 @@ our $VERSION = '0.01';
 use 5.006001;
 use strict;
 use warnings;
-use Carp;
-use Scalar::Util qw<blessed readonly>;
-
-use overload '<<'  => sub { $_[0]->_op_unify($_[1]) },
-             '""'  => sub { $_[0]->string },
-;
-
+no warnings 'uninitialized';
+use Class::Multimethods::Pure;
 use Exporter;
+use Scalar::Util qw<readonly>;
 use base 'Exporter';
 
-our @EXPORT = qw<defsym>;
+our @EXPORT = qw<defsym free id _()>;
+
+sub _() {
+    Symbol::Opaque::Anything->new;
+}
+
+sub free($) {
+    Symbol::Opaque::Free->new(\$_[0]);
+}
+
+sub id($) {
+    Symbol::Opaque::Id->new($_[0]);
+}
+
+sub makesymdef {
+    my ($name) = @_;
+    sub {
+        my @args;
+        for my $i (0..$#_) {
+            if (!defined $_[$i] && !readonly $_[$i]) {
+                push @args, free $_[$i];
+            }
+            else {
+                push @args, $_[$i];
+            }
+        }
+        Symbol::Opaque::Symbol->new($name, @args);
+    };
+}
 
 sub defsym {
     my ($name) = @_;
-    my $package = caller;
     no strict 'refs';
-    my $code = sub { Symbol::Opaque->new($name, \(@_)) };
-    *{"$package\::$name"} = $code;
-    $code;
+    my $package = caller;
+    *{"$package\::$name"} = makesymdef $name;
 }
+
+multi UNIFY => (Any, Any) => sub {
+    my ($a, $b) = @_;
+    $a eq $b and sub { };
+};
+
+multi UNIFY => ('Symbol::Opaque::Free', Any) => sub {
+    my ($var, $thing) = @_;
+    $var->bind($thing);
+};
+
+multi UNIFY => (subtype('Symbol::Opaque::Free', sub { $_[0]->bound }), Any) => sub {
+    my ($var, $thing) = @_;
+    UNIFY($var->value, $thing);
+};
+
+multi UNIFY => ('Symbol::Opaque::Symbol', Any) => sub { 
+    0; 
+};
+
+multi UNIFY => ('Symbol::Opaque::Symbol', 'Symbol::Opaque::Symbol') => sub {
+    my ($sa, $sb) = @_;
+    return 0 unless $sa->name eq $sb->name;
+
+    UNIFY([$sa->args], [$sb->args]);
+};
+
+multi UNIFY => ('Symbol::Opaque::Anything', Any) => sub {
+    sub { };
+};
+
+multi UNIFY => ('ARRAY', 'ARRAY') => sub {
+    my ($a, $b) = @_;
+    return 0 unless @$a == @$b;
+    
+    my @rollback;
+    for my $i (0..$#$a) {
+        my $code = UNIFY($a->[$i], $b->[$i]);
+        if ($code) {
+            push @rollback, $code;
+        }
+        else {
+            $_->() for @rollback;
+            return 0;
+        }
+    }
+
+    return sub { $_->() for @rollback };
+};
+
+# Hash-hash unification is a little subtle.
+# The right hash has to have every key-value pair as the left hash,
+# but the right may have extra keys and that's okay.
+multi UNIFY => ('HASH', 'HASH') => sub {
+    my ($a, $b) = @_;
+
+    my @keys = keys %$a;
+    for (@keys) {
+        return 0 unless exists $b->{$_};
+    }
+    UNIFY([ @$a{@keys} ], [ @$b{@keys} ]);
+};
+
+package Symbol::Opaque::Ops;
+
+use Class::Multimethods::Pure multi => 'UNIFY';
+
+use overload
+    '<<' => sub { 
+        my $ret = ! !UNIFY($_[0], $_[1]);
+        $ret 
+    },
+    '""' => sub { overload::StrVal($_[0]) },
+;
+
+package Symbol::Opaque::Symbol;
+
+use base 'Symbol::Opaque::Ops';
 
 sub new {
-    my ($class, $name, @refs) = @_;
+    my ($class, $name, @args) = @_;
     bless {
         name => $name,
-        refs => \@refs,
+        args => \@args,
     } => ref $class || $class;
-}
-
-sub _op_unify {
-    my ($self, $other) = @_;
-    ! !$self->unify($other);
 }
 
 sub name {
@@ -46,52 +141,46 @@ sub name {
 
 sub args {
     my ($self) = @_;
-    map { $$_ } @{$self->{refs}};
+    @{$self->{args}};
 }
 
-sub subunify {
-    my ($self, $leftref, $right) = @_;
-    if (!defined $$leftref && !readonly $$leftref) {  # a free variable
-        $$leftref = $right;
-        return sub { undef $$leftref };
-    }
-    elsif (blessed($$leftref) && $$leftref->isa('Symbol::Opaque')) {
-        return $$leftref->unify($right);
-    }
-    else {
-        return $$leftref eq $right ? sub { } : 0;
-    }
+package Symbol::Opaque::Free;
+
+use base 'Symbol::Opaque::Ops';
+
+sub new {
+    my ($class, $ref) = @_;
+    undef $$ref;
+    bless {
+        ref => $ref,
+    } => ref $class || $class;
 }
 
-sub unify {
-    my ($self, $other) = @_;
-    unless (blessed($other) && $other->isa('Symbol::Opaque')) {
-        return 0;
-    }
-    
-    my @oargs = $other->args;
-    if (@{$self->{refs}} != @oargs) {
-        return 0;
-    }
-    
-    my @rollback;
-    for my $i (0..$#oargs) {
-        my $unif = $self->subunify($self->{refs}[$i], $oargs[$i]);
-        if ($unif) {
-            push @rollback, $unif;
-        }
-        else {
-            $_->() for @rollback;
-            return 0;
-        }
-    }
-    
-    return sub { $_->() for @rollback };
+sub bind {
+    my ($self, $thing) = @_;
+    ${$self->{ref}} = $thing;
+    sub {
+        undef ${$self->{ref}};
+    };
 }
 
-sub string {
+sub bound {
     my ($self) = @_;
-    "$self->{name}(" . join(', ', $self->args) . ")";
+    defined ${$self->{ref}};
+}
+
+sub value {
+    my ($self) = @_;
+    ${$self->{ref}};
+}
+
+package Symbol::Opaque::Anything;
+
+use base 'Symbol::Opaque::Ops';
+
+sub new {
+    my ($class) = @_;
+    bless {} => ref $class || $class;
 }
 
 1;

@@ -1,4 +1,4 @@
-use Test::More tests => 21;
+use Test::More tests => 29;
 
 BEGIN { use_ok('Symbol::Opaque') }
 
@@ -57,6 +57,30 @@ defsym('bar');
 {
     my $x;
     ok(!( foo($x, bar($x)) << foo(foo(3), bar(3)) ), "a more complex nonlinear failing query");
+    ok(!defined $x, "x not bound");
+}
+
+{
+    my $x;
+    ok(foo([1, free $x, _]) << foo([1,2,3]), "array matching");
+    is($x, 2, "x bound");
+}
+
+{
+    my $x;
+    ok(!(foo([1, free $x, ]) << foo([2,3,4])), "array nonmatching");
+    ok(!defined $x, "x not bound");
+}
+
+{
+    my $x;
+    ok(foo({ a => free $x }) << foo({ a => 1, b => 2 }), "hash matching");
+    is($x, 1, "x bound");
+}
+
+{
+    my $x;
+    ok(!(foo({ a=> free $x }) << foo({ b => 1 })), "hash nonmatching");
     ok(!defined $x, "x not bound");
 }
 

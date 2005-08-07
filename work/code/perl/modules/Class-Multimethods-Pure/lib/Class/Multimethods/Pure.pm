@@ -7,7 +7,7 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 our %MULTI;
 our %MULTIPARAM;
@@ -325,6 +325,9 @@ our %SPECIAL = (
     REF    => 1,
     GLOB   => 1,
     LVALUE => 1,
+    IO     => 1,
+    FORMAT => 1,
+    Regexp => 1,
 );
 
 sub is_unblessed {
@@ -851,6 +854,9 @@ C<ref> when given an unblessed reference.   For the record:
     REF
     GLOB
     LVALUE
+    IO
+    FORMAT
+    Regexp
 
 For example:
 

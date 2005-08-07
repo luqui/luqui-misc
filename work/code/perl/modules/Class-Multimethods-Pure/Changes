@@ -18,3 +18,7 @@ Revision history for Perl extension Class::Multimethods::Pure.
                 because it actually works
         - DominatingOrder is deprecated
         - began work on a new dispatcher
+
+0.05  Sat Aug 6 18:50:00 2005
+        - added the unblessed types IO, FORMAT, and Regexp
+        - thanks rgs

@@ -1,12 +1,10 @@
-data Type where
-    Type    :: String -> Type
-    Sup     :: Type -> Type -> Type
-    Inf     :: Type -> Type -> Type
-    Top     :: Type
-    Bot     :: Type
-    Bracket :: Type -> Type -> Type
-
-instance Show Type
+data Type = Type String
+          | Sup Type Type
+          | Inf Type Type
+          | Top
+          | Bot
+          | Bracket Type Type
+    deriving Show
 
 does :: Type -> Type -> Bool
 does (Type a) (Type b) = does' a b
@@ -54,8 +52,8 @@ inf2 a b = inf2' (inf a) (inf b)
 
 main :: IO ()
 main = let 
-         t = Bracket (Type "Int") (Type "Gobble")
-         --u = Bracket t (Type "Num")
+         t = Bracket (Type "Int") u
+         u = Bracket t (Type "Num")
            in do
              print "T = ["
              print $ inf t
@@ -66,5 +64,5 @@ main = let
              print "U = ["
              --print $ inf u
              print "|"
-             --print $ sup u
+             print $ sup u
              print "]"

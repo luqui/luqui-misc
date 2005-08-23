@@ -117,7 +117,7 @@ use Class::Multimethods::Pure multi => 'UNIFY';
 use overload
     '<<' => sub { ! !UNIFY($_[0], $_[1]) },
     '>>' => sub { ! !UNIFY($_[1], $_[0]) },
-    '""' => sub { overload::StrVal($_[0]) },
+    '""' => sub { $_[0]->string },
 ;
 
 package Symbol::Opaque::Symbol;
@@ -140,6 +140,11 @@ sub name {
 sub args {
     my ($self) = @_;
     @{$self->{args}};
+}
+
+sub string {
+    my ($self) = @_;
+    $self->name . "(" . join(', ', @{$self->{args}}) . ")";
 }
 
 package Symbol::Opaque::Free;
@@ -172,6 +177,11 @@ sub value {
     ${$self->{ref}};
 }
 
+sub string {
+    my ($self) = @_;
+    "free($self->{ref})";
+}
+
 package Symbol::Opaque::Anything;
 
 use base 'Symbol::Opaque::Ops';
@@ -179,6 +189,10 @@ use base 'Symbol::Opaque::Ops';
 sub new {
     my ($class) = @_;
     bless {} => ref $class || $class;
+}
+
+sub string {
+    "_";
 }
 
 1;

@@ -54,26 +54,15 @@ process rule = do
               (replace subruler rulel t)
     runi _ _ = return ()
 
--- this is the most awfully procedural haskell I have ever seen
 close :: State CS [Rule]
 close = do
-    again <- step
-    if again
-        then close
-        else do
-            CS _ closure <- get
-            return closure
-    where
-    step :: State CS Bool
-    step = do
-        CS queue closure <- get
-        if length queue > 0
-            then let (q:qs) = queue in do
-                put (CS qs closure)
-                process q
-                return True
-            else
-                return False
+    CS queue closure <- get
+    if length queue > 0
+        then let (q:qs) = queue in do
+            put (CS qs closure)
+            process q
+            close
+        else return closure
 
 main :: IO ()
 main = let closure = fst $ runState close $ CS rules rules in

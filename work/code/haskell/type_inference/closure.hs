@@ -11,8 +11,8 @@ data Rule = Does Type Type
 
 rules :: [Rule]
 rules = [
-    Does (Type "a") ((List . Type) "a"),
-    Does ((List . List . Type) "a") (Type "Num"),
+    Does (Type "a") (List $ Type "a"),
+    Does (List $ List $ Type "a") (Type "Num"),
     Does (Type "c") (Type "a") ]
 
 -- Fall back on procedural methods, because I don't know how to think

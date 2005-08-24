@@ -18,10 +18,9 @@ insert_rule rule = do
         put (CS (addToQueue queue rule) (Set.insert rule closure))
 
 replace :: Type -> Type -> Type -> Maybe Type
-replace typ pat repl 
-    | pat == typ        = Just repl
-    | List inner <- typ = replace inner pat repl >>= Just . List
-    | otherwise         = Nothing
+replace pat with target 
+    | target == pat  = Just with
+    | otherwise      = gut (replace pat with) target
 
 process :: Rule -> State CS ()
 process rule = do
@@ -35,14 +34,14 @@ process rule = do
     luni (Does subrulel subruler) (Does t@(Type _ _) ruler) = 
         maybe (return ())
               (\repl -> insert_rule (Does repl subruler))
-              (replace subrulel ruler t)
+              (replace ruler t subrulel)
     luni _ _ = return ()
     
     runi :: Rule -> Rule -> State CS ()
     runi (Does subrulel subruler) (Does rulel t@(Type _ _)) = 
         maybe (return ())
               (\repl -> insert_rule (Does subrulel repl))
-              (replace subruler rulel t)
+              (replace rulel t subruler)
     runi _ _ = return ()
 
 close_ :: State CS (Set Rule)

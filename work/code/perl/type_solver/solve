@@ -1,0 +1,55 @@
+sub &infix:<*> (::X, ::X --> ::X | Num ::X) {...}
+sub &infix:<+> (::W, ::W --> ::W | Num ::W) {...}
+
+sub fop (&op:(::A, ::B --> ::C), &f:(::D --> ::A), ::B $y 
+            --> &:(::D --> ::C)) {
+    return -> $x { &op(&f($x), $y) }
+}
+
+                                # ::Y --> ::Z
+my Num $result = fop(&infix:<*>, { $_ + 1 }, 4)(2.5);
+
+------------
+Int 4, 1;
+Float 2.5;
+Num Int;
+Num Float;
+
+{
+    # &infix:<*> (<=) &op:(::A, ::B --> ::C)
+    does(::A, ::X)
+    does(::B, ::X)
+    does(::X, ::C)
+    instance(::X, Num)
+
+    # { $_ + 1 }:(::Y --> ::Z) (<=) &f:(::D --> ::A)
+    does(::D, ::Y)
+    does(::Z, ::A)
+
+    # 4 (in) ::B $y
+    does(Int, ::B)
+
+    # &:(::D --> ::C) (<=) &:(Float --> Num)
+    does(Float, ::D)
+    does(::C, Num)
+
+    # { $_ + 1 }:(::Y --> ::Z)
+    does(::Y, ::W)
+    does(Int, ::W)
+    does(::W, ::Z)
+    instance(::W, Num)
+}
+
+A     | X
+B     | X
+X     | C
+D     | Y
+Z     | A
+Int   | B
+Float | D
+C     | Num
+Y     | W
+Int   | W
+W     | Z
+W     | Num
+

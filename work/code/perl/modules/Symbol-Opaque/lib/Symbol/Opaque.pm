@@ -1,6 +1,6 @@
 package Symbol::Opaque;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use 5.006001;
 use strict;
@@ -286,6 +286,24 @@ the source hash may have keys that the target hash does not, and the two hashes
 will still unify.  This is so you can support "property lists", and unify
 against structures that have certain properties.
 
+A variable is considered free if it is writable (this is true of all variables
+that you'll pass in), undefined, and in the top level of a constructor.  That
+is:
+
+    foo([1, my $x]) << foo([1,2])
+
+Will not unify $x, since it is not directly in a data constructor.  To get
+around this, you can explicitly mark variables as free with the C<free> 
+function:
+
+    foo([1, free my $x]) << foo([1,2])  # success: $x == 2
+
+Sometimes you have a situation where you're unifying against a structure,
+and you want something to be in a position, but you don't care what it is.
+The C<_> marker is used in this case:
+
+    foo([1, _]) << foo([1, 2])   # success: no bindings
+    
 =head1 SEE ALSO
 
 L<Logic>

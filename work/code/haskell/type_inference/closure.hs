@@ -1,20 +1,13 @@
--- from code/perl/type_inference/closure.pl
+module Closure (
+    close,
+) where
 
 import Control.Monad.State
 import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.Queue
 
-
-data Type = Type String
-          | List Type
-    deriving (Show, Eq, Ord)
-
-data Rule = Does Type Type
-    deriving (Show, Eq, Ord)
-
--- Fall back on procedural methods, because I don't know how to think
--- this functionally :-(
+import Type
 
 data CS = CS (Queue Rule) (Set Rule)
 
@@ -39,14 +32,14 @@ process rule = do
                     (Set.elems closure)
     where
     luni :: Rule -> Rule -> State CS ()
-    luni (Does subrulel subruler) (Does t@(Type _) ruler) = 
+    luni (Does subrulel subruler) (Does t@(Type _ _) ruler) = 
         maybe (return ())
               (\repl -> insert_rule (Does repl subruler))
               (replace subrulel ruler t)
     luni _ _ = return ()
     
     runi :: Rule -> Rule -> State CS ()
-    runi (Does subrulel subruler) (Does rulel t@(Type _)) = 
+    runi (Does subrulel subruler) (Does rulel t@(Type _ _)) = 
         maybe (return ())
               (\repl -> insert_rule (Does subrulel repl))
               (replace subruler rulel t)
@@ -65,12 +58,3 @@ close_ = do
 close :: [Rule] -> [Rule]
 close rules = Set.toList $ fst $ runState close_ $ 
                 CS (listToQueue rules) (Set.fromList rules)
-
-main :: IO ()
-main = sequence_ $ map print $ close rules
-    where
-    rules :: [Rule]
-    rules = [
-        Does (Type "a") (List $ Type "a"),
-        Does (List $ List $ Type "a") (Type "Num"),
-        Does (Type "c") (Type "a") ]

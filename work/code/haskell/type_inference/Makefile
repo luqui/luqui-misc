@@ -1,7 +1,7 @@
-all: closure
+all: infer
 
-closure: closure.hs
-	ghc -fglasgow-exts -package mtl -o $@ $<
+infer:
+	ghc -fglasgow-exts --make Main.hs -o $@
 
 clean:
-	rm -f closure.hi closure.o
+	rm -f *.hi *.o

@@ -4,8 +4,13 @@ import Data.Complex
 
 type Amplitude = Complex Float
 
+data EqX a = EqX a
+
+eqx :: EqX a -> a
+eqx (EqX x) = x
+
 data Ord a => Superposition a = 
-    Superposition (Map a Amplitude)
+    Superposition (Map (EqX a) Amplitude)
 
 superpose :: Ord a => [(a, Amplitude)] -> Superposition a
 superpose xs = Superposition (Map.fromListWith (+) xs)

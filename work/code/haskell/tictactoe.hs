@@ -132,16 +132,16 @@ playGame :: (Player,Player) -> StateT (XO,Board) IO (Maybe XO)
 playGame (cur,oth) = do
     (pl, board) <- get
     liftIO $ putStrLn $ show board
-    if full board
-        then return Nothing
-        else maybe (do mnextboard <- liftIO $ act cur pl board
-                       maybe (return $ Just $ other pl)
-                             (\newboard -> do put (other pl, newboard)
-                                              playGame (oth,cur))
-                             mnextboard)
-                   (return . Just)
-                   (win board)
-      
+    maybe (if full board
+                then return Nothing
+                else (do mnextboard <- liftIO $ act cur pl board
+                         maybe (return $ Just $ other pl)
+                               (\newboard -> do put (other pl, newboard)
+                                                playGame (oth,cur))
+                               mnextboard))
+          (return . Just)
+          (win board)
+
 
 makePlayer :: String -> Player
 makePlayer "AI" = AI

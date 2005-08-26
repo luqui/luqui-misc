@@ -1,9 +1,8 @@
 import Data.Array
 import Control.Monad.State
 import Data.Maybe
-import List
-import IO
-import Debug.Trace
+import Data.List
+import System.IO
 
 type Move  = (XO, Int)
 
@@ -82,7 +81,6 @@ data Player = AI
 act :: Player -> XO -> Board -> IO (Maybe Board)
 act player@(Human name) pl board = do
     putStr $ "Your move, " ++ name ++ " (" ++ show pl ++ "): "
-    hFlush stdout
     space <- readLn :: IO Int
     maybe (do putStrLn "Invalid move"
               act player pl board)
@@ -149,11 +147,10 @@ makePlayer name = Human name
 
 main :: IO ()
 main = do
+    hSetBuffering stdout NoBuffering
     putStr $ "Player 1: "
-    hFlush stdout
     p1 <- getLine
     putStr $ "Player 2: "
-    hFlush stdout
     p2 <- getLine
     (mwinner,(_,finalboard)) <- runStateT (playGame (makePlayer p1, makePlayer p2)) (X,emptyBoard)
     putStrLn $ maybe "No winner" (\winner -> show winner ++ " wins!") mwinner

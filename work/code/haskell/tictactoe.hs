@@ -3,6 +3,7 @@ import Control.Monad.State
 import Data.Maybe
 import List
 import IO
+import Debug.Trace
 
 type Move  = (XO, Int)
 
@@ -98,16 +99,19 @@ type Rating = (Int, Int)
 --   I do not lose for all opponent moves
 
 aiMove :: XO -> Board -> Rating
-aiMove pl board 
+aiMove pl board =
+    makeRating pl board $ minimum $ (1,0) : do
+            oppmove <- allBoards (other pl) board
+            return $ makeRating pl oppmove $ maximum $ (0,0) : do
+                mymove <- allBoards pl oppmove
+                return $ aiMove pl mymove
+
+makeRating :: XO -> Board -> Rating -> Rating
+makeRating pl board def 
     | wins pl board         = (1,0)
     | wins (other pl) board = (0,0)
     | full board            = (0,1)
-    | otherwise             =
-        minimum $ (1,0) : do
-            oppmove <- allBoards (other pl) board
-            return $ maximum $ (0,0) : do
-                mymove <- allBoards pl oppmove
-                return $ aiMove pl mymove
+    | otherwise             = def
 
 maxRating :: (Board -> Rating) -> [Board] -> Board
 maxRating f as = maximumBy
@@ -151,6 +155,6 @@ main = do
     putStr $ "Player 2: "
     hFlush stdout
     p2 <- getLine
-    (mwinner,(_,finalboard)) <- runStateT (playGame (makePlayer p1, makePlayer p2)) (O,emptyBoard)
+    (mwinner,(_,finalboard)) <- runStateT (playGame (makePlayer p1, makePlayer p2)) (X,emptyBoard)
     putStrLn $ maybe "No winner" (\winner -> show winner ++ " wins!") mwinner
     putStrLn $ show finalboard

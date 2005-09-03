@@ -91,24 +91,22 @@ act player@(Human name) pl board = do
 
 act AI pl board = return $ aiMakeMove pl board
 
-type Rating = (Int, Int)
--- In order, these are
---   I win for all opponent moves
---   I do not lose for all opponent moves
+data Rating = MayLose | WontLose | WillWin
+    deriving (Eq, Ord, Enum)
 
 aiMove :: XO -> Board -> Rating
 aiMove pl board =
-    makeRating pl board $ minimum $ (1,0) : do
+    makeRating pl board $ minimum $ WillWin : do
             oppmove <- allBoards (other pl) board
-            return $ makeRating pl oppmove $ maximum $ (0,0) : do
+            return $ makeRating pl oppmove $ maximum $ MayLose : do
                 mymove <- allBoards pl oppmove
                 return $ aiMove pl mymove
 
 makeRating :: XO -> Board -> Rating -> Rating
 makeRating pl board def 
-    | wins pl board         = (1,0)
-    | wins (other pl) board = (0,0)
-    | full board            = (0,1)
+    | wins pl board         = WillWin
+    | wins (other pl) board = MayLose
+    | full board            = WontLose
     | otherwise             = def
 
 maxRating :: (Board -> Rating) -> [Board] -> Board

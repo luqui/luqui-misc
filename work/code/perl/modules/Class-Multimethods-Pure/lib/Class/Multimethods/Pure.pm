@@ -7,7 +7,7 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 our %MULTI;
 our %MULTIPARAM;
@@ -860,6 +860,7 @@ C<ref> when given an unblessed reference.   For the record:
 
 For example:
 
+    multi pretty => (Any) => sub { $_[0] };
     multi pretty => ('ARRAY') => sub {
         "[ " . join(', ', map { pretty($_) } @{$_[0]}) . " ]";
     };

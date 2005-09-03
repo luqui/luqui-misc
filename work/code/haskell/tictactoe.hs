@@ -94,11 +94,27 @@ act AI pl board = return $ aiMakeMove pl board
 data Rating = MayLose | WontLose | WillWin
     deriving (Eq, Ord, Enum)
 
+finiteMin :: (Eq a) => (a -> a -> Bool) -> a -> a -> [a] -> a
+finiteMin _ _ mx [] = mx
+finiteMin less mn mx (a:as) 
+    | a == mn   = mn
+    | otherwise = let mas = finiteMin less mn mx as in
+                      if mas `less` a
+                          then mas
+                          else a
+
+ratingMin :: [Rating] -> Rating
+ratingMin = finiteMin (<) MayLose WillWin
+
+ratingMax :: [Rating] -> Rating
+ratingMax = finiteMin (>) WillWin MayLose
+                          
+
 aiMove :: XO -> Board -> Rating
 aiMove pl board =
-    makeRating pl board $ minimum $ WillWin : do
+    makeRating pl board $ ratingMin $ do
             oppmove <- allBoards (other pl) board
-            return $ makeRating pl oppmove $ maximum $ MayLose : do
+            return $ makeRating pl oppmove $ ratingMax $ do
                 mymove <- allBoards pl oppmove
                 return $ aiMove pl mymove
 

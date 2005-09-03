@@ -4,7 +4,7 @@ use strict;
 
 use lib glob '/home/fibonaci/devel/misc/luke/work/code/glop/blib/{lib,arch}';
 
-use Glop -step => 0.01, '-fullscreen';
+use Glop -step => 0.002, '-fullscreen';
 use Glop::AutoGL;
 
 use Fighter;

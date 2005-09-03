@@ -7,10 +7,20 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 our %MULTI;
 our %MULTIPARAM;
+
+our $DEFAULT_CORE = 'Class::Multimethods::Pure::Method::Slow';
+
+{
+    # This env check is mostly for testing.  No, correction, it's only for
+    # testing.  Don't use it.
+    if (my $core = $ENV{CMMP_DEFAULT_MULTI_CORE}) {
+        $DEFAULT_CORE = $core;
+    }
+}
 
 sub _internal_multi {
     my $name = shift or return;
@@ -43,6 +53,7 @@ sub _internal_multi {
 
         my $multi = $MULTI{$name} ||= 
                 Class::Multimethods::Pure::Method->new(
+                    Core    => $MULTIPARAM{$name}{Core},
                     Variant => $MULTIPARAM{$name}{Variant},
                 );
         
@@ -190,6 +201,12 @@ sub equal {
 sub matches;
 sub string;
 
+# returns whether this type depends on anything other than the package
+sub ref_cacheable { 0 }
+# returns whether this type *could possibly* match an object in this package
+# (keep in mind that you could implement this even if ref_cacheable is false)
+sub ref_match     { 1 }
+
 {   
     my $pkg = sub { Class::Multimethods::Pure::Type::Package->new(
                             'Class::Multimethods::Pure::' . $_[0]) };
@@ -311,6 +328,13 @@ sub string {
     $self->name;
 }
 
+sub ref_cacheable { 1 }
+
+sub ref_match {
+    my ($self, $package) = @_;
+    $package->isa($self->name);
+}
+
 package Class::Multimethods::Pure::Type::Unblessed;
 
 # SCALAR, ARRAY, etc.
@@ -359,6 +383,13 @@ sub string {
     $self->name;
 }
 
+sub ref_cacheable { 1 }
+
+sub ref_match {
+    my ($self, $package) = @_;
+    $self->name eq $package;
+}
+
 package Class::Multimethods::Pure::Type::Any;
 
 # Anything whatever
@@ -379,6 +410,10 @@ sub string {
     my ($self) = @_;
     "Any";
 }
+
+sub ref_cacheable { 1 }
+
+sub ref_match { 1 }
 
 package Class::Multimethods::Pure::Type::Subtype;
 
@@ -414,6 +449,13 @@ sub string {
     "where(" . $self->base->string . ", {@{[$self->condition]}})";
 }
 
+sub ref_cacheable { 0 }
+
+sub ref_match {
+    my ($self, $package) = @_;
+    $self->base->ref_match($package);
+}
+
 package Class::Multimethods::Pure::Type::Junction;
 
 # Any junction type
@@ -435,6 +477,19 @@ sub values {
 sub matches {
     my ($self, $obj) = @_;
     $self->logic(map { $_->matches($obj) } $self->values);
+}
+
+sub ref_cacheable {
+    my ($self) = @_;
+    for ($_->values) {
+        return 0 unless $_->ref_cacheable;
+    }
+    return 1;
+}
+
+sub ref_match {
+    my ($self, $package) = @_;
+    $self->logic(map { $_->ref_match($package) } $self->values);
 }
 
 sub logic;  # takes a list of true/false values and returns
@@ -515,6 +570,11 @@ sub params {
     @{$self->{params}};
 }
 
+sub param {
+    my ($self, $param) = @_;
+    $self->{params}[$param];
+}
+
 sub code {
     my ($self) = @_;
     $self->{code};
@@ -554,6 +614,11 @@ sub matches {
     return 1;
 }
 
+sub param_ref_match {
+    my ($self, $param, $package) = @_;
+    $self->param($param)->ref_match($package);
+}
+
 sub string {
     my ($self) = @_;
     "(" . join(', ', map { $_->string } $self->params) . ")";
@@ -561,8 +626,22 @@ sub string {
 
 package Class::Multimethods::Pure::Method;
 
+use Carp;
+
 sub new {   # this needs to be overridden by subclasses
-    Class::Multimethods::Pure::Method::Slow->new(@_[1..$#_]);
+    my ($class, %opt) = @_;
+    my $core = $opt{Core} || $Class::Multimethods::Pure::DEFAULT_CORE;
+    
+    if ($core->can('new')) {
+        return $core->new(%opt);
+    }
+    
+    $core = "Class::Multimethods::Pure::Method::$core";
+    if ($core->can('new')) {
+        return $core->new(%opt);
+    }
+
+    croak "Multimethod core $opt{Core} doesn't exist!";
 }
 
 sub call {
@@ -591,6 +670,11 @@ sub add_variant {
     push @{$self->{variants}}, 
         $self->{Variant}->new(params => $params,
                               code => $code);
+}
+
+sub variants {
+    my ($self) = @_;
+    @{$self->{variants}};
 }
 
 sub find_variant {
@@ -630,91 +714,75 @@ sub find_variant {
     }
 }
 
-package Class::Multimethods::Pure::Method::DominatingOrder;
-# XXX this algorithm is fundamentally flawed
+package Class::Multimethods::Pure::Method::DumbCache;
+# This dispatcher is the most presumptuous dispatcher there is.  It can
+# optimize the simplest cases.  It will be faster for methods which:
+#   * Don't use subtypes
+#   * Have a fixed arity
+# It will be slower otherwise.  Also it is a memory guzzler.  The more
+# different kinds of objects you call it with, the more memory it guzzles.  So
+# if you're subclassing a lot, avoid this dispatcher.
 
-use base 'Class::Multimethods::Pure::Method';
-use Carp qw<cluck croak>;
+use base 'Class::Multimethods::Pure::Method::Slow';
+use Carp;
 
 sub new {
     my ($class, %o) = @_;
-    cluck "The DominatingOrder dispatcher is deprecated: it doesn't detect ambiguities in all cases";
-    bless { 
-        variants => [], 
-        Variant => $o{Variant} || 'Class::Multimethods::Pure::Variant',
-        vlist => undef,
-    } => ref $class || $class;
+    my $self = $class->SUPER::new(%o);
+    $self->{cache} = {};
+    $self->{can_cache} = 1;
+    $self->{arity} = undef;
+    $self;
 }
 
-sub add_variant { 
+sub add_variant {
     my ($self, $params, $code) = @_;
-
-    push @{$self->{variants}}, 
-        $self->{Variant}->new(params => $params,
-                              code => $code);
-    undef $self->{vlist};
-}
-
-sub compile {
-    my ($self) = @_;
-
-    return $self->{vlist} if $self->{vlist};
+    $self->SUPER::add_variant($params, $code);
+    $self->{cache} = {};
+    $self->{can_cache} = 1;
+    $self->{arity} = undef;
     
-    my @q = 0..@{$self->{variants}}-1;
-    my @bin = (0) x @q;
+    # Find out if we should even try caching
+    VARIANT:
+    for my $var ($self->variants) {
+        my @params = $var->params;
+        unless (defined $self->{arity}) {
+            $self->{arity} = @params;
+        }
+        else {
+            unless ($self->{arity} == @params) {
+                $self->{can_cache} = 0;
+                last VARIANT;
+            }
+        }
 
-    while (@q) {
-        my $i = shift @q;
-        
-        for my $j (grep { $bin[$_] == $bin[$i] } 0..@{$self->{variants}}-1) {
-            if ($self->{variants}[$j]->less($self->{variants}[$i])) {
-                $bin[$i]++;
-                push @q, $i;
-                last;
+        for ($var->params) {
+            unless ($_->ref_cacheable) {
+                $self->{can_cache} = 0;
+                last VARIANT;
             }
         }
     }
-
-    my @list;
-    for my $i (0..@{$self->{variants}}-1) {
-        push @{$list[$bin[$i]]}, $self->{variants}[$i];
-    }
-
-    $self->{vlist} = \@list;
-    $self->{vlist}
-}
-
-# returns a string that represents the compiled singular ordering
-sub debug_compiled {
-    my ($self, $name) = @_;
-    my $compiled = $self->compile;
-    my $debug = "====$name====\n";
-    for my $set (reverse @$compiled) {
-        for (@$set) {
-            $debug .= $_->string . "\n";
-        }
-        $debug .= "----\n";
-    }
-    $debug;
 }
 
 sub find_variant {
     my ($self, $args) = @_;
-
-    my $list = $self->compile;
-
-    for my $set (@$list) {
-        my @matches = grep { $_->matches($args) } @$set;
-        if (@matches == 1) {
-            return $matches[0];
+    if ($self->{can_cache}) {
+        if (@$args < $self->{arity}) {
+            croak "Not enough arguments to multimethod";
         }
-        elsif (@matches > 1) {
-            croak "Ambiguous method call for args (@$args):\n" .
-                join '', map { "    " . $_->string . "\n" } @matches;
+        
+        my $idx = join $;, map { ref } @$args[0..$self->{arity}-1];
+        if (my $var = $self->{cache}{$idx}) {
+            return $var;
+        }
+        else {
+            return $self->{cache}{$idx} = $self->SUPER::find_variant($args);
         }
     }
-    
-    croak "No method found for args (@$args)";
+    else {
+        return $self->SUPER::find_variant($args);
+    }
 }
 
 1;

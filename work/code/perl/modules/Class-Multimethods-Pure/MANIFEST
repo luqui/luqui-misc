@@ -3,6 +3,7 @@ Makefile.PL
 MANIFEST
 README
 lib/Class/Multimethods/Pure.pm
+test.pl
 t/arity.t
 t/export.t
 t/junction.t

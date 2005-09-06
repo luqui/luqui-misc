@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+use IO::Prompt;
+
+# emc:  Emerge-check.  Emerge-pretend a package and then ask if it's
+#       okay to go ahead and install it.
+
+my $stat = system 'emerge', '-p', @ARGV;
+exit $stat if $stat;
+
+if (prompt '-yt1', "Go ahead? ") {
+    exit system 'sudo', 'emerge', @ARGV;
+}

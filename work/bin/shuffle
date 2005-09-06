@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+# If arguments are given on the command line, shuffle them and print them to
+# stdout.  Otherwise, shuffle stdin to stdout.
+
+use Algorithm::Numerical::Shuffle qw<shuffle>;
+
+my @data = @ARGV ? map { "$_\n" } @ARGV : <STDIN>;
+print shuffle @data;

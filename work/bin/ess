@@ -1,11 +1,9 @@
 #!/usr/bin/perl
 
 use XML::Simple;
-use Getopt::Long;
+use LWP::Simple;
 
 my $feed;
-
-my $options = GetOptions();
 
 my $cmd = shift;
 if ($cmd eq 'watch' || $cmd eq 'w') {
@@ -39,10 +37,7 @@ else {
 
 sub get_feed {
     return if $feed;
-    open my $pipe, '-|', 'wget -o /dev/null -O - http://ess.tv/ess.rss';
-    my $text = do { local $/; <$pipe> };
-    close $pipe or die "wget died: $!\n";
-    $feed = XMLin($text) or die "Couldn't parse XML\n";
+    $feed = XMLin(get('http://ess.tv/ess.rss')) or die "Couldn't get feed\n";
 }
 
 sub select_show {

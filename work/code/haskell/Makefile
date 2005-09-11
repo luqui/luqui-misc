@@ -1,5 +1,5 @@
 %: %.hs
-	ghc --make -o $@ $<
+	ghc --make -O -o $@ $<
 	rm -f $@.hi $@.o
 
 tictactoe: tictactoe.hs

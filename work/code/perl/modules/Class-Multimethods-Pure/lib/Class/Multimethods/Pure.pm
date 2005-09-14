@@ -7,7 +7,7 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 our %MULTI;
 our %MULTIPARAM;
@@ -1242,7 +1242,8 @@ Luke Palmer <lrpalmer@gmail.com>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 Luke Palmer.  All rights reserved.
-This module is free software.  It may be used, redistributed,
-and/or modified under the terms of the Perl Artistic License:
-http://www.perl.com/perl/misc/Artistic.html
+Copyright (C) 2005 by Luke Palmer (lrpalmer@gmail.com)
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.5 or,
+at your option, any later version of Perl 5 you may have available.

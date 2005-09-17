@@ -5,11 +5,12 @@ use strict;
 no warnings;
 
 our $VERSION;
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 use Filter::Simple sub {
     s/([\$@%&])\.(\w+)/
         $1 eq '$' ? "\$self->{'$2'}" : "$1\{\$self->{'$2'}\}"/ge;
+    s[\./(\w+)][\$self->$1]g;
 };
 
 =head1 NAME
@@ -82,6 +83,9 @@ that).  Say $self->{foo} is an array ref:
 
 Which means that even if you're using an array referentially, you can usually
 avoid writing those pesky C<@{}>s everywhere.
+
+Perl6::Attributes now also translates C<./method> and C<./method(args)> to 
+C<$self->method> and C<$self->method(args)>.
 
 =head1 SEE ALSO
 

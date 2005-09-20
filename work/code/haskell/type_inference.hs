@@ -87,7 +87,7 @@ findme = do
     (t', u)      <- doesvv t newvar
     (u', t'')    <- doesvv u t'
     t'''         <- doesvc t'' (Type "Num")
-    return t''
+    return t'''
 
 main :: IO ()
 main = print findme

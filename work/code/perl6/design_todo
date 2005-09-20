@@ -1,11 +1,18 @@
-Things I am still dissatisfied with in Perl 6:
+Pending proposals:
 
-* Junctions (proposed)
+* Junctions
+* Theories / data constructors
+
+Things I am still dissatisfied with and will address.
+
 * Classes are just undefs
 * ./method should exist
 * No tuple type
 
+Things I am dissatisfied with but am willing to live with:
+
+* Hyper list semantics
+
 Things that need to be more thoroughly defined:
 
 * Parametric types / type variables
-* Data constructor declarations

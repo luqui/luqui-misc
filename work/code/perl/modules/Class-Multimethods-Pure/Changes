@@ -23,5 +23,13 @@ Revision history for Perl extension Class::Multimethods::Pure.
         - added the unblessed types IO, FORMAT, and Regexp
         - thanks rgs
 
-0.06  Set Aug 6 21:05:00 2005
+0.06  Sat Aug 6 21:05:00 2005
         - fixed a bug where a subtype would not be considered a subset of its parent
+
+0.07-0.09  Some dates
+        - Added a new multi core called DumbCache, did some minor maintenance.
+
+0.10  Mon Sep 19 23:09:00 2005
+        - Rejigged the registration process to be much more pluggable.  Now you just
+          have to specify your own registry like $REGISTRY if you're doing anything
+          at all reasonable in your extension.

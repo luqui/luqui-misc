@@ -7,10 +7,22 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 our %MULTI;
 our %MULTIPARAM;
+
+our $REGISTRY;
+$REGISTRY = {
+    multi =>      \%MULTI,
+    multiparam => \%MULTIPARAM,
+    install_wrapper => sub {
+        my ($pkg, $name) = @_;
+        no strict 'refs';
+        no warnings 'redefine';
+        *{"$pkg\::$name"} = make_wrapper($name, $REGISTRY);
+    },
+};
 
 our $DEFAULT_CORE = 'Class::Multimethods::Pure::Method::Slow';
 
@@ -22,7 +34,8 @@ our $DEFAULT_CORE = 'Class::Multimethods::Pure::Method::Slow';
     }
 }
 
-sub _internal_multi {
+sub process_multi {
+    my $registry = shift;    # multi, multiparam, and install_wrapper
     my $name = shift or return;
     
     if (@_) {
@@ -31,7 +44,7 @@ sub _internal_multi {
             if ($_[0] =~ /^-/) {
                 my ($k, $v) = splice @_, 0, 2;
                 $k =~ s/^-//;
-                $MULTIPARAM{$k} = $v;
+                $registry->{multiparam}{$k} = $v;
             }
             else {
                 my $type = shift;
@@ -51,37 +64,34 @@ sub _internal_multi {
         
         my $code = shift;
 
-        my $multi = $MULTI{$name} ||= 
+        my $multi = $registry->{multi}{$name} ||= 
                 Class::Multimethods::Pure::Method->new(
-                    Core    => $MULTIPARAM{$name}{Core},
-                    Variant => $MULTIPARAM{$name}{Variant},
+                    Core    => $registry->{multiparam}{$name}{Core},
+                    Variant => $registry->{multiparam}{$name}{Variant},
                 );
         
         $multi->add_variant(\@params, $code);
     }
 
     my $pkg = caller 1;
-    {
-        no strict 'refs';
-        no warnings 'redefine';
-        *{"$pkg\::$name"} = make_wrapper($name);
-    }
+    $registry->{install_wrapper}->($pkg, $name);
     
     @_;
 }
 
 sub make_wrapper {
-    my ($name) = @_;
+    my ($name, $registry) = @_;
+    my $method = $registry->{multi}{$name};
     sub {
-        my $call = $MULTI{$name}->can('call');
-        unshift @_, $MULTI{$name};
+        my $call = $method->can('call');
+        unshift @_, $method;
         goto &$call;
     };
 }
 
 # exports a multimethod with a given name and arguments
 sub multi {
-    if (_internal_multi(@_)) {
+    if (process_multi($REGISTRY, @_)) {
         croak "Usage: multi name => (Arg1, Arg2, ...) => sub { code };";
     }
 }
@@ -95,7 +105,7 @@ sub import {
     my $pkg = caller;
 
     if ($cmd eq 'multi') {
-        while (@_ = _internal_multi(@_)) { }
+        while (@_ = process_multi($REGISTRY, @_)) { }
     }
     elsif ($cmd eq 'import') {
         for my $export (@_) {

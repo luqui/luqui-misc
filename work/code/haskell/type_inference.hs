@@ -89,5 +89,17 @@ findme = do
     t'''         <- doesvc t'' (Type "Num")
     return t'''
 
+{- -- I want:
+findme = do
+    t <- newvar
+    u <- newvar
+    does (Type "Int") t
+    does t u
+    does u t
+    does t (Type "Num")
+    return ()
+-- This requires a state monad.
+-}
+
 main :: IO ()
 main = print findme

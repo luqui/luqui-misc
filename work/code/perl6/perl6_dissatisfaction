@@ -1,0 +1,11 @@
+Things I am still dissatisfied with in Perl 6:
+
+* Junctions (proposed)
+* Classes are just undefs
+* ./method should exist
+* No tuple type
+
+Things that need to be more thoroughly defined:
+
+* Parametric types / type variables
+* Data constructor declarations

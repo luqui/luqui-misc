@@ -1,0 +1,91 @@
+=head1 TITLE
+
+Perl 6 Theories - Grand unified object model
+
+=head1 SYNOPSIS
+
+    # theory representing a total order
+    theory Ordered{::T} {
+        multi infix:«<=» (T $x, T $y --> Bool) {...}
+        multi infix:«>=» (T $x, T $y --> Bool) { $y <= $x }
+        multi infix:«>»  (T $x, T $y --> Bool) { not $x <= $y }
+        ...
+    }
+
+    # a cons list data type
+    union MyList[::T] (
+        MyNil,
+        MyCons(T $.head, MyList[T] $.tail),
+    );
+    
+    # Lists of ordered things are lexographically ordered
+    # (read <= as "if" rather than "less than or equal to")
+    model Ordered{MyList[::T]} <= Ordered[::T] {
+        multi infix:«<=» (MyNil,  _)     { true }
+        multi infix:«<=» (MyCons, MyNil) { false }
+        multi infix:«<=» (MyCons ($h1, $t1), MyCons ($h2, $t2)) {
+            when $h1 <= $h2 { true }
+            when $h2 >  $h1 { false }
+            default         { $t1 <= $t2 }
+        }
+
+        # the theory automatically fills in <, >, >=, ==, etc.
+    }
+
+=head1 DESCRIPTION
+
+*** INTRO ***
+
+=head2 Tuples
+
+The first piece of machinery we need is the tuple.  The tuple underlies
+all of the semantics here, but you never really see it.  Perl 6's tuple
+is much richer than tuples of other languages; in short, it is an object
+representing a parameter list.
+
+The tuple has four parts: positional, named, and block, any of which can
+be empty.  It is constructed using the comma.
+
+    my $tuple = (1, :foo(2), 3, 4):{ $_ + 1 };
+
+This tuple has three positionals, C<1,3,4>;  one named, C<< foo => 2 >>;
+and one block, C<{ $_ }>.  The block parameters are specified as adverbs
+on the tuple as a whole.  If you want a block inside a positional, just
+put one there.  If you want a pair inside a positional, enclose it in
+parentheses (that is, named elements are I<lexically> determined; in the
+tuple (1,$x), $x will always be positional, whether or not it contains a
+pair):
+
+    my $tuple = ({ $_ + 1 }, (foo => 2));  # two positionals
+
+Unlike in most other languages, a single-argument tuple is not the same
+as a value.  To create a single-argument tuple (which ought to be an
+uncommon thing), use a null comma at the end:
+
+    my $tuple = ("foo",);                  # a tuple with one positional
+
+Tuples, like lists, may be flattened into other tuples:
+
+    my $a = (1,2,3);    # a tuple with positionals 1,2,3
+    my $b = (0,*$a,4);  # a tuple with positionals 0,1,2,3,4
+
+As a special case, function application will automatically (lexically)
+tuplize a single argument:
+
+    foo($x);            # equivalent to foo($x,)
+
+And therefore, you can think of all functions as taking only a single
+argument: the tuple of the argument list.  This will be important later.
+
+Lists and tuples should interact in a reasonable way so that you can
+pretend that they're the same thing (but in a strongly typed dialect,
+they are quite different).  *** HANDWAVE ***
+
+Since a tuple is essentially an argument list, a tuple pattern is
+essentially a parameter list.  I propose one change to the meaning of a
+parameter list term: C<*$x>, the slurpy scalar.  This is just like a
+slurpy list, except that it gathers the rest of the signature into a
+tuple C<$x> instead of a list.  To facilitate the technique that the
+slurpy scalar was introduced for, we can use this:
+
+    sub first (*[ $x, *@xs ]) { $x }

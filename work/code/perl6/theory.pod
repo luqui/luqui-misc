@@ -20,7 +20,7 @@ Perl 6 Theories - Grand unified object model
     
     # Lists of ordered things are lexographically ordered
     # (read <= as "if" rather than "less than or equal to")
-    model Ordered{MyList[::T]} <= Ordered[::T] {
+    model Ordered{MyList[::T]} <= Ordered{::T} {
         multi infix:«<=» (MyNil,  _)     { true }
         multi infix:«<=» (MyCons, MyNil) { false }
         multi infix:«<=» (MyCons ($h1, $t1), MyCons ($h2, $t2)) {
@@ -226,5 +226,3 @@ explicitly to form a GADT:
         Succ(AST[Int]                      --> AST[Int]),
         ...
     );
-
-

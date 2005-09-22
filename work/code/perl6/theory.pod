@@ -43,7 +43,7 @@ all of the semantics here, but you never really see it.  Perl 6's tuple
 is much richer than tuples of other languages; in short, it is an object
 representing a parameter list.
 
-The tuple has four parts: positional, named, and block, any of which can
+The tuple has three parts: positional, named, and block, any of which can
 be empty.  It is constructed using the comma.
 
     my $tuple = (1, :foo(2), 3, 4):{ $_ + 1 };

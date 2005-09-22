@@ -226,3 +226,18 @@ explicitly to form a GADT:
         Succ(AST[Int]                      --> AST[Int]),
         ...
     );
+
+If the argument names to the constructors are given C<$.attribute> form,
+then attribute accessors are defined on the type:
+
+    union Tree (
+        Leaf($.value),
+        Branch(Tree $.left, Tree $.right),
+    );
+    Leaf(4).value;                         # 4
+    Branch(Leaf(2), Leaf(3)).right.value;  # 3
+    Leaf(4).left;   # method found but pattern match failed
+
+*** Wait, how is it possible to define methods on union types?  Since
+every supertype does that type, every method is found (and cannot be
+appropriately typed). ***

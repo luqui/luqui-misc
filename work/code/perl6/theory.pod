@@ -82,11 +82,11 @@ pretend that they're the same thing (but in a strongly typed dialect,
 they are quite different).  *** HANDWAVE ***
 
 Since a tuple is essentially an argument list, a tuple pattern is
-essentially a parameter list.  I propose one change to the meaning of a
-parameter list term: C<*$x>, the slurpy scalar.  This is just like a
-slurpy list, except that it gathers the rest of the signature into a
-tuple C<$x> instead of a list.  To facilitate the technique that the
-slurpy scalar was introduced for, we can use this:
+essentially a parameter list.  The meaning of the slurpy scalar C<*$x>
+has changed.  Now it is just like a slurpy list, except that it gathers
+the rest of the signature into a tuple C<$x> instead of a list.  To
+facilitate the technique that the slurpy scalar was originally
+introduced for, we can use this:
 
     sub first (*[ $x, *@xs ]) { $x }
 
@@ -96,14 +96,83 @@ another function:
     sub foo (*$args) { bar(*$args) }   # call bar with whatever args foo
                                        # was called with
 
-Tuples also have the pattern constructor, comma, for use in signatures
-and bindings.  So you can say:
+Tuples also have a pattern constructor, comma, for use in signatures and
+bindings.  So you can say:
 
     multi snd (($x, $y)) { $y }
 
-C<snd> takes only one argument (no, I mean it takes one argument that is
-a one-tuple), where that argument is a two-tuple, and it extracts the
-second element.  More on pattern constructors later.
+C<snd> takes only one argument (no, I mean that in the usual sense, not
+the every-function-takes-exactly-one-argument sense), where that
+argument is a two-tuple, and it extracts the second element.  Now, what
+the heck is a pattern constructor?
+
+=head2 Pattern Constructors
+
+Before we get to exactly what a pattern constructor is, let's define
+what a pattern is.  A pattern is a thing that can extract
+"subinformation" out of an object as it's being bound.  It appears in
+argument lists like so:
+
+    rule parameter { <type> <zone> <parameter_name>  <pattern>? 
+                   |        <zone> <parameter_name>? <pattern>? }
+
+There are several patterns with special syntax: square brackets for
+matching inside arrays, curly brackets for matching out of hashes, bare
+parentheses for matching a tuple, all numeric and string literals (for
+matching themselves under C<eqv>), perhaps among others.  These either
+require a set of syntactic categories (like C<< pattern:term:<...> >>)
+or a straight-up grammar munge.  
+
+The patterns that are easy to define are the I<normal patterns>.  These
+are given by the rule:
+
+    rule normal_pattern { <pattern_name> <tuple_pattern>? }
+
+(If the C<tuple_pattern> is omitted, the empty tuple C<()> is assumed)
+
+So you'll have things like:
+
+    multi traverse (Leaf ($v), *&code) { &code($v) }
+    multi traverse (Branch ($l, $r), *&code) { 
+        traverse($l):&code;
+        traverse($r):&code;
+    }
+
+Where that first line could have also been either of:
+
+    multi traverse ($leaf Leaf ($v), *&code)   {...}
+    multi traverse (Tree _ Leaf ($v), *&code)  {...}
+
+But those don't add anything to the readability in this case.
+
+How does one define a normal pattern constructor?  By placing names into
+the C<pattern:> grammatical category.  A normal pattern constructor
+takes a type and returns a tuple, which is then unified against the
+given tuple pattern.
+
+For instance, I could define an identity pattern that would just return
+the one-tuple of the object:
+
+    sub pattern:<Id> ($obj) { ($obj,) }
+
+Or the typed version:
+
+    sub pattern:<Id> (::T $obj --> (::T,)) { ($obj,) }
+
+You could use this pattern to give more than one name to an argument:
+
+    sub mul3 ($x Id ($y Id ($z))) { $x + $y + $z }
+
+Other than that, it's not useful, of course.  But that goes to show that
+if the pattern constructors are typed, they imply those type constraints
+on the corresponding argument:
+
+    sub pattern:<Leaf> (Tree $t --> (Any,)) {...}
+
+    multi traverse (Tree _ Leaf ($value)) {...}
+
+The C<Tree> in the second declaration is redundant; the C<Leaf> pattern
+already implies it.
 
 =head2 Union Types
 
@@ -138,13 +207,6 @@ them to the scope in which the union was defined.
 
 Defines the pattern constructors C<Leaf> and C<Branch> in the package
 C<Tree> and exports them to the scope in which the union was defined.
-These pattern constructors both act on a single tuple pattern, like:
-
-    sub foo (Branch($l, $r)) {...}
-
-Or:
-
-    sub foo ($node Branch($l, $r)) {...}
 
 =back
 

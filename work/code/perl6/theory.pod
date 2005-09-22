@@ -89,3 +89,80 @@ tuple C<$x> instead of a list.  To facilitate the technique that the
 slurpy scalar was introduced for, we can use this:
 
     sub first (*[ $x, *@xs ]) { $x }
+
+The upshot is that you can easily delegate an arbitrary argument list to
+another function:
+
+    sub foo (*$args) { bar(*$args) }   # call bar with whatever args foo
+                                       # was called with
+
+Tuples also have the pattern constructor, comma, for use in signatures
+and bindings.  So you can say:
+
+    multi snd (($x, $y)) { $y }
+
+C<snd> takes only one argument (no, I mean it takes one argument that is
+a one-tuple), where that argument is a two-tuple, and it extracts the
+second element.  More on pattern constructors later.
+
+=head2 Union Types
+
+Perl 6 supports union types (also called case types or algebraic data
+types). Union types are to factores what classes are to roles (more on
+that later).  To demonstrate the syntax, let's define a simple binary
+tree:
+
+    union Tree (
+        Leaf($value),
+        Branch(Tree $left, Tree $right),
+    );
+
+The case types (C<Leaf> and C<Branch>) are defined as a I<constructor
+name> followed by a tuple pattern; i.e. an argument list.  This
+definition does many things at once:
+
+=over
+
+=item * 
+
+Defines the types and packages C<Tree>, C<Tree::Leaf>, and
+C<Tree::Branch>.
+
+=item *
+
+Defines the functions C<< &Leaf:($value --> Tree) >> and C<<
+&Branch:($left, $right --> Tree) >> in the package C<Tree> and exports
+them to the scope in which the union was defined.
+
+=item *
+
+Defines the pattern constructors C<Leaf> and C<Branch> in the package
+C<Tree> and exports them to the scope in which the union was defined.
+These pattern constructors both act on a single tuple pattern, like:
+
+    sub foo (Branch($l, $r)) {...}
+
+Or:
+
+    sub foo ($node Branch($l, $r)) {...}
+
+=back
+
+Unions can be parameterized over one or more types:
+
+    union Tree[::T] (
+        Leaf(T $value),
+        Branch(Tree[T] $left, Tree[T] $right),
+    );
+
+And the return type of the constructor functions can be stated
+explicitly to form a GADT:
+
+    union AST[::] (    # :: is a siglet meaning "a type"
+        Const(::T                          --> AST[::T]),
+        Cond(AST[Bool], AST[::T], AST[::T] --> AST[::T]),
+        Succ(AST[Int]                      --> AST[Int]),
+        ...
+    );
+
+

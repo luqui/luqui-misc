@@ -201,11 +201,10 @@ C<Account> in type position (after a C<my> or in a signature), you are
 referring to this role.  Whenever you say C<Account> elsewhere, you are
 referring to the package.
 
-To subclass a class, you say that a new class C<specializes> the old
-one:
+To subclass a class, you say that a new class C<does> the old one:
 
     class CreditAccount {
-        specializes Account;
+        does Account;
         
         method withdrawl ($amount, $password) {
             # try to borrow some money
@@ -214,13 +213,7 @@ one:
 
 Of course, you are specializing the role C<Account>, not the class.  In
 fact, the class doesn't exist at all; it is just a notation to define
-the package, concrete type, and role all at once.  You can also use the
-dwimmical extender C<does> instead of C<specializes>.
-
-Since C<CreditAccount> specializes C<Account>, a C<CreditAccount> can be
-used anywhere an C<Account> can.  This is a consequence of the fact that
-it is a role, not that you specialized it.  More on that later when we
-get to L<Theories>.
+the package, concrete type, and role all at once. 
 
 =head2 Unions and Factories
 
@@ -245,14 +238,14 @@ I<factory> C<Tree>:
 
     # automatically defined
     factory Tree {
-        producer Leaf ($value) {...}
-        producer Branch (Tree $left, Tree $right) {...}
+        generator Leaf ($value) {...}
+        generator Branch (Tree $left, Tree $right) {...}
     }
 
 A factory is the dual of a role: it defines a bunch of functions that
 I<return> C<Tree>s (where roles define functions that I<accept> trees).
-C<producer> is the corresponding dual to C<method> (it returns the thing
-in question).  We'll see why there's all this vocabulary later.
+C<generator> is the corresponding dual to C<method> (it returns the
+thing in question).  We'll see why there's all this vocabulary later.
 
 Unions can be parameterized over one or more types:
 
@@ -282,16 +275,133 @@ then attribute accessors are defined on the type:
     Branch(Leaf(2), Leaf(3)).right.value;  # 3
     Leaf(4).left;   # method found but pattern match failed
 
+Unions can be extended:
+
+    union AnnotatedTree does Tree (
+        Annotation($.str, Tree $.tree),
+    );
+
+When you extend a union, you create a superset (but still a subtype).
+That is, everything that is a C<Tree> is also an C<AnnotatedTree>
+(superset), but an C<AnnotatedTree> may be used anywhere a C<Tree> can.
+
+=head2 Theories
+
+Roles and factories are special cases of a much more general structure
+called a I<theory>.   A theory declares a general algebraic structure
+over several types.  A good example of a theory that is not a role or a
+factory is the definition of a ring (roughly an integer-like thing):
+
+    theory Ring{::R} {
+        multi infix:<+>   (R, R --> R) {...}
+        multi prefix:<->  (R --> R)    {...}
+        multi infix:<->   (R $x, R $y --> R) { $x + (-$y) }
+        multi infix:<*>   (R, R --> R) {...}
+        # only technically required to handle 0 and 1
+        multi coerce:<as> (Int --> R)  {...}
+    }
+
+This says that in order for a type R to be a ring, it must supply these
+operations.  The operations are necessary but not sufficient to be a
+ring; you also have to obey some algebraic laws (which are, in general,
+unverifiable programmatically), for instance, associativity over
+addition: C<(a + b) + c == a + (b + c)>.
+
+To I<instantiate> the theory, that is, declare that some type obeys
+these laws, you I<model> it:
+
+    model Ring{Int} {
+        # define all needed operations
+    }
+
+C<model> is really just a shorthand for an anonymous theory that models
+another:
+
+    theory {
+        models Ring{Int};
+        # definitions
+    }
+
+Saying that a theory C<models> another theory says that if you obey the
+laws of the former, then you automatically obey the laws of the latter.
+
+How do we actually use theories?  We can specify constraints over type
+variables with them:
+
+    multi pow (::T $x, Int $power --> ::T <= Ring{::T}) {
+        my $result = $x;
+        for (2..$power) { $result *= $x }
+        return $result;
+    }
+
+
+This says that C<pow> works on any first argument, as long as it belongs
+to a type that models C<Ring>.  C<< <= >> is to be read as "where" or
+"requires" or "is implied by".  It needs a better spelling. 
+
+Roles and factories reduce to theories using a I<topic type>.  So the
+role:
+
+    role Foo {
+        method bar () {...}
+    }
+
+Is equivalent to the theory:
+
+    theory Foo{::T} {
+        multi bar (T) {...}
+    }
+
+Because the role specifies a topic type (which we named C<::T> when we
+converted to a theory), and C<method> defines a multi with its first
+argument being the topic type.  It is an error to define a C<method>
+when there is no topic type.
+
+Conversely, a factory just reduces to a theory with a topic type.
+C<generator> defines a multi with its I<return> type being the topic
+type.
+
+But roles and factories are a bit more special than theories.  They have
+one additional property each:
+
+=over
+
+=item *
+
+If every A is also a B, and R is a role, then R{B} implies R{A}.
+
+=item *
+
+If every A is also a B, and F is a factory, then F{A} implies F{B}.
+
+=back
+
+That is, every subset of something that does a role also does that role,
+and every superset of something that does a factory also does that
+factory.  This is self-evident when you notice that roles can only have
+methods and factories can only have generators.
+
+When you specify a type in a type signature, you're really specifying a
+type variable with a constraint:
+
+    multi foo (Bar $x) {...}
+
+Is equivalent to:
+
+    multi foo (::T $x <= Bar{::T}) {...}
+
 =head2 Vocabulary
 
 Here is a summary of the object-oriented vocabulary in Perl:
+
+=head3 Structures
 
 =over
 
 =item * C<theory>
 
-The big one in the types department.  Specifies a general algebra over
-one or more types.
+The big one in the structures department.  Specifies a general algebra
+over one or more types.
 
 =item * C<role>
 
@@ -315,6 +425,20 @@ package of the given name.
 A notation that simultaneously defines a factory together with a
 concrete type, a role, and a package for each case in the factory.
 
+=item * C<model>
+
+A notation for a zero-parameter theory that models another theory.
+
+=item * C<models>
+
+Declares implication over structures.  If one structure models another,
+that means that if a type obeys the former, then it obeys the latter.
+
+=item * C<does>
+
+A unary shorthand for C<models>.  C<A does B> is a shorthand for
+C<A{::T} models B{::T}>.
+
 =item * C<multi>
 
 The big one in the functions department.  Specifies a
@@ -322,11 +446,12 @@ multiply-implemented function dispatched based on the involved types.
 
 =item * C<method>
 
-Goes with roles.  Defines a multi that takes the topic type as its first
-parameter.
+Goes with roles.  Defines a multi that implicitly takes the topic type
+as its first parameter.
 
-=item * C<producer>
+=item * C<generator>
 
-Goes with factories.  Defines a multi that returns the topic type.
+Goes with factories.  Defines a multi that implicitly returns the topic
+type.
 
 =back

@@ -174,7 +174,55 @@ on the corresponding argument:
 The C<Tree> in the second declaration is redundant; the C<Leaf> pattern
 already implies it.
 
-=head2 Union Types
+=head2 Classes and Roles
+
+There are two ways to create a concrete type, otherwise known as a
+class.  One is with the C<class> declarator, the other is the C<union>
+declarator (which we'll get to in a bit).  A class defined by its
+I<instance data> (or attributes) and its I<interface> (or methods).
+
+    class Account {
+        has $.balance;     # instance data and interface
+        has $.name;        # instance data and interface
+        has $._password;   # instance data
+        
+        method withdrawl ($amount, $password) {  # interface
+            # ...
+        }
+    }
+
+This definition does two things: it defines the package C<Account> with
+a C<new> constructor (which puts together the instance data), and it
+defines the role C<Account> that contains pretty much the body of the
+class, specifying its interface with default implementations (when you
+say C<has $.balance>, you are specifying the interface method C<balance>
+with a default implementation of object state).  Whenever you say
+C<Account> in type position (after a C<my> or in a signature), you are
+referring to this role.  Whenever you say C<Account> elsewhere, you are
+referring to the package.
+
+To subclass a class, you say that a new class C<specializes> the old
+one:
+
+    class CreditAccount {
+        specializes Account;
+        
+        method withdrawl ($amount, $password) {
+            # try to borrow some money
+        }
+    }
+
+Of course, you are specializing the role C<Account>, not the class.  In
+fact, the class doesn't exist at all; it is just a notation to define
+the package, concrete type, and role all at once.  You can also use the
+dwimmical extender C<does> instead of C<specializes>.
+
+Since C<CreditAccount> specializes C<Account>, a C<CreditAccount> can be
+used anywhere an C<Account> can.  This is a consequence of the fact that
+it is a role, not that you specialized it.  More on that later when we
+get to L<Theories>.
+
+=head2 Unions and Factories
 
 Perl 6 supports union types (also called case types or algebraic data
 types). Union types are to factores what classes are to roles (more on
@@ -187,28 +235,24 @@ tree:
     );
 
 The case types (C<Leaf> and C<Branch>) are defined as a I<constructor
-name> followed by a tuple pattern; i.e. an argument list.  This
-definition does many things at once:
+name> followed by a tuple pattern; i.e. an argument list.  Like
+C<class>, there is no such thing as the union C<Tree>; it is just a
+notation to define a bunch of related things:
 
-=over
+It defines the packages C<Tree>, C<Tree::Leaf>, and C<Tree::Branch>.  It
+defines (so far empty) roles C<Tree::Leaf> and C<Tree::Branch>, and the
+I<factory> C<Tree>:
 
-=item * 
+    # automatically defined
+    factory Tree {
+        producer Leaf ($value) {...}
+        producer Branch (Tree $left, Tree $right) {...}
+    }
 
-Defines the types and packages C<Tree>, C<Tree::Leaf>, and
-C<Tree::Branch>.
-
-=item *
-
-Defines the functions C<< &Leaf:($value --> Tree) >> and C<<
-&Branch:($left, $right --> Tree) >> in the package C<Tree> and exports
-them to the scope in which the union was defined.
-
-=item *
-
-Defines the pattern constructors C<Leaf> and C<Branch> in the package
-C<Tree> and exports them to the scope in which the union was defined.
-
-=back
+A factory is the dual of a role: it defines a bunch of functions that
+I<return> C<Tree>s (where roles define functions that I<accept> trees).
+C<producer> is the corresponding dual to C<method> (it returns the thing
+in question).  We'll see why there's all this vocabulary later.
 
 Unions can be parameterized over one or more types:
 
@@ -238,6 +282,51 @@ then attribute accessors are defined on the type:
     Branch(Leaf(2), Leaf(3)).right.value;  # 3
     Leaf(4).left;   # method found but pattern match failed
 
-*** Wait, how is it possible to define methods on union types?  Since
-every supertype does that type, every method is found (and cannot be
-appropriately typed). ***
+=head2 Vocabulary
+
+Here is a summary of the object-oriented vocabulary in Perl:
+
+=over
+
+=item * C<theory>
+
+The big one in the types department.  Specifies a general algebra over
+one or more types.
+
+=item * C<role>
+
+A I<covariant>, I<unary> theory, that is, a theory over a single type
+where the functions defined within only take the type as a parameter,
+never return it.
+
+=item * C<factory>
+
+A I<contravariant>, I<unary> theory, that is, a theory over a single
+type where the functions defined within only return the type, never take
+it as a parameter.
+
+=item * C<class>
+
+A notation that simultaneously defines a role, a concrete type, and a
+package of the given name.
+
+=item * C<union>
+
+A notation that simultaneously defines a factory together with a
+concrete type, a role, and a package for each case in the factory.
+
+=item * C<multi>
+
+The big one in the functions department.  Specifies a
+multiply-implemented function dispatched based on the involved types.
+
+=item * C<method>
+
+Goes with roles.  Defines a multi that takes the topic type as its first
+parameter.
+
+=item * C<producer>
+
+Goes with factories.  Defines a multi that returns the topic type.
+
+=back

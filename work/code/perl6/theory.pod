@@ -390,11 +390,53 @@ Is equivalent to:
 
     multi foo (::T $x <= Bar{::T}) {...}
 
+And so a role that returns the type the role defines is still a role,
+even though it appears to depend on the type contravariantly:
+
+    role Foo {
+        method bar (--> Foo) {...}
+    }
+
+Is equivalent to:
+
+    theory Foo{::T} {
+        multi bar (T --> Foo) {...}
+        # which is
+        multi bar (T --> ::U <= Foo{U}) {...}
+    }
+
+That is, you don't return the I<same> type, you just return one that
+conforms to the same interface.
+
+Finally, let's look at the full reduction of our C<Tree> union type and
+try to understand it:
+
+    union Tree (
+        Leaf($value),
+        Branch(Tree $left, Tree $right),
+    );
+
+This turns into:
+
+    theory Tree{::T} {
+        multi Leaf ($value --> ::T) {...}
+        multi Branch (::A $left, ::B $right --> ::T 
+                        <= Tree{::A}, Tree{::B}) 
+        {...}
+        
+        multi pattern:<Leaf> (::T --> (Any,)) {...}
+        multi pattern:<Branch> (::T --> (::A, ::B)
+                                <= Tree{::A}, Tree{::B}) {...}
+    }
+
+Whew, good thing we don't have to write that.  As you can see, even
+though it looks like C<Branch> is behaving covariantly by looking at the
+union, it isn't.  A branch accepts any two things that behave like this
+C<Tree>.
+
 =head2 Vocabulary
 
 Here is a summary of the object-oriented vocabulary in Perl:
-
-=head3 Structures
 
 =over
 
@@ -455,3 +497,33 @@ Goes with factories.  Defines a multi that implicitly returns the topic
 type.
 
 =back
+
+=head2 Notes
+
+There's a little problem with the GADT form:
+    
+    union AST[::] (
+        Const(::T --> AST[::T]),
+    );
+
+This reduces to:
+
+    theory AST[::A]{::B} {
+        multi Const(::T --> ::U <= AST[::T]{::U}) {...}
+    }
+
+Which doesn't even say anything about C<::B>.  It should be:
+
+    theory AST{V} {
+        multi Const(::T --> ::U <= V[::T]{::U}) {...}
+    }
+
+That is, it is a theory-valued theory.  I guess this makes sense, as all
+types are really theories.  But so far type variables can only assume
+concrete types; that's the cool thing about them.  You can never
+explicitly mention a concrete type, but that's the only thing a variable
+can be, so you have to go through interfaces.
+
+I suppose theory-valued theories are necessary if we want GADT (and
+there are probably some other uses as well), but I fear what it will do
+to the type inferencer.  Maybe there is another way.

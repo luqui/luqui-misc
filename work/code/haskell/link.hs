@@ -55,3 +55,10 @@ initState = [LinkState { open = [], closed = [] }]
 
 vBind :: String -> LinkState String -> [LinkState String]
 vBind word = bind (Node word) (getRole word)
+
+(*>>=) :: (Monad m) => m a -> [ a -> m a ] -> m a
+mon *>>= [] = mon
+mon *>>= (f:fs) = (mon >>= f) *>>= fs
+
+vParse :: String -> [LinkState String]
+vParse s = initState *>>= map vBind (words s)

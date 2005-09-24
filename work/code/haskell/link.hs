@@ -29,17 +29,20 @@ bind node' role state = do
     closeLinks node' opens = 
         map (\op -> Link { left = node op, right = node', kind = openKind op }) opens
 
+(==>) :: [a] -> [a] -> Case a
+x ==> y = Case (reverse x) y
+
 ------------------------------
 
-makeRole "^"    = Role [ Case [] [ "^" ] ]
+makeRole "^"    = Role [ [] ==> [ "^" ] ]
 
-makeRole "$"    = Role [ Case [ "$" ] [] ]
+makeRole "$"    = Role [ [ "$" ] ==> [] ]
 
-makeRole "verb" = Role [ Case [ "actor", "^" ] [ "$" ],
-                         Case [ "actor", "^" ] [ "object", "$" ] ]
+makeRole "verb" = Role [ [ "^", "actor" ] ==> [ "$" ],
+                         [ "^", "actor" ] ==> [ "object", "$" ] ]
 
-makeRole "noun" = Role [ Case [] [ "actor" ],
-                         Case [ "object" ] [] ]
+makeRole "noun" = Role [ [] ==> [ "actor" ],
+                         [ "object" ] ==> [] ]
 
 makeRole x      = error $ "Unknown role: " ++ x
 

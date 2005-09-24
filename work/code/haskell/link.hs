@@ -51,7 +51,7 @@ getRole "chases" = makeRole "verb"
 getRole x        = error $ "Unknown term: " ++ x
 
 
-initState = LinkState { open = [], closed = [] }
+initState = [LinkState { open = [], closed = [] }]
 
 vBind :: String -> LinkState String -> [LinkState String]
 vBind word = bind (Node word) (getRole word)

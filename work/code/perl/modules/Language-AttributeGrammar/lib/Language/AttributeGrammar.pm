@@ -156,8 +156,8 @@ sub _AG_INSTALL {
 
 sub _AG_LOOKUP {
     my ($self, $obj, $name) = @_;
-    if (Scalar::Util::blessed($obj) && $obj->can('name')) {
-        $obj->name;
+    if (Scalar::Util::blessed($obj) && $obj->can($name)) {
+        $obj->$name;
     }
     elsif (Scalar::Util::reftype($obj) eq 'HASH' && exists $obj->{$name}) {
         $obj->{$name};

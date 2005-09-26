@@ -12,10 +12,15 @@ use Scalar::Util ();
 
 our $GRAMMAR = <<'#\'EOG';   # mmm, vim hack
 #\
-input: sem(s?) /\z/
+
+{
+    our $SKIP = qr/(?: \s* (?: \# .*? \n)? )*/x;
+}
+
+input: <skip: $SKIP> sem(s?) /\z/
     {
         my %result;
-        for my $sem (@{$item[1]}) {
+        for my $sem (@{$item[2]}) {
             push @{$result{$sem->{class}}}, $sem->{data};
         }
         \%result;

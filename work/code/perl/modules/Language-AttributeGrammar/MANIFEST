@@ -5,3 +5,4 @@ README
 t/diff.t
 t/repmin.t
 lib/Language/AttributeGrammar.pm
+META.yml                                 Module meta-data (added by MakeMaker)

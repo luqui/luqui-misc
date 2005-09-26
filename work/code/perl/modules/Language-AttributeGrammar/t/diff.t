@@ -1,8 +1,8 @@
 use Test::More tests => 2;
 
-BEGIN { use_ok('Attribute::Grammar') }
+BEGIN { use_ok('Language::AttributeGrammar') }
 
-my $grammar = new Attribute::Grammar <<'EOG';
+my $grammar = new Language::AttributeGrammar <<'EOG';
 
 Cons: len($$)     = { 1 + len($.tail) }
 Nil:  len($$)     = { 0 }

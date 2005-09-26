@@ -1,4 +1,4 @@
-package Attribute::Grammar;
+package Language::AttributeGrammar;
 
 use 5.006001;
 use strict;
@@ -74,7 +74,7 @@ sub apply {
 
     my ($self, $data) = @_;
     my $_AG_INSTANCE;
-    my $package = "Attribute::Grammar::ANON" . $packageno++;
+    my $package = "Language::AttributeGrammar::ANON" . $packageno++;
     my %seen;
     for my $attr (@{$self->{attrs}}) {
         next if $seen{$attr}++;
@@ -97,10 +97,10 @@ sub apply {
         }
     }
 
-    $_AG_INSTANCE = Attribute::Grammar::Instance->new($data, \%visit);
+    $_AG_INSTANCE = Language::AttributeGrammar::Instance->new($data, \%visit);
 }
 
-package Attribute::Grammar::Instance;
+package Language::AttributeGrammar::Instance;
 
 sub new {
     my ($class, $data, $visit) = @_;

@@ -3,4 +3,5 @@ Makefile.PL
 MANIFEST
 README
 t/diff.t
+t/repmin.t
 lib/Language/AttributeGrammar.pm

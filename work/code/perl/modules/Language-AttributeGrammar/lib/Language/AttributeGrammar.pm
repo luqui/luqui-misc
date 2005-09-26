@@ -18,29 +18,31 @@ our $GRAMMAR = <<'#\'EOG';   # mmm, vim hack
 }
 
 input: <skip: $SKIP> sem(s?) /\z/
+    { [ map { @$_ } @{$item[2]} ] }
+
+sem: classes ':' <leftop: attrdef '|' attrdef>
     {
-        my %result;
-        for my $sem (@{$item[2]}) {
-            push @{$result{$sem->{class}}}, $sem->{data};
-        }
-        \%result;
+        [ map {
+            { %$_, classes => $item[1] }
+          } @{$item[3]} ]
     }
 
-sem: class ':' attr '(' var ')' '=' <perl_codeblock>
+attrdef: attr '(' var ')' '=' <perl_codeblock>
     {
-        my $code = $item[8];
+        my $code = $item[6];
         $code =~ s/\$\$(?=\W)/\$_AG_SELF/g;
         $code =~ s/\$\.(\w+)/\$_AG_INSTANCE->_AG_LOOKUP(\$_AG_SELF, '$1')/g;
         
         {
-            class => $item[1],
-            data => { 
-                attr => $item[3],
-                var  => $item[5],
-                code => $code,
-            },
+            attr => $item[1],
+            var  => $item[3],
+            code => $code,
         }
     }
+
+
+
+classes: <leftop: class ',' class>
 
 class: /\w+ (?: :: \w+ )*/x
 
@@ -62,10 +64,7 @@ sub new {
     my ($class, $grammar) = @_;
     my $map = $PARSER->input($grammar) or croak "Error in grammar";
 
-    my @attrs;
-    for (values %$map) {
-        push @attrs, map { $_->{attr} } @$_;
-    }
+    my @attrs = map { $_->{attr} } @$map;
     
     bless {
         attrs => \@attrs,
@@ -90,16 +89,14 @@ sub apply {
     }
 
     my %visit;
-    for my $class (keys %{$self->{map}}) {
-        for my $data (@{$self->{map}{$class}}) {
-            my $code = "package $package;  use strict;\n".
-                       "sub {\n".
-                       "    my (\$_AG_SELF) = \@_;\n".
-                       "    \$_AG_INSTANCE->_AG_INSTALL('$data->{attr}', $data->{var}, sub $data->{code});\n".
-                       "}\n";
-            my $sub = eval $code or confess "Compile error ($@) in:\n$code";
-            push @{$visit{$class}}, $sub;
-        }
+    for my $sem (@{$self->{map}}) {
+        my $code = "package $package;  use strict;\n".
+                   "sub {\n".
+                   "    my (\$_AG_SELF) = \@_;\n".
+                   "    \$_AG_INSTANCE->_AG_INSTALL('$sem->{attr}', $sem->{var}, sub $sem->{code});\n".
+                   "}\n";
+        my $sub = eval $code or confess "Compile error ($@) in:\n$code";
+        push @{$visit{$_}}, $sub for @{$sem->{classes}};
     }
 
     $_AG_INSTANCE = Language::AttributeGrammar::Instance->new($data, \%visit);

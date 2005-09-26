@@ -1,0 +1,9 @@
+DATA Tree
+    | Leaf   value:Int
+    | Branch left:Tree right:Tree
+
+ATTR Tree [ | | minval:Int ]
+
+SEM Tree
+    | Leaf lhs.minval   = { @value }
+    | Branch lhs.minval = { min @left.minval @right.minval }

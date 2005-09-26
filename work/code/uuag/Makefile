@@ -1,0 +1,2 @@
+%.hs: %.ag
+	uuagc -mdfcs $<

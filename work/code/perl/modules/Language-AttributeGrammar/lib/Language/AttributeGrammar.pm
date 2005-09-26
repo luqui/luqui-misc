@@ -198,4 +198,43 @@ sub AUTOLOAD {
     $self->_AG_VISIT($name, $self->{data});
 }
 
+
+
+=head1 NAME
+
+Language::AttributeGrammar - Attribute grammars for executable syntax trees and other stuff.
+
+=head1 SYNOPSIS
+
+    my $grammar = new Language::AttributeGrammar <<'END_GRAMMAR';
+    # find the minimum of a tree from the leaves up
+    Leaf:   min($$) = { $.value }
+    Branch: min($$) = { List::Util::min(min($.left), min($.right)) }
+
+    # find the global minimum and propagate it back down the tree
+    Root:   gmin($.tree)  = { min($.tree) }
+    Branch: gmin($.left)  = { gmin($$) }
+          | gmin($.right) = { gmin($$) }
+
+    # reconstruct the tree with every leaf replaced with the minimum value
+    Leaf:   result($$)    = { Leaf->new(gmin($$)) }
+    Branch: result($$)    = { Branch->new(result($.left), result($.right)) }
+    Root:   result($$)    = { result($.tree) }
+    END_GRAMMAR
+    
+    # This grammar expects that you define these classes:
+    #                Root   (with a ->tree attribute)
+    #                Branch (with a ->left and ->right attribute)
+    #                Leaf   (with a ->value attribute)
+
+    # Use the grammar
+    my $tree = Root->new( Branch->new( Leaf->new(1), 
+                                       Branch->new( Leaf->new(2), Leaf->new(3))));
+                                       
+    # Apply the attribute grammar to the data structure
+    my $atree = $grammar->apply($tree);
+    
+    # Fetch synthesized attributes of the root node:
+    my $result = $atree->result;   # gives Branch(Leaf(1), Branch(Leaf(1), Leaf(1)));
+
 1;

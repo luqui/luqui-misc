@@ -10,7 +10,7 @@ use Carp;;
 use overload ();    # for StrVal (we don't want custom stringifications creeping in)
 use Scalar::Util ();
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 our $GRAMMAR = <<'#\'EOG';   # mmm, vim hack
 #\
@@ -102,7 +102,7 @@ sub apply {
         my $code = "package $package;  use strict;\n".
                    "sub {\n".
                    "    my (\$_AG_SELF) = \@_;\n".
-                   "    \$_AG_INSTANCE->_AG_INSTALL('$sem->{attr}', $sem->{var}, sub {\n".
+                   "    \$_AG_INSTANCE->_AG_INSTALL('$sem->{attr}', $sem->{var}, $sem->{line}, sub {\n".
                    "        \$_AG_LINE = $sem->{line};\n".
                    "        $sem->{code}\n".
                    "    });\n".
@@ -160,12 +160,12 @@ sub _AG_VISIT {
         }
         else {
             if (defined ${$self->{lineref}}) {
-                Carp::croak("A value was demanded for $attr($arg) where none could be provided\n".
+                Carp::croak("A value was demanded for '$attr' ($arg) where none could be provided\n".
                             "near grammar line ${$self->{lineref}}.  Did you try to access an\n".
                             "inherited attribute of the top level of a structure?\n");
             }
             else {
-                Carp::croak("Cannot find the attribute $attr($arg) that you asked for.\n");
+                Carp::croak("Cannot find the attribute '$attr' ($arg) that you asked for.\n");
             }
         }
     }
@@ -185,12 +185,18 @@ sub _AG_EVAL_CELL {
 
 # Install a thunk in a particular attribute slot of a particular object.
 sub _AG_INSTALL {
-    my ($self, $attr, $arg, $code) = @_;
+    my ($self, $attr, $arg, $line, $code) = @_;
     my $argstr = overload::StrVal($arg);
-    $self->{cell}{$attr}{$argstr} = {
-        thunk => 1,
-        value => $code,
-    };
+    unless ($self->{cell}{$attr}{$argstr}) {
+        $self->{cell}{$attr}{$argstr} = {
+            thunk => 1,
+            value => $code,
+        };
+    }
+    else {
+        Carp::croak("Nonlinear attribute: you have two or more ways to assign a value\n".
+                    "to the attribute '$attr' near grammar line $line.\n");
+    }
 }
 
 # This determines the semantics of $.attr.
@@ -206,7 +212,7 @@ sub _AG_LOOKUP {
         $obj->{$name};
     }
     else {
-        Carp::croak("Could not find a way to access \$.$name of $obj near grammar line ".
+        Carp::croak("Could not find a way to access '\$.$name' of $obj near grammar line ".
                     "${$self->{lineref}}.\n");
     }
 }

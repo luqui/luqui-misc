@@ -4,8 +4,12 @@ Revision history for Perl extension Language::AttributeGrammar.
 	- original version; created by h2xs 1.23 with options
 		-X -n Attribute::Grammar -b 5.6.1
 
-0.02  Sun Sep 26 20:29:00 2005
+0.02  Mon Sep 26 20:29:00 2005
 	- added nicer error handling
 
-0.03  Sun Sep 26 21:57:00 2005
+0.03  Mon Sep 26 21:57:00 2005
 	- added support for ROOT
+
+0.04  Tue Sep 27 01:41:00 2005
+	- added a test for nonlinear attributes and an appropriate 
+	  error message.

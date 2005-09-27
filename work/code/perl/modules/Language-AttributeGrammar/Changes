@@ -4,3 +4,5 @@ Revision history for Perl extension Language::AttributeGrammar.
 	- original version; created by h2xs 1.23 with options
 		-X -n Attribute::Grammar -b 5.6.1
 
+0.02  Sun Sep 26 20:29:00 2005
+	- added nicer error handling

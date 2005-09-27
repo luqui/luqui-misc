@@ -6,11 +6,11 @@ use warnings;
 no warnings 'uninitialized';
 
 use Parse::RecDescent;
-use Carp;
+use Carp;;
 use overload ();    # for StrVal (we don't want custom stringifications creeping in)
 use Scalar::Util ();
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 our $GRAMMAR = <<'#\'EOG';   # mmm, vim hack
 #\
@@ -36,6 +36,7 @@ sem: classes ':' <leftop: attrdef '|' attrdef>
             { %$_, classes => $item[1] }
           } @{$item[3]} ]
     }
+    | <error>
 
 attrdef: attr <perl_codeblock ()> '=' <perl_codeblock>
     {
@@ -43,8 +44,10 @@ attrdef: attr <perl_codeblock ()> '=' <perl_codeblock>
             attr => $item[1],
             var  => massage_code($item[2]),
             code => massage_code($item[4]),
+            line => $thisline,
         }
     }
+    | <error>
 
 classes: <leftop: class ',' class>
 
@@ -58,7 +61,7 @@ our $PARSER = Parse::RecDescent->new($GRAMMAR);
 
 sub new {
     my ($class, $grammar) = @_;
-    my $map = $PARSER->input($grammar) or croak "Error in grammar";
+    my $map = $PARSER->input($grammar) or croak "Parse error in grammar";
 
     my @attrs = map { $_->{attr} } @$map;
     
@@ -77,6 +80,7 @@ sub apply {
 
     my ($self, $data) = @_;
     my $_AG_INSTANCE;   # we refer to this from within the generated code
+    my $_AG_LINE;
     my $package = "Language::AttributeGrammar::ANON" . $packageno++;
 
     # Generate the accessor functions for the attributes.  When you say
@@ -98,24 +102,28 @@ sub apply {
         my $code = "package $package;  use strict;\n".
                    "sub {\n".
                    "    my (\$_AG_SELF) = \@_;\n".
-                   "    \$_AG_INSTANCE->_AG_INSTALL('$sem->{attr}', $sem->{var}, sub $sem->{code});\n".
+                   "    \$_AG_INSTANCE->_AG_INSTALL('$sem->{attr}', $sem->{var}, sub {\n".
+                   "        \$_AG_LINE = $sem->{line};\n".
+                   "        $sem->{code}\n".
+                   "    });\n".
                    "}\n";
         my $sub = eval $code or confess "Compile error ($@) in:\n$code";
         push @{$visit{$_}}, $sub for @{$sem->{classes}};
     }
 
-    $_AG_INSTANCE = Language::AttributeGrammar::Instance->new($data, \%visit);
+    $_AG_INSTANCE = Language::AttributeGrammar::Instance->new($data, \%visit, \$_AG_LINE);
 }
 
 package Language::AttributeGrammar::Instance;
 # This object represents the runtime engine.
 
 sub new {
-    my ($class, $data, $visit) = @_;
+    my ($class, $data, $visit, $lineref) = @_;
     my $self = bless {
-        cell => {},
-        visit => $visit,
-        data => $data,
+        cell    => {},
+        visit   => $visit,
+        data    => $data,
+        lineref => $lineref,
     } => ref $class || $class;
 }
 
@@ -141,8 +149,14 @@ sub _AG_VISIT {
             $self->_AG_EVAL_CELL($cell);
         }
         else {
-            Carp::croak("A value was demanded for $attr($arg) where none could be provided\n".
-                        "(possibly you tried to evaluate an inherited attribute on the root node?)");
+            if (defined ${$self->{lineref}}) {
+                Carp::croak("A value was demanded for $attr($arg) where none could be provided\n".
+                            "near grammar line ${$self->{lineref}}.  Did you try to access an\n".
+                            "inherited attribute of the top level of a structure?\n");
+            }
+            else {
+                Carp::croak("Cannot find the attribute $attr($arg) that you asked for.\n");
+            }
         }
     }
 }
@@ -182,7 +196,8 @@ sub _AG_LOOKUP {
         $obj->{$name};
     }
     else {
-        Carp::croak("Could not find a way to access \$.$name of $obj");
+        Carp::croak("Could not find a way to access \$.$name of $obj near grammar line ".
+                    "${$self->{lineref}}.\n");
     }
 }
 

@@ -10,7 +10,7 @@ use Carp;;
 use overload ();    # for StrVal (we don't want custom stringifications creeping in)
 use Scalar::Util ();
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 our $GRAMMAR = <<'#\'EOG';   # mmm, vim hack
 #\
@@ -112,6 +112,8 @@ sub apply {
     }
 
     $_AG_INSTANCE = Language::AttributeGrammar::Instance->new($data, \%visit, \$_AG_LINE);
+    $_AG_INSTANCE->_AG_SCAN($data, 'ROOT');
+    return $_AG_INSTANCE;
 }
 
 package Language::AttributeGrammar::Instance;
@@ -127,6 +129,16 @@ sub new {
     } => ref $class || $class;
 }
 
+sub _AG_SCAN {
+    # Call all visitors for a given node
+    my ($self, $arg, $ref) = @_;
+    $ref ||= ref $arg;
+
+    for my $visitor (@{$self->{visit}{$ref} || []}) {
+        $visitor->($arg);
+    }
+}
+
 # Whenever you see min($.left), that's a call to $_AG_INSTANCE->_AG_VISIT('min', $.left).
 sub _AG_VISIT {
     my ($self, $attr, $arg) = @_;
@@ -139,9 +151,7 @@ sub _AG_VISIT {
     }
     else {
         # Otherwise, call each visitor for this node on this node...
-        for my $visitor (@{$self->{visit}{ref $arg}}) {
-            $visitor->($arg);
-        }
+        $self->_AG_SCAN($arg);
         
         # ... and hope that that caused the cell to be filled in.  If not,
         # we've been given an unsolvable grammar.
@@ -226,24 +236,22 @@ Language::AttributeGrammar - Attribute grammars for executable syntax trees and 
     Branch: min($$) = { List::Util::min(min($.left), min($.right)) }
 
     # find the global minimum and propagate it back down the tree
-    Root:   gmin($.tree)  = { min($.tree) }
+    ROOT:   gmin($$)      = { min($$) }
     Branch: gmin($.left)  = { gmin($$) }
           | gmin($.right) = { gmin($$) }
 
     # reconstruct the tree with every leaf replaced with the minimum value
     Leaf:   result($$)    = { Leaf->new(gmin($$)) }
     Branch: result($$)    = { Branch->new(result($.left), result($.right)) }
-    Root:   result($$)    = { result($.tree) }
     END_GRAMMAR
     
     # This grammar expects that you define these classes:
-    #                Root   (with a ->tree attribute)
     #                Branch (with a ->left and ->right attribute)
     #                Leaf   (with a ->value attribute)
 
     # Use the grammar
-    my $tree = Root->new( Branch->new( Leaf->new(1), 
-                                       Branch->new( Leaf->new(2), Leaf->new(3))));
+    my $tree = Branch->new( Leaf->new(1), 
+                            Branch->new( Leaf->new(2), Leaf->new(3)));
                                        
     # Apply the attribute grammar to the data structure
     my $atree = $grammar->apply($tree);
@@ -321,6 +329,16 @@ always use C<$$> explicitly:
 
 In the future I may provide a callback that allows the user to define
 the meaning of C<$.child>.
+
+There is one special class name that can go to the left of the colon:
+C<ROOT>.  This represents the root of the data structure you were given,
+and is used to avoid the common annoyance of creating a Root node
+class tha just bootstraps the "real" tree.   So when you say:
+
+    ROOT:  gmin($$) = { min($$) }
+
+That means that when you're at the root of the data structure, the
+global minimum is equal to the local minimum.
 
 =head2 Usage
 

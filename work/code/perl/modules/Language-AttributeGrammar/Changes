@@ -6,3 +6,6 @@ Revision history for Perl extension Language::AttributeGrammar.
 
 0.02  Sun Sep 26 20:29:00 2005
 	- added nicer error handling
+
+0.03  Sun Sep 26 21:57:00 2005
+	- added support for ROOT

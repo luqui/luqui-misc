@@ -11,7 +11,7 @@ Branch: min($$) = {
     $lmin <= $rmin ? $lmin : $rmin }
 
 # propagate the global minimum downward
-Root: gmin($.tree) = { min($.tree) }
+ROOT:   gmin($$)      = { min($$) }
 Branch: gmin($.left)  = { gmin($$) }
       | gmin($.right) = { gmin($$) }
 
@@ -19,17 +19,15 @@ Branch: gmin($.left)  = { gmin($$) }
 Leaf: result($$) = { bless { value => gmin($$) } => 'Leaf' }
 Branch: result($$) = { bless { left  => result($.left), 
                                right => result($.right) } => 'Branch' }
-Root: result($$) = { result($.tree) }
 
 EOG
 
 sub Leaf   { bless { value => $_[0] } => 'Leaf' }
 sub Branch { bless { left => $_[0], right => $_[1] } => 'Branch' }
-sub Root   { bless { tree => $_[0] } => 'Root' }
 
-my $tree = Root(Branch(
+my $tree = Branch(
             Branch(Leaf(2), Leaf(3)),
-            Branch(Leaf(1), Branch(Leaf(5), Leaf(9)))));
+            Branch(Leaf(1), Branch(Leaf(5), Leaf(9))));
 my $result = Branch(
             Branch(Leaf(1), Leaf(1)),
             Branch(Leaf(1), Branch(Leaf(1), Leaf(1))));

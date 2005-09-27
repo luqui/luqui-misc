@@ -33,3 +33,8 @@ Revision history for Perl extension Class::Multimethods::Pure.
         - Rejigged the registration process to be much more pluggable.  Now you just
           have to specify your own registry like $REGISTRY if you're doing anything
           at all reasonable in your extension.
+
+0.11  Tue Sep 20 01:18:00 2005
+        - Fixed a major minor bug that surfaced itself in Symbol::Opaque where
+          if you imported a multimethod before (in control flow sense) you
+          defined it, the import wouldn't work.

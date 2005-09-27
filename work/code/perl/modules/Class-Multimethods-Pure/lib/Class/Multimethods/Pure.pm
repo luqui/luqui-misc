@@ -7,7 +7,7 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 our %MULTI;
 our %MULTIPARAM;
@@ -81,10 +81,10 @@ sub process_multi {
 
 sub make_wrapper {
     my ($name, $registry) = @_;
-    my $method = $registry->{multi}{$name};
+    my $method = \$registry->{multi}{$name};
     sub {
-        my $call = $method->can('call');
-        unshift @_, $method;
+        my $call = $$method->can('call');
+        unshift @_, $$method;
         goto &$call;
     };
 }

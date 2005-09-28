@@ -13,3 +13,6 @@ Revision history for Perl extension Language::AttributeGrammar.
 0.04  Tue Sep 27 01:41:00 2005
 	- added a test for nonlinear attributes and an appropriate 
 	  error message.
+
+0.05  Wed Sep 28 00:57:00 2005
+	- added the prefix option

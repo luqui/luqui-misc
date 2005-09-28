@@ -10,7 +10,7 @@ use Carp;;
 use overload ();    # for StrVal (we don't want custom stringifications creeping in)
 use Scalar::Util ();
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 our $GRAMMAR = <<'#\'EOG';   # mmm, vim hack
 #\
@@ -51,7 +51,7 @@ attrdef: attr <perl_codeblock ()> '=' <perl_codeblock>
 
 classes: <leftop: class ',' class>
 
-class: /\w+ (?: :: \w+ )*/x
+class: /(?: :: )? \w+ (?: :: \w+ )*/x
 
 attr: /\w+/
 
@@ -60,8 +60,27 @@ attr: /\w+/
 our $PARSER = Parse::RecDescent->new($GRAMMAR);
 
 sub new {
-    my ($class, $grammar) = @_;
+    my ($class, $grammar, $grammar2) = @_;   # $grammar becomes $options sometimes
+    
+    my $options = {};
+    if (ref $grammar eq 'HASH') { ($options, $grammar) = ($grammar, $grammar2) }
+    
     my $map = $PARSER->input($grammar) or croak "Parse error in grammar";
+
+    # Add prefix to all classes except those that start with ::
+    if (exists $options->{prefix}) {
+        my $prefix = $options->{prefix};
+        carp "Warning: Your prefix doesn't end in ::" unless $prefix =~ /::$/;
+        for my $data (@$map) {
+            for (@{$data->{classes}}) {
+                $_ = "$prefix$_" unless /^::/;
+            }
+        }
+    }
+    # strip off all initial ::s.
+    for my $data (@$map) {
+        s/^::// for @{$data->{classes}};
+    }
 
     my @attrs = map { $_->{attr} } @$map;
     
@@ -353,8 +372,18 @@ object:
 
     my $grammar = Language::AttributeGrammar->new($grammar_string);
 
-This contains a minimal data structure of the semantics definitions.  In
-order to use it on a data structure, C<apply> it to the data structure:
+This contains a minimal data structure of the semantics definitions.  The 
+constructor also can take an options hash as its first argument:
+
+    my $grammar = Language::AttributeGrammar->new({ prefix => 'Foo::' }, $grammar_string);
+
+The only option at the moment is C<prefix>, which will prepend this
+prefix to all the types mentioned in your grammar.  However, if you need
+to omit this prefix, name the type in your grammar starting with a
+C<::>, and the prefix will not be prepended.
+
+In order to use it on a data structure, C<apply> it to the data
+structure:
 
     my $attr_data = $grammar->apply($data);
 

@@ -3,6 +3,7 @@ Makefile.PL
 MANIFEST
 README
 t/diff.t
+t/prefix.t
 t/repmin.t
 lib/Language/AttributeGrammar.pm
 META.yml                                 Module meta-data (added by MakeMaker)

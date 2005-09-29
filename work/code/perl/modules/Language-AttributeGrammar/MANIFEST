@@ -5,5 +5,5 @@ README
 t/diff.t
 t/prefix.t
 t/repmin.t
-lib/Language/AttributeGrammar.pm
+lib/Language/AttributeGrammar/Lazy.pm
 META.yml                                 Module meta-data (added by MakeMaker)

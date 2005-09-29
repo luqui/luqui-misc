@@ -1,8 +1,8 @@
 use Test::More tests => 2;
 
-BEGIN { use_ok('Language::AttributeGrammar::Lazy') }
+BEGIN { use_ok('Language::AttributeGrammar') }
 
-my $grammar = new Language::AttributeGrammar::Lazy <<'EOG';
+my $grammar = new Language::AttributeGrammar <<'EOG';
 
 # find the minimum from the leaves up
 Leaf: min($$) = { $.value }

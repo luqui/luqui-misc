@@ -1,8 +1,8 @@
 use Test::More tests => 2;
 
-BEGIN { use_ok('Language::AttributeGrammar::Lazy') }
+BEGIN { use_ok('Language::AttributeGrammar') }
 
-my $grammar = new Language::AttributeGrammar::Lazy <<'EOG';
+my $grammar = new Language::AttributeGrammar <<'EOG';
 
 Cons: len($$)     = { 1 + len($.tail) }   # length of list is 1 + length of tail
 Nil:  len($$)     = { 0 }

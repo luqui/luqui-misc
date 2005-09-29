@@ -1,8 +1,8 @@
 use Test::More tests => 5;
 
-BEGIN { use_ok('Language::AttributeGrammar::Lazy') }
+BEGIN { use_ok('Language::AttributeGrammar') }
 
-my $grammar = new Language::AttributeGrammar::Lazy { prefix => 'Root::' }, <<'EOG';
+my $grammar = new Language::AttributeGrammar { prefix => 'Root::' }, <<'EOG';
 
 Foo:         foo($$) = { 1 }
 Bar::Baz:    foo($$) = { 2 }

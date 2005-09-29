@@ -1,4 +1,4 @@
-package Language::AttributeGrammar;
+package Language::AttributeGrammar::Lazy;
 
 use 5.006001;
 use strict;
@@ -100,7 +100,7 @@ sub apply {
     my ($self, $data) = @_;
     my $_AG_INSTANCE;   # we refer to this from within the generated code
     my $_AG_LINE;
-    my $package = "Language::AttributeGrammar::ANON" . $packageno++;
+    my $package = "Language::AttributeGrammar::Lazy::ANON" . $packageno++;
 
     # Generate the accessor functions for the attributes.  When you say
     # min($.left) in the body, this is what it calls.
@@ -130,12 +130,12 @@ sub apply {
         push @{$visit{$_}}, $sub for @{$sem->{classes}};
     }
 
-    $_AG_INSTANCE = Language::AttributeGrammar::Instance->new($data, \%visit, \$_AG_LINE);
+    $_AG_INSTANCE = Language::AttributeGrammar::Lazy::Instance->new($data, \%visit, \$_AG_LINE);
     $_AG_INSTANCE->_AG_SCAN($data, 'ROOT');
     return $_AG_INSTANCE;
 }
 
-package Language::AttributeGrammar::Instance;
+package Language::AttributeGrammar::Lazy::Instance;
 # This object represents the runtime engine.
 
 sub new {
@@ -251,11 +251,11 @@ sub AUTOLOAD {
 
 =head1 NAME
 
-Language::AttributeGrammar - Attribute grammars for executable syntax trees and other stuff.
+Language::AttributeGrammar::Lazy - Attribute grammars for executable syntax trees and other stuff.
 
 =head1 SYNOPSIS
 
-    my $grammar = new Language::AttributeGrammar <<'END_GRAMMAR';
+    my $grammar = new Language::AttributeGrammar::Lazy <<'END_GRAMMAR';
     # find the minimum of a tree from the leaves up
     Leaf:   min($$) = { $.value }
     Branch: min($$) = { List::Util::min(min($.left), min($.right)) }
@@ -370,12 +370,12 @@ global minimum is equal to the local minimum.
 After you have a grammar specification in a string, create a new grammar
 object:
 
-    my $grammar = Language::AttributeGrammar->new($grammar_string);
+    my $grammar = Language::AttributeGrammar::Lazy->new($grammar_string);
 
 This contains a minimal data structure of the semantics definitions.  The 
 constructor also can take an options hash as its first argument:
 
-    my $grammar = Language::AttributeGrammar->new({ prefix => 'Foo::' }, $grammar_string);
+    my $grammar = Language::AttributeGrammar::Lazy->new({ prefix => 'Foo::' }, $grammar_string);
 
 The only option at the moment is C<prefix>, which will prepend this
 prefix to all the types mentioned in your grammar.  However, if you need

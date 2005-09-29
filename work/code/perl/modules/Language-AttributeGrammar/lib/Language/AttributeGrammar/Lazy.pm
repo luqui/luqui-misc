@@ -10,8 +10,6 @@ use Carp;;
 use overload ();    # for StrVal (we don't want custom stringifications creeping in)
 use Scalar::Util ();
 
-our $VERSION = '0.05';
-
 our $GRAMMAR = <<'#\'EOG';   # mmm, vim hack
 #\
 

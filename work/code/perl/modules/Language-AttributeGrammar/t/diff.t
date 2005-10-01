@@ -4,21 +4,21 @@ BEGIN { use_ok('Language::AttributeGrammar') }
 
 my $grammar = new Language::AttributeGrammar <<'EOG';
 
-Cons: len($$)     = { 1 + len($.tail) }   # length of list is 1 + length of tail
-Nil:  len($$)     = { 0 }
+Cons: len($$)            = { 1 + len($.tail) }   # length of list is 1 + length of tail
+Nil:  len($$)            = { 0 }
 
-Cons: sum($$)     = { $.head + sum($.tail) }
-Nil:  sum($$)     = { 0 }
+Cons: sum($$)            = { $.head + sum($.tail) }
+Nil:  sum($$)            = { 0 }
 
-Root: avg($.list) = { sum($.list) / len($.list) }
-Cons: avg($.tail) = { avg($$) }
+Root: global_avg($.list) = { sum($.list) / len($.list) }
+Cons: global_avg($.tail) = { global_avg($$) }
 
-Root: diff($$)    = { diff($.list) }
-Cons: diff($$)    = # Cons($.head - avg($$), diff($.tail))
+Root: diff($$)           = { diff($.list) }
+Cons: diff($$)           = # Cons($.head - global_avg($$), diff($.tail))
     {
-        bless { head => ($.head - avg($$)), tail => diff($.tail) } => 'Cons' 
+        bless { head => ($.head - global_avg($$)), tail => diff($.tail) } => 'Cons' 
     }
-Nil:  diff($$)    = { bless { } => 'Nil' }
+Nil:  diff($$)           = { bless { } => 'Nil' }
 
 EOG
 

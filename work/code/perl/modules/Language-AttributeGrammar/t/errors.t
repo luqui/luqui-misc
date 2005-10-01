@@ -10,10 +10,13 @@ sub mkg { $m->new(shift) }
 sub mko { my $c = shift; bless { @_ }, $c }
 sub apply { mkg(shift)->apply(@_) }
 
+# supress emission of crap the user doesn't care about
+$::RD_ERRORS = undef;
+$::RD_WARN = undef;
 
 throws_ok {
 	mkg('syntax error b{{{ {lkjahdtkjhat #%$!%^!#*^#!^!'); # i really hope that's not perl ;-)
-} qr/Parse error/, "bad grammer makes a syntax error"; # FIXME - P::RD emits a warning that we cannot mute (C?)
+} qr/Parse error/, "bad grammer makes a syntax error";
 
 throws_ok {
 	apply('Foo: gorch($$) = { $.doesnt_exist }', mko("Foo"))->gorch;

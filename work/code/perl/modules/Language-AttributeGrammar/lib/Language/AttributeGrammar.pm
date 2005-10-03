@@ -153,6 +153,8 @@ sub _AG_SCAN {
     my ($self, $arg, $ref) = @_;
     $ref ||= ref $arg;
 
+    print STDERR "Scanning $arg $ref\n";
+
     for my $visitor (@{$self->{visit}{$ref} || []}) {
         $visitor->($arg);
     }
@@ -163,12 +165,16 @@ sub _AG_VISIT {
     my ($self, $attr, $arg) = @_;
     my $argstr = overload::StrVal($arg);
 
+    print STDERR "Visiting $attr $arg\n";
+
     # If a thunk has already been installed in the cell we are trying,
     # just evaluate the thunk.
     if (my $cell = $self->{cell}{$attr}{$argstr}) {
         $self->_AG_EVAL_CELL($cell);
     }
     else {
+        print STDERR "Triggered a scan with $attr $arg\n";
+        
         # Otherwise, call each visitor for this node on this node...
         $self->_AG_SCAN($arg);
         
@@ -207,12 +213,14 @@ sub _AG_INSTALL {
     my ($self, $attr, $arg, $line, $code) = @_;
     my $argstr = overload::StrVal($arg);
     unless ($self->{cell}{$attr}{$argstr}) {
+        print STDERR "Installing $attr $argstr <- $code\n";
         $self->{cell}{$attr}{$argstr} = {
             thunk => 1,
             value => $code,
         };
     }
     else {
+        print STDERR "When installing $attr $argstr <- $code\n";
         Carp::croak("Nonlinear attribute: you have two or more ways to assign a value\n".
                     "to the attribute '$attr' near grammar line $line.\n");
     }

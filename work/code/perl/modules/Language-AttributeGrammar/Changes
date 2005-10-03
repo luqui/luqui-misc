@@ -16,3 +16,7 @@ Revision history for Perl extension Language::AttributeGrammar.
 
 0.05  Wed Sep 28 00:57:00 2005
 	- added the prefix option
+
+0.06  xxx
+	- added some basic sanitty tests, and tests for errors.
+

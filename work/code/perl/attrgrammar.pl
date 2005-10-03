@@ -15,6 +15,26 @@ sub x {
     $ret;
 }
 
+sub thunk(&) {
+    die "More than one argument to thunk" if @_ > 1;
+    my ($code) = @_;
+    bless {
+        thunk => $code,
+    } => 'Thunk';
+}
+
+package Thunk;
+
+sub call {
+    if (my $thunk = $_[0]{thunk}) {
+        delete $_[0]{thunk};
+        $_[0]{value} = $thunk->();
+    }
+    else {
+        $_[0]{value};
+    }
+}
+
 package Leaf;
 
 sub new {
@@ -28,9 +48,9 @@ sub visit {
     my ($self, $parent) = @_;
     my $compute;
     $compute = {
-        min     => sub { ::t "Leaf::min"; ::x $self->{value} },
-        result  => sub { ::t "Leaf::result"; ::x Leaf->new($compute->{gmin}->()) }, 
-        gmin    => sub { ::t "Leaf::gmin"; ::x $parent->{gmin}->() },
+        min     => ::thunk { ::t "Leaf::min"; ::x $self->{value} },
+        result  => ::thunk { ::t "Leaf::result"; ::x Leaf->new($compute->{gmin}->call) }, 
+        gmin    => ::thunk { ::t "Leaf::gmin"; ::x $parent->{gmin}->call },
     };
     $compute;
 }
@@ -50,13 +70,13 @@ sub visit {
     my ($left, $right);
     my $compute;
     $compute = {
-        min => sub {
+        min => ::thunk {
             ::t "Branch::min";
-            my ($lmin, $rmin) = ($left->{min}->(), $right->{min}->());
+            my ($lmin, $rmin) = ($left->{min}->call, $right->{min}->call);
             ::x($lmin <= $rmin ? $lmin : $rmin);
         },
-        result => sub { ::t "Branch::result"; ::x Branch->new($left->{result}->(), $right->{result}->()) },
-        gmin => sub { ::t "Branch::gmin"; ::x $parent->{gmin}->() },
+        result => ::thunk { ::t "Branch::result"; ::x Branch->new($left->{result}->call, $right->{result}->call) },
+        gmin => ::thunk { ::t "Branch::gmin"; ::x $parent->{gmin}->call },
     };
     ($left, $right) = ($self->{left}->visit($compute), $self->{right}->visit($compute));
     $compute;
@@ -76,8 +96,8 @@ sub visit {
     my $tree;
     my $compute;
     $compute = {
-        result => sub { ::t "Root::result"; ::x $tree->{result}->() },
-        gmin   => sub { ::t "Root::gmin"; ::x $tree->{min}->() },
+        result => ::thunk { ::t "Root::result"; ::x $tree->{result}->call },
+        gmin   => ::thunk { ::t "Root::gmin"; ::x $tree->{min}->call },
     };
     $tree = $self->{tree}->visit($compute);
     $compute;
@@ -101,4 +121,4 @@ my $tree = Root->new(
 );
 
 print Dumper($tree);
-print Dumper($tree->visit->{result}->());
+print Dumper($tree->visit->{result}->call);

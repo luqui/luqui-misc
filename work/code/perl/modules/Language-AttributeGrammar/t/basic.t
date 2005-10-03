@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 11;
+use Test::More tests => 14;
 use Test::Exception;
 
 my $m; BEGIN { use_ok($m = 'Language::AttributeGrammar') }
@@ -74,3 +74,25 @@ EOG
 	is($r->value, 3 * 3 * 3 * 4, "N levels of inherited attributes");
 }
 
+{
+	is(apply('ROOT: value($$) = { 5 }', mko("Foo"))->value, 5, "ROOT pseudonnode");
+}
+
+{
+	my $r = apply(<<'EOG', mko(Foo => child => mko("Bar")));
+ROOT: foo($$) = { 5 }
+Foo: bar($.child) = { foo($$) }
+Foo: bah($$) = { bah($.child) }
+Bar: bah($$) = { bar($$) + 10 }
+EOG
+	is($r->bah, 15, "ROOT inherits");
+}
+
+{
+	my $r = apply(<<'EOG', mko(Foo => child => mko("Bar")));
+ROOT: foo($$) = { 5 }
+Foo: foo($$) = { bar($.child) }
+Bar: bar($$) = { 10 }
+EOG
+	is($r->foo, 5, "definition under ROOT overrides definition over class");
+}

@@ -22,3 +22,9 @@ Revision history for Perl extension Perl6::Currying.
 	  (Thanks Angel!)
 
 	- Optimized placeholder detection regex
+
+0.06    Fri Oct 7  00:22:00 2005
+
+        - Luke Palmer resurrected maintenance of this module.
+        
+        - Fixed a bug where { $^x + $^x } would be a two-parameter function.

@@ -2,35 +2,39 @@ package Perl6::Placeholders;
 
 use Filter::Simple;
 
+our $VERSION = '0.06';
+
 my %giftwrap = (
-	'sort' => sub {"{$_[0]\->(\$a,\$b)}"},
-	'grep' => sub {"{$_[0]\->(\$_)}"},
-	'map'  => sub {"{$_[0]\->(\$_)}"},
-	'sub'  => sub {$_[0]},
-	''     => sub {$_[0]},
+        'sort' => sub {"{$_[0]\->(\$a,\$b)}"},
+        'grep' => sub {"{$_[0]\->(\$_)}"},
+        'map'  => sub {"{$_[0]\->(\$_)}"},
+        'sub'  => sub {$_[0]},
+        ''     => sub {$_[0]},
 );
 
 use re 'eval';
 our $code        = qr{ (?: [^{}]+ | \{ (??{ $code }) \} )* }x;
 our $placeholder = qr{ (?: $code (?: (??{ $carvar }) $code ) )+ }x;
 our $carvar      = qr{ (?: \$\w+ (?:
-			(?:->)?  (?:\[$placeholder\]|\{$placeholder\}) )+
-		       | \$\^\w+
-		       )
-		     }x;
+                        (?:->)?  (?:\[$placeholder\]|\{$placeholder\}) )+
+                       | \$\^\w+
+                       )
+                     }x;
 
 FILTER_ONLY 
-	executable => sub {
-			s<(sub|sort|map|grep)?\s*(?=.*\$\^\w)\{($placeholder)\}> {
-				my ($context,$code) = ($1||"",$2);
-				my $vars = join ",", sort $code =~ m/(\$\^\w+)/g;
-				my $decl = qq{my($vars)=\@_;};
-				$decl = "" if $code =~ /\Q$decl/;
-				$code = qq{ sub ($vars) {$decl $code } }; 
-				$code =~ s/\$\^(\w+)/\$$1/g;
-				"$context ". $giftwrap{$context}($code);
-			}ge;
-		},
+        executable => sub {
+                        s<(sub|sort|map|grep)?\s*(?=.*\$\^\w)\{($placeholder)\}> {
+                                my ($context,$code) = ($1||"",$2);
+                                my %vars;
+                                @vars{$code =~ m/(\$\^\w+)/g} = ();
+                                my $vars = join ',', sort keys %vars;
+                                my $decl = qq{my($vars)=\@_;};
+                                $decl = "" if $code =~ /\Q$decl/;
+                                $code = qq{ sub {$decl $code } }; 
+                                $code =~ s/\$\^(\w+)/\$$1/g;
+                                "$context ". $giftwrap{$context}($code);
+                        }ge;
+                },
 
 __END__
 
@@ -40,26 +44,26 @@ Perl6::Placeholders - Perl 6 implicitly declared parameters for Perl 5
 
 =head1 VERSION
 
-This document describes version 0.05 of Perl6::Placeholders,
-released May 29, 2002.
+This document describes version 0.06 of Perl6::Placeholders,
+released October 7, 2005.
 
 =head1 SYNOPSIS
 
-	use Perl6::Placeholders;
+        use Perl6::Placeholders;
 
-	my $add = { $^a + $^b };	# Create a sub that adds its two args
+        my $add = { $^a + $^b };        # Create a sub that adds its two args
 
-	print $add->(1,2), "\n";	# Call it
+        print $add->(1,2), "\n";        # Call it
 
-	# Use as map, grep, and sort blocks
-	print join ",", sort { $^y <=> $^x } 1..10;
-	print join "\n", map { $^value**2 } 1..10;
-	print join "\n", map { $data{$_-1}.$^value**2 } 1..10;
-	print join "\n", grep { $data{$^value} } 1..10;
+        # Use as map, grep, and sort blocks
+        print join ",", sort { $^y <=> $^x } 1..10;
+        print join "\n", map { $^value**2 } 1..10;
+        print join "\n", map { $data{$_-1}.$^value**2 } 1..10;
+        print join "\n", grep { $data{$^value} } 1..10;
 
-	my $div = { $^x / $^y };	# Create a HOF that divides its two args
+        my $div = { $^x / $^y };        # Create a HOF that divides its two args
 
-	print $div->(1,2), "\n";	# Do a division
+        print $div->(1,2), "\n";        # Do a division
 
 
 =head1 DESCRIPTION
@@ -78,32 +82,32 @@ number and sequence of arguments.
 
 That is, the expression:
 
-	# Perl 6 code
+        # Perl 6 code
         $check = { $^a == $^b**2 * $^c or die $^err_msg }; 
 
 is equivalent to:
 
-	# Perl 6 code
+        # Perl 6 code
         $check = sub ($a, $b, $c, $err_msg) {
             $a == $b**2 * $c or die $err_msg
         };
 
 This could then be invoked:
 
-	# Perl 6 code
+        # Perl 6 code
         $check.($i,$j,$k,$msg);
         
 It is also be possible to interpolate an argument list into a static
 expression like so:
 
-	# Perl 6 code
+        # Perl 6 code
         { $^a == $^b**2 * $^c or die $^err_msg }.($i,$j,$k,$msg);
 
 
 The placeholders are sorted UTF8-abetically before they are used
 to create the subroutine's parameter list. Hence the following:
 
-	# Perl 6 code
+        # Perl 6 code
         @reverse_sorted = sort {$^b <=> $^a} @list;
 
 works as expected. That is, it's equivalent to:
@@ -118,30 +122,30 @@ syntax in Perl 5.
 
 That is, the expression:
 
-	# Perl 5 code
-	use Perl6::Placeholders;
+        # Perl 5 code
+        use Perl6::Placeholders;
 
         $check = { $^a == $^b**2 * $^c or die $^err_msg }; 
 
 is equivalent to:
 
-	# Perl 5 code
+        # Perl 5 code
 
         $check = sub ($a, $b, $c, $err_msg) {
-	    my ($a, $b, $c, $err_msg) = @_;
+            my ($a, $b, $c, $err_msg) = @_;
             $a == $b**2 * $c or die $err_msg;
         };
 
 This could then be invoked:
 
-	# Perl 5 code
+        # Perl 5 code
         $check->($i,$j,$k,$msg);
         
 It is also be possible to interpolate an argument list into a static
 expression like so:
 
-	# Perl 5 code
-	use Perl6::Placeholders;
+        # Perl 5 code
+        use Perl6::Placeholders;
 
         { $^a == $^b**2 * $^c or die $^err_msg }->($i,$j,$k,$msg);
 
@@ -151,8 +155,8 @@ release may support array and hash parameters too).
 The placeholders are sorted ASCIIbetically before they are used
 to create the subroutine's parameter list. Hence the following:
 
-	# Perl 5 code
-	use Perl6::Placeholders;
+        # Perl 5 code
+        use Perl6::Placeholders;
 
         @reverse_sorted = sort {$^b <=> $^a} @list;
 
@@ -168,6 +172,10 @@ and requires that module to be installed.
 =head1 AUTHOR
 
 Damian Conway (damian@conway.org)
+
+=head1 MAINTAINER
+
+Luke Palmer (lrpalmer gmail com)
 
 =head1 BUGS
 

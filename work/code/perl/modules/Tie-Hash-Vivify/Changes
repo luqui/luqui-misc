@@ -1,0 +1,6 @@
+Revision history for Perl extension Tie::Hash::Vivify.
+
+0.01  Sun Oct  9 18:03:48 2005
+	- original version; created by h2xs 1.23 with options
+		-n Tie::Hash::Vivify -X -b 5.6.1
+

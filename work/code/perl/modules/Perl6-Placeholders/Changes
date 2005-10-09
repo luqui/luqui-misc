@@ -28,3 +28,7 @@ Revision history for Perl extension Perl6::Currying.
         - Luke Palmer resurrected maintenance of this module.
         
         - Fixed a bug where { $^x + $^x } would be a two-parameter function.
+
+0.07    Sat Oct 8  14:47:00 2005
+
+        - Fixed a documentation bug.  Smylers++

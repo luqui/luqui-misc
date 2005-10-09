@@ -2,7 +2,7 @@ package Perl6::Placeholders;
 
 use Filter::Simple;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 my %giftwrap = (
         'sort' => sub {"{$_[0]\->(\$a,\$b)}"},
@@ -131,7 +131,7 @@ is equivalent to:
 
         # Perl 5 code
 
-        $check = sub ($a, $b, $c, $err_msg) {
+        $check = sub {
             my ($a, $b, $c, $err_msg) = @_;
             $a == $b**2 * $c or die $err_msg;
         };

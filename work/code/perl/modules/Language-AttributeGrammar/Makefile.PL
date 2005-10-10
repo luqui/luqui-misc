@@ -5,8 +5,7 @@ WriteMakefile(
     NAME              => 'Language::AttributeGrammar',
     VERSION_FROM      => 'lib/Language/AttributeGrammar.pm', 
     PREREQ_PM         => {
-		Parse::RecDescent => 0,
-		Test::Exception => 0,
+                Perl6::Attributes => 0,
 	},
     ABSTRACT_FROM     => 'lib/Language/AttributeGrammar.pm',
     AUTHOR            => 'Luke Palmer <lrpalmer@gmail.com>',

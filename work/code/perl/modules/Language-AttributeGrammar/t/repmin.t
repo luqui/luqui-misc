@@ -60,7 +60,7 @@ add_visitor $engine ROOT => sub {
 
 add_visitor $engine Branch => sub {
     my ($self, $attrs) = @_;
-    my $gmin = $attrs->get($self)->get('min');
+    my $gmin = $attrs->get($self)->get('gmin');
     $attrs->get($self->{left})->get('gmin')->set(sub { $gmin->get });
     $attrs->get($self->{right})->get('gmin')->set(sub { $gmin->get });
 };

@@ -8,6 +8,8 @@ use Carp;
 use Perl6::Attributes;
 use Language::AttributeGrammar::Thunk;
 
+use Devel::STDERR::Indent qw<indent>;
+
 sub new {
     my ($class) = @_;
     bless {
@@ -35,8 +37,8 @@ sub make_visitor {
 
 sub annotate {
     my ($self, $visit, $top) = @_;
-    print "Annotating...\n";
     my @nodeq;
+    
     my $attrs = Language::AttributeGrammar::Engine::Vivifier->new(sub {
                     push @nodeq, $_[0];
                     Language::AttributeGrammar::Engine::Vivifier->new(sub {
@@ -62,7 +64,6 @@ sub evaluate {
     my $attrs = $self->annotate($visit, $top);
     my $head = $attrs->get($top)->get($attr);
     undef $attrs;   # allow intermediate values to go away
-    print "Evaluating...\n";
     $head->get;
 }
 
@@ -82,7 +83,6 @@ sub get {
     my ($self, $key) = @_;
     unless (exists $.hash{$key}) {
         $.hash{overload::StrVal($key)} = $.vivi->($key);
-        print "Vivified $.hash{overload::StrVal($key)}\n";
         $.hash{overload::StrVal($key)};
     }
     else {

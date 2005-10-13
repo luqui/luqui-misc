@@ -10,11 +10,12 @@ use Perl6::Attributes;
 
 sub new {
     my ($class, $code) = @_;
-    bless {
+    my $self = bless {
         stage => ($code ? 2 : 1),
         code  => $code,
         value => undef,
     } => ref $class || $class;
+    $self;
 }
 
 sub set {
@@ -38,7 +39,7 @@ sub get {
         $.value;
     }
     else {
-        croak "Bad attempt to evaluate a stage-1 thunk";
+        croak "Bad attempt to evaluate stage-1 thunk";
     }
 }
 

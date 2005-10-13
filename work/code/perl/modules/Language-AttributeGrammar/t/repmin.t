@@ -62,12 +62,13 @@ add_visitor $engine Branch => sub {
     my ($self, $attrs) = @_;
     my $gmin = $attrs->get($self)->get('min');
     $attrs->get($self->{left})->get('gmin')->set(sub { $gmin->get });
+    $attrs->get($self->{right})->get('gmin')->set(sub { $gmin->get });
 };
 
 add_visitor $engine Leaf => sub {
     my ($self, $attrs) = @_;
     my $min = $attrs->get($self)->get('gmin');
-    $attrs->get($self)->get('result')->set(sub { print "Evaluating $min\n"; Leaf($min->get) });
+    $attrs->get($self)->get('result')->set(sub { Leaf($min->get) });
 };
 
 add_visitor $engine Branch => sub {

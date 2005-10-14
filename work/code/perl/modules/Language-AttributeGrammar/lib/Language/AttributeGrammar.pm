@@ -11,7 +11,9 @@ use Perl6::Attributes;
 my $methnum = '0';
 
 sub new {
-    my ($class, $grammar) = @_;
+    my ($class, $options, $grammar) = @_;
+    $grammar = $options unless ref $options eq 'HASH';
+
     my $engine = Language::AttributeGrammar::Parser->new($grammar);
     my $meth = '_AG_visit_' . $methnum++;
     $engine->make_visitor($meth);

@@ -6,6 +6,8 @@ use Test::Exception;
 
 my $m; BEGIN { use_ok($m = 'Language::AttributeGrammar') }
 
+local $TODO = "No error handling yet";
+
 sub mkg { $m->new(shift) }
 sub mko { my $c = shift; bless { @_ }, $c }
 sub apply { mkg(shift)->apply(@_) }

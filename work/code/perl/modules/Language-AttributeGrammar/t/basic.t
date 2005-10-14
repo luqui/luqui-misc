@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 14;
+use Test::More tests => 13;
 use Test::Exception;
 
 my $m; BEGIN { use_ok($m = 'Language::AttributeGrammar') }
@@ -14,85 +14,92 @@ sub mko { my $c = shift; bless { @_ }, $c }
 sub apply { mkg(shift)->apply(@_) }
 
 {
-	my $r = apply('Foo: gorch($$) = { 42 }', mko("Foo"));
+        my $g = mkg('Foo: $/.gorch = { 42 }');
 
-	lives_ok { $r->gorch } "ok to access valid attribute";
-	is($r->gorch, 42, "the attribute's value");
+        my $r;
+	lives_ok { $r = $g->apply(mko("Foo"), 'gorch') } "ok to access valid attribute";
+	is($r, 42, "the attribute's value");
 
-	dies_ok { $r->quxx } "fatal to access invalid attribute";
+	dies_ok { $r->apply(mko("Foo"), 'swick') } "fatal to access invalid attribute";
 }
 
 {
-	my $r = apply(<<'EOG', mko("Foo"));
-Foo: gorch($$) = { 42 }
-Foo: bar($$) = { gorch($$) / 2 }
+	my $g = mkg(<<'EOG');
+Foo: $/.gorch = { 42 }
+Foo: $/.bar   = { $/.gorch / 2 }
 EOG
 
-	is($r->bar, 21, "dependant attributes on the same node");
+	is($g->apply(mko("Foo"), 'bar'), 21, "dependent attributes on the same node");
 }
 
 {
-	my $r = apply(<<'EOG', mko("Foo", bar => mko("Bar")));
-Foo: value($$) = { 3 * value($.bar) }
-Bar: value($$) = { 4 }
+	my $g = mkg(<<'EOG');
+Foo: $/.value = { 3 * $<bar>.value }
+Bar: $/.value = { 4 }
 EOG
 
-	is($r->value, 12, "one level of synthesized attributes");
+	is($g->apply(mko("Foo", bar => mko("Bar")), 'value'), 12, 
+                "one level of synthesized attributes");
 }
 
 
 {
-	my $r = apply(<<'EOG', mko(Foo => child => mko(Foo => child => mko(Foo => child => mko("Bar")))));
-Foo: value($$) = { 3 * value($.child) }
-Bar: value($$) = { 4 }
+        my $o = mko(Foo => child => mko(Foo => child => mko(Foo => child => mko('Bar'))));
+        my $g = mkg(<<'EOG');
+Foo: $/.value = { 3 * $<child>.value }
+Bar: $/.value = { 4 }
 EOG
 
-	is($r->value, 3 * 3 * 3 * 4, "N levels of synthesized attributes");
+	is($g->apply($o, 'value'), 3 * 3 * 3 * 4, "N levels of synthesized attributes");
 }
 
 {
-	my $r = apply(<<'EOG', mko("Foo", bar => mko("Bar")));
-Foo: parent_value($.bar) = { 3 }
-Foo: value($$) = { value($.bar) }
-Bar: value($$) = { 4 * parent_value($$) }
+        my $g = mkg(<<'EOG');
+Foo: $<bar>.parent_value = { 3 }
+Foo: $/.value            = { $<bar>.value }
+Bar: $/.value            = { 4 * $/.parent_value }
 EOG
 
-	is($r->value, 12, "one level of inherited attributes");
+	is($g->apply(mko("Foo", bar => mko("Bar")), 'value'), 12, 
+            "one level of inherited attributes");
 }
 
 {
-	my $r = apply(<<'EOG', mko(Root => child => mko(Foo => child => mko(Foo => child => mko(Foo => child => mko("Bar"))))));
-Root: parent_value($.child) = { 1 }
-Root: value($$) = { value($.child) }
+        my $o = mko(Root => child => mko(Foo => child => mko(Foo => child => mko(Foo => child => mko("Bar")))));
+        my $g = mkg(<<'EOG');
+Root: $<child>.parent_value = { 1 }
+Root: $/.value = { $<child>.value }
 
-Foo: parent_value($.child) = { 3 * parent_value($$) }
-Foo: value($$) = { value($.child) }
+Foo: $<child>.parent_value = { 3 * $/.parent_value }
+Foo: $/.value = { $<child>.value }
 
-Bar: value($$) = { 4 * parent_value($$) }
+Bar: $/.value = { 4 * $/.parent_value }
 EOG
 
-	is($r->value, 3 * 3 * 3 * 4, "N levels of inherited attributes");
+	is($g->apply($o, 'value'), 3 * 3 * 3 * 4, "N levels of inherited attributes");
 }
 
 {
-	is(apply('ROOT: value($$) = { 5 }', mko("Foo"))->value, 5, "ROOT pseudonnode");
-}
-
-{
-	my $r = apply(<<'EOG', mko(Foo => child => mko("Bar")));
-ROOT: foo($$) = { 5 }
-Foo: bar($.child) = { foo($$) }
-Foo: bah($$) = { bah($.child) }
-Bar: bah($$) = { bar($$) + 10 }
+        my $g = mkg(<<'EOG');
+ROOT: $/.foo = { 5 }
+Foo: $<child>.bar = { $/.foo }
+Foo: $/.bah = { $<child>.bah }
+Bar: $/.bah = { $/.bar + 10 }
 EOG
-	is($r->bah, 15, "ROOT inherits");
+	is($g->apply(mko(Foo => child => mko('Bar')), 'bah'), 15, "ROOT inherits");
 }
 
-{
-	my $r = apply(<<'EOG', mko(Foo => child => mko("Bar")));
-ROOT: foo($$) = { 5 }
-Foo: foo($$) = { bar($.child) }
-Bar: bar($$) = { 10 }
+TODO: {
+        local $TODO = 'I suppose ROOT should override if there is an overlap';
+        my $g = mkg(<<'EOG');
+ROOT: $/.foo = { 5 }
+Foo: $/.foo = { $<child>.bar }
+Bar: $/.bar = { 10 }
 EOG
-	is($r->foo, 5, "definition under ROOT overrides definition over class");
+	eval {
+            my $r = $g->apply(mko(Foo => child => mko('Bar')), 'foo');
+            is($r, 5, "definition under ROOT overrides definition over class"); 1;
+        } or ok(0, "definition under ROOT overrides definition over class");
 }
+
+# vim: ft=perl :

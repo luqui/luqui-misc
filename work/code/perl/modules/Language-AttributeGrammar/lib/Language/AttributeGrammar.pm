@@ -5,244 +5,51 @@ use strict;
 use warnings;
 no warnings 'uninitialized';
 
-use Parse::RecDescent;
-use Carp;
-use overload ();    # for StrVal (we don't want custom stringifications creeping in)
-use Scalar::Util ();
+use Language::AttributeGrammar::Parser;
+use Perl6::Attributes;
 
-our $VERSION = '0.05';
-
-our $GRAMMAR = <<'#\'EOG';   # mmm, vim hack
-#\
-
-{
-    # handle whitespace and perl-stype comments
-    our $SKIP = qr/(?: \s* (?: \# .*? \n)? )*/x;
-
-    sub massage_code {
-        my ($code) = @_;
-        $code =~ s/\$\$(?=\W)/\$_AG_SELF/g;
-        $code =~ s/\$\.(\w+)/\$_AG_INSTANCE->_AG_LOOKUP(\$_AG_SELF, '$1')/g;
-        $code;
-    }
-}
-
-input: <skip: $SKIP> sem(s?) /\z/
-    { [ map { @$_ } @{$item[2]} ] }
-
-sem: classes ':' <leftop: attrdef '|' attrdef>
-    {
-        [ map {
-            { %$_, classes => $item[1] }
-          } @{$item[3]} ]
-    }
-    | <error>
-
-attrdef: attr <perl_codeblock ()> '=' <perl_codeblock>
-    {
-        {
-            attr => $item[1],
-            var  => massage_code($item[2]),
-            code => massage_code($item[4]),
-            line => $thisline,
-        }
-    }
-    | <error>
-
-classes: <leftop: class ',' class>
-
-class: /(?: :: )? \w+ (?: :: \w+ )*/x
-
-attr: /\w+/
-
-#'EOG
-
-our $PARSER = Parse::RecDescent->new($GRAMMAR);
+my $methnum = '0';
 
 sub new {
-    my ($class, $grammar, $grammar2) = @_;   # $grammar becomes $options sometimes
-    
-    my $options = {};
-    if (ref $grammar eq 'HASH') { ($options, $grammar) = ($grammar, $grammar2) }
-    
-    my $map = $PARSER->input($grammar) or croak "Parse error in grammar";
-
-    # Add prefix to all classes except those that start with ::
-    if (exists $options->{prefix}) {
-        my $prefix = $options->{prefix};
-        carp "Warning: Your prefix doesn't end in ::" unless $prefix =~ /::$/;
-        for my $data (@$map) {
-            for (@{$data->{classes}}) {
-                $_ = "$prefix$_" unless /^::/;
-            }
-        }
-    }
-    # strip off all initial ::s.
-    for my $data (@$map) {
-        s/^::// for @{$data->{classes}};
-    }
-
-    my @attrs = map { $_->{attr} } @$map;
+    my ($class, $grammar) = @_;
+    my $engine = Language::AttributeGrammar::Parser->new($grammar);
+    my $meth = '_AG_visit_' . $methnum++;
+    $engine->make_visitor($meth);
     
     bless {
-        attrs => \@attrs,
-        map => $map,
+        engine => $engine,
+        meth   => $meth,
     } => ref $class || $class;
 }
 
-my $packageno = '000000';
-
-# Apply takes the list of sems (from $self) and generates a ::Instance object.
-# This is the heavy compilation side function.
 sub apply {
-    no strict 'refs';
+    my ($self, $top, $attr) = @_;
 
-    my ($self, $data) = @_;
-    my $_AG_INSTANCE;   # we refer to this from within the generated code
-    my $_AG_LINE;
-    my $package = "Language::AttributeGrammar::ANON" . $packageno++;
-
-    # Generate the accessor functions for the attributes.  When you say
-    # min($.left) in the body, this is what it calls.
-    my %seen;
-    for my $attr (@{$self->{attrs}}) {
-        next if $seen{$attr}++;
-        *{"$package\::$attr"} = sub { 
-            my ($arg) = @_;
-            $_AG_INSTANCE->_AG_VISIT($attr, $arg);
-        }
-    }
-
-    # Generate the visitor code.  When it visits a node, it runs through the visitors
-    # in $visit{ref $node} and calls them all.  Each visitor installs a thunk of its
-    # body into the $attr:$node slot.  See _AG_INSTALL and _AG_VISIT.
-    my %visit;
-    for my $sem (@{$self->{map}}) {
-        my $code = "package $package;  use strict;\n".
-                   "sub {\n".
-                   "    my (\$_AG_SELF) = \@_;\n".
-                   "    \$_AG_INSTANCE->_AG_INSTALL('$sem->{attr}', $sem->{var}, $sem->{line}, sub {\n".
-                   "        \$_AG_LINE = $sem->{line};\n".
-                   "        $sem->{code}\n".
-                   "    });\n".
-                   "}\n";
-        my $sub = eval $code or confess "Compile error ($@) in:\n$code";
-        push @{$visit{$_}}, $sub for @{$sem->{classes}};
-    }
-
-    $_AG_INSTANCE = Language::AttributeGrammar::Instance->new($data, \%visit, \$_AG_LINE);
-    $_AG_INSTANCE->_AG_SCAN($data, 'ROOT');
-    return $_AG_INSTANCE;
+    $.engine->evaluate($.meth, $top, $attr);
 }
 
-package Language::AttributeGrammar::Instance;
-# This object represents the runtime engine.
+sub annotate {
+    my ($self, $top) = @_;
+    Language::AttributeGrammar::Annotator->new($.engine->annotate($.meth, $top));
+}
+
+package Language::AttributeGrammar::Annotator;
 
 sub new {
-    my ($class, $data, $visit, $lineref) = @_;
-    my $self = bless {
-        cell    => {},
-        visit   => $visit,
-        data    => $data,
-        lineref => $lineref,
+    my ($class, $ann) = @_;
+
+    bless {
+        ann => $ann,
     } => ref $class || $class;
 }
 
-sub _AG_SCAN {
-    # Call all visitors for a given node
-    my ($self, $arg, $ref) = @_;
-    $ref ||= ref $arg;
-
-    for my $visitor (@{$self->{visit}{$ref} || []}) {
-        $visitor->($arg);
-    }
-}
-
-# Whenever you see min($.left), that's a call to $_AG_INSTANCE->_AG_VISIT('min', $.left).
-sub _AG_VISIT {
-    my ($self, $attr, $arg) = @_;
-    my $argstr = overload::StrVal($arg);
-
-    # If a thunk has already been installed in the cell we are trying,
-    # just evaluate the thunk.
-    if (my $cell = $self->{cell}{$attr}{$argstr}) {
-        $self->_AG_EVAL_CELL($cell);
-    }
-    else {
-        # Otherwise, call each visitor for this node on this node...
-        $self->_AG_SCAN($arg);
-        
-        # ... and hope that that caused the cell to be filled in.  If not,
-        # we've been given an unsolvable grammar.
-        if (my $cell = $self->{cell}{$attr}{$argstr}) {
-            $self->_AG_EVAL_CELL($cell);
-        }
-        else {
-            if (defined ${$self->{lineref}}) {
-                Carp::croak("A value was demanded for '$attr' ($arg) where none could be provided\n".
-                            "near grammar line ${$self->{lineref}}.  Did you try to access an\n".
-                            "inherited attribute of the top level of a structure?\n");
-            }
-            else {
-                Carp::croak("Cannot find the attribute '$attr' ($arg) that you asked for.\n");
-            }
-        }
-    }
-}
-
-# Evaluate a thunk.
-sub _AG_EVAL_CELL {
-    my ($self, $cell) = @_;
-    if ($cell->{thunk}) {
-        $cell->{thunk} = 0;
-        $cell->{value} = $cell->{value}->();
-    }
-    else {
-        $cell->{value};
-    }
-}
-
-# Install a thunk in a particular attribute slot of a particular object.
-sub _AG_INSTALL {
-    my ($self, $attr, $arg, $line, $code) = @_;
-    my $argstr = overload::StrVal($arg);
-    unless ($self->{cell}{$attr}{$argstr}) {
-        $self->{cell}{$attr}{$argstr} = {
-            thunk => 1,
-            value => $code,
-        };
-    }
-    else {
-        Carp::croak("Nonlinear attribute: you have two or more ways to assign a value\n".
-                    "to the attribute '$attr' near grammar line $line.\n");
-    }
-}
-
-# This determines the semantics of $.attr.
-sub _AG_LOOKUP {
-    my ($self, $obj, $name) = @_;
-    # If it has a method with the name of the attribute, we'll use it (support
-    # encapsulation if we can).
-    if (Scalar::Util::blessed($obj) && $obj->can($name)) {
-        $obj->$name;
-    }
-    # Otherwise look inside the hash and see if it has that key.
-    elsif (Scalar::Util::reftype($obj) eq 'HASH' && exists $obj->{$name}) {
-        $obj->{$name};
-    }
-    else {
-        Carp::croak("Could not find a way to access '\$.$name' of $obj near grammar line ".
-                    "${$self->{lineref}}.\n");
-    }
-}
-
-# This lets us access attributes of the root node from the outside world.
 our $AUTOLOAD;
 sub AUTOLOAD {
-    my ($self) = @_;
-    (my $name = $AUTOLOAD) =~ s/.*:://;
-    return if $name eq 'DESTROY';
-    $self->_AG_VISIT($name, $self->{data});
+    (my $attr = $AUTOLOAD) =~ s/.*:://;
+    return if $attr eq 'DESTROY';
+
+    my ($self, $node) = @_;
+    $self->get($node)->get($attr)->get;
 }
 
 1;

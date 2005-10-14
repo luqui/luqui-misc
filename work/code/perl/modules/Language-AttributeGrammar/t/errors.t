@@ -39,4 +39,4 @@ Nil: length($$) = { depth($$) }
 EOG
 } qr/nonlinear attribute/i, "nonlinear attribute";
 
-
+# vim: ft=perl :

@@ -6,4 +6,7 @@ t/diff.t
 t/prefix.t
 t/repmin.t
 lib/Language/AttributeGrammar.pm
+lib/Language/AttributeGrammar/Engine.pm
+lib/Language/AttributeGrammar/Thunk.pm
+lib/Language/AttributeGrammar/Parser.pm
 META.yml                                 Module meta-data (added by MakeMaker)

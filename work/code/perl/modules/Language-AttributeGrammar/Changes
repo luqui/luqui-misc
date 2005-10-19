@@ -20,3 +20,6 @@ Revision history for Perl extension Language::AttributeGrammar.
 0.06  xxx
 	- added some basic sanitty tests, and tests for errors.
 
+0.07  Wed Oct 19 00:46:00 2005
+        - complete rewrite in a way that is more memory efficient,
+          breaking the interface.  See documentation for details.

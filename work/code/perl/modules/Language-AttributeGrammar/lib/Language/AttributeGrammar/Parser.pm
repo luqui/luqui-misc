@@ -7,7 +7,7 @@ no warnings 'uninitialized';
 use Language::AttributeGrammar::Engine;
 use Parse::RecDescent;
 use Scalar::Util qw<reftype>;
-use Carp;
+use Carp::Clan '^Language::AttributeGrammar';
 
 my $prefix = 'Language::AttributeGrammar::Parser';
 
@@ -67,7 +67,7 @@ sub _get_child {
         $self->{$child};
     }
     else {
-        croak "Cannot find a way to access $child of $self at $at\n";
+        croak "Cannot find a way to access $child of $self at $at";
     }
 }
 

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 no warnings 'uninitialized';
 
-use Carp;
+use Carp::Clan '^Language::AttributeGrammar';
 use Perl6::Attributes;
 use Language::AttributeGrammar::Thunk;
 
@@ -62,7 +62,7 @@ sub annotate {
             $node->$visit($attrs);
         }
         else {
-            croak "No case defined: " . ref($node) . "\n";
+            croak "No case defined: " . ref($node);
         }
     }
 

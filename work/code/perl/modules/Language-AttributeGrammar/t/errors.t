@@ -16,19 +16,19 @@ $::RD_WARN = undef;
 
 throws_ok {
     mkg('syntax error b{{{ {lkjahdtkjhat #%$!%^!#*^#!^!'); # i really hope that's not perl ;-)
-} qr/Parse error/, "bad grammer makes a syntax error";
+} qr/Parse error.*errors\.t/, "bad grammer makes a syntax error";
 
 throws_ok {
     apply('Foo: $/.gorch = { $<doesnt_exist> }', mko("Foo"), 'gorch');
-} qr/doesnt_exist.*line 1/i, "can't access in-existent field in node";
+} qr/doesnt_exist.*line 1.*errors\.t/i, "can't access in-existent field in node";
 
 throws_ok {
     apply('Foo: $/.gorch = { $/.doesnt_exist }', mko("Foo"), 'gorch');
-} qr/doesnt_exist.*line 1/i, "can't call undefined function/attr";
+} qr/doesnt_exist.*line 1.*errors\.t/i, "can't call undefined function/attr";
 
 throws_ok {
     apply('Cons: $/.length = { $<tail>.length }', mko(Cons => tail => mko(Cons => tail => mko('Nil'))), 'length');
-} qr/Nil/i, "no visitor defined";
+} qr/Nil.*errors\.t/i, "no visitor defined";
 
 throws_ok {
     apply('Cons: $<tail>.depth = { 1 + $/.depth }  Nil:', mko(Cons => tail => mko(Cons => tail => mko("Nil"))), 'depth');
@@ -41,6 +41,6 @@ Cons: $<tail>.depth = { 1 + $/.depth }
 Nil:  $/.depth  = { 0 }
    |  $/.length = { $/.depth }
 EOG
-} qr/depth.*line 3/i, "nonlinear attribute";
+} qr/depth.*line 3.*errors\.t/i, "nonlinear attribute";
 
 # vim: ft=perl :

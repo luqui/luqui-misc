@@ -1,6 +1,6 @@
 package Language::AttributeGrammar::Thunk;
 
-use Carp;
+use Carp::Clan '^Language::AttributeGrammar';
 use Perl6::Attributes;
 
 # three-stage thunk

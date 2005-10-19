@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 13;
+use Test::More tests => 14;
 use Test::Exception;
 
 my $m; BEGIN { use_ok($m = 'Language::AttributeGrammar') }
@@ -100,6 +100,19 @@ EOG
         my $r = $g->apply(mko(Foo => child => mko('Bar')), 'foo');
         is($r, 5, "definition under ROOT overrides definition over class"); 1;
     } or ok(0, "definition under ROOT overrides definition over class");
+}
+
+{
+    sub Foo::getchild {
+        my ($foo) = @_;
+        $foo->{child}
+    }
+    my $g = mkg(<<'EOG');
+Foo: $/.foo = { `$/->getchild`.foo }
+Bar: $/.foo = { $<value> }
+EOG
+    my $r = $g->apply(mko(Foo => child => mko(Foo => child => mko(Bar => value => 42))), 'foo');
+    is($r, 42, 'backticks');
 }
 
 # vim: ft=perl :

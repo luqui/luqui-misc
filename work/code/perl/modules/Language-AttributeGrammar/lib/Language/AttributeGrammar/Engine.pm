@@ -81,12 +81,13 @@ sub new {
 
 sub get {
     my ($self, $key) = @_;
-    unless (exists $.hash{$key}) {
-        $.hash{overload::StrVal($key)} = $.vivi->($key);
-        $.hash{overload::StrVal($key)};
+    my $kval = overload::StrVal($key);
+    unless (exists $.hash{$kval}) {
+        $.hash{$kval} = $.vivi->($key);
+        $.hash{$kval};
     }
     else {
-        $.hash{overload::StrVal($key)};
+        $.hash{$kval};
     }
 }
 

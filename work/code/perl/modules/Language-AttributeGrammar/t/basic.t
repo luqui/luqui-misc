@@ -26,7 +26,7 @@ sub apply { mkg(shift)->apply(@_) }
 {
 	my $g = mkg(<<'EOG');
 Foo: $/.gorch = { 42 }
-Foo: $/.bar   = { $/.gorch / 2 }
+   | $/.bar   = { $/.gorch / 2 }
 EOG
 
 	is($g->apply(mko("Foo"), 'bar'), 21, "dependent attributes on the same node");
@@ -56,7 +56,7 @@ EOG
 {
         my $g = mkg(<<'EOG');
 Foo: $<bar>.parent_value = { 3 }
-Foo: $/.value            = { $<bar>.value }
+   | $/.value            = { $<bar>.value }
 Bar: $/.value            = { 4 * $/.parent_value }
 EOG
 
@@ -68,10 +68,10 @@ EOG
         my $o = mko(Root => child => mko(Foo => child => mko(Foo => child => mko(Foo => child => mko("Bar")))));
         my $g = mkg(<<'EOG');
 Root: $<child>.parent_value = { 1 }
-Root: $/.value = { $<child>.value }
+    | $/.value = { $<child>.value }
 
 Foo: $<child>.parent_value = { 3 * $/.parent_value }
-Foo: $/.value = { $<child>.value }
+   | $/.value = { $<child>.value }
 
 Bar: $/.value = { 4 * $/.parent_value }
 EOG
@@ -83,7 +83,7 @@ EOG
         my $g = mkg(<<'EOG');
 ROOT: $/.foo = { 5 }
 Foo: $<child>.bar = { $/.foo }
-Foo: $/.bah = { $<child>.bah }
+   | $/.bah = { $<child>.bah }
 Bar: $/.bah = { $/.bar + 10 }
 EOG
 	is($g->apply(mko(Foo => child => mko('Bar')), 'bah'), 15, "ROOT inherits");

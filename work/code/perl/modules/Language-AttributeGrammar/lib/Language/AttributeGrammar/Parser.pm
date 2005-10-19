@@ -31,11 +31,14 @@ our $GRAMMAR = <<'#\'END_GRAMMAR';   # vim hack
     our $prefix = 'Language::AttributeGrammar::Parser';
 }
 
-grammar: attrdef(s?) /\z/
-    { bless { attrdefs => $item[1] } => "$prefix\::$item[0]"; }
+grammar: attrsdef(s?) /\z/
+    { bless { attrsdefs => $item[1] } => "$prefix\::$item[0]"; }
 
-attrdef: case ':' attrcall '=' attrblock
+attrsdef: case ':' attrdef(s /\|/)
+    { bless { case => $item[1], attrdefs => $item[3] } => "$prefix\::$item[0]"; }
        | <error>
+
+attrdef: attrcall '=' attrblock
 
 attrcall: target '.' attr
         | <error>
@@ -102,19 +105,17 @@ our $ENGINE = Language::AttributeGrammar::Engine->new;
 
 add_visitor $ENGINE "$prefix\::grammar" => sub {
     my ($self, $attrs) = @_;
-    my @defthunks = map { 
-        {
-            case => $attrs->get($_)->get('case'),
-            visitor => $attrs->get($_)->get('visitor'),
-        }
-    } @{$self->{attrdefs}};
+    
+    my @defthunks = map { $attrs->get($_)->get('defthunks') } @{$self->{attrsdefs}};
 
     $attrs->get($self)->get('engine')->set(sub {
         my %visitors;
-        for my $def (@defthunks) {
-            my $case = $def->{case}->get;
-            $visitors{$case} ||= "my (\$_AG_SELF, \$_AG_ATTR) = \@_;\n";
-            $visitors{$case} .= $def->{visitor}->get;
+        for my $defs (@defthunks) {
+            for my $def (@{$defs->get}) {
+                my $case = $def->{case}->get;
+                $visitors{$case} ||= "my (\$_AG_SELF, \$_AG_ATTR) = \@_;\n";
+                $visitors{$case} .= $def->{visitor}->get;
+            }
         }
 
         my $engine = Language::AttributeGrammar::Engine->new;
@@ -127,13 +128,27 @@ add_visitor $ENGINE "$prefix\::grammar" => sub {
     });
 };
 
+add_visitor $ENGINE "$prefix\::attrsdef" => sub {
+    my ($self, $attrs) = @_;
+    my $case = $attrs->get($self->{case})->get('name');
+    for (@{$self->{attrdefs}}) {
+        $attrs->get($_)->get('case')->set(sub { $case->get });
+    }
+    my @defthunks = map {
+        {
+            case    => $case,
+            visitor => $attrs->get($_)->get('visitor'),
+        }
+    } @{$self->{attrdefs}};
+
+    $attrs->get($self)->get('defthunks')->set(sub { \@defthunks });
+};
+
 add_visitor $ENGINE "$prefix\::attrdef" => sub {
     my ($self, $attrs) = @_;
-    my $case   = $attrs->get($self->{case})->get('name');
     my $target = $attrs->get($self->{attrcall})->get('target');
     my $attr   = $attrs->get($self->{attrcall})->get('attr');
     my $code   = $attrs->get($self->{attrblock})->get('code');
-    $attrs->get($self)->get('case')->set(sub { $case->get });
     $attrs->get($self)->get('visitor')->set(sub {
         _filter_code($target->get, $attr->get, $code->get);
     });

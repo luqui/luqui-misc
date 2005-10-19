@@ -1,11 +1,6 @@
-use Test::More tests => 2;
+use Test::More tests => 5;
 
 BEGIN { use_ok('Language::AttributeGrammar') }
-
-local $TODO = "no prefix support yet";
-ok(0);
-
-exit;  # XXX
 
 my $grammar = new Language::AttributeGrammar { prefix => 'Root::' }, <<'EOG';
 

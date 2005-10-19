@@ -14,9 +14,12 @@ my $methnum = '0';
 
 sub new {
     my ($class, $options, $grammar) = @_;
-    $grammar = $options unless ref $options eq 'HASH';
+    unless (ref $options eq 'HASH') {
+        $grammar = $options;
+        $options = {};
+    }
 
-    my $engine = Language::AttributeGrammar::Parser->new($grammar);
+    my $engine = Language::AttributeGrammar::Parser->new($grammar, $options->{prefix});
     my $meth = '_AG_visit_' . $methnum++;
     $engine->make_visitor($meth);
     
@@ -62,7 +65,7 @@ sub AUTOLOAD {
 
 =head1 NAME
 
-Language::AttributeGrammar - Attribute grammars for executable syntax trees and other stuff.
+Language::AttributeGrammar - Attribute grammars for doing computations over trees.
 
 =head1 SYNOPSIS
 

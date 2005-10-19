@@ -39,7 +39,7 @@ sub make_visitor {
 }
 
 sub annotate {
-    my ($self, $visit, $top) = @_;
+    my ($self, $visit, $top, $topattr) = @_;
     my @nodeq;
     
     my $attrs = Language::AttributeGrammar::Engine::Vivifier->new(sub {
@@ -48,6 +48,12 @@ sub annotate {
                         Language::AttributeGrammar::Thunk->new;
                     });
                 });
+
+    if ($topattr) {
+        for my $key (keys %$topattr) {
+            $attrs->get($top)->get($key)->set(sub { $topattr->{$key} });
+        }
+    }
 
     $attrs->get($top);   # seed the queue
                 
@@ -68,8 +74,8 @@ sub annotate {
 }
 
 sub evaluate {
-    my ($self, $visit, $top, $attr) = @_;
-    my $attrs = $self->annotate($visit, $top);
+    my ($self, $visit, $top, $attr, $topattr) = @_;
+    my $attrs = $self->annotate($visit, $top, $topattr);
     my $head = $attrs->get($top)->get($attr);
     undef $attrs;   # allow intermediate values to go away
     $head->get($attr, 'top level');

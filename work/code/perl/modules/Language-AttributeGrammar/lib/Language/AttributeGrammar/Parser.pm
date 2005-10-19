@@ -106,6 +106,10 @@ our $ENGINE = Language::AttributeGrammar::Engine->new;
 add_visitor $ENGINE "$prefix\::grammar" => sub {
     my ($self, $attrs) = @_;
     
+    my $prefix = $attrs->get($self)->get('prefix');
+    for (@{$self->{attrsdefs}}) {
+        $attrs->get($_)->get('prefix')->set(sub { $prefix->get });
+    }
     my @defthunks = map { $attrs->get($_)->get('defthunks') } @{$self->{attrsdefs}};
     my @cases = map { $attrs->get($_)->get('case') } @{$self->{attrsdefs}};
 
@@ -137,6 +141,8 @@ add_visitor $ENGINE "$prefix\::grammar" => sub {
 
 add_visitor $ENGINE "$prefix\::attrsdef" => sub {
     my ($self, $attrs) = @_;
+    my $prefix = $attrs->get($self)->get('prefix');
+    $attrs->get($self->{case})->get('prefix')->set(sub { $prefix->get });
     my $case = $attrs->get($self->{case})->get('name');
     for (@{$self->{attrdefs}}) {
         $attrs->get($_)->get('case')->set(sub { $case->get });
@@ -177,7 +183,16 @@ add_visitor $ENGINE "$prefix\::attrblock" => sub {
 
 add_visitor $ENGINE "$prefix\::case" => sub {
     my ($self, $attrs) = @_;
-    $attrs->get($self)->get('name')->set(sub { $self->{value} });
+    my $prefixa = $attrs->get($self)->get('prefix');
+    $attrs->get($self)->get('name')->set(sub { 
+        my $prefix = $prefixa->get;
+        if ($self->{value} =~ /^::/) {
+            $self->{value};
+        }
+        else {
+            "$prefix$self->{value}";
+        }
+    });
 };
 
 add_visitor $ENGINE "$prefix\::attr" => sub {
@@ -216,7 +231,10 @@ our $PARSER;
 }
 
 sub new {
-    my ($class, $grammar) = @_;
+    my ($class, $grammar, $prefix) = @_;
+    $prefix ||= '';
     my $tree = $PARSER->grammar($grammar) or croak "Parse error";
-    return $ENGINE->evaluate('visit', $tree, 'engine');
+    return $ENGINE->evaluate('visit', $tree, 'engine', {
+        prefix => $prefix,
+    });
 }

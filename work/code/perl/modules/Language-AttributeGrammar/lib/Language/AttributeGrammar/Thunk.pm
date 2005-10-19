@@ -9,26 +9,29 @@ use Perl6::Attributes;
 #   stage 3: code evaluated and return value stored
 
 sub new {
-    my ($class, $code) = @_;
+    my ($class, $code, $attr, $at) = @_;
     my $self = bless {
         stage => ($code ? 2 : 1),
         code  => $code,
         value => undef,
+        attr  => $attr,
+        at    => $at,
     } => ref $class || $class;
     $self;
 }
 
 sub set {
-    my ($self, $code) = @_;
+    my ($self, $code, $attr, $at) = @_;
     unless ($.stage == 1) {
-        croak "Bad attempt to set code for stage-2 or stage-3 thunk";
+        croak "Attribute '$attr' defined more than once at $at and $.at";
     }
+    $.at = $at;
     $.code = $code;
     $.stage++;
 }
 
 sub get {
-    my ($self) = @_;
+    my ($self, $attr, $at) = @_;
     if ($.stage == 3) {
         $.value;
     }
@@ -39,7 +42,7 @@ sub get {
         $.value;
     }
     else {
-        croak "Bad attempt to evaluate stage-1 thunk";
+        croak "Attribute '$attr' not defined at $at";
     }
 }
 

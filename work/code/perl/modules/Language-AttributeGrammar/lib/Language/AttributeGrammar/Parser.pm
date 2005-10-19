@@ -15,10 +15,10 @@ our $AUTOACTION = q {
     if    ($item[0] eq 'TOKEN') { 1 }
     elsif (@item == 2)          { $item[1] }
     elsif ($item{TOKEN})        { 
-        bless { value => $item[2] } => "$prefix\::$item[0]";
+        bless { value => $item[2], thisline => $thisline } => "$prefix\::$item[0]";
     }
     else {
-        bless { %item } => "$prefix\::$item[0]";
+        bless { %item, thisline => $thisline } => "$prefix\::$item[0]";
     }
 };
 
@@ -34,7 +34,7 @@ our $GRAMMAR = <<'#\'END_GRAMMAR';   # vim hack
 grammar: attrsdef(s?) /\z/
     { bless { attrsdefs => $item[1] } => "$prefix\::$item[0]"; }
 
-attrsdef: case ':' attrdef(s /\|/)
+attrsdef: case ':' attrdef(s? /\|/)
     { bless { case => $item[1], attrdefs => $item[3] } => "$prefix\::$item[0]"; }
        | <error>
 
@@ -61,42 +61,42 @@ TOKEN:  # null
 my $namecount = '0';
 
 sub _get_child {
-    my ($self, $child) = @_;
+    my ($self, $child, $at) = @_;
     if ($self->can($child)) { $self->$child }
     elsif (reftype($self) eq 'HASH' && exists $self->{$child}) {
         $self->{$child};
     }
     else {
-        croak "Cannot find a way to access $child of $self\n";
+        croak "Cannot find a way to access $child of $self at $at\n";
     }
 }
 
 sub _filter_direct {
-    my ($code) = @_;
+    my ($code, $at) = @_;
     $code =~ s[\$/][\$_AG_SELF]gx;
-    $code =~ s[\$<(\w+)>][Language::AttributeGrammar::Parser::_get_child(\$_AG_SELF, '$1')]gx;
+    $code =~ s[\$<(\w+)>][Language::AttributeGrammar::Parser::_get_child(\$_AG_SELF, '$1', '$at')]gx;
     $code;
 }
 
 sub _filter_code {
-    my ($target, $attr, $code) = @_;
+    my ($target, $attr, $code, $at) = @_;
     my $result;
     my $idxa = sub {
         my ($itarget, $iattr) = @_;
         my $id = '$_AG_N' . $namecount++;
         $result .= "my $id = \$_AG_ATTR->get($itarget)->get('$iattr');\n";
-        "$id->get";
+        "$id->get('$iattr', '$at')";
     };
         
     $code =~ s[\$/ \s* \. \s* (\w+)]      
               [$idxa->('$_AG_SELF', $1)]gex;
     $code =~ s[\$<(\w+)> \s* \. \s* (\w+)]
-              [$idxa->("Language::AttributeGrammar::Parser::_get_child(\$_AG_SELF, '$1')", $2)]gex;
-    $code = _filter_direct($code);
+              [$idxa->("Language::AttributeGrammar::Parser::_get_child(\$_AG_SELF, '$1', '$at')", $2)]gex;
+    $code = _filter_direct($code, $at);
     $code =~ s[`(.*?)` \s* \. \s* (\w+)]
               [$idxa->($1, $2)]gex;
     
-    $result .= "\$_AG_ATTR->get($target)->get('$attr')->set(sub $code);\n";
+    $result .= "\$_AG_ATTR->get($target)->get('$attr')->set(sub $code, '$attr', '$at');\n";
     $result;
 }
 
@@ -107,6 +107,7 @@ add_visitor $ENGINE "$prefix\::grammar" => sub {
     my ($self, $attrs) = @_;
     
     my @defthunks = map { $attrs->get($_)->get('defthunks') } @{$self->{attrsdefs}};
+    my @cases = map { $attrs->get($_)->get('case') } @{$self->{attrsdefs}};
 
     $attrs->get($self)->get('engine')->set(sub {
         my %visitors;
@@ -118,7 +119,13 @@ add_visitor $ENGINE "$prefix\::grammar" => sub {
             }
         }
 
+
         my $engine = Language::AttributeGrammar::Engine->new;
+        
+        for my $case (@cases) {
+            $engine->add_case($case->get);
+        }
+        
         for my $case (keys %visitors) {
             my $code = eval "sub {\n$visitors{$case}\n}" or croak $@;
             $engine->add_visitor($case => $code);
@@ -142,6 +149,7 @@ add_visitor $ENGINE "$prefix\::attrsdef" => sub {
     } @{$self->{attrdefs}};
 
     $attrs->get($self)->get('defthunks')->set(sub { \@defthunks });
+    $attrs->get($self)->get('case')->set(sub { $case->get });
 };
 
 add_visitor $ENGINE "$prefix\::attrdef" => sub {
@@ -150,7 +158,7 @@ add_visitor $ENGINE "$prefix\::attrdef" => sub {
     my $attr   = $attrs->get($self->{attrcall})->get('attr');
     my $code   = $attrs->get($self->{attrblock})->get('code');
     $attrs->get($self)->get('visitor')->set(sub {
-        _filter_code($target->get, $attr->get, $code->get);
+        _filter_code($target->get, $attr->get, $code->get, "grammar line $self->{thisline}");
     });
 };
 
@@ -186,14 +194,14 @@ add_visitor $ENGINE "$prefix\::child" => sub {
     my ($self, $attrs) = @_;
     my ($name) = $self->{value} =~ /^\$<(\w+)>$/;
     $attrs->get($self)->get('invocant')->set(sub {
-        "Language::AttributeGrammar::Parser::_get_child(\$_AG_SELF, '$name')"
+        "Language::AttributeGrammar::Parser::_get_child(\$_AG_SELF, '$name', 'grammar line $self->{thisline}')"
     });
 };
 
 add_visitor $ENGINE "$prefix\::special" => sub {
     my ($self, $attrs) = @_;
     my ($code) = $self->{value} =~ /^`(.*)`$/;
-    $code = _filter_direct($code);
+    $code = _filter_direct($code, $self->{thisline});
     $attrs->get($self)->get('invocant')->set(sub { $code });
 };
 

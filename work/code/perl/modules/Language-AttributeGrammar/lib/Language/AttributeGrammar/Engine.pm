@@ -17,6 +17,11 @@ sub new {
     } => ref $class || $class;
 }
 
+sub add_case {
+    my ($self, $case) = @_;
+    $.cases{$case}{visit} ||= [];
+}
+
 sub add_visitor {
     my ($self, $case, $visitor) = @_;
     push @{$.cases{$case}{visit}}, $visitor;
@@ -53,7 +58,12 @@ sub annotate {
     }
 
     while (my $node = shift @nodeq) {
-        $node->$visit($attrs);
+        if ($node->can($visit)) {
+            $node->$visit($attrs);
+        }
+        else {
+            croak "No case defined: " . ref($node) . "\n";
+        }
     }
 
     return $attrs;
@@ -64,7 +74,7 @@ sub evaluate {
     my $attrs = $self->annotate($visit, $top);
     my $head = $attrs->get($top)->get($attr);
     undef $attrs;   # allow intermediate values to go away
-    $head->get;
+    $head->get($attr, 'top level');
 }
 
 package Language::AttributeGrammar::Engine::Vivifier;

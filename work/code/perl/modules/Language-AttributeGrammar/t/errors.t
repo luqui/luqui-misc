@@ -1,12 +1,10 @@
 use strict;
 use warnings;
 
-use Test::More tests => 6;
+use Test::More tests => 7;
 use Test::Exception;
 
 my $m; BEGIN { use_ok($m = 'Language::AttributeGrammar') }
-
-local $TODO = "No error handling yet";
 
 sub mkg { $m->new(shift) }
 sub mko { my $c = shift; bless { @_ }, $c }
@@ -21,24 +19,28 @@ throws_ok {
 } qr/Parse error/, "bad grammer makes a syntax error";
 
 throws_ok {
-    apply('Foo: gorch($$) = { $.doesnt_exist }', mko("Foo"))->gorch;
-} qr/access.*doesnt_exist/i, "can't access in-existent field in node";
-
-dies_ok {
-    apply('Foo: gorch($$) = { doesnt_exist($$) }', mko("Foo"))->gorch;
-} "can't call undefined function/attr";
-
+    apply('Foo: $/.gorch = { $<doesnt_exist> }', mko("Foo"), 'gorch');
+} qr/doesnt_exist.*line 1/i, "can't access in-existent field in node";
 
 throws_ok {
-    apply('Cons: depth($.tail) = { 1 + depth($$) }', mko(Cons => tail => mko(Cons => tail => mko("Nil"))))->depth;
-} qr/cannot find.*attribute.*depth/i, "in-existent attribute (lack of root)";
+    apply('Foo: $/.gorch = { $/.doesnt_exist }', mko("Foo"), 'gorch');
+} qr/doesnt_exist.*line 1/i, "can't call undefined function/attr";
 
 throws_ok {
-    apply(<<'EOG', mko(Cons => tail => mko(Cons => tail => mko("Nil"))))->length;
-Cons: depth($.tail) = { 1 + depth($$) }
-Cons: length($$) = { length($.tail) }
-Nil: length($$) = { depth($$) }
+    apply('Cons: $/.length = { $<tail>.length }', mko(Cons => tail => mko(Cons => tail => mko('Nil'))), 'length');
+} qr/Nil/i, "no visitor defined";
+
+throws_ok {
+    apply('Cons: $<tail>.depth = { 1 + $/.depth }  Nil:', mko(Cons => tail => mko(Cons => tail => mko("Nil"))), 'depth');
+} qr/depth/i, "in-existent attribute (lack of root)";
+
+throws_ok {
+    apply(<<'EOG', mko(Cons => tail => mko(Cons => tail => mko("Nil"))), 'length');
+ROOT: $/.depth = { 0 }
+Cons: $<tail>.depth = { 1 + $/.depth }
+Nil:  $/.depth  = { 0 }
+   |  $/.length = { $/.depth }
 EOG
-} qr/nonlinear attribute/i, "nonlinear attribute";
+} qr/depth.*line 3/i, "nonlinear attribute";
 
 # vim: ft=perl :

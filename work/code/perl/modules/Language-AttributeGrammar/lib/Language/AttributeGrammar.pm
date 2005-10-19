@@ -30,14 +30,14 @@ sub new {
 }
 
 sub apply {
-    my ($self, $top, $attr) = @_;
+    my ($self, $top, $attr, $topattrs) = @_;
 
-    $.engine->evaluate($.meth, $top, $attr);
+    $.engine->evaluate($.meth, $top, $attr, $topattrs);
 }
 
 sub annotate {
-    my ($self, $top) = @_;
-    Language::AttributeGrammar::Annotator->new($.engine->annotate($.meth, $top));
+    my ($self, $top, $topattrs) = @_;
+    Language::AttributeGrammar::Annotator->new($.engine->annotate($.meth, $top, $topattrs));
 }
 
 package Language::AttributeGrammar::Annotator;

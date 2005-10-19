@@ -87,6 +87,13 @@ sub _filter_code {
         $result .= "my $id = \$_AG_ATTR->get($itarget)->get('$iattr');\n";
         "$id->get('$iattr', '$at')";
     };
+
+    my $idxarray = sub {
+        my ($itarget, $iattr) = @_;
+        my $id = '@_AG_N' . $namecount++;
+        $result .= "my $id = map { \$_AG_ATTR->get(\$_)->get('$iattr') } $itarget;\n";
+        "(map { \$_->get('$iattr', '$at') } $id)";
+    };
         
     $code =~ s[\$/ \s* \. \s* (\w+)]      
               [$idxa->('$_AG_SELF', $1)]gex;
@@ -94,7 +101,7 @@ sub _filter_code {
               [$idxa->("Language::AttributeGrammar::Parser::_get_child(\$_AG_SELF, '$1', '$at')", $2)]gex;
     $code = _filter_direct($code, $at);
     $code =~ s[`(.*?)` \s* \. \s* (\w+)]
-              [$idxa->($1, $2)]gex;
+              [$idxarray->($1, $2)]gex;
     
     $result .= "\$_AG_ATTR->get($target)->get('$attr')->set(sub $code, '$attr', '$at');\n";
     $result;

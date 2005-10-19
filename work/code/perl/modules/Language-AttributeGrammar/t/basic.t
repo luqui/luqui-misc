@@ -108,7 +108,7 @@ EOG
         $foo->{child}
     }
     my $g = mkg(<<'EOG');
-Foo: $/.foo = { `$/->getchild`.foo }
+Foo: $/.foo = { `$/->getchild`.foo[0] }
 Bar: $/.foo = { $<value> }
 EOG
     my $r = $g->apply(mko(Foo => child => mko(Foo => child => mko(Bar => value => 42))), 'foo');

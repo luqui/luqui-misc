@@ -5,6 +5,8 @@ use strict;
 use warnings;
 no warnings 'uninitialized';
 
+our $VERSION = '0.07';
+
 use Language::AttributeGrammar::Parser;
 use Perl6::Attributes;
 

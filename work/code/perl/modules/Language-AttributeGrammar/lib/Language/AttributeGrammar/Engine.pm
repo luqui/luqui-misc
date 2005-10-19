@@ -8,8 +8,6 @@ use Carp::Clan '^Language::AttributeGrammar';
 use Perl6::Attributes;
 use Language::AttributeGrammar::Thunk;
 
-use Devel::STDERR::Indent qw<indent>;
-
 sub new {
     my ($class) = @_;
     bless {

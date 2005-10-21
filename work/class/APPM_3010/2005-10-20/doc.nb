@@ -1,0 +1,534 @@
+(************** Content-type: application/mathematica **************
+                     CreatedBy='Mathematica 5.0'
+
+                    Mathematica-Compatible Notebook
+
+This notebook can be used with any Mathematica-compatible
+application, such as Mathematica, MathReader or Publicon. The data
+for the notebook starts with the line containing stars above.
+
+To get the notebook into a Mathematica-compatible application, do
+one of the following:
+
+* Save the data starting with the line of stars above into a file
+  with a name ending in .nb, then open the file inside the
+  application;
+
+* Copy the data starting with the line of stars above to the
+  clipboard, then use the Paste menu command inside the application.
+
+Data for notebooks contains only printable 7-bit ASCII and can be
+sent directly in email or through ftp in text mode.  Newlines can be
+CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+
+NOTE: If you modify the data for this notebook not in a Mathematica-
+compatible application, you must delete the line below containing
+the word CacheID, otherwise Mathematica-compatible applications may
+try to use invalid cache data.
+
+For more information on notebooks and Mathematica-compatible 
+applications, contact Wolfram Research:
+  web: http://www.wolfram.com
+  email: info@wolfram.com
+  phone: +1-217-398-0700 (U.S.)
+
+Notebook reader applications are available free of charge from 
+Wolfram Research.
+*******************************************************************)
+
+(*CacheID: 232*)
+
+
+(*NotebookFileLineBreakTest
+NotebookFileLineBreakTest*)
+(*NotebookOptionsPosition[     10393,        396]*)
+(*NotebookOutlinePosition[     11031,        418]*)
+(*  CellTagsIndexPosition[     10987,        414]*)
+(*WindowFrame->Normal*)
+
+
+
+Notebook[{
+Cell["\<\
+Luke Palmer
+APPM 3010 with James Meiss
+2005-10-20\
+\>", "Text"],
+
+Cell[CellGroupData[{
+
+Cell["5.1.10", "Section"],
+
+Cell[CellGroupData[{
+
+Cell["a)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`DSolve[{\[IndentingNewLine]\(x'\)[t] \[Equal] 
+          y[t], \[IndentingNewLine]\(y'\)[t] \[Equal] \(-4\) 
+            x[t], \[IndentingNewLine]x[0] \[Equal] xi, \ 
+        y[0] \[Equal] yi\[IndentingNewLine]}, \ {x[t], y[t]}, t]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{{x(t) \[Rule] 
+          1\/2\ \((2\ xi\ \(cos(2\ t)\) + yi\ \(sin(2\ t)\))\), 
+        y(t) \[Rule] yi\ \(cos(2\ t)\) - 2\ xi\ \(sin(2\ t)\)}}\)], "Output"]
+}, Open  ]],
+
+Cell[TextData[{
+  "This system is Liapunov stable.  Assume without loss of generality that xi \
+and yi are positive.  The maximum magnitude x(t) takes on is less than ",
+  Cell[BoxData[
+      \(TraditionalForm\`xi\  + \ \(1\/2\) yi\)]],
+  ", and the maximum magnitude y(t) takes on is less than ",
+  Cell[BoxData[
+      \(TraditionalForm\`2  xi + yi\)]],
+  ".  By the triangle inequality, the maximum distance from the origin is \
+less than their sum ",
+  Cell[BoxData[
+      \(TraditionalForm\`3  xi + \(3\/2\) yi\  < \ 
+          3 \@\( xi\^2 + yi\^2\)\  = \ \(3  \[Delta]\  = \ \[Epsilon]\)\)]],
+  ".  So choosing \[Delta] such that ",
+  Cell[BoxData[
+      \(TraditionalForm\`3  \[Delta]\  = \ \[Epsilon]\)]],
+  " is sufficient to show stability. "
+}], "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["b)", "Subsection"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{
+        RowBox[{"(", GridBox[{
+              {\(x\& . \)},
+              {\(y\& . \)}
+              }], ")"}], "\[Equal]", " ", 
+        RowBox[{
+          RowBox[{"(", GridBox[{
+                {"0", "2"},
+                {"1", "0"}
+                }], ")"}], ".", 
+          RowBox[{"(", GridBox[{
+                {"x"},
+                {"y"}
+                }], ")"}]}]}], TraditionalForm]], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\[Lambda]\^2 - \[Tau]\ \[Lambda]\  + \ \[Delta] \
+\[Equal] 0\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\[Lambda]\^2 - 2 \[Equal] 0\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\[Lambda] \[Equal] \(\[PlusMinus]\@2\)\)], "Input"],
+
+Cell["This is a saddle system, so the origin is unstable.", "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["c)", "Subsection"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(x\& . \) \[Equal] 0, \ \(y\& . \) \[Equal] 
+      x\)], "Input"],
+
+Cell[TextData[{
+  "x is a constant, so ",
+  Cell[BoxData[
+      \(TraditionalForm\`\(y\& . \)\)]],
+  " is the constant ",
+  Cell[BoxData[
+      \(TraditionalForm\`x\_\(\(0\)\(\ \)\)\)]],
+  "and ",
+  Cell[BoxData[
+      \(TraditionalForm\`y\  = \ y\_0 + x\_0\ t\)]],
+  ".  So the origin in this system is unstable (since ",
+  Cell[BoxData[
+      \(TraditionalForm\`x\_0\)]],
+  " must take on nonzero values within ",
+  Cell[BoxData[
+      \(TraditionalForm\`\[Delta]\)]],
+  ")."
+}], "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["d)", "Subsection"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(x\& . \) \[Equal] 
+      0, \ \(y\& . \) \[Equal] \(-y\)\)], "Input"],
+
+Cell[TextData[{
+  "This system is Liapunov stable.  ",
+  Cell[BoxData[
+      \(TraditionalForm\`x\)]],
+  " is a constant and the magnitude of ",
+  Cell[BoxData[
+      \(TraditionalForm\`y\)]],
+  " is decreasing exponentially, so choosing ",
+  Cell[BoxData[
+      \(TraditionalForm\`\[Epsilon] = \[Delta]\)]],
+  " suffices."
+}], "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["e)", "Subsection"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(x\& . \) \[Equal] \(-x\), \ \(y\& . \) \[Equal] \(-5\
+\) y\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`x(t) \[Equal] \(\[ExponentialE]\^\(-t\)\) x\_0, \ 
+    y(t) \[Equal] \(\[ExponentialE]\^\(\(-5\) t\)\) y\_0\)], "Input"],
+
+Cell[TextData[{
+  "Both of these are going to zero in the limit and always decreasing, so it \
+is attracting. Choose ",
+  Cell[BoxData[
+      \(TraditionalForm\`\[Epsilon] = \[Delta]\)]],
+  " for Liapunov stability.  Therefore it is asymptotically stable."
+}], "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["f)", "Subsection"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(x\& . \) \[Equal] x, \(y\& . \) \[Equal] 
+      y\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`x(t) \[Equal] \(\[ExponentialE]\^t\) x\_0, 
+    y(t) \[Equal] \(\[ExponentialE]\^t\) y\_0\)], "Input"],
+
+Cell["\<\
+This system is exponentially diverging in both variables, so is \
+unstable.\
+\>", "Text"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["5.2.3", "Section"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{
+        RowBox[{"A", "\[Equal]", 
+          RowBox[{"(", GridBox[{
+                {"0", "1"},
+                {\(-2\), \(-3\)}
+                }], ")"}]}], ";"}], TraditionalForm]], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\[Lambda]\^2 + 3  \[Lambda] + 2 \[Equal] 0\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\[Lambda]\_1 \[Equal] \(-1\), \ \[Lambda]\_2 \[Equal] \
+\(-2\)\)], "Input"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{
+        RowBox[{
+          RowBox[{"(", GridBox[{
+                {"0", "1"},
+                {\(-2\), \(-3\)}
+                }], ")"}], ".", 
+          RowBox[{"(", GridBox[{
+                {"x"},
+                {"y"}
+                }], ")"}]}], "\[Equal]", 
+        RowBox[{"\[Lambda]", " ", 
+          RowBox[{"(", GridBox[{
+                {"x"},
+                {"y"}
+                }], ")"}]}]}], TraditionalForm]], "Input"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{\(\[Lambda]\_1\[DoubleLongRightArrow]\ x\), 
+        "\[Equal]", \(-y\ \ \[DoubleLongRightArrow]\ v\), "\[Equal]", " ", 
+        RowBox[{"c", " ", 
+          RowBox[{"(", GridBox[{
+                {\(-1\)},
+                {"1"}
+                }], ")"}]}]}], TraditionalForm]], "Input"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{\(\[Lambda]\_2\[DoubleLongRightArrow]\ x\), "\[Equal]", 
+        " ", \(\(-2\) y\ \[DoubleLongRightArrow]\ v\), "\[Equal]", 
+        RowBox[{"c", " ", 
+          RowBox[{"(", GridBox[{
+                {\(-2\)},
+                {"1"}
+                }], ")"}]}]}], TraditionalForm]], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["5.2.4", "Section"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{
+        RowBox[{"A", "=", 
+          RowBox[{"(", GridBox[{
+                {"5", "10"},
+                {\(-1\), \(-1\)}
+                }], ")"}]}], ";"}], TraditionalForm]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`Eigenvalues[A]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{\(-2\), 0}\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`Eigenvectors[A]\  // \ Transpose\)], "Input"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{"(", "\[NoBreak]", GridBox[{
+            {\(\(-3\) - \[ImaginaryI]\), \(\(-3\) + \[ImaginaryI]\)},
+            {"1", "1"}
+            },
+          ColumnAlignments->{Decimal}], "\[NoBreak]", ")"}], 
+      TraditionalForm]], "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["5.2.8", "Section"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{
+        RowBox[{"A", "=", 
+          RowBox[{"(", GridBox[{
+                {\(-3\), "4"},
+                {\(-2\), "3"}
+                }], ")"}]}], ";"}], TraditionalForm]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`Eigenvalues[A]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{\(-1\), 1}\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`Eigenvectors[A] // Transpose\)], "Input"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{"(", "\[NoBreak]", GridBox[{
+            {"2", "1"},
+            {"1", "1"}
+            },
+          ColumnAlignments->{Decimal}], "\[NoBreak]", ")"}], 
+      TraditionalForm]], "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["5.2.9", "Section"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{
+        RowBox[{"A", "=", 
+          RowBox[{"(", GridBox[{
+                {"4", \(-3\)},
+                {"8", \(-6\)}
+                }], ")"}]}], ";"}], TraditionalForm]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`Eigenvalues[A]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{\(-2\), 0}\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`Eigenvectors[A] // Transpose\)], "Input"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{"(", "\[NoBreak]", GridBox[{
+            {"1", "3"},
+            {"2", "4"}
+            },
+          ColumnAlignments->{Decimal}], "\[NoBreak]", ")"}], 
+      TraditionalForm]], "Output"]
+}, Open  ]]
+}, Open  ]]
+},
+FrontEndVersion->"5.0 for Macintosh",
+ScreenRectangle->{{4, 1024}, {0, 746}},
+WindowSize->{615, 629},
+WindowMargins->{{170, Automatic}, {Automatic, 29}}
+]
+
+(*******************************************************************
+Cached data follows.  If you edit this Notebook file directly, not
+using Mathematica, you must remove the line containing CacheID at
+the top of  the file.  The cache data will then be recreated when
+you save this file from within Mathematica.
+*******************************************************************)
+
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+
+(*NotebookFileOutline
+Notebook[{
+Cell[1754, 51, 73, 4, 86, "Text"],
+
+Cell[CellGroupData[{
+Cell[1852, 59, 25, 0, 77, "Section"],
+
+Cell[CellGroupData[{
+Cell[1902, 63, 24, 0, 65, "Subsection"],
+
+Cell[CellGroupData[{
+Cell[1951, 67, 281, 4, 116, "Input"],
+Cell[2235, 73, 195, 3, 55, "Output"]
+}, Open  ]],
+Cell[2445, 79, 764, 17, 160, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[3246, 101, 24, 0, 65, "Subsection"],
+Cell[3273, 103, 445, 15, 60, "Input"],
+Cell[3721, 120, 110, 2, 39, "Input"],
+Cell[3834, 124, 77, 1, 39, "Input"],
+Cell[3914, 127, 88, 1, 44, "Input"],
+Cell[4005, 130, 67, 0, 42, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[4109, 135, 24, 0, 65, "Subsection"],
+Cell[4136, 137, 103, 2, 37, "Input"],
+Cell[4242, 141, 489, 17, 64, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[4768, 163, 24, 0, 65, "Subsection"],
+Cell[4795, 165, 108, 2, 37, "Input"],
+Cell[4906, 169, 335, 11, 64, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[5278, 185, 24, 0, 65, "Subsection"],
+Cell[5305, 187, 110, 2, 37, "Input"],
+Cell[5418, 191, 157, 2, 39, "Input"],
+Cell[5578, 195, 268, 6, 64, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[5883, 206, 24, 0, 65, "Subsection"],
+Cell[5910, 208, 101, 2, 37, "Input"],
+Cell[6014, 212, 139, 2, 39, "Input"],
+Cell[6156, 216, 99, 3, 42, "Text"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[6304, 225, 24, 0, 77, "Section"],
+Cell[6331, 227, 233, 7, 56, "Input"],
+Cell[6567, 236, 92, 1, 39, "Input"],
+Cell[6662, 239, 112, 2, 36, "Input"],
+Cell[6777, 243, 477, 16, 56, "Input"],
+Cell[7257, 261, 328, 8, 56, "Input"],
+Cell[7588, 271, 332, 8, 56, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[7957, 284, 24, 0, 77, "Section"],
+Cell[7984, 286, 227, 7, 56, "Input"],
+
+Cell[CellGroupData[{
+Cell[8236, 297, 64, 1, 36, "Input"],
+Cell[8303, 300, 62, 1, 36, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[8402, 306, 82, 1, 36, "Input"],
+Cell[8487, 309, 274, 7, 55, "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[8810, 322, 24, 0, 77, "Section"],
+Cell[8837, 324, 226, 7, 56, "Input"],
+
+Cell[CellGroupData[{
+Cell[9088, 335, 64, 1, 36, "Input"],
+Cell[9155, 338, 62, 1, 36, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[9254, 344, 78, 1, 36, "Input"],
+Cell[9335, 347, 228, 7, 55, "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[9612, 360, 24, 0, 77, "Section"],
+Cell[9639, 362, 226, 7, 56, "Input"],
+
+Cell[CellGroupData[{
+Cell[9890, 373, 64, 1, 36, "Input"],
+Cell[9957, 376, 62, 1, 36, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[10056, 382, 78, 1, 36, "Input"],
+Cell[10137, 385, 228, 7, 55, "Output"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+
+
+(*******************************************************************
+End of Mathematica Notebook file.
+*******************************************************************)
+

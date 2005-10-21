@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 use Test::Exception;
 
 my $m; BEGIN { use_ok($m = 'Language::AttributeGrammar') }
@@ -42,5 +42,14 @@ Nil:  $/.depth  = { 0 }
    |  $/.length = { $/.depth }
 EOG
 } qr/depth.*line 3.*errors\.t/i, "nonlinear attribute";
+
+throws_ok {
+    apply(<<'EOG', mko(Cons => tail => mko(Cons => tail => mko('Nil'))), 'b');
+ROOT: $/.b      = { $/.a }
+Cons: $<tail>.b = { $/.b }
+    | $/.a      = { $<tail>.a }
+Nil:  $/.a      = { $/.b }
+EOG
+} qr/infinite loop/i;
 
 # vim: ft=perl :

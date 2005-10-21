@@ -32,14 +32,18 @@ sub set {
 
 sub get {
     my ($self, $attr, $at) = @_;
-    if ($.stage == 3) {
+    if ($.stage == 4) {
         $.value;
     }
     elsif ($.stage == 2) {
+        $.stage++;
         $.value = $.code->();
         undef $.code;
         $.stage++;
         $.value;
+    }
+    elsif ($.stage == 3) {
+        croak "Infinite loop on attribute '$attr' at $at";
     }
     else {
         croak "Attribute '$attr' not defined at $at";

@@ -3,7 +3,7 @@ package Language::AttributeGrammar::Thunk;
 use Carp::Clan '^Language::AttributeGrammar';
 use Perl6::Attributes;
 
-=head1 TITLE
+=head1 NAME
 
 Language::AttributeGrammar::Thunk - Delayed code logic
 

@@ -1,5 +1,15 @@
 package Language::AttributeGrammar::Engine;
 
+=head1 NAME
+
+Language::AttributeGrammar::Engine - Attribute grammar combinators
+
+=head1 DESCRIPTION
+
+=over
+
+=cut
+
 use strict;
 use warnings;
 no warnings 'uninitialized';
@@ -15,15 +25,37 @@ sub new {
     } => ref $class || $class;
 }
 
+=item * new
+
+Create a new engine.  No initialization is needed.
+
+=cut
+
 sub add_case {
     my ($self, $case) = @_;
     $.cases{$case}{visit} ||= [];
 }
 
+=item * $engine->add_case($case_name)
+
+Make sure a visitor is installed for class $case_name.  Usually this is not necessary.
+You need this only when you want a visitor installed for a class that has no attributes
+defined.
+
+=cut
+
 sub add_visitor {
     my ($self, $case, $visitor) = @_;
     push @{$.cases{$case}{visit}}, $visitor;
 }
+
+=item * $engine->add_visitor($case, $visitor)
+
+Add an action to perform when the an object of class $case is visited.
+
+    $engine->add_visitor(Foo => sub { ... });
+
+=cut
 
 sub make_visitor {
     my ($self, $visit) = @_;
@@ -37,6 +69,14 @@ sub make_visitor {
         *{"$case\::$visit"} = $.cases{$case}{visit_all};
     }
 }
+
+=item * $engine->make_visitor($method_name)
+
+Install a visitor named $method_name in all the defined cases.  This actually
+modifies the packages, so it's probably a good idea to choose a non-conflicting
+method name like 'MODULENAME_visit0001'.
+
+=cut
 
 sub annotate {
     my ($self, $visit, $top, $topattr) = @_;
@@ -73,6 +113,22 @@ sub annotate {
     return $attrs;
 }
 
+=item * $engine->annotate($method_name, $tree, $top_attrs)
+
+Run the visitors on $tree, after having installed a visitor using
+C<make_visitor> in the method name $method_name.  Set attributes $top_attrs (a
+hash) on the top node of the tree.  Returns a structure where you can query
+any attribute of any visited node using:
+
+    my $attrs = $engine($method_name, $tree, {});
+    my $attr_value = $attrs->get($node)->get('attr')->get;
+
+Using the annotated tree directly uses a bunch of memory, since it has to hold
+every attribute pair.  If you are only interested in one attribute of the top node,
+use:
+
+=cut
+
 sub evaluate {
     my ($self, $visit, $top, $attr, $topattr) = @_;
     my $attrs = $self->annotate($visit, $top, $topattr);
@@ -80,6 +136,17 @@ sub evaluate {
     undef $attrs;   # allow intermediate values to go away
     $head->get($attr, 'top level');
 }
+
+=item * $engine->evaluate($method_name, $tree, $attr, $top_attrs)
+
+Does the same as annotate, but returns the value of $attr on the root node of
+the tree all in one pass.  Doing this in one pass allows the engine to clean up
+intermediate values when they are not needed anymore.  This is the preferred
+form of usage.
+
+=back
+
+=cut
 
 package Language::AttributeGrammar::Engine::Vivifier;
 

@@ -1,3 +1,13 @@
+DATA Root | Root tree:Tree
+
+SEM Root
+    | Root tree.gmin = { @tree.minval }
+
+ATTR Root [ | | result:Tree ]
+
+SEM Root
+    | Root lhs.result = { @tree.result }
+
 DATA Tree
     | Leaf   value:Int
     | Branch left:Tree right:Tree
@@ -5,5 +15,17 @@ DATA Tree
 ATTR Tree [ | | minval:Int ]
 
 SEM Tree
-    | Leaf lhs.minval   = { @value }
+    | Leaf   lhs.minval = { @value }
     | Branch lhs.minval = { min @left.minval @right.minval }
+
+ATTR Tree [ gmin:{Int} | | ]
+
+SEM Tree
+    | Branch left.gmin  = { @lhs.gmin }
+             right.gmin = { @lhs.gmin }
+
+ATTR Tree [ | | result:Tree ]
+
+SEM Tree
+    | Branch lhs.result = { Branch @left.result @right.result }
+    | Leaf lhs.result   = { Leaf @lhs.gmin }

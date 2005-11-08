@@ -1,0 +1,85 @@
+#!/usr/bin/perl
+
+use strict;
+
+use Net::DAAP::Client;
+use Term::ReadLine;
+use Data::Dumper;
+
+sub usage {
+    print <<'USAGE';
+daaper: Usage: daaper <ip> [port]
+USAGE
+    exit 2;
+}
+
+my $term = Term::ReadLine->new('daaper');
+
+my $ip   = shift or usage;
+my $port = shift || 3689;
+
+my $daap = Net::DAAP::Client->new(
+                SERVER_HOST => $ip,
+                SERVER_PORT => $port,
+                DEBUG => 1,
+           );
+
+$daap->connect or die $daap->error;
+
+my %cmds = (
+    db => { 
+        description => "Set the current database",
+        code => sub {
+            my ($db_id) = @_;
+            $daap->db($db_id);
+        },
+    },
+    lsdbs => {
+        description => "List all known databases",
+        code => sub {
+            my $dbs = $daap->databases;
+            print scalar(keys %$dbs), " databases:\n";
+            print "  $_: $dbs->{$_}{'dmap.itemname'}\n" for sort keys %$dbs;
+        },
+    },
+    songs => {
+        description => "Show the songs in the current database",
+        code => sub {
+            my $songs = $daap->songs;
+            print scalar(keys %$songs), " songs:\n";
+            print "  $_: $songs->{$_}{'dmap.itemname'}\n" for sort keys %$songs;
+        },
+    },
+    save => {
+        description => "Save a song",
+        code => sub {
+            my ($song) = @_;
+            $daap->save('.', $song);
+        },
+    },
+    quit => {
+        description => "Disconnect and exit",
+        code => sub {
+            exit;
+        },
+    },
+);
+
+$cmds{help} = {
+    description => "Help on commands",
+    code => sub {
+        for (sort keys %cmds) {
+            print "  $_: $cmds{$_}{description}\n";
+        }
+    },
+};
+
+while (defined(my $line = $term->readline('daap> '))) {
+    my ($cmd, @args) = split /\s+/, $line;
+    unless (exists $cmds{$cmd}) {
+        print "$cmd: no such command\n";
+        next;
+    }
+
+    $cmds{$cmd}{code}->(@args);
+}

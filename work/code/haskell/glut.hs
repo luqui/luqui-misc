@@ -31,15 +31,21 @@ redraw win rot = do
     GL.clear [GL.ColorBuffer]
     rotation <- readIORef rot
     draw rotation
-    writeIORef rot (rotation + 0.1)
+    writeIORef rot (rotation + 0.01)
     swapBuffers
+
+timer :: Int -> Window -> IO ()
+timer time win = do
     postRedisplay (Just win)
+    addTimerCallback time (timer time win)
 
 main :: IO ()
 main = do
     initialize "glut" []
-    mainwin <- createWindow "Haskell GLUT"
+    initialDisplayMode $= [DoubleBuffered]
+    (mainwin, _) <- enterGameMode
     initScreen
     rot <- newIORef 0
     displayCallback $= redraw mainwin rot
+    timer 33 mainwin
     mainLoop

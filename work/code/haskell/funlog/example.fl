@@ -1,0 +1,53 @@
+# Act is a class of functions that take points to points
+Act :: (Int,Int) -> (Int,Int)
+    up    = (a,b) -> (a,b+1)   # up is *the* function that maps (a,b) to (a,b+1)
+    down  = (a,b) -> (a,b-1)
+    right = (a,b) -> (a+1,b)
+    left  = (a,b) -> (a-1,b)
+
+# Acts is a larger such class
+Acts :: (Int,Int) -> (Int,Int)
+    comp [Act &a, Acts &as] = &a >> &as
+	MEASURE (a,b) -> (a',b') = abs(a-a') + abs(b-b')
+    act  [Act &a] = &a
+	MEASURE (a,b) -> (a',b') = 
+	    if abs(a-a') + abs(b-b') == 1 then 0 else fail
+
+interactive:
+  (0,0)  Acts  (1,1)       # Find some function in the class Acts
+                             # that maps (0,0) to (1,1)
+
+Evaluation strategy:
+Left expand measure
+
+    init     f             final           measure  index   rule
+    (0,0)    Acts          (1,1)		    0
+    -- 0
+    (0,0)    Act >> Acts   (1,1)	   2	    1	    comp
+    (0,0)    Act	   (1,1)	   fail	    2	    act
+    -- 1
+    (0,1)    Acts	   (1,1)		    3	    up
+    (0,-1)   Acts	   (1,1)		    4	    down
+    (1,0)    Acts	   (1,1)		    5	    right
+    (-1,0)   Acts	   (1,1)		    6	    left
+    -- 2 fail
+    -- 3
+    (0,1)    Act	   (1,1)	   0	    7	    act
+    (0,1)    Act >> Acts   (1,1)	   1	    8	    comp
+    -- 4
+    (0,-1)   Act >> Acts   (1,1)	   3	    9	    comp
+    (0,-1)   Act	   (1,1)	   fail	    10	    act
+    -- 5
+    (1,0)    Act	   (1,1)	   0	    11	    act
+    (1,0)    Act >> Acts   (1,1)           1	    12	    comp
+    -- 6
+    (-1,0)   Act >> Acts   (1,1)	   3	    13	    comp
+    (-1,0)   Act	   (1,1)	   fail	    14	    act
+    -- 7
+    (0,2)    ==		   (1,1)	   fail	    15	    up
+    (0,0)    ==		   (1,1)	   fail	    16	    down
+    (1,1)    ==		   (1,1)	   STOP	    17	    right
+	7: right
+	3: act[right]
+	1: up >> act[right]
+	0: comp[up, act[right]]

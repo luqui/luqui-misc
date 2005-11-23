@@ -4,4 +4,4 @@ let eq = \x y -> and (leq x y) (leq y x) in
 
 let fact = \n -> if (eq n 0) 1 (times n (fact (plus n -1))) in
 
-fact
+fact 5

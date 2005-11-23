@@ -1,17 +1,21 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
-module Typist.Eval where
+module Typist.Eval (
+    Pad,
+    Val(..),
+    Eval, eval,
+    Cast, cast
+) where
 
 import Control.Monad.Reader
 import qualified Data.Map as Map
-
 import Typist.AST
 
 type Pad = Map.Map VarName Val
 
 data Val
     = VLambda { vlamParam :: VarName, vlamBody :: AST, vlamPad :: Pad }
-    | VNative { vnatFunc :: Val -> Val }
+    | VNative { vnatFunc :: Val -> Eval Val }
     | VLit    { vlitVal :: ASTLit }
 
 instance Show Val where
@@ -42,10 +46,29 @@ eval app@(App {}) = do
             with (Map.insert (vlamParam fun) arg (vlamPad fun)) $
                 eval (vlamBody fun)
         VNative {} ->
-            return $ vnatFunc fun arg
+            vnatFunc fun arg
 
 eval var@(Var {}) = do
     pad <- ask
     return $ pad Map.! varName var
 
 eval lit@(Lit {}) = return $ VLit (litLit lit)
+
+class Cast a where
+    cast :: Val -> Eval a
+
+instance Cast Val where
+    cast = return . id
+
+instance (Cast a) => Cast (Val -> Eval a) where
+    cast fun@(VLambda {}) = return $ \arg -> 
+        with (Map.insert (vlamParam fun) arg (vlamPad fun)) $
+            cast =<< eval (vlamBody fun)
+            
+    cast fun@(VNative {}) = return $ (\v -> cast =<< vnatFunc fun v)
+
+instance Cast Integer where
+    cast = return . intVal . vlitVal
+
+instance Cast Bool where
+    cast = return . boolVal . vlitVal

@@ -6,7 +6,6 @@ import Typist.AST
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Token
 import Text.ParserCombinators.Parsec.Language (haskellStyle)
-import Debug.Trace
 
 parseAST :: String -> AST
 parseAST str = 
@@ -78,7 +77,7 @@ parseApp = do
     parseLeftApp = choice [ do arg <- parseAtom
                                rest <- parseLeftApp
                                return $ (\fun -> rest (App { appFun = fun, appArg = arg }))
-                           , trace "end of app" $ return id
+                           , return id
                            ] 
 
 parseVar :: TParser st AST
@@ -87,17 +86,10 @@ parseVar = do
     return $ Var { varName = var }
 
 parseLit :: TParser st AST
-parseLit = choice [ parseInt
-                  , parseBool
-                  ]
+parseLit = parseInt
 
 parseInt :: TParser st AST
 parseInt = do
     sign <- choice [ char '-' >> return (-1), optional (char '+') >> return 1 ]
     nat <- ws $ tok natural
     return $ Lit { litLit = Int (sign * nat) }
-
-parseBool :: TParser st AST
-parseBool = do
-    bool <- choice [ string "True" >> return True, string "False" >> return False ]
-    return $ Lit { litLit = Bool bool }

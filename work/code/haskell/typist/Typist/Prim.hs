@@ -33,9 +33,12 @@ native "leq"   = makeNative2 $ \x y -> VLit (Bool ((x :: Integer) <= (y :: Integ
 -- Fundamental operations on Bool
 native "if"    = makeNative3 $ \cond true false ->
                                  if cond then true else false
+native "True"  = VLit (Bool True)
+native "False" = VLit (Bool False)
+native x       = error ("undefined function: " ++ x)
 
 allNatives :: [String]
-allNatives = words "plus neg times leq if"
+allNatives = words "plus neg times leq if True False"
 
 nativePad :: Pad
 nativePad = Map.fromList [ (x, native x) | x <- allNatives ]

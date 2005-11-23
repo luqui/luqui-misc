@@ -4,7 +4,9 @@ module Typist.Eval (
     Pad,
     Val(..),
     Eval, eval,
-    Cast, cast
+    Cast, cast,
+    evalWithPad, evalPure,
+    runWithPad,
 ) where
 
 import Control.Monad.Reader
@@ -53,6 +55,15 @@ eval var@(Var {}) = do
     return $ pad Map.! varName var
 
 eval lit@(Lit {}) = return $ VLit (litLit lit)
+
+runWithPad :: Pad -> Eval a -> a
+runWithPad = flip runReader
+
+evalWithPad :: Pad -> AST -> Val
+evalWithPad pad = runWithPad pad . eval
+
+evalPure :: AST -> Val
+evalPure = evalWithPad Map.empty
 
 class Cast a where
     cast :: Val -> Eval a

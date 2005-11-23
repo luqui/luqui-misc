@@ -1,5 +1,7 @@
-(\and -> 
- (\fact fix -> fix fact 5)
-  (\fact' n -> if (and (leq n 0) (leq 0 n)) 1 (times n (fact' (plus n -1))))
-  (\f -> (\x -> f (\y -> x x y)) (\x -> f (\y -> x x y))))   -- Fixpoint
- (\a b -> if a (if b True False) False)
+let and = \a b -> if a (if b True False) False in
+
+let eq = \x y -> and (leq x y) (leq y x) in
+
+let fact = \n -> if (eq n 0) 1 (times n (fact (plus n -1))) in
+
+fact

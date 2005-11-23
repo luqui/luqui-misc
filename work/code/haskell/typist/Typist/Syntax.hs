@@ -15,7 +15,9 @@ parseAST str =
 
 
 typistDef :: LanguageDef st
-typistDef = haskellStyle
+typistDef = haskellStyle {
+                reservedNames = words "let in"
+            }
 
 typistTok :: TokenParser st
 typistTok = makeTokenParser typistDef
@@ -40,6 +42,7 @@ parseProgram = do
 
 parseExpression :: TParser st AST
 parseExpression = choice [ parseLambda
+                         , parseLet
                          , parseApp
                          , parseAtom
                          ]
@@ -65,6 +68,33 @@ parseLambda = do
     parseBody = do
         ws $ string "->"
         parseExpression
+
+parseLet :: TParser st AST
+parseLet = do
+    -- XXX we need mutual recursion
+    ws $ tok reserved "let"
+    var <- ws $ tok identifier
+    ws $ char '='
+    exp <- ws $ parseExpression
+    ws $ tok reserved "in"
+    body <- ws $ parseExpression
+    let newdef = App {
+            appFun = Var { varName = "fix" },
+            appArg = Lambda {
+                lamParam = var,
+                lamBody  = exp
+            }
+        }
+    let newbody = App {
+            appFun = Lambda {
+                lamParam = var,
+                lamBody = body
+            },
+            appArg = newdef
+        }
+    return $ newbody
+
+    
 
 parseApp :: TParser st AST
 parseApp = do

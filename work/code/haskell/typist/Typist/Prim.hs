@@ -4,6 +4,7 @@ module Typist.Prim (
 
 import Typist.AST
 import Typist.Eval
+import Typist.Syntax
 import qualified Data.Map as Map
 
 makeNative1 :: (Cast a) => (a -> Val) -> Val
@@ -35,10 +36,14 @@ native "if"    = makeNative3 $ \cond true false ->
                                  if cond then true else false
 native "True"  = VLit (Bool True)
 native "False" = VLit (Bool False)
+
+-- This belongs in the prelude (but "let" depends on it)
+native "fix"   = evalPure . parseAST $ "\\f -> (\\x -> f (\\y -> x x y)) (\\x -> f (\\y -> x x y))"
+
 native x       = error ("undefined function: " ++ x)
 
 allNatives :: [String]
-allNatives = words "plus neg times leq if True False"
+allNatives = words "plus neg times leq if True False fix"
 
 nativePad :: Pad
 nativePad = Map.fromList [ (x, native x) | x <- allNatives ]

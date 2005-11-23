@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fglasgow-exts -fallow-undecidable-instances #-}
+
 module Typist.Run (
     runAST,
 ) where
@@ -9,7 +11,7 @@ import Typist.Syntax
 import Control.Monad.Reader
 
 runAST :: AST -> Val
-runAST ast = runReader (eval ast) nativePad
+runAST = evalWithPad nativePad
 
 runCode :: String -> Val
 runCode = runAST . parseAST

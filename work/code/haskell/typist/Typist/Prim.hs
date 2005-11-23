@@ -26,16 +26,16 @@ makeNative3 f =
 
 native :: String -> Val
 -- Fundamental operations on Int
-native "+"   = makeNative2 $ \x y -> VLit (Int (x + y))
-native "neg" = makeNative1 $ \x ->   VLit (Int (-x))
-native "*"   = makeNative2 $ \x y -> VLit (Int (x * y))
-native "<="  = makeNative2 $ \x y -> VLit (Bool ((x :: Integer) <= (y :: Integer)))
+native "plus"  = makeNative2 $ \x y -> VLit (Int (x + y))
+native "neg"   = makeNative1 $ \x ->   VLit (Int (-x))
+native "times" = makeNative2 $ \x y -> VLit (Int (x * y))
+native "leq"   = makeNative2 $ \x y -> VLit (Bool ((x :: Integer) <= (y :: Integer)))
 -- Fundamental operations on Bool
-native "if"  = makeNative3 $ \cond true false ->
-                               if cond then true else false
+native "if"    = makeNative3 $ \cond true false ->
+                                 if cond then true else false
 
 allNatives :: [String]
-allNatives = words "+ neg"
+allNatives = words "plus neg times leq if"
 
 nativePad :: Pad
 nativePad = Map.fromList [ (x, native x) | x <- allNatives ]

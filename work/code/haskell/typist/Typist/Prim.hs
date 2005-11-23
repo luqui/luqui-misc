@@ -28,7 +28,6 @@ makeNative3 f =
 native :: String -> Val
 -- Fundamental operations on Int
 native "plus"  = makeNative2 $ \x y -> VLit (Int (x + y))
-native "neg"   = makeNative1 $ \x ->   VLit (Int (-x))
 native "times" = makeNative2 $ \x y -> VLit (Int (x * y))
 native "leq"   = makeNative2 $ \x y -> VLit (Bool ((x :: Integer) <= (y :: Integer)))
 -- Fundamental operations on Bool

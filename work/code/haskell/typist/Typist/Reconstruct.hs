@@ -123,5 +123,5 @@ unify ((s := t):c')
     | TFree {} <- t
     , not (t `elem` frees s) = (t :|-> s) : unify ((t |-> s) c')
     | s1 :-> s2 <- s
-    , t1 :-> t2 <- t       = unify (c' ++ [s1 := t1, s2 := t2])
-    | otherwise              = error "Type unification error"
+    , t1 :-> t2 <- t         = unify (c' ++ [s1 := t1, s2 := t2])
+    | otherwise              = error $ "Error when unifying " ++ show s ++ " and " ++ show t

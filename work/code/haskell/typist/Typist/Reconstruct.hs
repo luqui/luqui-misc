@@ -14,10 +14,12 @@ import Debug.Trace
 
 type FreeID = Integer
 
+infixr 5 :->
+
 data Type 
     = TInt
     | TBool
-    | TFunc Type Type
+    | Type :-> Type
     | TFree FreeID
     deriving (Show, Eq)
 
@@ -26,7 +28,7 @@ data Constraint
     deriving Show
 
 data Substitution
-    = Type :-> Type
+    = Type :|-> Type
     deriving Show
 
 type TypePad = Map.Map VarName Type
@@ -40,7 +42,7 @@ makeASTType ast = let (typ, cons)    = makeASTTypeConstraint ast
                   lookupFree typ subs
 
 makeASTTypeConstraint :: AST -> (Type, [Constraint])
-makeASTTypeConstraint ast = let (typ, _, cons) = runRWS (annotate ast) Map.empty 0 in 
+makeASTTypeConstraint ast = let (typ, _, cons) = runRWS (primTypes $ annotate ast) Map.empty 0 in 
                             (typ, cons)
 
 newFree :: Ann Type
@@ -62,21 +64,36 @@ annotate (Var { varName = var }) = do
 
 annotate (Lambda { lamParam = param, lamBody = body }) = do
     paramtype <- newFree
-    bodytype <- local (Map.insert param paramtype) $ annotate body
-    return (TFunc paramtype bodytype)
+    bodytype <- setType param paramtype $ annotate body
+    return (paramtype :-> bodytype)
 
 annotate (App { appFun = fun, appArg = arg }) = do
     funtype <- annotate fun
     argtype <- annotate arg
     funleft <- newFree
     funright <- newFree
-    tell [funtype := TFunc funleft funright]
+    tell [funtype := (funleft :-> funright)]
     tell [argtype := funleft]
     return funright
 
+setType :: VarName -> Type -> Ann a -> Ann a
+setType var typ = local (Map.insert var typ)
+
+primTypes :: Ann a -> Ann a
+primTypes mon = do
+    setType "plus" (TInt :-> TInt :-> TInt) $ do
+    setType "times" (TInt :-> TInt :-> TInt) $ do
+    setType "leq" (TInt :-> TInt :-> TBool) $ do
+    ifa <- newFree
+    setType "if" (TBool :-> ifa :-> ifa :-> ifa) $ do
+    setType "True" TBool $ do
+    setType "False" TBool $ do
+    fixa <- newFree
+    setType "fix" ((fixa :-> fixa) :-> fixa) $ mon
+
 substitute :: Substitution -> Type -> Type
-substitute sub (TFunc a b) = TFunc (substitute sub a) (substitute sub b)
-substitute (from :-> to) free@(TFree {}) = 
+substitute sub (a :-> b) = substitute sub a :-> substitute sub b
+substitute (from :|-> to) free@(TFree {}) = 
     if from == free
         then to
         else free
@@ -86,10 +103,10 @@ substituteConstraint :: Substitution -> Constraint -> Constraint
 substituteConstraint sub (a := b) = substitute sub a := substitute sub b
 
 (|->) :: Type -> Type -> [Constraint] -> [Constraint]
-(|->) s t = map (substituteConstraint (s :-> t))
+(|->) s t = map (substituteConstraint (s :|-> t))
 
 frees :: Type -> [Type]
-frees (TFunc a b)  = frees a ++ frees b
+frees (a :-> b)  = frees a ++ frees b
 frees f@(TFree {}) = [f]
 frees _            = []
 
@@ -102,9 +119,9 @@ unify [] = []
 unify ((s := t):c')
     | s == t                 = unify(c')
     | TFree {} <- s
-    , not (s `elem` frees t) = (s :-> t) : unify ((s |-> t) c')
+    , not (s `elem` frees t) = (s :|-> t) : unify ((s |-> t) c')
     | TFree {} <- t
-    , not (t `elem` frees s) = (t :-> s) : unify ((t |-> s) c')
-    | TFunc s1 s2 <- s
-    , TFunc t1 t2 <- t       = unify (c' ++ [s1 := t1, s2 := t2])
+    , not (t `elem` frees s) = (t :|-> s) : unify ((t |-> s) c')
+    | s1 :-> s2 <- s
+    , t1 :-> t2 <- t       = unify (c' ++ [s1 := t1, s2 := t2])
     | otherwise              = error "Type unification error"

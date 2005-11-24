@@ -41,8 +41,5 @@ native "fix"   = evalPure . parseAST $ "\\f -> (\\x -> f (\\y -> x x y)) (\\x ->
 
 native x       = error ("undefined function: " ++ x)
 
-allNatives :: [String]
-allNatives = words "plus neg times leq if True False fix"
-
 nativePad :: Pad
-nativePad = Map.fromList [ (x, native x) | x <- allNatives ]
+nativePad = Map.fromList [ (x, native x) | x <- primitives ]

@@ -2,6 +2,7 @@ module Typist.AST (
     VarName,
     AST(..),
     ASTLit(..),
+    primitives,
 ) where
 
 type VarName = String
@@ -18,4 +19,5 @@ data ASTLit
     | Bool   { boolVal :: Bool }
     deriving Show
 
-
+primitives :: [VarName]
+primitives = words "plus neg times leq if True False fix"

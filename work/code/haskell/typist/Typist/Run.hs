@@ -8,6 +8,7 @@ import Typist.AST
 import Typist.Eval
 import Typist.Prim
 import Typist.Syntax
+import Typist.Reconstruct
 import Control.Monad.Reader
 
 runAST :: AST -> Val

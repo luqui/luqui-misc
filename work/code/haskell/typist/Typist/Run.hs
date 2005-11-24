@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fglasgow-exts -fallow-undecidable-instances #-}
 
 module Typist.Run (
-    runAST,
+    runAST, runCode,
 ) where
 
 import Typist.AST

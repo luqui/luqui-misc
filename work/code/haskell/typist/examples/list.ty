@@ -1,0 +1,24 @@
+let and = \a b -> if a (if b True False) False in
+
+let eq = \a b -> and (leq a b) (leq b a) in
+
+-- List a = (a -> List a -> b) -> (b) -> b
+
+let cons = \a list -> \consf nilf -> consf a list in
+
+let nil  = \consf nilf -> nilf in
+
+let take = \n list -> 
+             if (eq n 0)
+                nil
+                (list (\x xs -> cons x (take (plus n -1) xs))
+                      (nil)) in
+
+let foldr = \f init list -> list (\x xs -> f x (foldr f init xs))
+                                 (init) in
+
+let sum = foldr plus 0 in
+
+let incs = \n -> cons n (incs (plus n 1)) in
+
+sum (take 100 (incs 1))

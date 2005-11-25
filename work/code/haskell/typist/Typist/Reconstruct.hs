@@ -1,127 +1,88 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
-module Typist.Reconstruct (
-    makeASTType,
-    Constraint(..),
-    Type(..),
-    TypePad,
-) where
+module Typist.Reconstruct where
 
 import Typist.AST
 import Control.Monad.RWS
 import qualified Data.Map as Map
-import Debug.Trace
 
-type FreeID = Integer
+-- From "Colored Local Type Inference"
+-- Odersky, Zenger, Zenger, (C) 2001 ACM
 
-infixr 5 :->
+data InhT 
+    = InhT (Maybe (GenType InhT))
+    deriving Show
 
-data Type 
-    = TInt
-    | TBool
-    | Type :-> Type
-    | TFree FreeID
-    deriving (Show, Eq)
+type Env = Map.Map VarName SynT
+
+type Ann a = RWS Env [Constraint] TypeID a
 
 data Constraint
-    = Type := Type
-    deriving Show
-
-data Substitution
-    = Type :|-> Type
-    deriving Show
-
-type TypePad = Map.Map VarName Type
-
-type Ann a = RWS TypePad [Constraint] FreeID a
+    = Between SynT (InhT, InhT)
 
 
-makeASTType :: AST -> Type
-makeASTType ast = let (typ, cons)    = makeASTTypeConstraint ast
-                      subs           = unify cons in
-                  lookupFree typ subs
-
-makeASTTypeConstraint :: AST -> (Type, [Constraint])
-makeASTTypeConstraint ast = let (typ, _, cons) = runRWS (primTypes $ annotate ast) Map.empty 0 in 
-                            (typ, cons)
-
-newFree :: Ann Type
+newFree :: Ann SynT
 newFree = do
-    fid <- get
-    put (fid + 1)
-    return (TFree fid)
+    varnum <- get
+    put (varnum + 1)
+    return $ SynT (TVar varnum)
 
-annotate :: AST -> Ann Type
 
-annotate (Lit { litLit = Int { } })  = return TInt
-annotate (Lit { litLit = Bool { } }) = return TBool
+-- This function implements the algorithm on page 11 of CLTI
+typeAST :: AST -> InhT -> Ann SynT
 
-annotate (Var { varName = var }) = do
-    pad <- ask
-    if var `Map.member` pad 
-        then return $ pad Map.! var
-        else fail $ "Undeclared variable: " ++ var
+-- rule (var)
+typeAST (Var { varName = name }) inh = do
+    env <- ask
+    if name `Map.member` env 
+        then generalize (env Map.! name) inh
+        else fail $ "Undeclared variable: " ++ name
 
-annotate (Lambda { lamParam = param, lamBody = body }) = do
-    paramtype <- newFree
-    bodytype <- setType param paramtype $ annotate body
-    return (paramtype :-> bodytype)
+-- rule (abs_(tp, ?))
+typeAST lam@(ExpLambda {})
+        (InhT Nothing) = do
+    bodytype <- local (Map.insert (lamParam lam) (lamParamT lam)) $
+                    typeAST (lamBody lam) (InhT Nothing)
+    return $ SynT $ TFunc (lamTParam lam) (lamParamT lam) bodytype
 
-annotate (App { appFun = fun, appArg = arg }) = do
-    funtype <- annotate fun
-    argtype <- annotate arg
-    funleft <- newFree
-    funright <- newFree
-    tell [funtype := (funleft :-> funright)]
-    tell [argtype := funleft]
-    return funright
+-- rule (abs_(tp, T))
+typeAST lam@(ExpLambda {})
+        (InhT (Just TTop)) = do
+    bodytype <- local (Map.insert (lamParam lam) (lamParamT lam)) $
+                    typeAST (lamBody lam) (InhT (Just TTop))
+    return $ SynT $ TTop
 
-setType :: VarName -> Type -> Ann a -> Ann a
-setType var typ = local (Map.insert var typ)
+-- rule (abs_tp)
+typeAST lam@(ExpLambda {})
+        inh@(InhT (Just (TFunc tvars from to))) = do
+    bodytype <- local (Map.insert (lamParam lam) (lamParamT lam)) $
+                    typeAST (lamBody lam) to
+    generalize (SynT $ TFunc tvars (lamParamT lam) bodytype) inh
 
-primTypes :: Ann a -> Ann a
-primTypes mon = do
-    setType "plus" (TInt :-> TInt :-> TInt) $ do
-    setType "times" (TInt :-> TInt :-> TInt) $ do
-    setType "leq" (TInt :-> TInt :-> TBool) $ do
-    ifa <- newFree
-    setType "if" (TBool :-> ifa :-> ifa :-> ifa) $ do
-    setType "True" TBool $ do
-    setType "False" TBool $ do
-    fixa <- newFree
-    setType "fix" ((fixa :-> fixa) :-> fixa) $ mon
+-- rule (abs)
+typeAST lam@(Lambda {})
+        inh@(InhT (Just (TFunc tvars from to))) = do
+    synfrom <- instantiate from
+    bodytype <- local (Map.insert (lamParam lam) synfrom) $
+                    typeAST (lamBody lam) to
+    synfrom <- instantiate from
+    return $ SynT $ TFunc tvars synfrom bodytype
+    
+typeAST ast inh = fail $ "Can't type (" ++ show ast ++ ") with context (" ++ show inh ++ ")"
 
-substitute :: Substitution -> Type -> Type
-substitute sub (a :-> b) = substitute sub a :-> substitute sub b
-substitute (from :|-> to) free@(TFree {}) = 
-    if from == free
-        then to
-        else free
-substitute _ x = x
 
-substituteConstraint :: Substitution -> Constraint -> Constraint
-substituteConstraint sub (a := b) = substitute sub a := substitute sub b
 
-(|->) :: Type -> Type -> [Constraint] -> [Constraint]
-(|->) s t = map (substituteConstraint (s :|-> t))
+-- take an InhT pattern and create a type out of it
+-- what to do when the pattern has holes??
+instantiate :: InhT -> Ann SynT
+instantiate = undefined
 
-frees :: Type -> [Type]
-frees (a :-> b)  = frees a ++ frees b
-frees f@(TFree {}) = [f]
-frees _            = []
+-- The up-right arrow operation in the paper
+-- Match a SynT against an InhT pattern covariantly
+generalize :: SynT -> InhT -> Ann SynT
+generalize = undefined
 
-lookupFree :: Type -> [Substitution] -> Type
-lookupFree = foldl (flip substitute)
-
--- Straight from TaPL, page 327
-unify :: [Constraint] -> [Substitution]
-unify [] = []
-unify ((s := t):c')
-    | s == t                 = unify(c')
-    | TFree {} <- s
-    , not (s `elem` frees t) = (s :|-> t) : unify ((s |-> t) c')
-    | TFree {} <- t
-    , not (t `elem` frees s) = (t :|-> s) : unify ((t |-> s) c')
-    | s1 :-> s2 <- s
-    , t1 :-> t2 <- t         = unify (c' ++ [s1 := t1, s2 := t2])
-    | otherwise              = error $ "Error when unifying " ++ show s ++ " and " ++ show t
+-- The down-right arrow operation in the paper
+-- Match a SynT against an InhT pattern contravariantly
+specify :: SynT -> InhT -> Ann SynT
+specify = undefined

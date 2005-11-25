@@ -5,9 +5,13 @@ module Typist.Reconstruct where
 import Typist.AST
 import Control.Monad.RWS
 import qualified Data.Map as Map
+import Debug.Trace
 
 -- From "Colored Local Type Inference"
 -- Odersky, Zenger, Zenger, (C) 2001 ACM
+
+-- Constraint solving from "Local Type Inference"
+-- Pierce, Turner,  1997
 
 data InhT 
     = InhT (Maybe (GenType InhT))
@@ -15,10 +19,33 @@ data InhT
 
 type Env = Map.Map VarName SynT
 
-type Ann a = RWS Env [Constraint] TypeID a
+type Ann a = RWS Env () TypeID a
 
-data Constraint
-    = Between SynT (InhT, InhT)
+data Bound
+    = Bound SynT SynT
+    deriving Show
+
+type Constraints = Map.Map TypeID Bound
+
+data Substitution 
+    = Substitute TypeID SynT
+    deriving Show
+
+
+-- LTI page 4
+(<:) :: SynT -> SynT -> Bool
+(SynT (TVar a)) <: (SynT (TVar b))  = a == b
+_ <: (SynT TTop)                    = True
+(SynT TBot) <: _                    = True
+
+(SynT (TFunc fvars fdom frng)) <: (SynT (TFunc gvars gdom grng)) =
+    | length fvars == length gvars = 
+        let subs = substitute (zipWith Substitute gvars (map (SynT . TVar) fvars)) in
+        subs gdom <: fdom  &&  frng <: subs grng
+
+(SynT TInt)  <: (SynT TInt)         = True
+(SynT TBool) <: (SynT TBool)        = True
+_ <: _                              = False
 
 
 newFree :: Ann SynT
@@ -73,7 +100,7 @@ typeAST app@(ExpApp {})
     funtype <- typeAST (appFun app) (InhT Nothing)
     ressyn <- case funtype of
         SynT (TFunc tvars dom rng) -> appTp (tvars,dom,rng)
-        SynT TBottom -> appTpBot
+        SynT TBot -> appTpBot
         x -> fail $ "Trying to apply something that doesn't think it's a function: " ++ show x
 
     generalize ressyn inh
@@ -85,20 +112,22 @@ typeAST app@(ExpApp {})
         when (length (appTArg app) /= length tvars) $
             fail $ "Can't apply " ++ show (length (appTArg app))
                     ++ " varaibles to a function expecting " ++ show (length tvars)
-        ctxtype <- substitute (zip (appTArg app) tvars) dom
+        let ctxtype = substitute (zipWith Substitute tvars (appTArg app)) dom
         ctx <- destantiate ctxtype
         argtype <- typeAST (appArg app) ctx
         
-        substitute (zip (appTArg app) tvars) rng
+        return $ substitute (zipWith Substitute tvars (appTArg app)) rng
 
     appTpBot :: Ann SynT
     appTpBot = do
         typeAST (appArg app) (InhT (Just TTop))
-        return (SynT TBottom)
+        return (SynT TBot)
 
--- rule (app_(tp,_|_))
+-- rule (app) and (app_|_)
+ 
 
 typeAST ast inh = fail $ "Can't type (" ++ show ast ++ ") with context (" ++ show inh ++ ")"
+
 
 
 
@@ -123,5 +152,24 @@ specify :: SynT -> InhT -> Ann SynT
 specify = undefined
 
 
-substitute :: [(SynT, TypeID)] -> SynT -> Ann SynT
-substitute = undefined
+substitute :: [Substitution] -> SynT -> SynT
+substitute ss t
+    | trace ("sub " ++ show ss ++ " in " ++ show t) False = undefined
+substitute [] t = t
+substitute ((Substitute src dest):ss) v@(SynT (TVar x)) 
+    | x == src  =  substitute ss dest
+    | otherwise =  substitute ss v
+substitute ss (SynT (TFunc vars dom rng)) =
+    -- XXX remove vars from ss?
+    SynT (TFunc vars (substitute ss dom) (substitute ss rng))
+substitute ss x = x
+
+
+-- least upper bound of two types   (LTI page 5)
+sup :: SynT -> SynT -> SynT
+sup = undefined
+
+-- greatest lower bound of two types
+inf :: SynT -> SynT -> SynT
+inf = undefined
+

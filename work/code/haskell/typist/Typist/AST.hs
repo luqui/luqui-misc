@@ -29,7 +29,7 @@ data GenType typ
     = TFunc [TypeID] typ typ
     | TVar TypeID
     | TTop
-    | TBottom
+    | TBot
     | TInt
     | TBool
     deriving Show

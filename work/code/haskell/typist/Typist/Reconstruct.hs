@@ -38,7 +38,7 @@ data Substitution
 _ <: (SynT TTop)                    = True
 (SynT TBot) <: _                    = True
 
-(SynT (TFunc fvars fdom frng)) <: (SynT (TFunc gvars gdom grng)) =
+(SynT (TFunc fvars fdom frng)) <: (SynT (TFunc gvars gdom grng))
     | length fvars == length gvars = 
         let subs = substitute (zipWith Substitute gvars (map (SynT . TVar) fvars)) in
         subs gdom <: fdom  &&  frng <: subs grng

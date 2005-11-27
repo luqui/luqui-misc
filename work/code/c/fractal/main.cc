@@ -132,12 +132,12 @@ void draw_buffer(buf_t buffer, num left, num right, num bottom, num top)
             glBegin(GL_QUADS);
                 itercolor(buffer[rind][iind]);
                 glVertex3d(r, i, buffer[rind][iind]);
-                itercolor(buffer[rind+1][iind]);
-                glVertex3d(r + rstep, i, buffer[rind+1][iind]);
-                itercolor(buffer[rind+1][iind+1]);
-                glVertex3d(r + rstep, i + istep, buffer[rind+1][iind+1]);
-                itercolor(buffer[rind][iind+1]);
-                glVertex3d(r, i + istep, buffer[rind][iind+1]);
+                itercolor(buffer[rind][iind]);
+                glVertex3d(r + rstep, i, buffer[rind][iind]);
+                itercolor(buffer[rind][iind]);
+                glVertex3d(r + rstep, i + istep, buffer[rind][iind]);
+                itercolor(buffer[rind][iind]);
+                glVertex3d(r, i + istep, buffer[rind][iind]);
             glEnd();
         }
     }

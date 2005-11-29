@@ -1,6 +1,6 @@
 all: doc.dvi
 
-doc.dvi: doc.tex dog-cat-tree.eps
+doc.dvi: doc.tex dog-cat-tree.eps base-tree-example.eps adjoining-substitution.eps
 	latex doc.tex
 	latex doc.tex
 

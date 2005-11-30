@@ -1,0 +1,26 @@
+The three-dimensional mandelbrot.
+
+(a + bx + cx^2)(a + bx + cx^2) + d + ex + fx^2  (mod x^3+1)
+
+aa + abx + acx^2 + abx + bbx^2 + bcx^3 + cax^2 + cbx^3 + ccx^4 + d + ex + fx^2
+
+(aa + d) + (2ab + e)x + (2ac + bb + f)x^2 + (2bc)x^3 + (cc)x^4  (mod x^3+1)
+  A           B              C                D         E
+
+        Ex   + D
+      ------------------------------
+x^3+1 | Ex^4 + Dx^3 + Cx^2 + Bx + A
+        Ex^4               + Ex
+        -----------------------
+               Dx^3 + Cx^2 + (B-E)x + A
+               Dx^3                 + D
+               ------------------------
+                      Cx^2 + (B-E)x + (A-D)
+
+(2ac + bb + f)x^2 + (2ab + e - cc)x + (aa + d - 2bc)
+
+Parameters d,e,f
+
+x' =  x^2 - 2yz + d
+y' = -z^2 + 2xy + e
+z' =  y^2 + 2xz + f

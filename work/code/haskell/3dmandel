@@ -19,8 +19,87 @@ x^3+1 | Ex^4 + Dx^3 + Cx^2 + Bx + A
 
 (2ac + bb + f)x^2 + (2ab + e - cc)x + (aa + d - 2bc)
 
-Parameters d,e,f
 
-x' =  x^2 - 2yz + d
-y' = -z^2 + 2xy + e
-z' =  y^2 + 2xz + f
+==========================
+|  Parameters d,e,f      |
+|                        |
+|  x' =  x^2 - 2yz + d   |
+|  y' = -z^2 + 2xy + e   |
+|  z' =  y^2 + 2xz + f   |
+==========================
+---------------------------------------
+
+(a + bx + cx^2)(d + ex + fx^2) = 1   (mod x^3+1)
+
+ad + aex + afx^2 + bdx + bex^2 + bfx^3 + cdx^2 + cex^3 + cfx^4 = 1 (mod x^3+1)
+
+(ad) + (ae + bd)x + (af + be + cd)x^2 + (bf + ce)x^3 + (cf)x^4 = 1 (mod x^3+1)
+ A        B              C                   D          E
+
+Cx^2 + (B-E)x + (A-D) = 1
+(af + be + cd)x^2 + (ae + bd - cf)x + (ad - bf - ce) = 1
+
+{ af + be + cd = 0
+{ ae + bd - cf = 0
+{ ad - bf - ce = 1
+
+[  a  b  c  ] [ d ]    [ 0 ]
+[  a  b -c  ] [ e ]  = [ 0 ]
+[  a -b -c  ] [ f ]    [ 1 ]
+
+[  a  b  c  |  1  0  0 ]
+[  a  b -c  |  0  1  0 ]
+[  a -b -c  |  0  0  1 ]
+
+[  a  b   c  |  1  0  0 ]
+[  0  0  -2c | -1  1  0 ]
+[  0 -2b -2c | -1  0  1 ]
+
+[  a  b   c  |  1  0  0 ]
+[  0 -2b -2c | -1  0  1 ]
+[  0  0  -2c | -1  1  0 ]
+
+[  a  b   c  |  1  0  0  ]
+[  0  b   c  | .5  0 -.5 ]
+[  0  0   c  | .5 -.5 0  ]
+
+[  a  0   0  | .5  0 .5  ]
+[  0  b   0  |  0 .5 -.5 ]
+[  0  0   c  | .5 -.5 0  ]
+
+[  1  0   0  | 1/2a  0     1/2a ]
+[  0  1   0  | 0     1/2b -1/2b ]
+[  0  0   1  | 1/2c -1/2c  0    ]
+
+----------------------------
+
+[ 1/2a    0    1/2a ] [ 0 ]     [ 1/2a ]
+[ 0     1/2b  -1/2b ] [ 0 ]  =  [ 1/2b ]
+[ 1/2c -1/2c  0     ] [ 1 ]     [ 0    ]
+
+----------------------------
+
+(a + bx + cx^2)(1/2a + x/2b)    (mod x^3+1)
+
+1/2 + ax/2b + bx/2a + x^2/2 + cx^2/2a + cx^3/2b   (mod x^3+1)
+
+1/2 + (a/2b + b/2a)x + (1/2 + c/2a)x^2 + (c/2b)x^3   (mod x^3+1)
+ A          B              C                D
+
+Cx^2 + (B-E)x + (A-D)
+
+(1/2 + c/2a)x^2 + (a/2b + b/2a)x + (1/2 - c/2b)
+
+---------------
+
+c = -a
+a^2 + b^2 = 0
+-b = c
+
+a = b = c = 0
+
+(But we can't take c/2a if a is zero)
+
+So no polynomials whatsoever have multiplicitave inverses??!!
+
+Something's wrong here.

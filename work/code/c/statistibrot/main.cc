@@ -9,29 +9,42 @@
 #include <iostream>
 #include <unistd.h>
 
+// #define X3PLUS1
+// #define X3PLUSX
+// #define X3MINUSX
+// #define X3
+#define X3PLUSX2PLUSXPLUS1
+
+
 typedef float num;
 
 const num SCRLEFT = -2;
-const num SCRRIGHT = 1;
-const num SCRBOT = -1;
-const num SCRTOP = 1;
-
-const int BUFFERSZ = 100000;
-
-num perturb = 0;
-num xbias = 0;
-num ybias = 0;
+const num SCRRIGHT = 2;
+const num SCRBOT = -2;
+const num SCRTOP = 2;
+const num SCRBACK = -2;
+const num SCRFRONT = 2;
+const int BUFFERSZ = 1000000;
 
 struct Point {
     Point() { }
-    Point(num x, num y) : x(x), y(y) { }
-    num x, y;
+    Point(num x, num y, num z)
+        : x(x), y(y), z(z),
+          r(fabs(x)/2), g(fabs(y)/2), b(fabs(z)/2)
+    { }
+    num x, y, z;
+    num r, g, b;
 };
 
 Point outsidebuf[BUFFERSZ];
 int outsidepts = 0;
 Point insidebuf[BUFFERSZ];
 int insidepts = 0;
+
+const int max_iters = 400;
+const num max_bound = 100;
+
+num viewx = 4, viewy = 4, viewz = 4;
 
 SDL_Surface* screen;
 void init_sdl() {
@@ -40,10 +53,14 @@ void init_sdl() {
 
     glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        gluOrtho2D(SCRLEFT, SCRRIGHT, SCRBOT, SCRTOP);
+        gluPerspective(45.0, 800.0/600.0, 0.01, 50);
     glMatrixMode(GL_MODELVIEW);
     
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
 }
 
 void quit() {
@@ -66,47 +83,76 @@ void events() {
     }
 
     Uint8* keys = SDL_GetKeyState(NULL);
-    if (keys[SDLK_SPACE]) perturb += 0.002;
-    else perturb = 0;
-
-    if (keys[SDLK_UP])    ybias += 0.0002;
-    if (keys[SDLK_DOWN])  ybias -= 0.0002;
-    if (keys[SDLK_RIGHT]) xbias += 0.0002;
-    if (keys[SDLK_LEFT])  xbias -= 0.0002;
-    if (keys[SDLK_RETURN]) xbias = ybias = 0;
+    if (keys[SDLK_LEFT])  viewx -= 0.06;
+    if (keys[SDLK_RIGHT]) viewx += 0.06;
+    if (keys[SDLK_DOWN])  viewy -= 0.06;
+    if (keys[SDLK_UP])    viewy += 0.06;
+    if (keys[SDLK_z])     viewz -= 0.06;
+    if (keys[SDLK_a])     viewz += 0.06;
 }
 
-int mandel_order(num cr, num ci, int limit) {
+int mandel_order(num d, num e, num f, int limit) {
     int iters = 0;
-    num zr = 0, zi = 0, rsq, isq;
+
+    num ap = 0, bp = 0, cp = 0;
     while (++iters < limit) {
-        if ((isq = zi*zi) + (rsq=zr*zr) > 4) break;
-        zi = ci + 2*zr*zi;
-        zr = cr - isq + rsq;
+        num a = ap, b = bp, c = cp;
+        
+        if (iters % 10 == 0)
+            if (fabs(a*a*a - b*b*b + c*c*c + 3*a*b*c) > max_bound)
+                return iters;
+        
+#if defined(X3PLUS1)
+        ap =  2*a*c + b*b + d;
+        bp =  2*b*c - a*a + e;
+        cp = -2*a*b + c*c + f;
+#elif defined(X3PLUSX)
+        ap =  2*a*c + b*b - a*a + d;
+        bp =  2*b*c - 2*a*b     + e;
+        cp =  c*c               + f;
+#elif defined(X3MINUSX)
+        ap = a*a + b*b + 2*a*c + d;
+        bp = 2*b*c + 2*a*b     + e;
+        cp = c*c               + f;
+#elif defined(X3)
+        ap =  2*a*c + b*b + d;
+        bp =  2*b*c       + e;
+        cp =          c*c + f;
+#elif defined(X3PLUSX2PLUSXPLUS1)
+        ap = 2*a*c + b*b - 2*a*b + d;
+        bp = 2*b*c - 2*a*b       + e;
+        cp = c*c - 2*a*b + a*a   + f;
+#endif
     }
-    if (iters == limit) return 0;
-    else return iters;
+    return 0;
 }
 
 int fill_buffer() { 
-    bool inpred = false, outpred = false;
-    while (!(inpred && outpred)) {
+    std::cout << "Filling point buffer...\n";
+    while (!(insidepts == BUFFERSZ && outsidepts == BUFFERSZ)) {
+        if ((insidepts + outsidepts) % (2*BUFFERSZ/100) == 0) {
+            num complete = 100 * num(insidepts + outsidepts) / num(2*BUFFERSZ);
+            std::cout << "\e[0G\e[2K" << complete << "%";
+            std::cout.flush();
+        }
+        
         num x = drand48() * (SCRRIGHT - SCRLEFT) + SCRLEFT;
         num y = drand48() * (SCRTOP - SCRBOT) + SCRBOT;
-        int ord = mandel_order(x,y,100);
+        num z = drand48() * (SCRFRONT - SCRBACK) + SCRBACK;
+        int ord = mandel_order(x,y,z,max_iters);
         if (ord == 0) {
             if (insidepts < BUFFERSZ) {
-                insidebuf[insidepts++] = Point(x,y);
+                insidebuf[insidepts++] = Point(x,y,z);
             }
-            else inpred = true;
         }
         else {
             if (outsidepts < BUFFERSZ) {
-                outsidebuf[outsidepts++] = Point(x,y);
+                outsidebuf[outsidepts++] = Point(x,y,z);
             }
-            else outpred = true;
         }
     }
+    std::cout << "\n";
+    std::cout << "Done\n";
 }
 
 int min(int a, int b) {
@@ -118,11 +164,10 @@ int max(int a, int b) {
 }
 
 void pointselect(Point* in, Point* out) {
-    num xpert = drand48() * perturb - perturb/2 + xbias;
-    num ypert = drand48() * perturb - perturb/2 + ybias;
-    Point avg((in->x + out->x) / 2 + xpert,
-              (in->y + out->y) / 2 + ypert);
-    int ord = mandel_order(avg.x, avg.y, 100);
+    Point avg((in->x + out->x) / 2,
+              (in->y + out->y) / 2,
+              (in->z + out->z) / 2);
+    int ord = mandel_order(avg.x, avg.y, avg.z, max_iters);
     if (ord == 0) {
         *in = avg;
     }
@@ -132,46 +177,39 @@ void pointselect(Point* in, Point* out) {
 }
 
 void evolve() {
+    static int ctr = 0;
     int inpt, outpt;
     
-    int ptnum = inpt = outpt = lrand48() % max(insidepts, outsidepts);
-    if (ptnum > insidepts)
-        inpt = lrand48() % insidepts;
-    if (ptnum > outsidepts)
-        outpt = lrand48() % outsidepts;
+    int ptnum = inpt = outpt = ctr++;
+    ctr %= min(insidepts, outsidepts);
     
     pointselect(&insidebuf[inpt], &outsidebuf[outpt]);
 }
 
 void draw() {
     glLoadIdentity();
-    glColor3f(1,1,0);
-
-    glVertexPointer(2, GL_FLOAT, sizeof(Point), outsidebuf);
+    gluLookAt(viewx, viewy, viewz,
+              0, 0, 0,
+              0, 1, 0);
+    glPointSize(4.0);
+    
+    glVertexPointer(3, GL_FLOAT, sizeof(Point), &outsidebuf[0].x);
+    glColorPointer(3, GL_FLOAT, sizeof(Point), &outsidebuf[0].r);
     glDrawArrays(GL_POINTS, 0, outsidepts);
-
-    glColor3f(1,0,0);
-
-    glVertexPointer(2, GL_FLOAT, sizeof(Point), insidebuf);
-    glDrawArrays(GL_POINTS, 0, insidepts);
 }
 
 int main(int argc, char** argv) {
     srand48(time(NULL));
-    std::cout << "Filling point buffer...\n";
     fill_buffer();
-    std::cout << "Done\n";
     
     init_sdl();
 
     int frames = 0;
     for (;;) {
         events();
-        for (int i = 0; i < 1000; i++) { evolve(); }
-        if (frames++ % 10 == 0) {
-            SDL_GL_SwapBuffers();
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
+        for (int i = 0; i < 10000; i++) { evolve(); }
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         draw();
+        SDL_GL_SwapBuffers();
     }
 }

@@ -85,7 +85,7 @@ cat''}
 \label{dog-cat-tree}
 \end{Figure}
 
-After experiencing great success in the theory of programming lanugages,
+After experiencing great success in the theory of programming languages,
 context-free grammars began to show their weaknesses in natural language
 processing.  For instance, they fail at one of the most fundamental
 underlying themes in language: agreement.  To ensure that the subject
@@ -104,23 +104,48 @@ increased the pressure on academics to come up with a better
 representation of natural syntax.  Fortunately for them, one had already
 been around for ten years.
 
-\section{Tree-Adjoining Grammars}
+\section{Tree-Rewriting Grammars}
 
 Context-free grammars were all about rewriting strings to (or from) a
 single start symbol, and to create a parse tree in the process.
 Tree-rewriting grammars instead start with one or more start trees and
 rewrite them using rules until one of them matches the input. 
 
-\textbf{XXX} Tree Substitution Grammars?
+The first form of tree-rewriting grammar was the \defn{tree substitution
+grammar}.  Here, the start trees contained \defn{substitutable nodes},
+which were childless nodes marked with a root type (for example,
+\textit{NP}).  New trees could be derived from old ones by substituting
+a tree with the given root type in for that node.  This provided the
+people who constructed grammars more control over the derived trees and
+was a generally encouraging development until it was shown that the tree
+substitution grammars derive the same set of languages as the
+context-free grammars.
 
-The tree-adjoining grammars were ultimately introduced in order to
-\defn{lexicalize} any specified grammar.  That is, it is desirable to
-associate one rule with each lexeme\footnote{A lexeme is one unit of
-meaning, usually (but not always) a single word.  For example, ``to
-give'' (and its various inflected forms) is one lexeme, but ``to give
-up'' is another.}.  This is because modern linguistic theory unifies to
-some degree the lexicon and the syntax, by treating each lexeme as its
-meaning together with a ``minisyntax'' for its usage.
+\subsection{Tree-Adjoining Grammars}
+
+The tree substitution grammars were modified to allow an additional
+operation, namely \defn{adjunction}, which formed the
+\defn{tree-adjoining grammars} (TAGs) \cite{Joshi-1975}.  In a tree-adjoining grammar, you
+again specify a set of initial trees, which correspond roughly to the
+different general forms a sentence can take on.  An example base tree
+for English is shown in Figure \ref{base-tree-example}.  Then you
+specify \defn{auxiliary trees}, which are a bit tricky.  An auxiliary
+substitution takes a subtree $S$ and substitutes a subtree $T$, making
+$S$ a subtree of $T$.  It is best illustrated by example.  Figure
+\ref{adjoining-substitution} shows an auxiliary substitution on the base
+tree in Figure \ref{base-tree-example}.  The shown substitution allows
+the string ``I taught him a lesson'' to derive ``I really taught him a
+lesson''.
+
+TAGs are (finally!) not equivalent to the context-free grammars.  They
+are strictly more powerful, generating the set of ``mildly
+context-sensitive languages''.  Chomsky's context-sensitive grammars are
+still more powerful.  However, TAGs have had much more success in
+practice than the context-sensitive grammars because the formalism is
+easier to work with.  It is hard to intuit the generated structure of a
+context-sensitive grammar just by looking at it, while it is hard to
+miss the generated structure of a TAG.  Also, as we will see, TAGs
+readily provide a way to encode semantic information.
 
 \begin{Figure}
 \begin{center}
@@ -135,27 +160,32 @@ to the asylum''.}
 \label{base-tree-example}
 \end{Figure}
 
-In a tree-adjoining grammar, you specify some set of \defn{base
-trees}, which correspond roughly to the different general forms a
-sentence can take on.  An example base tree for english is shown in
-Figure \ref{base-tree-example}.  Then you specify \defn{adjoining
-substitutions}, which are a bit tricky.  An adjoining substitution takes
-a subtree S and substitutes a subtree T, making S a subtree of T.  It is
-best illustrated by example.  Figure \ref{adjoining-substitution} shows
-an adjoining substitution on the base tree in Figure
-\ref{base-tree-example}.
-
 \begin{Figure}
 \begin{center}
 \epsfig{file=adjoining-substitution.eps,width=5in}
 \end{center}
-\caption{An adjoining substitution on the base tree shown in Figure
-\ref{base-tree-example}.  The substitution rule is on the left, the
-resulting tree is on the right.  The star in the substitution rule
+\caption{An auxiliary substitution on the base tree shown in Figure
+\ref{base-tree-example}.  The auxiliary tree is on the left, the
+resulting tree is on the right.  The star in the auxiliary tree
 represents where to put the subtree that is being replaced by this
 substitution.}
 \label{adjoining-substitution}
 \end{Figure}
+
+The tree-adjoining grammars were ultimately introduced in order to
+\defn{lexicalize} any specified grammar.  That is, it is desirable to
+associate one rule with each lexeme\footnote{A lexeme is one unit of
+meaning, usually (but not always) a single word.  For example, ``to
+give'' (and its various inflected forms) is one lexeme, but ``to give
+up'' is another.}.  This is because modern linguistic theory unifies to
+some degree the lexicon and the syntax, by treating each lexeme as its
+meaning together with a ``minisyntax'' for its usage.
+
+\subsection{Feature-based TAGs}
+
+As pointed out above, the lexicon plays an important role in parsing.
+Consider the sentence ``*I drank him some coffee.''  This is not a
+grammatical sentence because 
 
 \clearpage
 
@@ -167,6 +197,9 @@ Adjoining Grammar: An Overview.  \textit{CSLI Lecture Notes no. 107}:
 \bibitem{Frank-2000} Frank, Robert.  2000.  From Regular to Context-Free
 to Mildly Context-Sensitive Systems: The Path of Child Language
 Acquisition.  \textit{CSLI Lecture Notes no. 107}: 101--120.
+\bibitem{Joshi-1975} Joshi, Aravind K., Leon Levy, and M. Takahashi.
+1975. Tree Adjunct Grammars. \textit{Journal of Computer and System
+Sciences 10}: 136--163.
 \bibitem{Shieber-1985} Shieber, Stuart B.  1985. Evidence against the
 context-freeness of natural language.  \textit{Linguistics and
 Philosophy 8}: 333--343.  Through \cite{Abeille-2000}.

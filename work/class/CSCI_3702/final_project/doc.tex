@@ -22,6 +22,7 @@
 $<<$Introduction$>>$
 
 \section{The Rise and Fall of Free Context}
+\label{sec-free-context}
 
 In 1957, Noam Chomsky introduced four formal classes of languages with
 which to study Human language:  \defn{regular} languages,
@@ -183,9 +184,36 @@ meaning together with a ``minisyntax'' for its usage.
 
 \subsection{Feature-based TAGs}
 
-As pointed out above, the lexicon plays an important role in parsing.
-Consider the sentence ``*I drank him some coffee.''  This is not a
-grammatical sentence because 
+TAGs have some of the same problems that were pointed out for
+context-free grammars in section \ref{sec-free-context}.  In order to
+allow the sentence ``John has seen the ball'' but disallow ``*John seen
+the ball'', node types will unnecessarily multiply.  Two solutions were
+proposed for this: \defn{Constrained TAGs} and \defn{Feature-based
+TAGs}.
+
+Constrained TAGs allow you to specify a finite set of adjunctions that
+can occur at a given node, rather than the usual unconstrained operation
+where any matching adjunction can occur.  These haven't been widely
+successful, and the Engineer in me feels uneasy about them, wanting
+things to be extensible.  You don't want to have to go back through all
+your rules when you add a new auxiliary tree to see if it should or
+should not be allowed to be substituted in each place.
+
+Feature-based TAGs (FTAGs), introduced by Vijay-Shanker in 1987
+\cite{Vijay-Shanker-1987}, instead allow you to associate two
+\defn{feature sets} with each of the nodes, which must unify with each
+other position in the derived tree.
+
+\begin{Figure}
+\begin{center}
+\epsfig{file=tense-features.eps,width=5in}
+\end{center}
+\caption{An example use of feature structures.  A base tree is on the
+left, which is not syntactically correct because the \texttt{tense}
+features do not unify on \textit{VP}.  An auxiliary tree is on the
+right, which can be subtituted for the \textit{VP} on the left to make
+it unify.}
+\end{Figure}
 
 \clearpage
 
@@ -203,6 +231,10 @@ Sciences 10}: 136--163.
 \bibitem{Shieber-1985} Shieber, Stuart B.  1985. Evidence against the
 context-freeness of natural language.  \textit{Linguistics and
 Philosophy 8}: 333--343.  Through \cite{Abeille-2000}.
+\bibitem{Vijay-Shanker-1987} Vijay-Shanker, K. 1987.  \textit{A study of
+Tree Ajoining Grammars}.  Doctoral dissertation, Department of Computer
+and Information Science, University og Pennsylvania, Philadelphia, PA,
+December.  Through \cite{Abeille-2000}.
 \end{thebibliography}
 
 \end{document}

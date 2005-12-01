@@ -8,6 +8,8 @@
 
 \newcommand{\defn}[1]{\textit{#1}}
 \newcommand{\XXX}[1]{\textbf{XXX #1}}
+\newcommand{\mi}[1]{\mathit{#1}}
+\newcommand{\mt}[1]{\text{#1}}
 
 \floatstyle{boxed}
 \newfloat{Figure}{tbp}{}
@@ -33,7 +35,7 @@ grammars for the context-free languages, since they seemed to be the
 best fit for both natural and computer languages. \XXX{Need a
 Better Reason.}
 
-Informally, a context-free grammar is a set of rewrite rules that take
+Informally, a context-free grammar is a set of rules that takes
 ``rewritable'' symbols eventually into sequences of words in the target
 language.  For example, this is a small version of a common context-free
 grammar:
@@ -46,14 +48,16 @@ S  &\rightarrow \mathit{NP} \; \mathit{VP}      \tag{1} \\
 V  &\rightarrow \text{``chased''}               \tag{5}
 \end{align}
 
-The capital letters represent rewritable symbols, and the things in
-quotes represent words in the target language.  We can see how the
-string ``the dog chased the cat'' was generated from $S$ (the so-called
-\defn{start symbol}) in Figure \ref{dog-cat-deriv}.  The order in
-which the rewrites are made does not matter (in the fourth step I could
-just have well used rule (5) to attain ``the dog chased NP'').  Rules may
-also be applied more than once during a derivation (in the fourth step I
-could have used rule (3) again to attain ``the dog V the dog'').
+The capital letters represent rewritable symbols\footnote{\textit{S}:
+Sentence; \textit{NP}: Noun Phrase; \textit{VP}: Verb Phrase;
+\textit{V}: Verb.}, and the things in quotes represent words in the
+target language.  We can see how the string ``the dog chased the cat''
+was generated from $S$ (the so-called \defn{start symbol}) in Figure
+\ref{dog-cat-deriv}.  The order in which the rewrites are made does not
+matter (in the fourth step I could just as well have used rule (5) to
+attain ``the dog chased NP'').  Rules may also be applied more than once
+during a derivation (in the fourth step I could have used rule (3) again
+to attain ``the dog V the dog'').
 
 \begin{Figure}
 \begin{tabularx}{\linewidth}{X|X}
@@ -116,13 +120,19 @@ The first form of tree-rewriting grammar was the \defn{tree substitution
 grammar}.  Here, the start trees contained \defn{substitutable nodes},
 which were childless nodes marked with a root type (for example,
 \textit{NP}).  New trees could be derived from old ones by substituting
-a tree with the given root type in for that node.  This provided the
-people who constructed grammars more control over the derived trees and
-was a generally encouraging development until it was shown that the tree
+a tree with the given root type for that node.  This provided the people
+who constructed grammars more control over the derived trees, and it was
+a generally encouraging development until it was shown that the tree
 substitution grammars derive the same set of languages as the
 context-free grammars.
 
+Section \ref{subsec-tags} describes the formalism of tree-adjoining
+grammars, and section \ref{subsec-feature-tags} describes the
+integration of features, a method for controlling what kinds of
+substitutions can be made.
+
 \subsection{Tree-Adjoining Grammars}
+\label{subsec-tags}
 
 The tree substitution grammars were modified to allow an additional
 operation, namely \defn{adjunction}, which formed the
@@ -155,8 +165,8 @@ readily provide a way to encode semantic information.
 \caption{An example of a base tree for English.  The parenthesized
 letters after NP refer to the case that declined pronouns would take on:
 \textit{n} for \defn{nominative}, eg. ``\textbf{I} gave John the
-Ball''; \textit{d} for \defn{dative}, eg. ``John gave \textbf{me} the
-Ball''; \textit{a} for \defn{accusative}, eg.  ``John gave \textbf{me}
+ball''; \textit{d} for \defn{dative}, eg. ``John gave \textbf{me} the
+ball''; \textit{a} for \defn{accusative}, eg.  ``John gave \textbf{me}
 to the asylum''.}
 \label{base-tree-example}
 \end{Figure}
@@ -183,6 +193,7 @@ some degree the lexicon and the syntax, by treating each lexeme as its
 meaning together with a ``minisyntax'' for its usage.
 
 \subsection{Feature-based TAGs}
+\label{subsec-feature-tags}
 
 TAGs have some of the same problems that were pointed out for
 context-free grammars in section \ref{sec-free-context}.  In order to
@@ -194,7 +205,7 @@ TAGs}.
 Constrained TAGs allow you to specify a finite set of adjunctions that
 can occur at a given node, rather than the usual unconstrained operation
 where any matching adjunction can occur.  These haven't been widely
-successful, and the Engineer in me feels uneasy about them, wanting
+successful, and the engineer in me feels uneasy about them, wanting
 things to be extensible.  You don't want to have to go back through all
 your rules when you add a new auxiliary tree to see if it should or
 should not be allowed to be substituted in each place.
@@ -202,7 +213,26 @@ should not be allowed to be substituted in each place.
 Feature-based TAGs (FTAGs), introduced by Vijay-Shanker in 1987
 \cite{Vijay-Shanker-1987}, instead allow you to associate two
 \defn{feature sets} with each of the nodes, which must unify with each
-other position in the derived tree.
+other at every position in the derived tree.  These are commonly called
+the \defn{top} and \defn{bottom} features, which encode properties of
+the structure above and below, respectively, the node in question.  When
+performing an adjunction of an auxiliary tree $A$ for a source subtree
+$S$, $S$'s top feature must unify with $A$'s root's top feature, and
+$S$'s bottom feature must unify with $A$'s *'s bottom feature.  Another
+way of saying this is that the top feature says what the tree is
+expecting in that position, and the bottom feature says what it actually
+has.  Adjunctions must be made in order to make those two things the
+same.
+
+This formalism allows us to represent the ``seen'' example above simply,
+as shown in Figure \ref{tense-features}.  The feature on \textit{VP} in
+this example is \texttt{tense} which represents whether it is a tensed
+clause (i.e. has a subject).  The initial tree on the left expects a
+tensed \textit{VP}, and provides an untensed \textit{VP} on which it
+must be based.  The reader should verify that all the features unify by
+adjoining the auxiliary tree on the right to the \textit{VP} on the
+left.  The stars in the auxiliary tree's features mean ``anything'' or
+``don't care''.
 
 \begin{Figure}
 \begin{center}
@@ -211,9 +241,56 @@ other position in the derived tree.
 \caption{An example use of feature structures.  A base tree is on the
 left, which is not syntactically correct because the \texttt{tense}
 features do not unify on \textit{VP}.  An auxiliary tree is on the
-right, which can be subtituted for the \textit{VP} on the left to make
+right, which can be adjoined to the \textit{VP} on the left to make
 it unify.}
+\label{tense-features}
 \end{Figure}
+
+\section{Semantics}
+\label{sec-semantics}
+
+FTAGs provide us with a convenient way to specify the syntax of a
+language.  With the formalisms to which we have been introduced so far,
+we would be able to implement a grammar checker like that of Microsoft
+Word.  But other than irritating users with the philosophical
+implications of using the passive voice\footnote{Zing!}, this doesn't
+have much practical use.  The next big problem is getting a computer to
+understand what a particular utterance means.
+
+Section \ref{subsec-predicate-calculus} covers the representation of
+semantics using the first-order predicate calculus, and then section
+\ref{subsec-ftag-semantics} covers the integration of these techniques
+into FTAGs.
+
+\subsection{Predicate Calculus}
+\label{subsec-predicate-calculus}
+
+To represent semantic knowledge, we will use the \defn{first-order
+predicate calculus}.  We will deviate from the norm in the field by
+expressing terms in the functional logic language Curry\footnote{For
+those unfamiliar, the syntax is like that of Haskell or Standard ML.}.
+The calculus operates by defining relationships between
+\defn{predicates} (true or false values) over variables.  Single capital
+letters are variables, italicied terms are predicate terms, and
+regular-type terms are objects (although Curry itself does not
+distinguish the latter two of these).  As an example, consider the
+sentence ``John walks a dog.''   This can be encoded:
+
+\[
+  \mi{dog} \; X \quad \& \quad \mi{walks} \; \mt{john} \; X
+\]
+
+This can be read ``$X$ is a dog and John walks $X$.''  The reason we
+factored the dog out into a variable is because of the existential
+determiner ``\textbf{a} dog''.  If it had been ``\textbf{the} dog'', we
+could have simply encoded this sentence as:
+
+\[
+  \mi{walks} \; \mt{john} \; \mt{dog}
+\]
+
+Under the assumption that ``dog'' had already been defined in specific
+elsewhere (perhaps by a previous sentence in the discourse).
 
 \clearpage
 
@@ -225,9 +302,14 @@ Adjoining Grammar: An Overview.  \textit{CSLI Lecture Notes no. 107}:
 \bibitem{Frank-2000} Frank, Robert.  2000.  From Regular to Context-Free
 to Mildly Context-Sensitive Systems: The Path of Child Language
 Acquisition.  \textit{CSLI Lecture Notes no. 107}: 101--120.
+\bibitem{Gardent-2005} Gardent, Claire and Parmentier, Yannick.  2005.
+Large Scale Semantic Construction for Tree Adjoining Grammars.
+\textit{Logical Aspects of Computational Lingusitics 2005}: 131--146.
 \bibitem{Joshi-1975} Joshi, Aravind K., Leon Levy, and M. Takahashi.
 1975. Tree Adjunct Grammars. \textit{Journal of Computer and System
 Sciences 10}: 136--163.
+\bibitem{Jurafsky-2000} Jurafsky, Daniel and Martin, James H. 2000.
+\textit{Speech and Language Processing}.  Prentice Hall, NJ.
 \bibitem{Shieber-1985} Shieber, Stuart B.  1985. Evidence against the
 context-freeness of natural language.  \textit{Linguistics and
 Philosophy 8}: 333--343.  Through \cite{Abeille-2000}.

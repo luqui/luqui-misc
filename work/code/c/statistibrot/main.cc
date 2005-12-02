@@ -7,7 +7,6 @@
 #include <cmath>
 #include <ctime>
 #include <iostream>
-#include <unistd.h>
 
 // #define X3PLUS1
 // #define X3PLUSX
@@ -45,6 +44,10 @@ const int max_iters = 400;
 const num max_bound = 100;
 
 num viewx = 4, viewy = 4, viewz = 4;
+
+double floatrand() {
+    return double(rand()) / double(RAND_MAX);
+}
 
 SDL_Surface* screen;
 void init_sdl() {
@@ -136,9 +139,9 @@ int fill_buffer() {
             std::cout.flush();
         }
         
-        num x = drand48() * (SCRRIGHT - SCRLEFT) + SCRLEFT;
-        num y = drand48() * (SCRTOP - SCRBOT) + SCRBOT;
-        num z = drand48() * (SCRFRONT - SCRBACK) + SCRBACK;
+        num x = floatrand() * (SCRRIGHT - SCRLEFT) + SCRLEFT;
+        num y = floatrand() * (SCRTOP - SCRBOT) + SCRBOT;
+        num z = floatrand() * (SCRFRONT - SCRBACK) + SCRBACK;
         int ord = mandel_order(x,y,z,max_iters);
         if (ord == 0) {
             if (insidepts < BUFFERSZ) {
@@ -199,7 +202,7 @@ void draw() {
 }
 
 int main(int argc, char** argv) {
-    srand48(time(NULL));
+    srand(time(NULL));
     fill_buffer();
     
     init_sdl();

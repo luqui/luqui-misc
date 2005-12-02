@@ -9,13 +9,13 @@ data Type
     = Type :-> Type
     | TInt
     | TBool
-    deriving (Show, Eq)
+    deriving (Eq,Show)
 
 type Gamma = [(VarName, Type -> (Delta,Type))]
 type Delta = [(VarName, Type)]
 
 popGamma :: (Eq a, Show a, Show b) => a -> [(a,b)] -> [(a,b)]
-popGamma a [] = error "Pop nuffin!"
+popGamma a [] = []
 popGamma a ((x,y):xs) = 
     if a == x
         then xs
@@ -43,8 +43,7 @@ typeOf (Lambda { lamParam = param, lamBody = body }) gamma ~(dom :-> rng) =
     let gamma' = (param, \cx -> ([(param, cx)], dom)) : gamma
         (delta, trng) = typeOf body gamma' rng in
     (popGamma param delta, 
-     maybe (error $ "Undeclared variable': " ++ param) id
-        (lookup param delta) :-> trng)
+     maybe dom id (lookup param delta) :-> trng)
 
 typeOf (Var { varName = name }) gamma cxt =
     maybe (error $ "Undeclared variable: " ++ name)
@@ -55,6 +54,11 @@ unify :: Delta -> Delta -> Delta
 unify [] bs = bs
 unify ((x,y):as) bs = 
     maybe ((x,y) : unify as bs)
-          (\ (t,rest) -> 
-            if t == y then (x,y) : unify as rest else error "Type Error!")
+          (\ (t,rest) -> (x, singleUnify t y) : unify as rest)
           (lookupRemove x bs)
+
+singleUnify :: Type -> Type -> Type
+singleUnify x y = 
+    if x == y
+        then x
+        else error $ "Type Error when unifying " ++ show x ++ " and " ++ show y

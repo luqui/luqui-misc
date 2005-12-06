@@ -8,6 +8,9 @@
 #include <ctime>
 #include <iostream>
 
+// The plotting forms.  Have exactly one of these
+// uncommented at all times.  Try different ones.
+
 // #define X3PLUS1
 // #define X3PLUSX
 // #define X3MINUSX
@@ -142,31 +145,40 @@ int mandel_order(num d, num e, num f, int limit) {
                 return iters;
         
 #if defined(X3PLUS1)
+        // ax^2 + bx + c   (mod x^3 + 1)
         ap =  2*a*c + b*b + d;
         bp =  2*b*c - a*a + e;
         cp = -2*a*b + c*c + f;
 #elif defined(X3PLUSX)
+        // ax^2 + bx + c   (mod x^3 + x)
         ap =  2*a*c + b*b - a*a + d;
         bp =  2*b*c - 2*a*b     + e;
         cp =  c*c               + f;
 #elif defined(X3MINUSX)
+        // ax^2 + bx + c   (mod x^3 - x)
         ap = a*a + b*b + 2*a*c + d;
         bp = 2*b*c + 2*a*b     + e;
         cp = c*c               + f;
 #elif defined(X3)
+        // ax^2 + bx + c   (mod x^3)
         ap =  2*a*c + b*b + d;
         bp =  2*b*c       + e;
         cp =          c*c + f;
 #elif defined(X3PLUSX2PLUSXPLUS1)
+        // ax^2 + bx + c   (mod x^3 + x^2 + x + 1)
         ap = 2*a*c + b*b - 2*a*b + d;
         bp = 2*b*c - 2*a*b       + e;
         cp = c*c - 2*a*b + a*a   + f;
 #elif defined(JULIAR)
+        // ax + b (mod x^2 + 1)  (standard mandelbrot)
+        // initial a is determined by the parameter f.
         if (iters == 1) a = f;
         ap = a*a - b*b           + d;
         bp = 2*a*b               + e;
         cp = 0;
 #elif defined(JULIARI)
+        // ax + b (mod x^2 + 1)  (standard mandelbrot)
+        // initial a and b are determined by the parameter f
         if (iters == 1) a = b = f;
         ap = a*a - b*b           + d;
         bp = 2*a*b               + e;
@@ -214,6 +226,13 @@ int max(int a, int b) {
     return a >= b ? a : b;
 }
 
+// Take two points, one inside and one outside the set, 
+// and caculate their average.  If the average is in the
+// set, then move the point that was formerly in the set
+// to the average.  If the average is not in the set,
+// then move the point that was formerly not in the set
+// to the average.  This makes the two points exponentially
+// converge on the boundary of the set.
 void pointselect(Point* in, Point* out) {
     Point avg((in->x + out->x) / 2,
               (in->y + out->y) / 2,

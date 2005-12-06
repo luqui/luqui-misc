@@ -246,52 +246,6 @@ it unify.}
 \label{tense-features}
 \end{Figure}
 
-\section{Semantics}
-\label{sec-semantics}
-
-FTAGs provide us with a convenient way to specify the syntax of a
-language.  With the formalisms to which we have been introduced so far,
-we would be able to implement a grammar checker like that of Microsoft
-Word.  But other than irritating users with the philosophical
-implications of using the passive voice\footnote{Zing!}, this doesn't
-have much practical use.  The next big problem is getting a computer to
-understand what a particular utterance means.
-
-Section \ref{subsec-predicate-calculus} covers the representation of
-semantics using the first-order predicate calculus, and then section
-\ref{subsec-ftag-semantics} covers the integration of these techniques
-into FTAGs.
-
-\subsection{Predicate Calculus}
-\label{subsec-predicate-calculus}
-
-To represent semantic knowledge, we will use the \defn{first-order
-predicate calculus}.  We will deviate from the norm in the field by
-expressing terms in the functional logic language Curry\footnote{For
-those unfamiliar, the syntax is like that of Haskell or Standard ML.}.
-The calculus operates by defining relationships between
-\defn{predicates} (true or false values) over variables.  Single capital
-letters are variables, italicied terms are predicate terms, and
-regular-type terms are objects (although Curry itself does not
-distinguish the latter two of these).  As an example, consider the
-sentence ``John walks a dog.''   This can be encoded:
-
-\[
-  \mi{dog} \; X \quad \& \quad \mi{walks} \; \mt{john} \; X
-\]
-
-This can be read ``$X$ is a dog and John walks $X$.''  The reason we
-factored the dog out into a variable is because of the existential
-determiner ``\textbf{a} dog''.  If it had been ``\textbf{the} dog'', we
-could have simply encoded this sentence as:
-
-\[
-  \mi{walks} \; \mt{john} \; \mt{dog}
-\]
-
-Under the assumption that ``dog'' had already been defined in specific
-elsewhere (perhaps by a previous sentence in the discourse).
-
 \clearpage
 
 \singlespace

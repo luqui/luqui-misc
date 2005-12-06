@@ -12,7 +12,9 @@
 // #define X3PLUSX
 // #define X3MINUSX
 // #define X3
-#define X3PLUSX2PLUSXPLUS1
+// #define X3PLUSX2PLUSXPLUS1
+// #define JULIAR
+#define JULIARI
 
 
 typedef float num;
@@ -28,12 +30,30 @@ const int BUFFERSZ = 1000000;
 struct Point {
     Point() { }
     Point(num x, num y, num z)
-        : x(x), y(y), z(z),
-          r(fabs(x)/2), g(fabs(y)/2), b(fabs(z)/2)
+        : x(x), y(y), z(z)
     { }
     num x, y, z;
-    num r, g, b;
+    num nx, ny, nz;
 };
+
+void set_normals(Point* a, Point* b) {
+    num vabx = b->x - a->x;
+    num vaby = b->y - a->y;
+    num vabz = b->z - a->z;
+    
+    num norm = sqrt(vabx*vabx + vaby*vaby + vabz*vabz);
+    
+    vabx /= norm;
+    vaby /= norm;
+    vabz /= norm;
+
+    b->nx = vabx;
+    b->ny = vaby;
+    b->nz = vabz;
+    a->nx = vabx;
+    a->ny = vaby;
+    a->nz = vabz;
+}
 
 Point outsidebuf[BUFFERSZ];
 int outsidepts = 0;
@@ -44,6 +64,19 @@ const int max_iters = 400;
 const num max_bound = 100;
 
 num viewx = 4, viewy = 4, viewz = 4;
+
+void set_lights() {
+    num ambient[] = { 0.5, 0.5, 0.5, 1.0 };
+    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+
+    num diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+    
+    num position[4];
+    position[0] = viewx;  position[1] = viewy;  position[2] = viewz;  position[3] = 1.0;
+    glLightfv(GL_LIGHT0, GL_POSITION, position);
+}
+
 
 double floatrand() {
     return double(rand()) / double(RAND_MAX);
@@ -60,10 +93,13 @@ void init_sdl() {
     glMatrixMode(GL_MODELVIEW);
     
     glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
 }
 
 void quit() {
@@ -102,7 +138,7 @@ int mandel_order(num d, num e, num f, int limit) {
         num a = ap, b = bp, c = cp;
         
         if (iters % 10 == 0)
-            if (fabs(a*a*a - b*b*b + c*c*c + 3*a*b*c) > max_bound)
+            if (fabs(a*a + b*b + c*c) > max_bound)
                 return iters;
         
 #if defined(X3PLUS1)
@@ -125,6 +161,16 @@ int mandel_order(num d, num e, num f, int limit) {
         ap = 2*a*c + b*b - 2*a*b + d;
         bp = 2*b*c - 2*a*b       + e;
         cp = c*c - 2*a*b + a*a   + f;
+#elif defined(JULIAR)
+        if (iters == 1) a = f;
+        ap = a*a - b*b           + d;
+        bp = 2*a*b               + e;
+        cp = 0;
+#elif defined(JULIARI)
+        if (iters == 1) a = b = f;
+        ap = a*a - b*b           + d;
+        bp = 2*a*b               + e;
+        cp = 0;
 #endif
     }
     return 0;
@@ -155,7 +201,9 @@ int fill_buffer() {
         }
     }
     std::cout << "\n";
-    std::cout << "Done\n";
+    for (int i = 0; i < BUFFERSZ; i++) {
+        set_normals(&insidebuf[i], &outsidebuf[i]);
+    }
 }
 
 int min(int a, int b) {
@@ -177,6 +225,7 @@ void pointselect(Point* in, Point* out) {
     else {
         *out = avg;
     }
+    set_normals(in, out);
 }
 
 void evolve() {
@@ -196,8 +245,10 @@ void draw() {
               0, 1, 0);
     glPointSize(4.0);
     
+    set_lights();
+    glColor3f(1,1,1);
     glVertexPointer(3, GL_FLOAT, sizeof(Point), &outsidebuf[0].x);
-    glColorPointer(3, GL_FLOAT, sizeof(Point), &outsidebuf[0].r);
+    glNormalPointer(GL_FLOAT, sizeof(Point), &outsidebuf[0].nx);
     glDrawArrays(GL_POINTS, 0, outsidepts);
 }
 

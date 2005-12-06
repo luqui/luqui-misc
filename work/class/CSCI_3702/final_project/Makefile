@@ -5,6 +5,9 @@ doc.dvi: doc.tex dog-cat-tree.eps base-tree-example.eps adjoining-substitution.e
 	latex doc.tex
 	latex doc.tex
 
+doc.pdf: doc.dvi
+	dvipdf doc.dvi
+
 %.eps: %.dia
 	dia -e $@ $<
 

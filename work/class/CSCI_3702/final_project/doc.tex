@@ -84,7 +84,9 @@ The parse tree for the derivation in Figure \ref{dog-cat-deriv} can be
 seen in Figure \ref{dog-cat-tree}.
 
 \begin{Figure}
-\epsfig{file=dog-cat-tree.eps,width=3in}
+\begin{center}
+\epsfig{file=dog-cat-tree.eps,height=2in}
+\end{center}
 \caption{The parse tree for the derivation of ``the dog chased the
 cat''}
 \label{dog-cat-tree}
@@ -110,6 +112,7 @@ representation of natural syntax.  Fortunately for them, one had already
 been around for ten years.
 
 \section{Tree-Rewriting Grammars}
+\label{sec-tree-rewriting-grammars}
 
 Context-free grammars were all about rewriting strings to (or from) a
 single start symbol, and to create a parse tree in the process.
@@ -160,7 +163,7 @@ readily provide a way to encode semantic information.
 
 \begin{Figure}
 \begin{center}
-\epsfig{file=base-tree-example.eps,width=3in}
+\epsfig{file=base-tree-example.eps,height=2in}
 \end{center}
 \caption{An example of a base tree for English.  The parenthesized
 letters after NP refer to the case that declined pronouns would take on:
@@ -173,7 +176,7 @@ to the asylum''.}
 
 \begin{Figure}
 \begin{center}
-\epsfig{file=adjoining-substitution.eps,width=5in}
+\epsfig{file=adjoining-substitution.eps,height=2in}
 \end{center}
 \caption{An auxiliary substitution on the base tree shown in Figure
 \ref{base-tree-example}.  The auxiliary tree is on the left, the
@@ -236,7 +239,7 @@ left.  The stars in the auxiliary tree's features mean ``anything'' or
 
 \begin{Figure}
 \begin{center}
-\epsfig{file=tense-features.eps,width=5in}
+\epsfig{file=tense-features.eps,height=2in}
 \end{center}
 \caption{An example use of feature structures.  A base tree is on the
 left, which is not syntactically correct because the \texttt{tense}
@@ -246,6 +249,58 @@ it unify.}
 \label{tense-features}
 \end{Figure}
 
+\section{Child Language Acquisition}
+
+Now that we have the mathematical formalisms behind these various
+classes of languages, we can see how they relate to the human mind.
+What follows is a summary, in the layman's terms established in this
+introduction, of Robert Frank in \cite{Frank-2000}.
+
+Frank points out a natural ordering in children's language acquisition,
+that utterance of sentences of type 1 below precedes by utterance of
+type two, which in turn precedes type three:
+
+\begin{enumerate}
+\item They're taking a vacuum cleaner to wipe and puppy dog's
+running.  (Conjunction)
+\item Tell Iris that I wet my bed. (Complementation)
+\item I'm calling the man who fixes the door.  (Relativization)
+\end{enumerate}
+
+The same sort of ordering applies to children's assignment of correct
+meaning to the following sentences \cite{Bloom-1980}:
+
+\begin{enumerate}
+\item The sheep that kissed the monkey kissed the rabbit.
+\item Cookie Monster tells Grover to jump over the
+fence\footnote{Children who could comprehend the previous sentence would
+act out that Cookie Monster was the one jumping}. 
+\item Cookie Monster touches Grover after jumping over the
+fence\footnote{A similar misunderstanding happened here, where children
+thought that Grover was jumping over the fence.  Admittedly, this
+sentence could be interpreted ambiguously even by adults.}.
+\end{enumerate}
+
+We would like to understand why this ordering occurs.  It had been
+argued previously that children hadn't yet acquired the proper
+grammatical structures, but Frank argues instead that they are not able
+to perform certain types of computations.  Recall the tree substitution
+grammars (TSGs) introduced in Section \ref{sec-tree-rewriting-grammars},
+If you restrict those grammars not to allow recursion, but instead
+simply conjunction, then we can explain the first type of sentences
+acquired in learning.  See Figure \ref{conjunction}.
+
+\begin{Figure}
+\begin{center}
+\epsfig{file=conjunction.eps,height=2in}
+\end{center}
+\caption{A base tree using conjunction rather than recursion.  The plus
+after each symbol means that it can in fact be one or more such symbols
+joined with ``and''.}
+\label{conjunction}
+\end{Figure}
+
+
 \clearpage
 
 \singlespace
@@ -253,6 +308,10 @@ it unify.}
 \bibitem{Abeille-2000} Abeill\'e, Anne and Rambow, Owen.  2000.  Tree
 Adjoining Grammar: An Overview.  \textit{CSLI Lecture Notes no. 107}:
 1--68.
+\bibitem{Bloom-1980} Bloom, Lois, Margaret Lahey, Lois Hood, Karin
+Lifter, and Kathleen Fiess.  1980.  Complex sentences: Acquisition of
+syntactic connectives and the semantics relations they encode.
+\textit{Journal of Child Language 7}: 235--261.
 \bibitem{Frank-2000} Frank, Robert.  2000.  From Regular to Context-Free
 to Mildly Context-Sensitive Systems: The Path of Child Language
 Acquisition.  \textit{CSLI Lecture Notes no. 107}: 101--120.

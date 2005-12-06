@@ -287,8 +287,15 @@ grammatical structures, but Frank argues instead that they are not able
 to perform certain types of computations.  Recall the tree substitution
 grammars (TSGs) introduced in Section \ref{sec-tree-rewriting-grammars},
 If you restrict those grammars not to allow recursion, but instead
-simply conjunction, then we can explain the first type of sentences
-acquired in learning.  See Figure \ref{conjunction}.
+simply conjunction (forming the NTSGs), then we can explain the first
+type of sentences acquired in learning. If the base trees are all
+constructed in the manner of Figure \ref{conjunction}, the
+misunderstandings in comprehension above can be understood as children's
+use of ``that'' as a synonym for ``and'' (which was shown by Bloom et
+al.).  The reader should verify that the sentence ``John has eaten an
+apple and Fred has eaten peaches and a candy bar'' fits into this
+structure, but that ``John was saying he has eaten an apple'' would
+require recursion.
 
 \begin{Figure}
 \begin{center}
@@ -300,6 +307,35 @@ joined with ``and''.}
 \label{conjunction}
 \end{Figure}
 
+Allowing recursion (the TSGs), we arrive at the second type of sentences
+here, but prepositional phrases still cannot be
+handled\footnote{Lexically, that is.  Recall our requirement to
+associate exactly one lexeme with each tree.}.  Finally, allowing
+adjunctions (the TAGs), we can generate an adult language.  Frank's
+showed that the NTSGs are equivalent in generative capacity to the
+regular languages.  Recall that TSGs are equivalent to the context-free
+languages and that TAGs form a subset of the context-sensitive language.
+Thus child language acquisition can be modeled by Chomsky's language
+hierarchy!
+
+This is quite an incredible finding.  It suggests that there is some
+mathematical machinery being developed in a child's brain as it matures,
+rather than just acquiring new vocabulary and word uses.  This finding
+forms yet another argument for the pervasive lexicon; that is, if we
+drop the requirement to lexicalize the grammar, then we can represent
+most sentences as context-free, and many as regular, and there would be
+no such necessary ordering.
+
+But how, then, do we explain the fact that Figure \ref{conjunction} is
+not lexicalized?  Elman \cite{Elman-1990} explains that as children are
+learning, they treat combinations of words as single lexical units.
+That is, ``has-eaten'' and ``ate'' are learned synonyms rather than
+inflections.
+
+However, if such computational development accurately represents our
+process of learning language, it seems that our ability to utter and
+comprehend certain types of sentences would be quantized; all sentences
+of a certain type would emerge simultaneously.
 
 \clearpage
 
@@ -312,6 +348,8 @@ Adjoining Grammar: An Overview.  \textit{CSLI Lecture Notes no. 107}:
 Lifter, and Kathleen Fiess.  1980.  Complex sentences: Acquisition of
 syntactic connectives and the semantics relations they encode.
 \textit{Journal of Child Language 7}: 235--261.
+\bibitem{Elman-1990} Elman, Jeffrey L.  1990.  Finding Structure in
+Time.  \textit{Cognitive Science 14}: 179--211.
 \bibitem{Frank-2000} Frank, Robert.  2000.  From Regular to Context-Free
 to Mildly Context-Sensitive Systems: The Path of Child Language
 Acquisition.  \textit{CSLI Lecture Notes no. 107}: 101--120.

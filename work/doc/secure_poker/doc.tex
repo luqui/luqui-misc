@@ -1,0 +1,72 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\newcommand{\XXX}[1]{\textbf{XXX: #1}}
+\newcommand{\carddom}{\mathbb{N}_{52}}
+
+\title{Secure Cryptographic Poker Protocol}
+\author{Luke Palmer}
+
+\begin{document}
+\maketitle
+
+There is significant suspicion, though no proof, of cheating in certain
+online card rooms.  Not of individual players cheating---the sites try
+to prevent that as much as possible---but of the card rooms themselves
+cheating.  For instance, if a card room were to fix the hands such that
+more straights and flushes are seen, then it increases the aggresive
+action in the game and makes bigger pots to rake.  Not to mention, it
+makes the game more exciting and attracts many players, as well as
+knocking players out on ``bullshit'', emotionally encouraging them to
+buy back in.
+
+\XXX{Introduction and goals}
+
+\section{Sketch of the Protocol}
+
+The following pieces need to be defined before this protocol can be used
+in practice.  Let $N$ be the number of players.  We use the term
+\textit{publish} to mean ``send to all players''.  We use the notation
+$\mathbf{x}$ to mean the vector $\langle x_i \rangle$ ranging over each
+valid $i$.
+
+\begin{itemize}
+\item A cryptographic hash function to a set $\mathbb{H}$, $H:
+\mathcal{P}(\carddom) \mapsto \mathbb{H}$.  It should be  ``very hard''
+to determine an $x$ that will produce a given $H(x)$.  Additionally, it
+should be hard to find $x$ and $y$ such that $H(x) = H(y)$.
+\item A combinator function $C: \carddom^N \mapsto \carddom$ such that
+if $x_i \not= y_i$ for every $i$, then $C(\mathbf{x}) \not=
+C(\mathbf{y})$.  The combinator function should be a one-to-one
+correspondence in each of the components of the vector; that is, if
+$C(\mathbf{x}) = C(\mathbf{y})$ and there is some $j$ for which $x_j
+\not= y_j$, then there must be some $k \not= j$ with $x_k \not= y_k$ as
+well.
+\end{itemize}
+
+Choose one of the players to \textit{host} the hand.  It makes sense to
+have the current dealer do this, but any player will do.  This player
+will be responsible for generating unique random numbers in $\carddom$.
+At the beginning of the hand, each player $i$ chooses a permutation
+$P_i: \carddom \mapsto \carddom$ and publishes $H(P_i)$.  
+
+To deal a community card, the host generates a unique random number $n$.
+Then each player $i$ publishes his $P_i(n)$.  Each player recovers
+the community card by calculating $C(\textbf{P}(n))$.
+
+Dealing a hole card to a player $p$ proceeds in a similar way.  The host
+generates a unique random number $n$.  Then each player $i$ calcuates
+$P_i(n)$, and they all publish it \textit{except} for $p$.  $p$ can then
+find the value of his hole card by computing $C(\textbf{P}(n))$.
+
+The game proceeds as normal, dealing hole and community cards as they
+are needed.  If there is a showdown at the end, each player $i$ who is
+still in the hand publishes his $P_i$ and his hole cards.  All players
+check that the published $H(P_i)$ was correct, and that his hole cards
+and all published $P_i(n)$s were consistent with that permutation.  If
+there is an inconsistency, then that player has cheated and appropriate
+action should be taken.  If there is no showdown, then there is no
+consistency checking and the hand is assumed good.
+
+\end{document}

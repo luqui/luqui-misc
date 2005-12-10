@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+
+use Commands::Guarded;
+
+my $clean = $ARGV[0] eq 'clean';
+
+sub run {
+    my ($cmd) = @_;
+    print "$cmd\n";
+    system $cmd and die "$!\n";
+}
+
+for my $gz (glob '*.raw.gz') {
+    (my $raw = $gz) =~ s/\.gz$//;
+    (my $base = $raw) =~ s/\.raw$//;
+    my $entropy = "$base.entropy";
+    my $mutual  = "$base.mutual";
+
+    if ($clean) {
+        step clean =>
+            ensure { !-e $raw && !-e $entropy && !-e $mutual }
+            using { run "rm -f $raw $entropy $mutual" };
+    }
+    else {
+        step unzip =>
+            ensure { -e $raw && -M $raw <= -M $gz }
+            using { run "gunzip -c $gz > $raw" };
+
+        step entropy => 
+            ensure { -e $entropy && -M $entropy <= -M $raw }
+            using { run qq{perl -a -nle 'print "\$F[0]\\t\$F[1]"' $raw > $entropy} };
+
+        step mutual => 
+            ensure { -e $mutual && -M $mutual <= -M $raw }
+            using { run qq{perl -a -nle 'print "\$F[0]\\t\$F[2]"' $raw > $mutual} };
+    }
+}

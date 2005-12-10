@@ -3,7 +3,7 @@
 module Main where
 
 import System
-import System.Environment
+import System.IO
 import System.Random
 import Control.Monad.State
 import Data.Array
@@ -26,6 +26,8 @@ printStats circle ruledesc = do
 
 main :: IO ()
 main = do
+    hSetBuffering stdout NoBuffering
+
     [radStr, lenStr] <- getArgs
     let rad       = read radStr
         len       = read lenStr
@@ -38,6 +40,7 @@ main = do
                let (perm, gen') = runState (permute [0..ruleBits-1]) gen
                setStdGen gen'
                return perm
-
+    
     let path = binaryPath ruleBits perm
+
     mapM_ (printStats circle) path

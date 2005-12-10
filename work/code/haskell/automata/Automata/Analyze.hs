@@ -9,6 +9,11 @@ import Control.Monad.State
 
 import Automata.Simulate
 
+
+-- Just a convenience function to divide two integers to get a fractional
+a ./ b = fromIntegral a / fromIntegral b
+
+
 -- A little bit of mathematical hackery here. Since x ln x goes to 
 -- zero when x does, we pretend that x ln y goes to zero when x does,
 -- regardless of y.
@@ -88,7 +93,7 @@ makeDist2 table =
     populateArray [] = listArray ((0,0), (sizex-1, sizey-1)) (repeat 0)
     populateArray ((key,amt):rest) =
         let prev = populateArray rest in
-        prev // [ (key, (prev ! key) + fromIntegral amt / fromIntegral total) ]
+        prev // [ (key, (prev ! key) + amt ./ total) ]
 
 
 automatonEntropy :: (Ord a, Topology c, Configuration c)

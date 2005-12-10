@@ -3,14 +3,26 @@
 module Main where
 
 import System
+import System.Environment
+import System.Random
 import Control.Monad.State
+import Data.Array
 import Automata.Simulate
 import qualified Automata.Simulate.Circle as Circle
 import Automata.Analyze
 
 randomBinList :: Int -> IO [Int]
 randomBinList len =
-    mapM (randomRIO (0,1)) [1..len]
+    mapM (const $ randomRIO (0,1)) [1..len]
+
+printStats :: (Topology c, Configuration c) 
+           => c Int -> Array Int Int -> IO ()
+printStats circle ruledesc = do
+    let rule = binaryRule ruledesc
+        entropy' = automatonEntropy rule circle 1000           -- XXX number of iterations
+        mi       = automatonSpatialMI rule circle 1000 (0,10)  -- XXX separation distance
+        lambda   = sum (elems ruledesc) ./ length (elems ruledesc)
+    putStrLn $ show lambda ++ "\t" ++ show entropy' ++ "\t" ++ show mi
 
 main :: IO ()
 main = do
@@ -20,11 +32,12 @@ main = do
         ruleBits  = 2^(2*rad + 1)
 
     init <- randomBinList len
-    let circle = Circle.makeCircle neighbors init
+    let circle = Circle.makeCircle rad init
 
     perm <- do gen <- getStdGen
-               (perms, gen') = runState (permute [0..ruleBits-1])
+               let (perm, gen') = runState (permute [0..ruleBits-1]) gen
                setStdGen gen'
-               return perms
-               
+               return perm
+
     let path = binaryPath ruleBits perm
+    mapM_ (printStats circle) path

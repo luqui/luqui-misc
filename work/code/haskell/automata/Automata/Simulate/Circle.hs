@@ -6,6 +6,8 @@ import qualified Automata.Simulate as Sim
 import Data.Array
 import Data.List
 
+-- Defines a circular linear topology.
+
 data Circle a =
     Circle {
         cells  :: Array Int a,

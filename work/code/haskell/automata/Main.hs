@@ -24,6 +24,9 @@ printStats circle ruledesc = do
         lambda   = sum (elems ruledesc) ./ length (elems ruledesc)
     putStrLn $ show lambda ++ "\t" ++ show entropy' ++ "\t" ++ show mi
 
+-- Main program.  Take as command-line argumens the rule radius
+-- and the circle's size.  Emit three columns: lambda, entropy,
+-- mutual information.
 main :: IO ()
 main = do
     hSetBuffering stdout NoBuffering
@@ -37,7 +40,7 @@ main = do
     let circle = Circle.makeCircle rad init
 
     perm <- do gen <- getStdGen
-               let (perm, gen') = runState (permute [0..ruleBits-1]) gen
+               let (perm, gen') = runState (permute [1..ruleBits-1]) gen
                setStdGen gen'
                return perm
     

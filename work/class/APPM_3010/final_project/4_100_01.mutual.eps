@@ -1,0 +1,1182 @@
+%%!PS-Adobe-3.0 EPSF-3.0
+%%Creator: gnuplot 4.0 patchlevel 0
+%%CreationDate: Sat Dec 10 08:05:43 2005
+%%BoundingBox: 72 72 432 288
+%%EndComments
+/Gpdict 100 dict def
+Gpdict begin
+/Color false def
+/Dashed true def
+/Gplinewidth 20.000 def
+/hpt_ 100.000 def
+/vpt_ 100.000 def
+ /hpt hpt_ def  
+ /vpt vpt_ def  
+ /Gppointsize_ 1 def 
+ /Gplinewidth_ 1 def 
+  
+ /ArrowDict 25 dict def  
+  
+ /M /moveto load def  
+ /L /lineto load def  
+ /R /rmoveto load def  
+ /V /rlineto load def  
+ /N {newpath moveto} bind def  
+ /f {rlineto fill} bind def  
+ /ED { exch def} bind def  
+  
+ /Atan {/atan load stopped {pop pop 0} if } def  
+ /Div {dup 0 eq { pop } { div } ifelse } def  
+ /Pyth {dup mul exch dup mul add sqrt} def  
+  
+ %Sizes  
+ /Gpsetlinewidth  
+ { 
+   dup 
+ %  /Gplinewidth_ ED %save 
+   Gplinewidth mul setlinewidth 
+ } def  
+  
+ /Gpsetpointsize   
+ {  
+   dup  
+   /Gppointsize_ ED %save 
+   dup  
+   vpt_ mul /vpt ED 
+   hpt_ mul /hpt ED  
+ } def  
+      
+ %Color  
+ /SetHsbColor { Color {sethsbcolor} {pop pop pop} ifelse } def  
+ /SetCmykColor { Color {setcmykcolor} {pop pop pop pop} ifelse } def  
+ /SimpleSetColor {6 div 1 1 SetHsbColor} def  
+ /Black {0 0 0 0 SetCmykColor} def  
+ /Red {0 SimpleSetColor} def  
+ /Blue {1 1 0 0 SetCmykColor} def  
+ /Cyan {1 0 0 0 SetCmykColor} def  
+ /Magenta {0 1 0 0 SetCmykColor} def 
+  
+ %Stroking  
+ /PathLength@ % z = z + sqrt{(x-xlast)^2 + (y-ylast)^2}  
+  {  
+    /z   
+    z  
+    y ylast sub  
+    x xlast sub  
+    Pyth  
+    add  
+    def   
+    /ylast y def  
+    /xlast x def  
+  } def  
+      
+  /PathLength  
+  {  
+    flattenpath  
+    /z 0 def  
+    { %move  
+      /ystart ED  
+      /xstart ED  
+      /xlast xstart def  
+      /ylast ystart def  
+    }  
+    { %line  
+      /y ED  
+      /x ED  
+      PathLength@  
+    }  
+    { %curve  
+    }  
+    { %close  
+      /x xstart def  
+      /y ystart def  
+      PathLength@   
+    }  
+    /pathforall load  
+    stopped {pop pop pop pop} if  
+    z  
+  } def  
+    
+ %dotsep DotLine  
+ /DotLine   
+ {  
+   PathLength /b ED   
+   /z ED   
+   /y currentlinewidth def   
+   /z y z add def   
+   [ 0 b b z Div round Div dup 0 le { pop 1 } if] 0 setdash   
+   1 setlinecap  
+ } def  
+  
+ /DashLine   
+  {  
+    PathLength /b ED   
+    /x ED   
+    /y ED   
+    /z y x add def   
+    b y sub z Div round z mul y add b exch Div 
+    dup  
+    y mul /y ED   
+    x mul /x ED   
+    x 0 gt y 0 gt and   
+    { [ y x ] 0 }  
+    { [ 1 0 ] 0 }  
+    ifelse  
+    setdash  
+  } def  
+  
+ /DashLineTwo 
+  {  
+    PathLength /b ED   
+    /u ED 
+    /v ED 
+    /x ED   
+    /y ED 
+    /z y x add u add v add def   
+    b y sub z Div round z mul y add b exch Div 
+    dup  
+    y mul /y ED   
+    x mul /x ED   
+    x 0 gt y 0 gt and   
+    { [ y x v u] 0 }  
+    { [ 1 0 ] 0 }  
+    ifelse  
+    setdash  
+  } def  
+      
+  
+ /DotLineStroke   
+ {  
+   gsave  
+     Dashed {currentlinewidth 2 mul DotLine} if  
+     stroke  
+   grestore  
+ } def  
+    
+ /SolidLineStroke  
+ {  
+   gsave  
+     [] 0 setdash  
+     stroke  
+   grestore  
+ } def  
+    
+ /DashLineStroke  
+ {  
+   gsave   
+     Dashed {Gplinewidth 8 mul Gplinewidth 5 mul DashLine} if  
+     stroke  
+   grestore  
+ } def  
+   
+ /DashDotLineStroke  
+ {  
+   gsave   
+     Dashed {Gplinewidth 8 mul Gplinewidth 5 mul 0 Gplinewidth 5 mul DashLineTwo} if  
+     stroke  
+   grestore  
+ } def  
+    
+ /DashShortLineStroke  
+ {  
+   gsave   
+     Dashed {Gplinewidth 4 mul dup DashLine} if  
+     stroke  
+   grestore  
+ } def  
+    
+ /ArrowHead  
+ {   
+   currentlinewidth mul add dup 2 div /w ED  
+   mul dup /h ED  
+   mul /a ED   
+   w neg h moveto   
+   0 0 L   
+   w h L   
+   w neg a neg rlineto   
+   gsave fill grestore   
+ } def  
+    
+  %/DrawArrowHead {1 dup scale 0.2 1.4 50 3 ArrowHead} def  
+  %%%%%  
+  %inset length dim num  
+  %arrowwidth = dim + num*linewidth  
+  %arrowlength = length*arrowwidth  
+  %arrowinset = width * inset  
+    
+  /DrawArrowHead {0.2 1.4 Gplinewidth 3 mul 4 ArrowHead} def  
+    
+  /Arrow  
+  {  
+    currentpoint  
+    4 2 roll  
+    ArrowDict  
+    begin  
+      /@mtrx matrix currentmatrix def  
+      gsave  
+        2 copy translate  
+        2 index sub neg exch  
+        3 index sub exch Atan  
+        rotate  
+        newpath  
+        DrawArrowHead  
+        @mtrx setmatrix  
+        currentpoint  
+      grestore  
+    end %ArrowDicht  
+    lineto  
+    Gpstroke  
+  } def  
+    
+  %axis  
+  /LTa   
+  {  
+    Gpstroke      
+    newpath  
+    0 setgray  
+    /Gpstroke {DotLineStroke newpath} def  
+  } def  
+    
+  %border  
+  /LTb  
+  {  
+    Gpstroke      
+    newpath  
+    0 setgray  
+    /Gpstroke {SolidLineStroke newpath} def  
+  } def  
+    
+  /LT0  
+  {  
+    Gpstroke      
+    newpath  
+    Red  
+    /Gpstroke {SolidLineStroke newpath} def  
+  } def  
+    
+  /LT1  
+  {  
+    Gpstroke      
+    newpath  
+    Blue  
+    /Gpstroke {DashLineStroke newpath} def  
+  } def  
+    
+  /LT2   
+  {  
+    Gpstroke  
+    newpath  
+    Cyan  
+    /Gpstroke {DashShortLineStroke newpath} def  
+  } def  
+  
+  /LT3   
+  {  
+    Gpstroke  
+    newpath  
+    Magenta  
+    /Gpstroke {DashDotLineStroke newpath} def  
+  } def  
+    
+  /Pnt  
+  {  
+    gsave   
+      [] 0 setdash  
+      1 setlinecap   
+      Gplinewidth Gppointsize_ mul setlinewidth 
+      M  
+      0 0 V  
+      stroke  
+    grestore  
+  } def  
+    
+  /DiaPath  
+  {  
+      [] 0 setdash  
+      Gplinewidth setlinewidth  
+      2 copy   
+      newpath  
+      vpt add moveto  
+      hpt neg vpt neg rlineto   
+      hpt vpt neg rlineto  
+      hpt vpt rlineto   
+      hpt neg vpt rlineto  
+      closepath  
+  } def  
+    
+  /Dia   
+  {   
+    gsave  
+      DiaPath  
+      stroke  
+    grestore  
+  } def  
+    
+  /DaF  
+  {  
+    gsave  
+      DiaPath  
+      fill  
+    grestore  
+  } def  
+    
+  /Crc  
+  {  
+    gsave  
+      [] 0 setdash  
+      Gplinewidth setlinewidth  
+      newpath  
+      vpt 0.85 mul 0 360 arc  
+      closepath  
+      stroke  
+    grestore  
+  } def  
+        
+    
+  /Crs  
+  {  
+    gsave  
+      [] 0 setdash  
+      Gplinewidth setlinewidth  
+      0 setlinecap  
+      newpath  
+      vpt sub  
+      moveto  
+      0 vpt 2 mul rlineto  
+      hpt vpt neg rmoveto  
+      hpt 2 mul neg 0 rlineto  
+      stroke  
+    grestore  
+  } def  
+    
+  /CrX  
+  {  
+  gsave  
+   translate  
+   45 rotate  
+   0 0 Crs  
+  grestore  
+  } def  
+    
+  /CcF  
+  {  
+    gsave  
+      [] 0 setdash  
+      Gplinewidth setlinewidth  
+      newpath  
+      vpt 0.85 mul 0 360 arc  
+      closepath  
+      fill  
+    grestore  
+  } def  
+    
+  /Box  
+  {  
+     gsave  
+       translate  
+       45 rotate  
+       0 0 DiaPath  
+       stroke  
+     grestore  
+  } def  
+    
+  /BxF  
+  {  
+     gsave  
+       translate  
+       45 rotate  
+       0 0 DiaPath  
+       fill  
+     grestore  
+  } def  
+    
+  /Gpstroke {stroke} def  
+  1 setlinecap  
+  1 setlinejoin 
+ %
+ % PostScript level 2 pattern fill definitions
+ % Ethan A Merritt April 2003
+ %
+ % Level-1 compatible emulation for rectfill
+  /RF { gsave newpath 4 -2 roll moveto dup 0 exch rlineto
+    exch 0 rlineto neg 0 exch rlineto closepath fill grestore
+  } bind def
+  /BoxFill { gsave RF fill grestore } def 
+  /Blank { 0 0 M 0 8 L 8 8 L 8 0 L 0 0 L
+           1.0 setgray fill 0.0 setgray 0.5 setlinewidth } bind def
+  /Tile8x8 { /PaintType 1 def /PatternType 1 def /TilingType 1 def
+             /BBox [0 0 8 8] def /XStep 8 def /YStep 8 def
+  } bind def
+  /P1D 12 dict def P1D begin
+      Tile8x8 /PaintProc { Blank 0 0 M 8 8 L 0 8 M 8 0 L stroke } def
+  end P1D matrix makepattern
+  /Pattern1 exch def
+  /P2D 12 dict def P2D begin
+      Tile8x8 /PaintProc { Blank 0 0 M 8 8 L 0 8 M 8 0 L stroke
+                           0 4 M 4 8 L 8 4 L 4 0 L 0 4 L stroke } def
+  end P2D matrix makepattern
+  /Pattern2 exch def
+  /P3D 12 dict def P3D begin
+      Tile8x8 /PaintProc { Blank 0 0 M 0 8 L
+                          8 8 L 8 0 L 0 0 L fill } def
+  end P3D matrix makepattern
+  /Pattern3 exch def
+  /P4D 12 dict def P4D begin
+      Tile8x8 /PaintProc { Blank -4 8 M 8 -4 L
+                          0 12 M 12 0 L stroke } def
+  end P4D matrix makepattern
+  /Pattern4 exch def
+  /P5D 12 dict def P5D begin
+      Tile8x8 /PaintProc { Blank -4 0 M 8 12 L
+                          0 -4 M 12 8 L stroke } def
+  end P5D matrix makepattern
+  /Pattern5 exch def
+  /P6D 12 dict def P6D begin
+      Tile8x8 /PaintProc { Blank -2 8 M 4 -4 L
+                          0 12 M 8 -4 L 4 12 M 10 0 L stroke } def
+  end P6D matrix makepattern
+  /Pattern6 exch def
+  /P7D 12 dict def P7D begin
+      Tile8x8 /PaintProc { Blank -2 0 M 4 12 L
+                          0 -4 M 8 12 L 4 -4 M 10 8 L stroke } def
+  end P7D matrix makepattern
+  /Pattern7 exch def
+  /P8D 12 dict def P8D begin
+      Tile8x8 /PaintProc { Blank 8 -2 M -4 4 L
+                          12 0 M -4 8 L 12 4 M 0 10 L stroke } def
+  end P8D matrix makepattern
+  /Pattern8 exch def
+  /P9D 12 dict def P9D begin
+      Tile8x8 /PaintProc { Blank 0 -2 M 12 4 L
+                          -4 0 M 12 8 L -4 4 M 8 10 L stroke } def
+  end P9D matrix makepattern
+  /Pattern9 exch def
+ 
+end
+%%%%EndProlog
+Gpdict begin
+gsave
+72 72 translate
+0.0200 0.0200 scale
+0 setgray
+newpath
+1.000 Gpsetpointsize
+1.000 Gpsetlinewidth
+1.000 Gpsetlinewidth
+LTb
+2200 1100 M
+300 0 V
+Gpstroke
+17175 1100 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 2015 M
+300 0 V
+Gpstroke
+17175 2015 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 2930 M
+300 0 V
+Gpstroke
+17175 2930 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 3845 M
+300 0 V
+Gpstroke
+17175 3845 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 4760 M
+300 0 V
+Gpstroke
+17175 4760 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 5675 M
+300 0 V
+Gpstroke
+17175 5675 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 6590 M
+300 0 V
+Gpstroke
+17175 6590 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 7505 M
+300 0 V
+Gpstroke
+17175 7505 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 8420 M
+300 0 V
+Gpstroke
+17175 8420 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 9335 M
+300 0 V
+Gpstroke
+17175 9335 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 10250 M
+300 0 V
+Gpstroke
+17175 10250 M
+-300 0 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+2200 1100 M
+0 300 V
+Gpstroke
+2200 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+3698 1100 M
+0 300 V
+Gpstroke
+3698 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+5195 1100 M
+0 300 V
+Gpstroke
+5195 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+6693 1100 M
+0 300 V
+Gpstroke
+6693 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+8190 1100 M
+0 300 V
+Gpstroke
+8190 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+9688 1100 M
+0 300 V
+Gpstroke
+9688 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+11185 1100 M
+0 300 V
+Gpstroke
+11185 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+12682 1100 M
+0 300 V
+Gpstroke
+12682 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+14180 1100 M
+0 300 V
+Gpstroke
+14180 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+15677 1100 M
+0 300 V
+Gpstroke
+15677 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+17175 1100 M
+0 300 V
+Gpstroke
+17175 10250 M
+0 -300 V
+Gpstroke
+1.000 Gpsetlinewidth
+LTb
+1.000 Gpsetlinewidth
+LTb
+2200 1100 M
+14975 0 V
+0 9150 V
+-14975 0 V
+0 -9150 V
+1.000 Gpsetpointsize
+1.000 Gpsetpointsize
+Gpstroke
+1.000 Gpsetlinewidth
+LT0
+LTb
+LT0
+17146 1100 Dia
+17117 1100 Dia
+17087 1100 Dia
+17058 1100 Dia
+17029 1100 Dia
+17000 1100 Dia
+16970 1100 Dia
+16941 1100 Dia
+16912 1100 Dia
+16883 1100 Dia
+16853 1100 Dia
+16824 1100 Dia
+16795 1100 Dia
+16766 1100 Dia
+16736 1100 Dia
+16707 1100 Dia
+16678 1100 Dia
+16649 1100 Dia
+16619 1100 Dia
+16590 1100 Dia
+16561 1100 Dia
+16532 1100 Dia
+16502 1100 Dia
+16473 1100 Dia
+16444 1100 Dia
+16415 1100 Dia
+16385 1100 Dia
+16356 1100 Dia
+16327 1100 Dia
+16298 1100 Dia
+16268 1100 Dia
+16239 1100 Dia
+16210 1100 Dia
+16181 1100 Dia
+16151 1100 Dia
+16122 1100 Dia
+16093 1100 Dia
+16064 1100 Dia
+16034 1100 Dia
+16005 1100 Dia
+15976 1100 Dia
+15947 1100 Dia
+15917 1100 Dia
+15888 1100 Dia
+15859 1100 Dia
+15830 1100 Dia
+15800 1100 Dia
+15771 1100 Dia
+15742 1100 Dia
+15713 1100 Dia
+15683 1100 Dia
+15654 1100 Dia
+15625 1100 Dia
+15596 1100 Dia
+15566 1100 Dia
+15537 1100 Dia
+15508 1100 Dia
+15479 1100 Dia
+15449 1100 Dia
+15420 1100 Dia
+15391 1100 Dia
+15362 1100 Dia
+15332 1100 Dia
+15303 1100 Dia
+15274 1100 Dia
+15245 1100 Dia
+15215 1100 Dia
+15186 1100 Dia
+15157 1100 Dia
+15128 2171 Dia
+15098 2171 Dia
+15069 2171 Dia
+15040 2171 Dia
+15011 1783 Dia
+14981 1783 Dia
+14952 1783 Dia
+14923 1346 Dia
+14894 1346 Dia
+14864 1346 Dia
+14835 1346 Dia
+14806 1346 Dia
+14777 1346 Dia
+14747 1346 Dia
+14718 1457 Dia
+14689 1590 Dia
+14660 1590 Dia
+14630 2976 Dia
+14601 2976 Dia
+14572 2976 Dia
+14543 2976 Dia
+14513 2976 Dia
+14484 2976 Dia
+14455 2976 Dia
+14426 2976 Dia
+14396 2976 Dia
+14367 2976 Dia
+14338 2976 Dia
+14309 2976 Dia
+14279 2976 Dia
+14250 2960 Dia
+14221 2960 Dia
+14192 2960 Dia
+14162 2960 Dia
+14133 2960 Dia
+14104 1620 Dia
+14075 1620 Dia
+14045 1620 Dia
+14016 1620 Dia
+13987 1620 Dia
+13958 1631 Dia
+13928 1631 Dia
+13899 1631 Dia
+13870 1631 Dia
+13841 1183 Dia
+13811 1111 Dia
+13782 1111 Dia
+13753 1208 Dia
+13724 1136 Dia
+13694 1136 Dia
+13665 1106 Dia
+13636 1106 Dia
+13607 1130 Dia
+13577 1149 Dia
+13548 1149 Dia
+13519 1149 Dia
+13490 1103 Dia
+13460 1113 Dia
+13431 1113 Dia
+13402 1103 Dia
+13373 1137 Dia
+13344 1137 Dia
+13314 1107 Dia
+13285 1102 Dia
+13256 1101 Dia
+13227 1115 Dia
+13197 1512 Dia
+13168 1100 Dia
+13139 1170 Dia
+13110 1104 Dia
+13080 1128 Dia
+13051 1101 Dia
+13022 1105 Dia
+12993 1119 Dia
+12963 1197 Dia
+12934 1104 Dia
+12905 1104 Dia
+12876 1156 Dia
+12846 1220 Dia
+12817 1120 Dia
+12788 1120 Dia
+12759 1163 Dia
+12729 1275 Dia
+12700 1330 Dia
+12671 1106 Dia
+12642 1185 Dia
+12612 1108 Dia
+12583 1115 Dia
+12554 1131 Dia
+12525 1106 Dia
+12495 1100 Dia
+12466 1182 Dia
+12437 1228 Dia
+12408 1193 Dia
+12378 1102 Dia
+12349 1128 Dia
+12320 1211 Dia
+12291 1107 Dia
+12261 1101 Dia
+12232 1102 Dia
+12203 1125 Dia
+12174 1101 Dia
+12144 1101 Dia
+12115 1136 Dia
+12086 1107 Dia
+12057 1133 Dia
+12027 1139 Dia
+11998 1101 Dia
+11969 1222 Dia
+11940 1104 Dia
+11910 1108 Dia
+11881 1104 Dia
+11852 1107 Dia
+11823 1101 Dia
+11793 1122 Dia
+11764 1107 Dia
+11735 1247 Dia
+11706 1202 Dia
+11676 1291 Dia
+11647 1102 Dia
+11618 1145 Dia
+11589 1107 Dia
+11559 1104 Dia
+11530 1156 Dia
+11501 1170 Dia
+11472 1105 Dia
+11442 1116 Dia
+11413 1107 Dia
+11384 1101 Dia
+11355 1101 Dia
+11325 1131 Dia
+11296 1117 Dia
+11267 1100 Dia
+11238 1127 Dia
+11208 1107 Dia
+11179 1155 Dia
+11150 1103 Dia
+11121 1151 Dia
+11091 1110 Dia
+11062 1192 Dia
+11033 1206 Dia
+11004 1218 Dia
+10974 1101 Dia
+10945 1156 Dia
+10916 1161 Dia
+10887 1103 Dia
+10857 1251 Dia
+10828 1102 Dia
+10799 1102 Dia
+10770 1234 Dia
+10740 1116 Dia
+10711 1185 Dia
+10682 1101 Dia
+10653 1108 Dia
+10623 1110 Dia
+10594 1108 Dia
+10565 1137 Dia
+10536 1124 Dia
+10506 1394 Dia
+10477 1169 Dia
+10448 1100 Dia
+10419 1130 Dia
+10389 1146 Dia
+10360 1125 Dia
+10331 1103 Dia
+10302 1103 Dia
+10272 1105 Dia
+10243 1111 Dia
+10214 1168 Dia
+10185 1106 Dia
+10155 1162 Dia
+10126 1100 Dia
+10097 1138 Dia
+10068 1108 Dia
+10038 1102 Dia
+10009 1171 Dia
+9980 1113 Dia
+9951 1103 Dia
+9921 1108 Dia
+9892 1103 Dia
+9863 1129 Dia
+9834 1103 Dia
+9804 1250 Dia
+9775 1109 Dia
+9746 1100 Dia
+9717 1115 Dia
+9688 1103 Dia
+9658 1147 Dia
+9629 1189 Dia
+9600 1100 Dia
+9571 1104 Dia
+9541 1195 Dia
+9512 1103 Dia
+9483 1113 Dia
+9454 1163 Dia
+9424 1114 Dia
+9395 1124 Dia
+9366 1269 Dia
+9337 1174 Dia
+9307 1131 Dia
+9278 1146 Dia
+9249 1113 Dia
+9220 1161 Dia
+9190 1121 Dia
+9161 1117 Dia
+9132 1108 Dia
+9103 1100 Dia
+9073 1100 Dia
+9044 1116 Dia
+9015 1104 Dia
+8986 1111 Dia
+8956 1107 Dia
+8927 1129 Dia
+8898 1107 Dia
+8869 1147 Dia
+8839 1103 Dia
+8810 1108 Dia
+8781 1106 Dia
+8752 1100 Dia
+8722 1121 Dia
+8693 1120 Dia
+8664 1153 Dia
+8635 1117 Dia
+8605 1113 Dia
+8576 1173 Dia
+8547 1312 Dia
+8518 1343 Dia
+8488 1160 Dia
+8459 1242 Dia
+8430 1100 Dia
+8401 1102 Dia
+8371 1151 Dia
+8342 1102 Dia
+8313 1102 Dia
+8284 1342 Dia
+8254 1100 Dia
+8225 1100 Dia
+8196 1133 Dia
+8167 1197 Dia
+8137 1183 Dia
+8108 1152 Dia
+8079 1192 Dia
+8050 1143 Dia
+8020 1152 Dia
+7991 1106 Dia
+7962 1115 Dia
+7933 1106 Dia
+7903 1113 Dia
+7874 1334 Dia
+7845 1103 Dia
+7816 1100 Dia
+7786 1100 Dia
+7757 1108 Dia
+7728 1109 Dia
+7699 1376 Dia
+7669 1294 Dia
+7640 1117 Dia
+7611 1145 Dia
+7582 1112 Dia
+7552 1106 Dia
+7523 1119 Dia
+7494 1124 Dia
+7465 1106 Dia
+7435 1100 Dia
+7406 1114 Dia
+7377 1158 Dia
+7348 1117 Dia
+7318 1144 Dia
+7289 1101 Dia
+7260 1270 Dia
+7231 1107 Dia
+7201 1106 Dia
+7172 1107 Dia
+7143 1100 Dia
+7114 1105 Dia
+7084 1109 Dia
+7055 1103 Dia
+7026 1103 Dia
+6997 1121 Dia
+6967 1101 Dia
+6938 1101 Dia
+6909 1117 Dia
+6880 1107 Dia
+6850 1112 Dia
+6821 1158 Dia
+6792 1121 Dia
+6763 1104 Dia
+6733 1103 Dia
+6704 1113 Dia
+6675 1145 Dia
+6646 1144 Dia
+6616 1104 Dia
+6587 1118 Dia
+6558 1106 Dia
+6529 1162 Dia
+6499 1100 Dia
+6470 1115 Dia
+6441 1146 Dia
+6412 1171 Dia
+6382 1171 Dia
+6353 1164 Dia
+6324 1126 Dia
+6295 1132 Dia
+6265 1133 Dia
+6236 1116 Dia
+6207 1102 Dia
+6178 1102 Dia
+6148 1109 Dia
+6119 1106 Dia
+6090 1189 Dia
+6061 1101 Dia
+6031 1366 Dia
+6002 1366 Dia
+5973 1100 Dia
+5944 1101 Dia
+5915 1105 Dia
+5885 1226 Dia
+5856 1107 Dia
+5827 1143 Dia
+5798 1104 Dia
+5768 1140 Dia
+5739 1100 Dia
+5710 1101 Dia
+5681 1107 Dia
+5651 1107 Dia
+5622 1116 Dia
+5593 1252 Dia
+5564 1384 Dia
+5534 1384 Dia
+5505 1195 Dia
+5476 1195 Dia
+5447 1195 Dia
+5417 1101 Dia
+5388 1101 Dia
+5359 1101 Dia
+5330 1136 Dia
+5300 1129 Dia
+5271 1106 Dia
+5242 1106 Dia
+5213 1146 Dia
+5183 1146 Dia
+5154 1146 Dia
+5125 1366 Dia
+5096 1100 Dia
+5066 1100 Dia
+5037 1100 Dia
+5008 1123 Dia
+4979 1123 Dia
+4949 1138 Dia
+4920 1138 Dia
+4891 1138 Dia
+4862 1138 Dia
+4832 1138 Dia
+4803 1138 Dia
+4774 1192 Dia
+4745 1192 Dia
+4715 1135 Dia
+4686 1135 Dia
+4657 1135 Dia
+4628 1122 Dia
+4598 1177 Dia
+4569 1177 Dia
+4540 1109 Dia
+4511 1107 Dia
+4481 1227 Dia
+4452 1312 Dia
+4423 1312 Dia
+4394 1312 Dia
+4364 1203 Dia
+4335 3263 Dia
+4306 3428 Dia
+4277 3428 Dia
+4247 3428 Dia
+4218 7591 Dia
+4189 7591 Dia
+4160 7591 Dia
+4130 9757 Dia
+4101 2892 Dia
+4072 2892 Dia
+4043 4225 Dia
+4013 4225 Dia
+3984 4225 Dia
+3955 4225 Dia
+3926 4225 Dia
+3896 4225 Dia
+3867 4225 Dia
+3838 4103 Dia
+3809 4103 Dia
+3779 4103 Dia
+3750 4103 Dia
+3721 4103 Dia
+3692 4103 Dia
+3662 4103 Dia
+3633 4103 Dia
+3604 4103 Dia
+3575 4103 Dia
+3545 1615 Dia
+3516 1615 Dia
+3487 1615 Dia
+3458 2716 Dia
+3428 2716 Dia
+3399 2716 Dia
+3370 3917 Dia
+3341 3917 Dia
+3311 3917 Dia
+3282 3917 Dia
+3253 3917 Dia
+3224 3917 Dia
+3194 3917 Dia
+3165 3917 Dia
+3136 3917 Dia
+3107 3917 Dia
+3077 1623 Dia
+3048 2231 Dia
+3019 2231 Dia
+2990 2231 Dia
+2960 2231 Dia
+2931 2231 Dia
+2902 2231 Dia
+2873 2130 Dia
+2843 2130 Dia
+2814 1896 Dia
+2785 1896 Dia
+2756 1771 Dia
+2726 2485 Dia
+2697 2485 Dia
+2668 2485 Dia
+2639 1104 Dia
+2609 1104 Dia
+2580 1104 Dia
+2551 1104 Dia
+2522 1104 Dia
+2492 1104 Dia
+2463 1104 Dia
+2434 1104 Dia
+2405 1104 Dia
+2375 1104 Dia
+2346 1104 Dia
+2317 1100 Dia
+2288 1100 Dia
+2258 1100 Dia
+2229 1100 Dia
+2200 1100 Dia
+15925 9675 Dia
+1.000 Gpsetlinewidth
+LTb
+2200 1100 M
+14975 0 V
+0 9150 V
+-14975 0 V
+0 -9150 V
+1.000 Gpsetpointsize
+Gpstroke
+grestore
+end
+showpage
+%%%%EOF

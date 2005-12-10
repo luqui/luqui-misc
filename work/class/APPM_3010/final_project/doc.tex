@@ -23,7 +23,15 @@ automaton usually do not affect its overall qualitiative behavior, but
 sometimes they can cause major \textit{bifurcations} in behavior.
 
 Li et al. \cite{Li-1990} explore this idea, and find that with a logical
-``path'' through a rule space, 
+path through a rule space, there is a transition point between
+``simple'' and ``chaotic'' behavior, though it does vary from path to
+path.  But near the transition point emerges so-called ``complex''
+behavior, which neither looks statistically random nor is periodic.
+
+In this paper, I'll have some fun describing a reasonable precise
+definition of a cellular automaton, though I won't use the definitions
+for much.  I'll then describe the metrics used by Li et al. and
+reproduce some of their graphs with a program I wrote.  
 
 Some slightly domain-specific notation is taken from the theory of
 functional programming\footnote{Probably somewhere earlier than that,
@@ -114,7 +122,7 @@ cellular automaton.  Clearly, neither is fixed-point or simple-periodic
 ``complex behavior'' in the literature.  Supposedly it is defined
 precisely as behavior that is neither chaotic nor simple-periodic.
 
-Li et al. \cite{Li-1990} define three statistical quantities that are
+Li et al. define three statistical quantities that are
 used for classifying cellular automaton rules.  These are the
 \textit{spreading rate of difference patterns}, the \textit{entropy},
 and the \textit{mutual information}.  The latter two are repeated here,
@@ -189,18 +197,28 @@ Figure \ref{mutual-9} shows mutual information for the same system.
 
 There is a bifurcation (in this context simply meaning a qualitative
 change in behavior) near where the mutual information reaches its
-maximum.  Notice that the entropy is high, but not maximum, at these
-points.
+maximum (called $\lambda_c$, for ``critical'').  Notice that the entropy
+is high, but not maximum, at these points.  Li et al. show that as the
+number of neighbors approaches infinity, $\lambda_c$ approaches zero.
+That is, the faster the automaton can communicate information, in a
+manner of speaking, the more easily the system becomes chaotic.
+
+However, what we'd really like to find is an invariant as the number of
+neighbors increases, or a parameter that shows us where $\lambda_c$ will
+be for a given path, or anything at all to hold on to.  So far there is
+nothing analogous even to linear fixed-point analysis for continuous
+systems.  However, the statistical approach did give us one criterion
+for complexity: that $\lambda$ is not too small and it is not too large.
 
 \begin{figure}
-\epsfig{file=4_100_01.entropy.eps,width=3in}
+\epsfig{file=4_100_01.entropy.eps,width=4in}
 \caption{Entropy $S$ for a 9-neighbor binary linear set of automata.  The
 x-axis is $\lambda$ and it ranges from $0$ to $1$.}
 \label{entropy-9}
 \end{figure}
 
 \begin{figure}
-\epsfig{file=4_100_01.mutual.eps,width=3in}
+\epsfig{file=4_100_01.mutual.eps,width=4in}
 \caption{Mutual information $M$ for a 9-neighbor binary linear set of
 automata.  The x-axis is $\lambda$ and it ranges form $0$ to $1$.}
 \label{mutual-9}

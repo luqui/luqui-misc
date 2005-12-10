@@ -2,7 +2,7 @@
 
 module Automata.Simulate.Circle where
 
-import Automata.Simulate
+import qualified Automata.Simulate as Sim
 import Data.Array
 import Data.List
 
@@ -23,10 +23,13 @@ neighbors :: Circle a -> Int -> [a]
 neighbors circ pos = map ((cells circ !) . (`mod` size circ)) $
                          map (+ pos) [-radius circ..radius circ]
 
-instance Topology Circle where
+instance Sim.Topology Circle where
     update f circ = 
         circ { cells = listArray (0, size circ - 1) $ 
                          map (f . neighbors circ) (indices $ cells circ) }
+
+instance Sim.Configuration Circle where
+    cells = elems . cells
 
 instance (Show a) => Show (Circle a) where
     show circ = concat . intersperse " " . map show . elems . cells $ circ

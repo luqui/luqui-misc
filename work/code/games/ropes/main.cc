@@ -6,7 +6,7 @@
 #include "objects.h"
 
 dWorldID WORLD;
-num STEP = 1/30.0;
+num STEP = 1/60.0;
 num OVERSTEP = 0;
 
 ObjectManager* OBJECT_MANAGER;
@@ -60,7 +60,7 @@ int main() {
 
     MOUSE_FOCUS = player;
 
-    int stepct = 100;
+    int stepct = 5*int(1/STEP);  // every 5 seconds
 
     while (true) {
         if (--stepct == 0) {

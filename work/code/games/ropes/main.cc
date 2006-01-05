@@ -9,6 +9,8 @@ dWorldID WORLD;
 num STEP = 1/30.0;
 num OVERSTEP = 0;
 
+ObjectManager* OBJECT_MANAGER;
+
 void setup_gfx() {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
     SDL_SetVideoMode(PIXEL_WIDTH, PIXEL_HEIGHT, 24, 
@@ -40,6 +42,7 @@ void setup_physics() {
 
 void step() {
     events();
+    OBJECT_MANAGER->step();
     collide();
     dWorldQuickStep(WORLD, STEP);
     dJointGroupEmpty(COLLIDE_JOINTS);
@@ -48,15 +51,24 @@ void step() {
 int main() {
     setup_gfx();
     setup_physics();
-
-    Wall w(vec(0,0), vec(16,1));
     
-    Player* p = new Player(vec(8,6));
-    MOUSE_FOCUS = p;
+    OBJECT_MANAGER = new ObjectManager;
+    OBJECT_MANAGER->add(new Wall(vec(0,0), vec(16,1)));
+
+    Player* player = new Player(vec(8,6));
+    OBJECT_MANAGER->add(player);
+
+    MOUSE_FOCUS = player;
+
+    int stepct = 100;
 
     while (true) {
+        if (--stepct == 0) {
+            OBJECT_MANAGER->sweep();
+            stepct = 100;
+        }
+        
         step();
-        p->step();
         OVERSTEP -= STEP;
 
         // avoid degenerate behavior for expensive step()s.
@@ -64,13 +76,12 @@ int main() {
         while (OVERSTEP <= STEP) {
             glClear(GL_COLOR_BUFFER_BIT);
             glLoadIdentity();
-            p->draw();
-            w.draw();
+            OBJECT_MANAGER->draw();
             SDL_GL_SwapBuffers();
             OVERSTEP += get_time_diff();
         }
     }
 
-    delete p;
+    delete OBJECT_MANAGER;
     quit();
 }

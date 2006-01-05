@@ -16,7 +16,7 @@ static void near_callback(void* data, dGeomID ga, dGeomID gb) {
         for (int c = 0; c < n_contacts; c++) {
             dContact contact;
             contact.surface.mode = dContactFDir1 | dContactBounce;
-            contact.surface.mu = dInfinity;
+            contact.surface.mu = 0;
             contact.surface.bounce = 0.75;
             contact.surface.bounce_vel = 0.5;
             contact.fdir1[0] = geoms[c].normal[1];

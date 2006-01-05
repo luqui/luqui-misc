@@ -10,7 +10,7 @@ extern num OVERSTEP;
 
 class Body {
     public:
-        Body() {
+        Body() : owner_(0) {
             body_ = dBodyCreate(WORLD);
             dBodySetData(body_, static_cast<void*>(this));
             plane2d_ = dJointCreatePlane2D(WORLD, 0);
@@ -66,7 +66,17 @@ class Body {
             dBodyAddForceAtPos(body_, f.x, f.y, 0, p.x, p.y, 0);
         }
 
+        void set_mass(num mass) {
+            dMass dmass;
+            dMassSetSphere(&dmass, mass / (4.0/3.0*M_PI), 1);
+            dBodySetMass(body_, &dmass);
+        }
+
         dBodyID body_id() const { return body_; }
+
+        void set_owner(void* w) { owner_ = w; }
+
+        void* owner() const { return owner_; }
 
         static Body* from_body_id(dBodyID body) {
             if (body)
@@ -76,6 +86,7 @@ class Body {
         }
         
     private:
+        void* owner_;
         dBodyID body_;
         dJointID plane2d_;
 };

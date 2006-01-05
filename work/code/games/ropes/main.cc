@@ -57,6 +57,8 @@ int main() {
     while (true) {
         step();
         p->step();
+        OVERSTEP -= STEP;
+
         // avoid degenerate behavior for expensive step()s.
         if (OVERSTEP > STEP) OVERSTEP = STEP;
         while (OVERSTEP <= STEP) {
@@ -67,7 +69,6 @@ int main() {
             SDL_GL_SwapBuffers();
             OVERSTEP += get_time_diff();
         }
-        OVERSTEP -= STEP;
     }
 
     delete p;

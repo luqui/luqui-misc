@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fglasgow-exts #-}
+
 data Circuit where
     Series   :: Circuit -> Circuit -> Circuit
     Parallel :: Circuit -> Circuit -> Circuit

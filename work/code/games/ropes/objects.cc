@@ -45,7 +45,7 @@ void ObjectManager::sweep() {
     if (cleaned) cout << "Cleaned up " << cleaned << " objects\n";
 }
 
-const num Spikey::radius = 0.2;
+const num Spikey::radius = 0.3;
 
 Spikey::Spikey(vec p, vec f)
     : hinge_(0), geom_(p, radius), state_(STICKY)
@@ -61,7 +61,7 @@ Spikey::Spikey(vec p, vec f)
 
 void Spikey::stick(Body* b) {
     if (hinge_) dJointDestroy(hinge_);
-    hinge_ = dJointCreateFixed(WORLD, 0);
+    hinge_ = dJointCreateFixed(LEVEL->world, 0);
     dJointAttach(hinge_, body_.body_id(), b ? b->body_id() : 0);
     dJointSetFixed(hinge_);
     state_ = STUCK;
@@ -82,7 +82,7 @@ Rope::Rope(Object* obja, Body* bodya, Object* objb, Body* bodyb)
     proxya_.set_position(apos);
     proxya_.set_velocity(bodya->velocity());
     proxya_.set_mass(0.01, 1);
-    hingea_ = dJointCreateHinge(WORLD, 0);
+    hingea_ = dJointCreateHinge(LEVEL->world, 0);
     dJointAttach(hingea_, proxya_.body_id(), bodya->body_id());
     dJointSetHingeAxis(hingea_, 0, 0, 1);
 
@@ -90,11 +90,11 @@ Rope::Rope(Object* obja, Body* bodya, Object* objb, Body* bodyb)
     proxyb_.set_position(bpos);
     proxyb_.set_velocity(bodyb->velocity());
     proxyb_.set_mass(0.01, 1);
-    hingeb_ = dJointCreateHinge(WORLD, 0);
+    hingeb_ = dJointCreateHinge(LEVEL->world, 0);
     dJointAttach(hingeb_, proxyb_.body_id(), bodyb->body_id());
     dJointSetHingeAxis(hingeb_, 0, 0, 1);
     
-    rope_ = dJointCreateSlider(WORLD, 0);
+    rope_ = dJointCreateSlider(LEVEL->world, 0);
     vec axis = bpos - apos;
     dJointAttach(rope_, proxya_.body_id(), proxyb_.body_id());
     dJointSetSliderAxis(rope_, axis.x, axis.y, 0);

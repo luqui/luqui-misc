@@ -4,6 +4,7 @@
 #include "common.h"
 #include "drawing.h"
 #include "geometry.h"
+#include "level.h"
 #include <set>
 
 class Object {
@@ -67,8 +68,6 @@ private:
     set_t oset_;
 };
 
-extern ObjectManager* OBJECT_MANAGER;
-
 class Wall : public Object {
 public:
     Wall(vec ll, vec ur) : ll_(ll), ur_(ur), geom_(ll, ur) {
@@ -100,8 +99,8 @@ public:
     bool visible() const {
         vec p = body_.position();
         // we don't check off the top of the screen, because stuff falls.
-        if (p.x < SCREEN_LEFT || p.x > SCREEN_RIGHT ||
-            p.y < SCREEN_BOTTOM) return false;
+        if (p.x < LEVEL->left || p.x > LEVEL->right ||
+            p.y < LEVEL->bottom) return false;
         else return true;
     }
 
@@ -138,8 +137,8 @@ public:
     ~Rope();
     
     void mark() {
-        OBJECT_MANAGER->mark(obja_);
-        OBJECT_MANAGER->mark(objb_);
+        LEVEL->manager->mark(obja_);
+        LEVEL->manager->mark(objb_);
     }
 
     void draw();

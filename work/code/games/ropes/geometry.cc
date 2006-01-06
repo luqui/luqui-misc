@@ -1,9 +1,6 @@
 #include "geometry.h"
 #include "objects.h"
 
-dSpaceID COLLIDE_SPACE;
-dJointGroupID COLLIDE_JOINTS;
-
 static void near_callback(void* data, dGeomID ga, dGeomID gb) {
     if (dGeomIsSpace(ga) || dGeomIsSpace(gb)) {
         dSpaceCollide2(ga, gb, data, &near_callback);
@@ -33,12 +30,12 @@ static void near_callback(void* data, dGeomID ga, dGeomID gb) {
             contact.fdir1[2] = 0;
             contact.geom = geoms[c];
 
-            dJointID joint = dJointCreateContact(WORLD, COLLIDE_JOINTS, &contact);
+            dJointID joint = dJointCreateContact(LEVEL->world, LEVEL->contact_joints, &contact);
             dJointAttach(joint, bodya, bodyb);
         }
     }
 }
 
 void collide() {
-    dSpaceCollide(COLLIDE_SPACE, 0, &near_callback);
+    dSpaceCollide(LEVEL->collide_space, 0, &near_callback);
 }

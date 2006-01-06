@@ -3,8 +3,8 @@
 
 #include "common.h"
 #include "vec.h"
+#include "level.h"
 
-extern dWorldID WORLD;
 extern num STEP;
 extern num OVERSTEP;
 
@@ -13,9 +13,9 @@ class Object;
 class Body {
     public:
         Body() : owner_(0) {
-            body_ = dBodyCreate(WORLD);
+            body_ = dBodyCreate(LEVEL->world);
             dBodySetData(body_, static_cast<void*>(this));
-            plane2d_ = dJointCreatePlane2D(WORLD, 0);
+            plane2d_ = dJointCreatePlane2D(LEVEL->world, 0);
             dJointAttach(plane2d_, body_, 0);
         }
         

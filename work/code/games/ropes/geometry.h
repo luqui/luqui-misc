@@ -4,9 +4,7 @@
 #include "common.h"
 #include "vec.h"
 #include "physics.h"
-
-extern dSpaceID COLLIDE_SPACE;
-extern dJointGroupID COLLIDE_JOINTS;
+#include "level.h"
 
 class Object;
 
@@ -55,7 +53,7 @@ private:
 class Box : public Geom {
 public:
     Box(vec ll, vec ur) {
-        geom_ = dCreateBox(COLLIDE_SPACE, ur.x - ll.x, ur.y - ll.y, 1);
+        geom_ = dCreateBox(LEVEL->collide_space, ur.x - ll.x, ur.y - ll.y, 1);
         init();
         vec center = (ll + ur) / 2;
         dGeomSetPosition(geom_, center.x, center.y, 0);
@@ -65,7 +63,7 @@ public:
 class Circle : public Geom {
 public:
     Circle(vec center, num radius) {
-        geom_ = dCreateSphere(COLLIDE_SPACE, radius);
+        geom_ = dCreateSphere(LEVEL->collide_space, radius);
         init();
         dGeomSetPosition(geom_, center.x, center.y, 0);
     }

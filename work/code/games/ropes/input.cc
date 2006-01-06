@@ -1,4 +1,5 @@
 #include "input.h"
+#include "level.h"
 
 MouseResponder* MOUSE_FOCUS;
 
@@ -28,9 +29,9 @@ void events() {
 
 void MouseSelector::mouse_motion_native(SDL_MouseMotionEvent* e) {
     num xdiff = num(e->xrel) / num(PIXEL_WIDTH) 
-                    * (SCREEN_RIGHT - SCREEN_LEFT);
+                    * (LEVEL->right - LEVEL->left);
     num ydiff = num(e->yrel) / num(PIXEL_HEIGHT)
-                    * (SCREEN_BOTTOM - SCREEN_TOP);
+                    * (LEVEL->bottom - LEVEL->top);  // sic
     mouse_move(vec(xdiff, ydiff));
 }
 

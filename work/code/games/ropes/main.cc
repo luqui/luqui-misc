@@ -33,19 +33,22 @@ int main() {
     LEVEL->load_level("levels/walls.lvl");
     MOUSE_FOCUS = LEVEL->player;
 
+    num overstep = 0;
+    
     while (true) {
         events();
         LEVEL->step();
-        OVERSTEP -= STEP;
+        overstep -= STEP;
 
         // avoid degenerate behavior for expensive step()s.
-        if (OVERSTEP > STEP) OVERSTEP = STEP;
-        while (OVERSTEP <= STEP) {
+        if (overstep > STEP) overstep = STEP;
+        while (overstep <= STEP) {
+            if (!LEVEL->frozen()) OVERSTEP = overstep; else OVERSTEP = 0;
             glClear(GL_COLOR_BUFFER_BIT);
             glLoadIdentity();
             LEVEL->draw();
             SDL_GL_SwapBuffers();
-            OVERSTEP += get_time_diff();
+            overstep += get_time_diff();
         }
     }
 

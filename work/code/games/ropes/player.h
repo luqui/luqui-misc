@@ -12,7 +12,9 @@
 
 class Player : public MouseSelector, public Object {
 public:
-    Player(vec pos) : spikey_(0), angle_(0), geom_(pos, 1), selected_(0) {
+    Player(vec pos, Color col) 
+            : spikey_(0), angle_(0), geom_(pos, 1), selected_(0),
+              color_(col) {
         body_.set_position(pos);
         body_.set_owner(this);
         geom_.set_owner(this);
@@ -24,6 +26,10 @@ public:
     }
 
     void find_selected_rope() {
+        if (this != LEVEL->player) {
+            if (selected_) selected_->deselect();
+            return;
+        }
         Rope* best = 0;  num bestdiff = 1e999;
         for (ropes_t::iterator i = ropes_.begin(); i != ropes_.end(); ++i) {
             num diff = moddiff(angle_, (*i)->angle(), 2*M_PI);
@@ -43,15 +49,17 @@ public:
         glPushMatrix();
             glTranslated(pos.x, pos.y, 0);
             
-            glColor3d(0,0,1);
+            glColor3d(color_.r, color_.g, color_.b);
             draw_circle(1); 
             
-            glRotated(angle_ * 180 / M_PI, 0, 0, 1);
-            glColor3d(1,1,1);
-            glTranslated(2, 0, 0);
-            draw_circle(0.1);
-            glTranslated(2, 0, 0);
-            draw_circle(0.2);
+            if (LEVEL->player == this) {
+                glRotated(angle_ * 180 / M_PI, 0, 0, 1);
+                glColor3d(1,1,1);
+                glTranslated(2, 0, 0);
+                draw_circle(0.1);
+                glTranslated(2, 0, 0);
+                draw_circle(0.2);
+            }
         glPopMatrix();
     }
 
@@ -59,6 +67,7 @@ public:
         num amt = dir * vec(1,0) * -0.4;   // only horizontal motion
         angle_ += amt;
         angle_ = smallmod(angle_, 2*M_PI);
+        find_selected_rope();
     }
 
     void mouse_left_button_down() {
@@ -69,6 +78,7 @@ public:
         spikey_ = new Spikey(pos + dist*dir, force);
         body_.apply_force(-force, pos);  // newton's 3rd
         LEVEL->manager->add(spikey_);
+        LEVEL->unfreeze();
     }
 
     void mouse_left_button_up() {
@@ -76,6 +86,13 @@ public:
         Rope* rope = new Rope(this, &body_, spikey_, spikey_->body());
         ropes_.push_back(rope);
         LEVEL->manager->add(rope);
+
+        while (ropes_.size() > LEVEL->max_ropes) {
+            Rope* fst = ropes_.front();
+            ropes_.pop_front();
+            LEVEL->manager->remove(fst);
+        }
+        find_selected_rope();
     }
 
     void mouse_right_button_down() {
@@ -90,11 +107,12 @@ public:
             selected_ = 0;
             find_selected_rope();
         }
+        LEVEL->unfreeze();
     }
 
     void mouse_wheel(int delta) {
         if (selected_) {
-            selected_->lengthen(delta);
+            selected_->lengthen(5*delta);
         }
     }
 
@@ -106,6 +124,8 @@ public:
     }
 
     bool visible() const { return true; }
+
+    Color color() const { return color_; }
 
 private:
     Player(const Player&);  // no copying of players
@@ -119,6 +139,8 @@ private:
     Rope* selected_;
     typedef list<Rope*> ropes_t;
     ropes_t ropes_;
+
+    Color color_;
 };
 
 #endif

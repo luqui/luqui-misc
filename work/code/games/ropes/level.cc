@@ -43,6 +43,9 @@ void Level::load_level(string file)
     num gravity;
     literal(fin, "gravity");
     fin >> gravity;
+
+    literal(fin, "ropes");
+    fin >> max_ropes;
     
     int boxes;
     literal(fin, "boxes");
@@ -64,9 +67,9 @@ void Level::load_level(string file)
     contact_joints = dJointGroupCreate(0);
     
     manager = new ObjectManager;
-    p1 = new Player(p1pos);
+    p1 = new Player(p1pos, Color(0,0,1));
     manager->add(p1);
-    p2 = new Player(p2pos);
+    p2 = new Player(p2pos, Color(1,0,0));
     manager->add(p2);
 
     for (list<BoxDef>::iterator i = boxen.begin(); i != boxen.end(); ++i) {
@@ -87,6 +90,24 @@ void Level::set_view()
     glMatrixMode(GL_MODELVIEW);
 }
 
+void Level::freeze() 
+{
+    frozen_ = true;
+    freeze_timer_ = 0;
+    wait_timer_ = WAIT_TIMER;
+    if (player == p1) next_player_ = p2; else next_player_ = p1;
+    player = 0;
+    MOUSE_FOCUS = 0;
+}
+
+void Level::unfreeze()
+{
+    if (frozen_) {
+        frozen_ = false;
+        freeze_timer_ = TURN_TIMER;
+    }
+}
+
 void Level::step()
 {
     if (--stepct_ == 0) {
@@ -94,13 +115,37 @@ void Level::step()
         stepct_ = 5*int(1/STEP);
     }
 
-    manager->step();
-    collide();
-    dWorldQuickStep(world, STEP);
-    dJointGroupEmpty(contact_joints);
+    if (!frozen_) {
+        manager->step();
+        collide();
+        dWorldQuickStep(world, STEP);
+        dJointGroupEmpty(contact_joints);
+
+        if ((freeze_timer_ -= STEP) <= 0) {
+            freeze();
+        }
+    }
+    else if (!player) {
+        if ((wait_timer_ -= STEP) <= 0) {
+            player = next_player_;
+            MOUSE_FOCUS = next_player_;
+            wait_timer_ = 0;
+        }
+    }
 }
 
 void Level::draw()
 {
     manager->draw();
+    if (player && !frozen_) {
+        num rpoint = freeze_timer_ / TURN_TIMER * (right - left);
+        Color color = player->color();
+        glColor3d(color.r, color.g, color.b);
+        glBegin(GL_QUADS);
+            glVertex2d(left, bottom);
+            glVertex2d(left, bottom+0.5);
+            glVertex2d(left + rpoint, bottom+0.5);
+            glVertex2d(left + rpoint, bottom);
+        glEnd();
+    }
 }

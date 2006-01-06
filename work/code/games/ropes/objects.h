@@ -108,8 +108,8 @@ public:
         vec p = body_.position();
         glPushMatrix();
             glTranslated(p.x, p.y, 0);
-            if (state_ == UNSTUCK) glColor3d(0.5,0,0.5);
-            else                   glColor3d(0, 0, 1);
+            if (state_ == UNSTUCK) glColor3d(0.75,0.5,0);
+            else                   glColor3d(0, 0.75, 0);
             draw_circle(radius);
         glPopMatrix();
     }

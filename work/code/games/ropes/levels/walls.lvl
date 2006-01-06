@@ -8,6 +8,8 @@ p2     38 15
 
 gravity 4
 
+ropes 3
+
 boxes 4
 box    0 0 1 30
 box    39 0 40 30

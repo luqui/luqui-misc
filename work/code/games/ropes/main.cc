@@ -29,11 +29,13 @@ num get_time_diff() {
     return ret;
 }
 
-int main() {
+int main(int argc, char** argv) {
     setup_gfx();
+
+    string level = argc == 2 ? argv[1] : "levels/walls.lvl";
     
     LEVEL = new Level;
-    LEVEL->load_level("levels/walls.lvl");
+    LEVEL->load_level(level);
     MOUSE_FOCUS = LEVEL->player;
 
     num overstep = 0;
@@ -53,7 +55,7 @@ int main() {
             if (restart) {
                 delete LEVEL;
                 LEVEL = new Level;
-                LEVEL->load_level("levels/walls.lvl");
+                LEVEL->load_level(level);
                 MOUSE_FOCUS = LEVEL->player;
             }
         }

@@ -133,8 +133,8 @@ void Rope::draw() {
 
 void Rope::lengthen(num amt) {
     ext_ += amt;
-    if (ext_ < 1.2) {  // XXX magic number
-        ext_ = 1.2;
+    if (ext_ < 0) {
+        ext_ = 0;
     }
     dJointSetSliderParam(rope_, dParamLoStop, base_ext_ - ext_);
 }

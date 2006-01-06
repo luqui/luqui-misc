@@ -71,7 +71,9 @@ extern ObjectManager* OBJECT_MANAGER;
 
 class Wall : public Object {
 public:
-    Wall(vec ll, vec ur) : ll_(ll), ur_(ur), geom_(ll, ur) { }
+    Wall(vec ll, vec ur) : ll_(ll), ur_(ur), geom_(ll, ur) {
+        geom_.set_owner(this);
+    }
 
     bool visible() const { return true; }
     
@@ -86,7 +88,14 @@ private:
 
 class Spikey : public Object {
 public:
+    enum State {
+        STICKY,
+        STUCK,
+        UNSTUCK
+    };
+    
     Spikey(vec p, vec f);
+    ~Spikey() { if (hinge_) dJointDestroy(hinge_); }
 
     bool visible() const {
         vec p = body_.position();
@@ -100,17 +109,25 @@ public:
         vec p = body_.position();
         glPushMatrix();
             glTranslated(p.x, p.y, 0);
-            glColor3d(0,0,1);
+            if (state_ == UNSTUCK) glColor3d(0.5,0,0.5);
+            else                   glColor3d(0, 0, 1);
             draw_circle(radius);
         glPopMatrix();
     }
 
     Body* body() { return &body_; }
 
+    void stick(Body* b);
+    void unstick();
+    
+    State state() const { return state_; }
+
     static const num radius;
 private:
+    dJointID hinge_;
     Circle geom_;
     Body body_;
+    State state_;
 };
 
 class Rope : public Object {
@@ -154,5 +171,7 @@ private:
 
     bool selected_;
 };
+
+bool collide(Object* a, Object* b, bool swap = true);
 
 #endif

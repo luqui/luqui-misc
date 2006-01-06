@@ -48,14 +48,31 @@ void ObjectManager::sweep() {
 const num Spikey::radius = 0.2;
 
 Spikey::Spikey(vec p, vec f)
-    : geom_(p, radius)
+    : hinge_(0), geom_(p, radius), state_(STICKY)
 {
     body_.set_position(p);
-    body_.set_owner(static_cast<void*>(this));
+    body_.set_owner(this);
+    geom_.set_owner(this);
     geom_.attach(&body_);
     body_.set_mass(0.1, radius);
 
     body_.apply_force(f, p);
+}
+
+void Spikey::stick(Body* b) {
+    if (hinge_) dJointDestroy(hinge_);
+    hinge_ = dJointCreateFixed(WORLD, 0);
+    dJointAttach(hinge_, body_.body_id(), b ? b->body_id() : 0);
+    dJointSetFixed(hinge_);
+    state_ = STUCK;
+}
+
+void Spikey::unstick() {
+    if (hinge_) {
+        dJointDestroy(hinge_);
+        hinge_ = 0;
+    }
+    state_ = UNSTUCK;
 }
 
 Rope::Rope(Object* obja, Body* bodya, Object* objb, Body* bodyb)
@@ -120,4 +137,24 @@ void Rope::lengthen(num amt) {
         ext_ = 1.2;
     }
     dJointSetSliderParam(rope_, dParamLoStop, base_ext_ - ext_);
+}
+
+bool collide(Object* a, Object* b, bool swap) {
+    // Poor man's MMD
+    if (Spikey* spikey = dynamic_cast<Spikey*>(a)) {
+        if (Spikey* spikey2 = dynamic_cast<Spikey*>(b)) {
+            spikey->unstick();
+            spikey2->unstick();
+            return true;
+        }
+        else if (spikey->state() == Spikey::STICKY) {
+            if (dynamic_cast<Wall*>(b)) {
+                spikey->stick(0);
+            }
+        }
+        else if (spikey->state() == Spikey::STUCK) {
+            return false;
+        }
+    }
+    return true;
 }

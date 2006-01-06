@@ -14,7 +14,8 @@ class Player : public MouseSelector, public Object {
 public:
     Player(vec pos) : spikey_(0), angle_(0), geom_(pos, radius), selected_(0) {
         body_.set_position(pos);
-        body_.set_owner(static_cast<void*>(this));
+        body_.set_owner(this);
+        geom_.set_owner(this);
         geom_.attach(&body_);
     }
 

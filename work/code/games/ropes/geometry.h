@@ -8,6 +8,8 @@
 extern dSpaceID COLLIDE_SPACE;
 extern dJointGroupID COLLIDE_JOINTS;
 
+class Object;
+
 class Geom {
 public:
     virtual ~Geom() {
@@ -19,6 +21,9 @@ public:
     
     virtual Body* body() const { return Body::from_body_id(body_id()); }
 
+    virtual Object* owner() const { return owner_; }
+    virtual void set_owner(Object* o) { owner_ = o; }
+    
     virtual void attach(Body* body) {
         if (body)
             dGeomSetBody(geom_, body->body_id());
@@ -38,8 +43,10 @@ protected:
         dGeomSetData(geom_, static_cast<void*>(this));
     }
     
+    Geom() : geom_(0), owner_(0) { }
+    
     dGeomID geom_;
-    Geom() : geom_(0) { }
+    Object* owner_;
 
 private:
     Geom(const Geom&);  // no copying

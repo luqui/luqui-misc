@@ -8,6 +8,8 @@ extern dWorldID WORLD;
 extern num STEP;
 extern num OVERSTEP;
 
+class Object;
+
 class Body {
     public:
         Body() : owner_(0) {
@@ -74,9 +76,9 @@ class Body {
 
         dBodyID body_id() const { return body_; }
 
-        void set_owner(void* w) { owner_ = w; }
+        void set_owner(Object* w) { owner_ = w; }
 
-        void* owner() const { return owner_; }
+        Object* owner() const { return owner_; }
 
         static Body* from_body_id(dBodyID body) {
             if (body)
@@ -86,7 +88,7 @@ class Body {
         }
         
     private:
-        void* owner_;
+        Object* owner_;
         dBodyID body_;
         dJointID plane2d_;
 };

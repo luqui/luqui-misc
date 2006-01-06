@@ -1,4 +1,5 @@
 #include "geometry.h"
+#include "objects.h"
 
 dSpaceID COLLIDE_SPACE;
 dJointGroupID COLLIDE_JOINTS;
@@ -14,6 +15,10 @@ static void near_callback(void* data, dGeomID ga, dGeomID gb) {
         dBodyID bodya = dGeomGetBody(ga);
         dBodyID bodyb = dGeomGetBody(gb);
         if (bodya == 0 && bodyb == 0) return;
+
+        Object* obja = Geom::from_geom_id(ga)->owner();
+        Object* objb = Geom::from_geom_id(gb)->owner();
+        if (obja && objb && !collide(obja, objb)) return;
         
         dContactGeom geoms[16];
         int n_contacts = dCollide(ga, gb, 16, geoms, sizeof(dContactGeom));

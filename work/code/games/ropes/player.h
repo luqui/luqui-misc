@@ -65,8 +65,9 @@ public:
         num dist = 1 + Spikey::radius;
         vec dir = vec(cos(angle_), sin(angle_));
         vec pos = body_.position();
-        spikey_ = new Spikey(pos + dist*dir, dir / STEP);
-        body_.apply_force(-dir / STEP, pos);  // newton's 3rd
+        vec force = 2 * dir / STEP;
+        spikey_ = new Spikey(pos + dist*dir, force);
+        body_.apply_force(-force, pos);  // newton's 3rd
         LEVEL->manager->add(spikey_);
     }
 

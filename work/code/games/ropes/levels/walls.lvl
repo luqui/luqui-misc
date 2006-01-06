@@ -6,7 +6,7 @@ top    30
 p1     2  15
 p2     38 15
 
-gravity 1
+gravity 4
 
 boxes 4
 box    0 0 1 30

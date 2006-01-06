@@ -112,7 +112,7 @@ public:
 
     void mouse_wheel(int delta) {
         if (selected_) {
-            selected_->lengthen(5*delta);
+            selected_->lengthen(3*delta);
         }
     }
 

@@ -6,12 +6,13 @@ top    30
 p1     2  15
 p2     38 15
 
-gravity 4
+gravity 7
 
 ropes 3
 
-boxes 4
+boxes 5
 box    0 0 1 30
 box    39 0 40 30
+box    0 29 40 30
 box    1 13 3 14
 box    37 13 39 14

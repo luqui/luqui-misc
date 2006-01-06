@@ -54,6 +54,8 @@ int main() {
     
     OBJECT_MANAGER = new ObjectManager;
     OBJECT_MANAGER->add(new Wall(vec(0,0), vec(16,1)));
+    OBJECT_MANAGER->add(new Wall(vec(0,0), vec(1,12)));
+    OBJECT_MANAGER->add(new Wall(vec(15,0), vec(16,12)));
 
     Player* player = new Player(vec(8,6));
     OBJECT_MANAGER->add(player);

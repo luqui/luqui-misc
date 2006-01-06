@@ -39,6 +39,11 @@ public:
         oset_.insert(o);
     }
 
+    void remove(Object* o) {
+        oset_.erase(o);
+        delete o;
+    }
+
     void mark(Object* o);
 
     void sweep();
@@ -120,18 +125,20 @@ public:
         OBJECT_MANAGER->mark(objb_);
     }
 
-    void draw() {
+    void draw();
+
+    num angle() {
         vec posa = proxya_.position();
         vec posb = proxyb_.position();
-
-        glColor3d(1,1,1);
-        glBegin(GL_LINES);
-            glVertex2d(posa.x, posa.y);
-            glVertex2d(posb.x, posb.y);
-        glEnd();
+        return atan2(posb.y - posa.y, posb.x - posa.x);
     }
 
+    void select()   { selected_ = true; }
+    void deselect() { selected_ = false; }
+
     bool visible() const { return false; }
+    
+    void lengthen(num amt);
     
 private:
     dJointID rope_;
@@ -139,9 +146,13 @@ private:
     dJointID hingeb_;
     Body proxya_;
     Body proxyb_;
+    num ext_;
+    num base_ext_;
 
     Object* obja_;
     Object* objb_;
+
+    bool selected_;
 };
 
 #endif

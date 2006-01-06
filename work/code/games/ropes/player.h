@@ -12,7 +12,7 @@
 
 class Player : public MouseSelector, public Object {
 public:
-    Player(vec pos) : spikey_(0), angle_(0), geom_(pos, radius) {
+    Player(vec pos) : spikey_(0), angle_(0), geom_(pos, radius), selected_(0) {
         body_.set_position(pos);
         body_.set_owner(static_cast<void*>(this));
         geom_.attach(&body_);
@@ -20,16 +20,34 @@ public:
 
     static const num radius;
     
-    void step() { }
+    void step() {
+        find_selected_rope();
+    }
+
+    void find_selected_rope() {
+        Rope* best = 0;  num bestdiff = 1e999;
+        for (ropes_t::iterator i = ropes_.begin(); i != ropes_.end(); ++i) {
+            num diff = moddiff(angle_, (*i)->angle(), 2*M_PI);
+            if (diff < bestdiff) {
+                bestdiff = diff;
+                best = *i;
+            }
+        }
+        if (best == selected_) return;
+        if (selected_) selected_->deselect();
+        if (best) best->select();
+        selected_ = best;
+    }
+
     void draw() {
         vec pos = body_.position();
         glPushMatrix();
             glTranslated(pos.x, pos.y, 0);
-            glRotated(angle_ * 180 / M_PI, 0, 0, 1);
             
             glColor3d(0,0,1);
             draw_circle(radius); 
             
+            glRotated(angle_ * 180 / M_PI, 0, 0, 1);
             glColor3d(1,1,1);
             glTranslated(2*radius, 0, 0);
             draw_circle(0.1);
@@ -60,6 +78,26 @@ public:
         OBJECT_MANAGER->add(rope);
     }
 
+    void mouse_right_button_down() {
+        if (selected_) {
+            for (ropes_t::iterator i = ropes_.begin(); i != ropes_.end(); ++i) {
+                if (*i == selected_) {
+                    ropes_.erase(i);
+                    break;
+                }
+            }
+            OBJECT_MANAGER->remove(selected_);
+            selected_ = 0;
+            find_selected_rope();
+        }
+    }
+
+    void mouse_wheel(int delta) {
+        if (selected_) {
+            selected_->lengthen(0.5 * delta);
+        }
+    }
+
     void mark() {
         if (spikey_) OBJECT_MANAGER->mark(spikey_);
         for (ropes_t::iterator i = ropes_.begin(); i != ropes_.end(); ++i) {
@@ -78,6 +116,7 @@ private:
     Body body_;
     Circle geom_;
 
+    Rope* selected_;
     typedef list<Rope*> ropes_t;
     ropes_t ropes_;
 };

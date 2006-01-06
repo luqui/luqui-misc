@@ -59,12 +59,12 @@ Spikey::Spikey(vec p, vec f)
 }
 
 Rope::Rope(Object* obja, Body* bodya, Object* objb, Body* bodyb)
-    : obja_(obja), objb_(objb)
+    : obja_(obja), objb_(objb), selected_(false)
 {
     vec apos = bodya->position();
     proxya_.set_position(apos);
     proxya_.set_velocity(bodya->velocity());
-    proxya_.set_mass(0.1, 1);
+    proxya_.set_mass(0.01, 1);
     hingea_ = dJointCreateHinge(WORLD, 0);
     dJointAttach(hingea_, proxya_.body_id(), bodya->body_id());
     dJointSetHingeAxis(hingea_, 0, 0, 1);
@@ -72,7 +72,7 @@ Rope::Rope(Object* obja, Body* bodya, Object* objb, Body* bodyb)
     vec bpos = bodyb->position();
     proxyb_.set_position(bpos);
     proxyb_.set_velocity(bodyb->velocity());
-    proxyb_.set_mass(0.1, 1);
+    proxyb_.set_mass(0.01, 1);
     hingeb_ = dJointCreateHinge(WORLD, 0);
     dJointAttach(hingeb_, proxyb_.body_id(), bodyb->body_id());
     dJointSetHingeAxis(hingeb_, 0, 0, 1);
@@ -85,10 +85,39 @@ Rope::Rope(Object* obja, Body* bodya, Object* objb, Body* bodyb)
     dJointSetSliderParam(rope_, dParamLoStop, 0);
     dJointSetSliderParam(rope_, dParamStopCFM, 0.25);
     dJointSetSliderParam(rope_, dParamStopERP, 0.01);
+
+    ext_ = base_ext_ = axis.norm();
 }
 
 Rope::~Rope() {
     dJointDestroy(hingea_);
     dJointDestroy(hingeb_);
     dJointDestroy(rope_);
+}
+
+void Rope::draw() {
+    vec posa = proxya_.position();
+    vec posb = proxyb_.position();
+
+    glPushAttrib(GL_LINE_BIT);
+        if (selected_) {
+            glLineWidth(2.0);
+            glColor3d(0,1,0);
+        }
+        else {
+            glColor3d(1,1,1);
+        }
+        glBegin(GL_LINES);
+            glVertex2d(posa.x, posa.y);
+            glVertex2d(posb.x, posb.y);
+        glEnd();
+    glPopAttrib();
+}
+
+void Rope::lengthen(num amt) {
+    ext_ += amt;
+    if (ext_ < 1.2) {  // XXX magic number
+        ext_ = 1.2;
+    }
+    dJointSetSliderParam(rope_, dParamLoStop, base_ext_ - ext_);
 }

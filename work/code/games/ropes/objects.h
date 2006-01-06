@@ -39,50 +39,9 @@ public:
         oset_.insert(o);
     }
 
-    void mark(Object* o) {
-        if (o->visible_) return;
-        o->visible_ = true;
-        
-        if (gc_tail_) gc_tail_->gc_next_ = o;
-        o->gc_next_ = 0;
-        gc_tail_ = o;
-    }
+    void mark(Object* o);
 
-    void sweep() {
-        Object* cptr = 0;
-        
-        gc_tail_ = 0;
-        for (set_t::iterator i = oset_.begin(); i != oset_.end(); ++i) {
-            (*i)->visible_ = false;
-            if ((*i)->visible()) {
-                if (!cptr) cptr = *i;
-                mark(*i);
-            }
-        }
-
-        while (cptr) {
-            cptr->mark();
-            cptr = cptr->gc_next_;
-        }
-
-        int cleaned = 0;
-        for (set_t::iterator i = oset_.begin(); i != oset_.end(); ) {
-            Object* o = *i;
-            if (!o->visible_) {
-                set_t::iterator next = i;  ++next;
-                oset_.erase(i);
-                i = next;
-
-                delete o;
-                cleaned++;
-            }
-            else {
-                ++i;
-            }
-        }
-
-        if (cleaned) cout << "Cleaned up " << cleaned << " objects\n";
-    }
+    void sweep();
 
     void step() {
         for (set_t::iterator i = oset_.begin(); i != oset_.end(); ++i) {
@@ -122,14 +81,7 @@ private:
 
 class Spikey : public Object {
 public:
-    Spikey(vec p, vec f) : geom_(p, radius) {
-        body_.set_position(p);
-        body_.set_owner(static_cast<void*>(this));
-        geom_.attach(&body_);
-        body_.set_mass(0.1);
-
-        body_.apply_force(f, p);
-    }
+    Spikey(vec p, vec f);
 
     bool visible() const {
         vec p = body_.position();
@@ -148,12 +100,48 @@ public:
         glPopMatrix();
     }
 
+    Body* body() { return &body_; }
+
     static const num radius;
 private:
     Circle geom_;
     Body body_;
 };
 
-const num Spikey::radius = 0.2;
+class Rope : public Object {
+public:
+    Rope(Object* obja, Body* bodya,
+         Object* objb, Body* bodyb);
+
+    ~Rope();
+    
+    void mark() {
+        OBJECT_MANAGER->mark(obja_);
+        OBJECT_MANAGER->mark(objb_);
+    }
+
+    void draw() {
+        vec posa = proxya_.position();
+        vec posb = proxyb_.position();
+
+        glColor3d(1,1,1);
+        glBegin(GL_LINES);
+            glVertex2d(posa.x, posa.y);
+            glVertex2d(posb.x, posb.y);
+        glEnd();
+    }
+
+    bool visible() const { return false; }
+    
+private:
+    dJointID rope_;
+    dJointID hingea_;
+    dJointID hingeb_;
+    Body proxya_;
+    Body proxyb_;
+
+    Object* obja_;
+    Object* objb_;
+};
 
 #endif

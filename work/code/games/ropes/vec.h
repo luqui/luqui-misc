@@ -54,6 +54,10 @@ inline vec operator + (vec u, const vec& v) {
     return u += v;
 }
 
+inline vec operator - (vec u, const vec& v) {
+    return u -= v;
+}
+
 inline vec operator * (vec u, num a) {
     return u *= a;
 }

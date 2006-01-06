@@ -11,6 +11,10 @@ static void near_callback(void* data, dGeomID ga, dGeomID gb) {
         if (dGeomIsSpace(gb)) dSpaceCollide(reinterpret_cast<dSpaceID>(gb), data, &near_callback);
     }
     else {
+        dBodyID bodya = dGeomGetBody(ga);
+        dBodyID bodyb = dGeomGetBody(gb);
+        if (bodya == 0 && bodyb == 0) return;
+        
         dContactGeom geoms[16];
         int n_contacts = dCollide(ga, gb, 16, geoms, sizeof(dContactGeom));
         for (int c = 0; c < n_contacts; c++) {
@@ -25,7 +29,7 @@ static void near_callback(void* data, dGeomID ga, dGeomID gb) {
             contact.geom = geoms[c];
 
             dJointID joint = dJointCreateContact(WORLD, COLLIDE_JOINTS, &contact);
-            dJointAttach(joint, dGeomGetBody(ga), dGeomGetBody(gb));
+            dJointAttach(joint, bodya, bodyb);
         }
     }
 }

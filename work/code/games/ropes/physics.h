@@ -66,9 +66,9 @@ class Body {
             dBodyAddForceAtPos(body_, f.x, f.y, 0, p.x, p.y, 0);
         }
 
-        void set_mass(num mass) {
+        void set_mass(num mass, num radius = 1) {
             dMass dmass;
-            dMassSetSphere(&dmass, mass / (4.0/3.0*M_PI), 1);
+            dMassSetSphereTotal(&dmass, mass, radius);
             dBodySetMass(body_, &dmass);
         }
 

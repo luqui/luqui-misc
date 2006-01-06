@@ -12,7 +12,7 @@
 
 class Player : public MouseSelector, public Object {
 public:
-    Player(vec pos) : angle_(0), geom_(pos, radius) {
+    Player(vec pos) : spikey_(0), angle_(0), geom_(pos, radius) {
         body_.set_position(pos);
         body_.set_owner(static_cast<void*>(this));
         geom_.attach(&body_);
@@ -48,9 +48,23 @@ public:
         num dist = radius + Spikey::radius;
         vec dir = vec(cos(angle_), sin(angle_));
         vec pos = body_.position();
-        Spikey* spikey = new Spikey(pos + dist*dir, dir / STEP);
+        spikey_ = new Spikey(pos + dist*dir, dir / STEP);
         body_.apply_force(-dir / STEP, pos);  // newton's 3rd
-        OBJECT_MANAGER->add(spikey);
+        OBJECT_MANAGER->add(spikey_);
+    }
+
+    void mouse_left_button_up() {
+        if (!spikey_) return;
+        Rope* rope = new Rope(this, &body_, spikey_, spikey_->body());
+        ropes_.push_back(rope);
+        OBJECT_MANAGER->add(rope);
+    }
+
+    void mark() {
+        if (spikey_) OBJECT_MANAGER->mark(spikey_);
+        for (ropes_t::iterator i = ropes_.begin(); i != ropes_.end(); ++i) {
+            OBJECT_MANAGER->mark(*i);
+        }
     }
 
     bool visible() const { return true; }
@@ -58,9 +72,14 @@ public:
 private:
     Player(const Player&);  // no copying of players
 
+    Spikey* spikey_;
+
     num angle_;
     Body body_;
     Circle geom_;
+
+    typedef list<Rope*> ropes_t;
+    ropes_t ropes_;
 };
 
 const num Player::radius = 1;

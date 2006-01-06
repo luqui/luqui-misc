@@ -12,7 +12,7 @@ num OVERSTEP = 0;
 ObjectManager* OBJECT_MANAGER;
 
 void setup_gfx() {
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE);
     SDL_SetVideoMode(PIXEL_WIDTH, PIXEL_HEIGHT, 24, 
                      SDL_OPENGL | (SDL_FULLSCREEN * FULLSCREEN)) >= 0
         || DIE("Couldn't set video mode: " + SDL_GetError());

@@ -60,4 +60,7 @@ inline num sign(num x) {
     return x >= 0 ? 1 : -1;
 }
 
+extern int P1_SCORE;
+extern int P2_SCORE;
+
 #endif

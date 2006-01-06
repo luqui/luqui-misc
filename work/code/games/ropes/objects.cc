@@ -100,7 +100,7 @@ Rope::Rope(Object* obja, Body* bodya, Object* objb, Body* bodyb)
     dJointSetSliderAxis(rope_, axis.x, axis.y, 0);
     
     dJointSetSliderParam(rope_, dParamLoStop, 0);
-    dJointSetSliderParam(rope_, dParamStopCFM, 0.10);
+    dJointSetSliderParam(rope_, dParamStopCFM, 0.25);
     dJointSetSliderParam(rope_, dParamStopERP, 0.01);
 
     ext_ = base_ext_ = axis.norm();

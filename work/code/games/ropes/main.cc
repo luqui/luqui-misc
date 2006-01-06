@@ -9,6 +9,9 @@
 num STEP = 1/60.0;
 num OVERSTEP = 0;
 
+int P1_SCORE = 0;
+int P2_SCORE = 0;
+
 void setup_gfx() {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_NOPARACHUTE);
     SDL_SetVideoMode(PIXEL_WIDTH, PIXEL_HEIGHT, 24, 
@@ -39,6 +42,21 @@ int main() {
         events();
         LEVEL->step();
         overstep -= STEP;
+
+        if (LEVEL->frozen()) {
+            bool restart = true;
+            if (LEVEL->p1->dead() && LEVEL->p2->dead()) ;
+            else if (LEVEL->p1->dead()) P2_SCORE++;
+            else if (LEVEL->p2->dead()) P1_SCORE++;
+            else restart = false;
+
+            if (restart) {
+                delete LEVEL;
+                LEVEL = new Level;
+                LEVEL->load_level("levels/walls.lvl");
+                MOUSE_FOCUS = LEVEL->player;
+            }
+        }
 
         // avoid degenerate behavior for expensive step()s.
         if (overstep > STEP) overstep = STEP;

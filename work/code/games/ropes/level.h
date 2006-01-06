@@ -35,6 +35,8 @@ public:
     
     size_t max_ropes;
     
+    num fire_velocity;
+    
     dWorldID world;
     
     dSpaceID collide_space;

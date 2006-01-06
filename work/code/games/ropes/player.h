@@ -46,6 +46,7 @@ public:
 
     void draw() {
         vec pos = body_.position();
+        find_selected_rope();
         glPushMatrix();
             glTranslated(pos.x, pos.y, 0);
             
@@ -74,7 +75,7 @@ public:
         num dist = 1 + Spikey::radius;
         vec dir = vec(cos(angle_), sin(angle_));
         vec pos = body_.position();
-        vec force = 2 * dir / STEP;
+        vec force = LEVEL->fire_velocity * dir / STEP;
         spikey_ = new Spikey(pos + dist*dir, force);
         body_.apply_force(-force, pos);  // newton's 3rd
         LEVEL->manager->add(spikey_);
@@ -124,6 +125,14 @@ public:
     }
 
     bool visible() const { return true; }
+    
+    bool dead() const {
+        vec pos = body_.position();
+        if (pos.x + 1 < LEVEL->left   || pos.x - 1 > LEVEL->right
+         || pos.y + 1 < LEVEL->bottom || pos.y - 1 > LEVEL->top)
+                return true;
+        else return false;
+    }
 
     Color color() const { return color_; }
 

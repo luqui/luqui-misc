@@ -46,6 +46,9 @@ void Level::load_level(string file)
 
     literal(fin, "ropes");
     fin >> max_ropes;
+
+    literal(fin, "gunspeed");
+    fin >> fire_velocity;
     
     int boxes;
     literal(fin, "boxes");
@@ -147,5 +150,19 @@ void Level::draw()
             glVertex2d(left + rpoint, bottom+0.5);
             glVertex2d(left + rpoint, bottom);
         glEnd();
+    }
+
+    Color p1col = p1->color();
+    glColor3d(p1col.r, p1col.g, p1col.b);
+    for (int i = 0; i < P1_SCORE; i++) {
+        num x = left + 0.75 * i + 0.25;
+        draw_box(vec(x, top - 0.75), vec(x + 0.5, top - 0.25));
+    }
+    
+    Color p2col = p2->color();
+    glColor3d(p2col.r, p2col.g, p2col.b);
+    for (int i = 0; i < P2_SCORE; i++) {
+        num x = right - 0.75 * i - 0.25;
+        draw_box(vec(x - 0.5, top - 0.75), vec(x, top - 0.25));
     }
 }

@@ -28,6 +28,7 @@ public:
     void find_selected_rope() {
         if (this != LEVEL->player) {
             if (selected_) selected_->deselect();
+            selected_ = 0;
             return;
         }
         Rope* best = 0;  num bestdiff = 1e999;

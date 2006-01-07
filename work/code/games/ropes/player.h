@@ -96,7 +96,13 @@ public:
         find_selected_rope();
     }
 
+    void mouse_middle_button_down() {
+        LEVEL->unfreeze();
+    }
+
     void mouse_right_button_down() {
+        if (spikey_) spikey_ = 0; // right click to not attach rope
+        
         if (selected_) {
             for (ropes_t::iterator i = ropes_.begin(); i != ropes_.end(); ++i) {
                 if (*i == selected_) {

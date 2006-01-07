@@ -79,6 +79,13 @@ public:
         spikey_ = new Spikey(pos + dist*dir, force);
         body_.apply_force(-force, pos);  // newton's 3rd
         LEVEL->manager->add(spikey_);
+        
+        while (ropes_.size() >= LEVEL->max_ropes) {
+            Rope* fst = ropes_.front();
+            ropes_.pop_front();
+            LEVEL->manager->remove(fst);
+        }
+        
         LEVEL->unfreeze();
     }
 
@@ -88,11 +95,7 @@ public:
         ropes_.push_back(rope);
         LEVEL->manager->add(rope);
 
-        while (ropes_.size() > LEVEL->max_ropes) {
-            Rope* fst = ropes_.front();
-            ropes_.pop_front();
-            LEVEL->manager->remove(fst);
-        }
+        spikey_ = 0;
         find_selected_rope();
     }
 
@@ -101,7 +104,10 @@ public:
     }
 
     void mouse_right_button_down() {
-        if (spikey_) spikey_ = 0; // right click to not attach rope
+        if (spikey_) {
+            spikey_ = 0; // right click not to attach rope
+            return;
+        }
         
         if (selected_) {
             for (ropes_t::iterator i = ropes_.begin(); i != ropes_.end(); ++i) {

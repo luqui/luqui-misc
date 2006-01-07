@@ -81,7 +81,7 @@ void Level::load_level(string file)
 
     set_view();
 
-    player = p1;
+    player = P1_SCORE <= P2_SCORE ? p1 : p2;
     stepct_ = 5*int(1/STEP);
 }
 

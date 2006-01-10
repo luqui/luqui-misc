@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+my $per = 100;
+if ($ARGV[0] eq '-n') {
+    shift;
+    $per = shift;
+}
+
+my $ct = 0;
+while (<>) {
+    print unless $ct %= $per;
+    $ct++;
+}

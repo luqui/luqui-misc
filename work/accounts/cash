@@ -4,7 +4,7 @@
 <gnc:book version="2.0.0">
 <book:id type="guid">0b1ea4f90af13b80aa4bf9e881592f2d</book:id>
 <gnc:count-data cd:type="account">24</gnc:count-data>
-<gnc:count-data cd:type="transaction">15</gnc:count-data>
+<gnc:count-data cd:type="transaction">17</gnc:count-data>
 <gnc:account version="2.0.0">
   <act:name>Assets</act:name>
   <act:id type="guid">1658bd8e5ec0199401767a3ef789b89c</act:id>
@@ -761,6 +761,66 @@
       <split:reconciled-state>n</split:reconciled-state>
       <split:value>-1396/100</split:value>
       <split:quantity>-1396/100</split:quantity>
+      <split:account type="guid">c2aeafd6e80ecc5db05f2f29fe42ca99</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">c5cc6082baff6b2f20c9953c2083113b</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-13 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-13 16:44:14 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>Radio Shack: Various cables for speakers</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">e4490fd857459732ee2157f75c9036fe</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>1619/100</split:value>
+      <split:quantity>1619/100</split:quantity>
+      <split:account type="guid">e1651cd4c8ea4e9ea2b68e27e6ace67d</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">2a6f29abba199f0c082c2bdfd97b0667</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-1619/100</split:value>
+      <split:quantity>-1619/100</split:quantity>
+      <split:account type="guid">c2aeafd6e80ecc5db05f2f29fe42ca99</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">c0ac2bc2de8de4322a4261ad170c058c</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-13 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-13 16:45:16 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>Safeway: Orange Juice</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">8fdb2b06650eed74e1e373a14f222cd2</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>1103/100</split:value>
+      <split:quantity>1103/100</split:quantity>
+      <split:account type="guid">ab318e6a7674fdd0743cc728a15fcde5</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">64ef1b8830dbdabdaa451562b731dc11</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-1103/100</split:value>
+      <split:quantity>-1103/100</split:quantity>
       <split:account type="guid">c2aeafd6e80ecc5db05f2f29fe42ca99</split:account>
     </trn:split>
   </trn:splits>

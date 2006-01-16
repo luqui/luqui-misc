@@ -4,7 +4,7 @@
 <gnc:book version="2.0.0">
 <book:id type="guid">0b1ea4f90af13b80aa4bf9e881592f2d</book:id>
 <gnc:count-data cd:type="account">25</gnc:count-data>
-<gnc:count-data cd:type="transaction">21</gnc:count-data>
+<gnc:count-data cd:type="transaction">23</gnc:count-data>
 <gnc:account version="2.0.0">
   <act:name>Assets</act:name>
   <act:id type="guid">1658bd8e5ec0199401767a3ef789b89c</act:id>
@@ -1146,6 +1146,66 @@
       <split:reconciled-state>n</split:reconciled-state>
       <split:value>-500/100</split:value>
       <split:quantity>-500/100</split:quantity>
+      <split:account type="guid">2c220f228263548f309ceca07ade534b</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">8aad1fc2d3f23ee24054e957c7af7523</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-16 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-16 02:41:21 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>Billy Martin Rhythm Class</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">7934ccf26cf31ac7937f1d4b93f1dd53</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>2200/100</split:value>
+      <split:quantity>2200/100</split:quantity>
+      <split:account type="guid">b768f44e25857f00463e3a8e34c3f2dd</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">6590ea24a22f91b12139f14b8fbce89b</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-2200/100</split:value>
+      <split:quantity>-2200/100</split:quantity>
+      <split:account type="guid">2c220f228263548f309ceca07ade534b</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">472d38941b21df27e2e6a59236486082</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-16 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-16 02:41:56 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>Qdoba</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">0d1d46b9ed85bbc8d8469be975272aa4</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>600/100</split:value>
+      <split:quantity>600/100</split:quantity>
+      <split:account type="guid">406ac83c5c85423dd0743db29bbb980a</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">3ffd274fd9931591e23742b3c3decabd</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-600/100</split:value>
+      <split:quantity>-600/100</split:quantity>
       <split:account type="guid">2c220f228263548f309ceca07ade534b</split:account>
     </trn:split>
   </trn:splits>

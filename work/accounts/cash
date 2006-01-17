@@ -4,7 +4,7 @@
 <gnc:book version="2.0.0">
 <book:id type="guid">0b1ea4f90af13b80aa4bf9e881592f2d</book:id>
 <gnc:count-data cd:type="account">25</gnc:count-data>
-<gnc:count-data cd:type="transaction">23</gnc:count-data>
+<gnc:count-data cd:type="transaction">24</gnc:count-data>
 <gnc:account version="2.0.0">
   <act:name>Assets</act:name>
   <act:id type="guid">1658bd8e5ec0199401767a3ef789b89c</act:id>
@@ -902,6 +902,36 @@
       <split:reconciled-state>n</split:reconciled-state>
       <split:value>-4000/100</split:value>
       <split:quantity>-4000/100</split:quantity>
+      <split:account type="guid">c2aeafd6e80ecc5db05f2f29fe42ca99</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">6690cd16aec4784026da36dfdd27efde</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-17 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-17 01:03:34 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>King Soopers: Green Tea and Fruits</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">283833db89c84cbb1e676b045cad2d13</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>2197/100</split:value>
+      <split:quantity>2197/100</split:quantity>
+      <split:account type="guid">ab318e6a7674fdd0743cc728a15fcde5</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">dfd666c000fa7d3f6d36d852acd7d29d</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-2197/100</split:value>
+      <split:quantity>-2197/100</split:quantity>
       <split:account type="guid">c2aeafd6e80ecc5db05f2f29fe42ca99</split:account>
     </trn:split>
   </trn:splits>

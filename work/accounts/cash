@@ -3,8 +3,8 @@
 <gnc:count-data cd:type="book">1</gnc:count-data>
 <gnc:book version="2.0.0">
 <book:id type="guid">0b1ea4f90af13b80aa4bf9e881592f2d</book:id>
-<gnc:count-data cd:type="account">25</gnc:count-data>
-<gnc:count-data cd:type="transaction">31</gnc:count-data>
+<gnc:count-data cd:type="account">26</gnc:count-data>
+<gnc:count-data cd:type="transaction">32</gnc:count-data>
 <gnc:account version="2.0.0">
   <act:name>Assets</act:name>
   <act:id type="guid">1658bd8e5ec0199401767a3ef789b89c</act:id>
@@ -136,6 +136,27 @@
       <slot:value type="string"></slot:value>
     </slot>
   </act:slots>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Financial Aid</act:name>
+  <act:id type="guid">08bffbde4d59564295f2522f09797f2d</act:id>
+  <act:type>INCOME</act:type>
+  <act:commodity>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:slots>
+    <slot>
+      <slot:key>placeholder</slot:key>
+      <slot:value type="string">false</slot:value>
+    </slot>
+    <slot>
+      <slot:key>notes</slot:key>
+      <slot:value type="string"></slot:value>
+    </slot>
+  </act:slots>
+  <act:parent type="guid">354c12b8cb519e4f73357b8c5c6bf9a9</act:parent>
 </gnc:account>
 <gnc:account version="2.0.0">
   <act:name>Poker</act:name>
@@ -1057,6 +1078,36 @@
       <split:value>-101815/100</split:value>
       <split:quantity>-101815/100</split:quantity>
       <split:account type="guid">46855ee3fb2e21c80e1d3784179b379e</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">8344bca9c462841c31ccf946f9b0468c</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-18 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-18 17:16:41 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>CU Voucher Refund</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">9b8e66754f7d717638dc0a460c7f47e7</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>244924/100</split:value>
+      <split:quantity>244924/100</split:quantity>
+      <split:account type="guid">7f1707672569125550f27e9d8f22bca5</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">f85adc4c1b2cf86cb48b9b97aa07a8f1</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-244924/100</split:value>
+      <split:quantity>-244924/100</split:quantity>
+      <split:account type="guid">08bffbde4d59564295f2522f09797f2d</split:account>
     </trn:split>
   </trn:splits>
 </gnc:transaction>

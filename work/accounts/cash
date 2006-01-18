@@ -4,7 +4,7 @@
 <gnc:book version="2.0.0">
 <book:id type="guid">0b1ea4f90af13b80aa4bf9e881592f2d</book:id>
 <gnc:count-data cd:type="account">25</gnc:count-data>
-<gnc:count-data cd:type="transaction">24</gnc:count-data>
+<gnc:count-data cd:type="transaction">31</gnc:count-data>
 <gnc:account version="2.0.0">
   <act:name>Assets</act:name>
   <act:id type="guid">1658bd8e5ec0199401767a3ef789b89c</act:id>
@@ -937,6 +937,96 @@
   </trn:splits>
 </gnc:transaction>
 <gnc:transaction version="2.0.0">
+  <trn:id type="guid">6759d506f00ec947aa89add906fc7eaa</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-18 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-18 00:35:16 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>ATM</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">8fedef2a93760eec45daa71f57916d28</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>1000/100</split:value>
+      <split:quantity>1000/100</split:quantity>
+      <split:account type="guid">2c220f228263548f309ceca07ade534b</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">451ab7708c1fb8b8ed21b578411f263e</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-1000/100</split:value>
+      <split:quantity>-1000/100</split:quantity>
+      <split:account type="guid">c2aeafd6e80ecc5db05f2f29fe42ca99</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">0780c079c10f71e9eb7937108129f06b</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-18 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-18 00:35:27 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>ATM for Poker at Jillians</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">3ceb781e685281a9034e151ece7a64b6</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>16000/100</split:value>
+      <split:quantity>16000/100</split:quantity>
+      <split:account type="guid">2c220f228263548f309ceca07ade534b</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">e441fda609472ccc97aa44dd8f99c77f</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-16000/100</split:value>
+      <split:quantity>-16000/100</split:quantity>
+      <split:account type="guid">c2aeafd6e80ecc5db05f2f29fe42ca99</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">4638b7c2db02944877237282a4cad4ef</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-18 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-18 00:42:45 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>CSCI 7135: &quot;Computer Architecture: A quantitative approach&quot;</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">6f0c9f8256f261b54fd8f5543ec10292</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>5648/100</split:value>
+      <split:quantity>5648/100</split:quantity>
+      <split:account type="guid">e00d035478ecd831204d5016967b465f</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">8d2e476727a353056a5c4d400cd032a2</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-5648/100</split:value>
+      <split:quantity>-5648/100</split:quantity>
+      <split:account type="guid">c2aeafd6e80ecc5db05f2f29fe42ca99</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
   <trn:id type="guid">69ed240ba9ea8c08cca607eb5f8a8e6c</trn:id>
   <trn:currency>
     <cmdty:space>ISO4217</cmdty:space>
@@ -1237,6 +1327,126 @@
       <split:value>-600/100</split:value>
       <split:quantity>-600/100</split:quantity>
       <split:account type="guid">2c220f228263548f309ceca07ade534b</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">d80b1305d6275bb34b408f5ee751f96a</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-18 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-18 00:36:15 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>Chai at School</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">7294d74f9af739889012d01fcd7668e0</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>200/100</split:value>
+      <split:quantity>200/100</split:quantity>
+      <split:account type="guid">406ac83c5c85423dd0743db29bbb980a</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">189900d0cc065403a6613026a6e7d738</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-200/100</split:value>
+      <split:quantity>-200/100</split:quantity>
+      <split:account type="guid">2c220f228263548f309ceca07ade534b</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">d0e7990039ff0fcc7e3460880c53a420</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-18 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-18 00:36:34 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>V&amp;T at Jillians</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">6a9be8fcd655f259e945e3a6bcafe267</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>400/100</split:value>
+      <split:quantity>400/100</split:quantity>
+      <split:account type="guid">406ac83c5c85423dd0743db29bbb980a</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">c43b24b1fabca668d6fb03a8def86dcc</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-400/100</split:value>
+      <split:quantity>-400/100</split:quantity>
+      <split:account type="guid">2c220f228263548f309ceca07ade534b</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">46f3f80ced6e0ec150eb25f20940df7f</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-18 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-18 00:37:05 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>Buy in at Jillians</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">b925ce3ceff49595fc6ccce1ceb5f5ac</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>6000/100</split:value>
+      <split:quantity>6000/100</split:quantity>
+      <split:account type="guid">c95ef8e8144c4a22448743df279c88f8</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">752f1f26110eb3342b6c8432d650b483</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-6000/100</split:value>
+      <split:quantity>-6000/100</split:quantity>
+      <split:account type="guid">2c220f228263548f309ceca07ade534b</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">1b2fdc7d9b98f3ad01d148f0cf43cc08</trn:id>
+  <trn:currency>
+    <cmdty:space>ISO4217</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2006-01-18 00:00:00 +0000</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2006-01-18 00:37:27 +0000</ts:date>
+  </trn:date-entered>
+  <trn:description>Buy out at Jillians</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">d2610e6237f2d8f03d42f00e3d7ba756</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>8000/100</split:value>
+      <split:quantity>8000/100</split:quantity>
+      <split:account type="guid">2c220f228263548f309ceca07ade534b</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">4671fe8d67d028c997b5b41b85490da2</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-8000/100</split:value>
+      <split:quantity>-8000/100</split:quantity>
+      <split:account type="guid">a32a6a9a2a9f37178cd2a08b4fd710be</split:account>
     </trn:split>
   </trn:splits>
 </gnc:transaction>

@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+# Luke Palmer
+# 2005-01-27
+# Homework 1
+
 my ($eps, $pow) = (1, 0);
 while (1) {
     my $diff = (1 + $eps) - 1;

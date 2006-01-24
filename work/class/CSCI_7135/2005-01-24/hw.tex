@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+
+\begin{document}
+\noindent 
+Luke Palmer \\
+CSCI 7135 \\
+2005-01-24
+
+PAPI, the ``Performance Application Programming Interface'' is a
+platform-independent\footnote{When you want it to be.} interface to the
+hardware performance counters of many architectures.  It provides its
+users with two views, what it calls the ``high level'' and ``low level''
+views.   The high level view provides a simple interface that is totally
+platform-independent, providing common counters available everywhere.
+The low level view allows specification of hardware-specific counters,
+as well as a few ``advanced'' features, such as counter multiplexing.
+
+PAPI's interface is fairly straightforward: create an event set
+describing the events to monitor, ask it to start monitoring those
+events, then ask it what it got.  PAPI provides an abstraction called
+\textit{multiplexing} to monitor more events at a time than the
+processor is capable of, which conveniently has the same interface as
+non-multiplexed monitoring, except that you may only use the low level
+interface ``to prevent na\"ive use'' (ugh).  Multiplexing is implemented
+by giving each monitor a time slice, much like the processor threads
+processes.  This is done in software, so switching the monitors too
+often could have an effect on the performance profile of the program.
+
+Perhaps the most powerful feature of PAPI is its \textit{statistical
+profiling}.  This interrupts the program in regular intervals and
+records the value of a monitor in bins indexed by the program counter.
+This gives a statistical appoximation to how much each portion of the
+program triggered that event.  However, exactly how often to interrupt
+is a difficult question: if we interrupt too frequently, writing the
+results to memory could skew results regarding cache.  If we interrupt
+too infrequently, the program will have to be run for a long time to
+gather accurate results.
+
+That doesn't leave much to say.  PAPI looks to be a well-designed
+(with the exception of the ``na\"ive use'' thing above) and full
+featured library.
+
+\end{document}

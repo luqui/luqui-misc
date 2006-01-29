@@ -15,15 +15,33 @@ metric eqs xs =
     localMetric :: Equation -> Int
     localMetric (inp, outp) = abs (outp - sum (zipWith (*) inp xs))
 
-binaries :: Int -> [[Int]]
-binaries 0 = [[]]
-binaries n = do
-    bn' <- binaries (n-1)
-    bit <- [0,1]
-    return (bit:bn')
-    
-solve :: [Equation] -> [[Int]] -> [[Int]]
-solve eqs = filter ((== 0) . metric eqs)
+liftMA :: (Monad m) =>  ([a] -> b) -> [m a] -> m b
+liftMA f ms =
+    liftM f (liftJoin ms)
+    where
+    liftJoin :: (Monad m) => [m a] -> m [a]
+    liftJoin []     = return []
+    liftJoin (m:ms) = liftM2 (:) m (liftJoin ms)
+
+checkEqs :: [Equation] -> [Int] -> Bool
+checkEqs eqs pfx = 
+    all checkEq eqs
+    where
+    checkEq :: Equation -> Bool
+    checkEq (xs, y) = 
+        let val0 = sum (zipWith (*) xs (pfx ++ repeat 0))
+            val1 = sum (zipWith (*) xs (pfx ++ repeat 1)) in
+        case () of
+            () | val0 > y -> False
+               | val1 < y -> False
+               | otherwise -> True
+
+pruneSolve :: [Equation] -> Int -> [Int] -> [[Int]]
+pruneSolve eqs 0 pfx = if metric eqs pfx == 0 then [pfx] else []
+pruneSolve eqs n pfx = 
+    if checkEqs eqs pfx
+        then pruneSolve eqs (n-1) (pfx ++ [0]) ++ pruneSolve eqs (n-1) (pfx ++ [1])
+        else []
 
 data Check = Y Int | N
 
@@ -44,7 +62,7 @@ main :: IO ()
 main = do
     putStrLn "Enter each equation, followed by a single '.' when done."
     eqs <- readEq
-    let sols = solve eqs (binaries (numVars eqs))
+    let sols = pruneSolve eqs (numVars eqs) []
     mapM_ print sols
     putStrLn "--"
     print (convolve sols)

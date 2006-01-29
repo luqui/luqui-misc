@@ -5,10 +5,9 @@ use LWP::Simple;
 
 my $feed;
 
-my $cmd = shift;
-if ($cmd eq 'watch' || $cmd eq 'w') {
+if (@ARGV == 1) {
     get_feed();
-    my $show = shift or usage;
+    my $show = shift;
     my @shows = select_show($show);
     if (@shows > 1) {
         print "Multiple shows found for criterion '$show'\n";
@@ -19,16 +18,10 @@ if ($cmd eq 'watch' || $cmd eq 'w') {
     exec "mplayer -cache 512 '$link'";
     die "couldn't fork mplayer: $!\n";
 }
-elsif ($cmd eq 'schedule' || $cmd eq 's') {
+elsif (@ARGV == 0) {
     get_feed();
-    if (my $show = shift) {
-        my @shows = select_show($show);
-        show_title($_) for @shows;
-    }
-    else {
-        for (0..@{$feed->{channel}{item}}-1) {
-            show_title($_);
-        }
+    for (0..@{$feed->{channel}{item}}-1) {
+        show_title($_);
     }
 }
 else {
@@ -71,9 +64,8 @@ sub usage {
     print <<EOU;
 Usage: ess command [args]
   Commands:
-  ess watch <criterion>      Watch the specified show
-  ess schedule [criterion]   Show what is playing on the given channel 
-                             or on all channels if not specified
+  ess                        Show what is playing on all channels
+  ess <criterion>            Watch the specified show
 EOU
     exit;
 }

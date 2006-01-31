@@ -1,0 +1,48 @@
+\documentclass[12pt]{article}
+
+\begin{document}
+\noindent
+Luke Palmer \\
+CSCI 7135 \\
+2005-01-31
+
+With the exception of a few key features, the Pentium 4's philosophy
+seems to be ``make everything bigger''.  The Pentium 4 has a longer
+pipeline (to allow higher clock speeds), a larger L2 cache and data path
+width, and more internal registers than the Pentium 3.  Despite the
+appearance of making this the SUV of processors, the papers argue that
+this does have real benefits due to hyperthreading.  
+
+A new technology, hyperthreading, is supported on newer models of the
+Pentium 4.  Hyperthreading allows running two-threaded programs without
+context switching, by keeping two states (registers, PC) in the
+processor simultaneously, but sharing most resources, such as data
+cache.  Increasing the size of some resources has little effect on
+single-threaded programs, but a large effect on multi-threaded programs.
+
+Pentium 4 also supports the ``trace cache'', which is an instruction
+cache that caches instructions \textit{after} they have been decoded
+into microcode.  It also orders the cached $\mu$ops into sequences (or
+``traces''), so that one form of branch prediction comes for free; i.e.
+the destination of a recently taken branch will be included in the same
+trace as the source.
+
+Finally, Pentium 4 flaunts an out-of-order core (a feature not so
+uncommon these days) which tries to keep every subunit of the processor
+busy as much as possible.  A memory load, a floating point multiply, and
+an integer shift can all be performed simultaneously by queueing
+instructions of various types for their respective cores.  In order to
+support this out-of-order execution, Pentium 4 does ``register
+renaming'' to avoid working on corrupt data.  I'm not sure how that
+works.
+
+Intel is phasing out the Netburst architecture, going back to the
+Pentium III architecture for their next generation of processors, the
+Pentium M.  Although the Pentium 4 could achieve incredibly high clock
+frequencies, the long pipeline must have punished branch mispredicts too
+much.  A lot of modern software has many, many branches (consider
+virtual machines with null pointer checks or vtable dispatches), so
+optimizing for ``pure computation'' flow was probably a poor choice.
+Then again, the Pentium 4 performs well with multimedia applications:
+video encoding and playback for example.
+\end{document}

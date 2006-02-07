@@ -1,0 +1,38 @@
+\documentclass[12pt]{article}
+
+\begin{document}
+\noindent
+Luke Palmer \\
+CSCI 7135 \\
+2006-02-07
+
+This paper presented the design decisions and the features of Intel's
+Pentium M processor for mobile computers.  An analysis showed that a 3\%
+power increase could yield a 1\% performance increase by clock scaling.
+This was used as a baseline metric for determining which features to
+include in the Pentium M.  If the ratio between the power increase
+and the performance gain was less than three, the feature was, in
+general, included.
+
+Because a processor takes about 10\% of the power used in a laptop
+computer, the power optimization was made to reduce heat, not
+necessarily to increase battery life.  However, the paper gave little
+more than a mention of the ``Power Density'' constraint.  Given that
+battery life is not the goal, this issue deserved more treatment.
+
+The Pentium M features a smarter branch predictor in order to reduce the
+number of speculative instructions executed.   Notably, it can predict
+indirect branches which is a win for object-oriented software, or any
+software running in a virtual machine, which is becoming more and more
+common.  The Pentium M also has ``micro-ops fusion'', which splits a
+single memory $\mu$op only at the execution level to reap the benefits
+of out-of-order execution, rather than splitting it into two completely
+separate $\mu$ops.  It also flaunts an interesting (but confusing)
+technology related to the stack pointer.
+
+Finally, the paper includes a benchmark analysis comparing the Pentium M
+to the Pentium 4 and Pentium III processors.   The statistical analysis
+fell short of being thorough and rigorous, but glancing at the charts
+looked favorable, as one would expect.
+
+\end{document}

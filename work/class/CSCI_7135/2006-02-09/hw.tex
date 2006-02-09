@@ -1,0 +1,42 @@
+\documentclass[12pt]{article}
+
+\begin{document}
+\noindent
+Luke Palmer \\
+CSCI 7135 \\
+2006-02-09
+
+This Tom's Hardware article contrasted\footnote{Accidentally, so they
+say.} the performance and power usage of the Pentium M with the Pentium
+4.  The article tested the Pentium M as if it were a desktop processor,
+using the Asus CT-479 adapter, which allows a Pentium M to be placed in
+a Pentium 4 chipset.  They performed a series of speed and thermal
+performance benchmarks, finding that the Pentium M often outperforms the
+Pentium 4 even as a desktop processor.
+
+The authors found that it was possible to overclock the Pentium M up to
+2.56 GHz by overclocking the front-side bus.  The overclocked Pentium M
+was at the top of the list (against a selection of Pentium 4s and Athlon
+64 FXs).  The Pentium M didn't beat the Pentium 4 on video encoding
+tasks, however; it lagged behind by a fair amount.  We've seen that the
+Pentium 4 is good at these kinds of tasks because of the trace cache and
+SSE3, neither of which the Pentium M supports. The Pentium M also didn't
+outperform the Pentium 4 on the memory benchmarks.  This is most likely
+because of the 160 MHz bus, whereas the top-performing Pentium 4 had a
+266 MHz bus at its disposal.
+
+However, the Pentium M has better power consumption (and therefore heat
+dissipation) by 80\% (at peak load).  The fact that it outperformed the
+Pentium 4 in many cases combined with the power win caused the authors
+to question why the Pentium 4 was even necessary.  They stated that
+Intel planned to phase out the Pentium 4.  In light of these results,
+this seems like a wise move.
+
+One thing that I noticed when reading the Pentium 4 and Pentium M
+articles previously was that the Pentium 4 flaunted a bunch of new
+features like a \$29.99 late-night infomercial.  The Pentium M instead
+included a detailed analysis of all the features that could be included,
+and a precise metric determining whether they should be.  This shows
+that it pays to do engineering when engineering a processor.
+
+\end{document}

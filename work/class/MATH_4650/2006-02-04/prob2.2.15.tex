@@ -1,0 +1,22 @@
+Solving $2 \sin(\pi x) + x = 0$ is solving $f(x) = x$ when $f(x) = -2
+\sin(\pi x)$.  However, it does not converge.  I tested it to 1,000
+iterations.  For the trees' sake, here are the first 15 only.
+
+\begin{verbatim}
+Prelude> mapM_ print $ take 15 $ iterate (\x -> -2 * sin (pi * x)) 1.0
+1.0
+-2.4492127076447545e-16
+1.5388857298831052e-15
+-9.66910420742986e-15
+6.075277348971162e-14
+-3.817209337609655e-13
+2.3984233624497707e-12
+-1.506973843134066e-11
+9.468595909483918e-11
+-5.949294269809009e-10
+3.738051834415167e-9
+-2.3486872363473077e-8
+1.4757237134577618e-7
+-9.272245553853974e-7
+5.8259237028454145e-6
+\end{verbatim}

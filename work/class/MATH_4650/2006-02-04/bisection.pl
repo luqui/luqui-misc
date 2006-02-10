@@ -36,10 +36,12 @@ my $fn = eval "sub { my \$x = shift; $fntxt }"
 
 while (my $intxt = $term->readline('Interval = ')) {
     unless ($intxt =~ /^ \s* \[ 
-                        \s* (-?\d+\.\d+) \s* , 
-                        \s* (-?\d+\.\d+) \s* 
-                      \] \s* $/x) {
+                        \s* (-?\d+\.\d+) \s* ,   # lower bound
+                        \s* (-?\d+\.\d+) \s*     # upper bound
+                      \] \s* (?:\((\d+)\))? \s*          # optional accuracy
+                      $/x) {
         print "Bad interval\n";  next;
     }
-    print bisect($fn, $1, $2, 1e-2), "\n";
+    my $accuracy = $3 || 2;
+    print bisect($fn, $1, $2, 10**-$accuracy), "\n";
 }

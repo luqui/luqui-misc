@@ -1,0 +1,161 @@
+\documentclass[12pt]{article}
+
+\begin{document}
+\noindent
+Luke Palmer \\
+MATH 4650 \\
+2006-02-10
+
+Note: The problems that make use of computer output either used GHCi or
+one of the programs at the end of this homework.
+
+\begin{description}
+\item{2.1.4}    \input{prob2.1.4.tex}
+
+\item{2.1.12}   \input{prob2.1.12.tex}
+
+\item{2.2.2}    \input{prob2.2.2.tex}
+
+\item{2.2.8}    \input{prob2.2.8.tex}
+
+\item{2.2.15}   \input{prob2.2.15.tex}
+
+\item{2.2.20}   \input{prob2.2.20.tex}
+
+\item{2.2.21}   \input{prob2.2.21.tex}
+
+\item{2.2.22}   \input{prob2.2.22.tex}
+
+\item{2.3.6e}   \input{prob2.3.6e.tex}
+
+\item{2.3.8e}   \input{prob2.3.8e.tex}
+
+\item{2.3.15}   \input{prob2.3.15.tex}
+\end{description}
+
+\section*{Programs Used}
+
+\subsection*{Newton's Method}
+\begin{verbatim}
+#!/usr/bin/perl
+
+use strict;
+use Term::ReadLine;
+
+sub checkzero {
+    my ($f, $p) = @_;
+    # doesn't work if df/dx > 100 at p
+    warn "Warning: Did not converge to a zero!\n"
+        unless abs($f->($p)) < 1e-10;
+    return $p;
+}
+
+sub checkconv {
+    my ($a, $b) = @_;
+    return abs(($a-$b)/$a) < 1e-12;
+}
+
+sub newton {
+    my ($f, $df, $p0) = @_;
+    my $p = $p0;
+    my $prev;
+
+    while (1) {
+        print "  $p\n";
+        $prev = $p;
+        $p -= $f->($p) / $df->($p);
+
+        last if checkconv($p, $prev);
+    }
+    return checkzero($f, $p);
+}
+
+sub secant {
+    # basically straight from the book
+    my ($f, $p0, $p1) = @_;
+    my ($q0, $q1) = ($f->($p0), $f->($p1));
+    my $p;
+
+    while (1) {
+        print "  $p0, $p1\n";
+        $p = $p1 - $q1 * ($p1 - $p0) / ($q1 - $q0);
+        last if checkconv($p, $p1);
+        ($p0, $q0, $p1, $q1) = ($p1, $q1, $p, $f->($p));
+    }
+    return checkzero($f, $p);
+}
+
+my $pi = 4*atan2(1,1);
+
+my $term = Term::ReadLine::Gnu->new;
+
+my $fntxt = $term->readline('f($x) = ');
+my $fn = eval "sub { my \$x = shift; $fntxt }"
+            or die "Failed parse: $@";
+my $fptxt = $term->readline('f\'($x) = ');
+my $fp = eval "sub { my \$x = shift; $fptxt }"
+            or die "Failed parse: $@";
+
+while (my $intxt = $term->readline('Initial guess = ')) {
+    if ($intxt =~ s/^secant\s*//) {
+        my $intxt2 = $term->readline('Initial guess 2 = ');
+        print secant($fn, $intxt, $intxt2), "\n";
+    }
+    else {
+        print newton($fn, $fp, $intxt), "\n";
+    }
+}
+\end{verbatim}
+
+\subsection*{Bisection Method}
+\begin{verbatim}
+#!/usr/bin/perl
+
+use strict;
+use Term::ReadLine;
+
+sub bisect {
+    my ($func, $lo, $hi, $accuracy) = @_;
+    die "Bounds do not satisfy constrants"
+        unless $func->($lo) * $func->($hi) < 0;
+
+    if ($func->($lo) > 0) {
+        ($lo, $hi) = ($hi, $lo);   # make sure $func->($lo) < 0
+    }
+
+    while (abs($hi - $lo) > $accuracy) {
+        print "  [$lo, $hi]\n";
+        my $mid = ($hi + $lo) / 2;
+        if ($func->($mid) < 0) {
+            $lo = $mid;
+        }
+        elsif ($func->($mid) > 0) {
+            $hi = $mid;
+        }
+        else {   # $func->($mid) == 0
+            return $mid;
+        }
+    }
+    return(($hi + $lo) / 2);
+}
+
+my $term = Term::ReadLine::Gnu->new;
+
+my $fntxt = $term->readline('f($x) = ');
+my $fn = eval "sub { my \$x = shift; $fntxt }"
+            or die "Failed parse: $@";
+
+while (my $intxt = $term->readline('Interval = ')) {
+    unless ($intxt =~ /^ \s* \[
+                        \s* (-?\d+\.\d+) \s* ,   # lower bound
+                        \s* (-?\d+\.\d+) \s*     # upper bound
+                      \] \s* (?:\((\d+)\))? \s*          # optional accuracy
+                      $/x) {
+        print "Bad interval\n";  next;
+    }
+    my $accuracy = $3 || 2;
+    print bisect($fn, $1, $2, 10**-$accuracy), "\n";
+}
+\end{verbatim}
+
+\end{document}

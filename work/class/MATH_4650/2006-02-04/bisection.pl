@@ -42,6 +42,6 @@ while (my $intxt = $term->readline('Interval = ')) {
                       $/x) {
         print "Bad interval\n";  next;
     }
-    my $accuracy = $3 || 2;
+    my $accuracy = $3 || 12;
     print bisect($fn, $1, $2, 10**-$accuracy), "\n";
 }

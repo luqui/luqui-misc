@@ -13,7 +13,7 @@ sub checkzero {
 
 sub checkconv {
     my ($a, $b) = @_;
-    return abs(($a-$b)/$a) < 1e-12;
+    return abs($a-$b) < 1e-12;
 }
 
 sub newton {

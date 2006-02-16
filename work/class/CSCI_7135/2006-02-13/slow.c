@@ -43,8 +43,8 @@ int my_slow_code()
     size_t size = 1 << 28;   /* get a nice chunk, bigger than cache */
     unsigned int* data = malloc(size * sizeof(unsigned int));
     unsigned int idx = 42;
-    void* startB = &&start;
-    void* endB   = &&end;
+    volatile void* startB = &&start;
+    volatile void* endB   = &&end;
     
     start:
         if (i++ >= 100000) goto *endB;

@@ -1,0 +1,36 @@
+\documentclass[12pt]{article}
+
+\begin{document}
+\noindent
+Luke Palmer \\
+CSCI 7135 \\
+2006-02-21
+
+This chapter discusses many optimization techniques for threaded
+applications having to do with the intricacies of the hardware.  The
+chapter was well-organized and the reasons for each optimization were
+explained well.  Although there were many optimizations discussed, they
+either fit into general multithreading practices (eg. making each thread
+be efficient before trying to optimize their communication) or
+understanding of a few hardware themes (pipelining, caching).
+
+The optimization that relates to pipelining is simply to use the
+\texttt{pause} instruction in spin-wait loops.  This prevents multiple
+loads from going into the pipeline at once so that it doesn't get
+flooded.  Not only do multiple loads take away from the resources of the
+worker thread, they are all loads to the same address, so they are all
+contending and take a long time to retire from the pipeline.
+
+The chapter discussed a rather subtle optimization relating to caching.
+They suggest introducing per-instance offsets into entire programs and
+into code that is to be executed in two threads at once.  The same code
+presumably has the same data access patterns, so stripping off the
+higher-order bits will result in the same cache hashing.  Because of
+this, if two instances of the same code are executed simultaneously, the
+same cache buckets will be used and will cause poor cache distribution.
+
+There were several other fairly straightforward optimization principles
+discussed which didn't have as much to do with the specific guts of the
+hardware.  Although it got a little too list-like at times, overall this
+was a quick and informative read.
+\end{document}

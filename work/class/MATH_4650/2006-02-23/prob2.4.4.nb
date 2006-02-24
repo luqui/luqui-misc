@@ -1,0 +1,299 @@
+(************** Content-type: application/mathematica **************
+                     CreatedBy='Mathematica 5.2'
+
+                    Mathematica-Compatible Notebook
+
+This notebook can be used with any Mathematica-compatible
+application, such as Mathematica, MathReader or Publicon. The data
+for the notebook starts with the line containing stars above.
+
+To get the notebook into a Mathematica-compatible application, do
+one of the following:
+
+* Save the data starting with the line of stars above into a file
+  with a name ending in .nb, then open the file inside the
+  application;
+
+* Copy the data starting with the line of stars above to the
+  clipboard, then use the Paste menu command inside the application.
+
+Data for notebooks contains only printable 7-bit ASCII and can be
+sent directly in email or through ftp in text mode.  Newlines can be
+CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+
+NOTE: If you modify the data for this notebook not in a Mathematica-
+compatible application, you must delete the line below containing
+the word CacheID, otherwise Mathematica-compatible applications may
+try to use invalid cache data.
+
+For more information on notebooks and Mathematica-compatible 
+applications, contact Wolfram Research:
+  web: http://www.wolfram.com
+  email: info@wolfram.com
+  phone: +1-217-398-0700 (U.S.)
+
+Notebook reader applications are available free of charge from 
+Wolfram Research.
+*******************************************************************)
+
+(*CacheID: 232*)
+
+
+(*NotebookFileLineBreakTest
+NotebookFileLineBreakTest*)
+(*NotebookOptionsPosition[      6528,        208]*)
+(*NotebookOutlinePosition[      7176,        230]*)
+(*  CellTagsIndexPosition[      7132,        226]*)
+(*WindowFrame->Normal*)
+
+
+
+Notebook[{
+Cell[BoxData[""], "Input"],
+
+Cell[CellGroupData[{
+
+Cell["2.4.4", "Section"],
+
+Cell[BoxData[
+    \(nriter[f_]\  := \ 
+      Function[x, \[IndentingNewLine]\(f[x] \(f'\)[x]\)\/\(\(f'\)[x]\^2 - \
+f[x] \(f''\)[x]\)]\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell["(a)", "Subsection"],
+
+Cell[BoxData[
+    \(\(parta = 
+        nriter[Function[x, 
+            1 - 4  x\ Cos[x] + 2  x\^2 + Cos[2  x]]];\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(NestList[parta, 0.5, 10]\)], "Input"],
+
+Cell[BoxData[
+    \({0.5`, \(-0.2216635041043578`\), \(-0.5257368088302673`\), \
+\(-0.47743233346105585`\), \(-0.490425392795258`\), \
+\(-0.48710106518206286`\), \(-0.4879638364708492`\), \
+\(-0.48774072219490566`\), \(-0.487798474011426`\), \(-0.4877835289088023`\), \
+\(-0.48778739666730864`\)}\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \(parta =. \)], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(b)", "Subsection"],
+
+Cell[BoxData[
+    \(\(partb = 
+        nriter[Function[x, 
+            x\^2 + 6  x\^5 + 9  x\^4 - 2  x\^3 - 6  x\^2 + 1]];\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(NestList[partb, \(-2.5\), 10]\)], "Input"],
+
+Cell[BoxData[
+    \({\(-2.5`\), \(-1.7223097498234692`\), \(-0.6139174410429937`\), 
+      0.01867857231708095`, \(-0.01845560459955353`\), 
+      0.018647047959267377`, \(-0.01842485522430332`\), 
+      0.01861568231757126`, \(-0.018394259248487504`\), 
+      0.018584474065940236`, \(-0.018363815400312622`\)}\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \(partb =. \)], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(c)", "Subsection"],
+
+Cell[BoxData[
+    \(\(partc\  = \ 
+        nriter[\[IndentingNewLine]Function[x, 
+            Sin[3  x] + 3 \( E\^\(\(-2\) x\)\) Sin[x] - 
+              3 \( E\^\(-x\)\) Sin[2  x] - E\^\(\(-3\) x\)]];\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(NestList[partc, 3.5, 10]\)], "Input"],
+
+Cell[BoxData[
+    \({3.5`, 0.1395043259069943`, \(-2.307234058487681`\), 
+      17.85494256443884`, 
+      0.05171610801132746`, \(-4.977919459490407`\), \
+\(-237.54932578203739`\), ComplexInfinity, Indeterminate, Indeterminate, 
+      Indeterminate}\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \( (*\ Ooh, \ it\ diverges\ *) \)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(NestList[partc, 3.0, 20]\)], "Input"],
+
+Cell[BoxData[
+    \({3.`, \(-0.12813438252243978`\), 2.2780934639876826`, 
+      0.19345193333632427`, \(-2.3335163966846677`\), 15.866098409649688`, 
+      0.13545386770922618`, \(-2.3361043856648434`\), 
+      15.699639198455062`, \(-0.00832060929202801`\), 
+      30.067210808520546`, \(-0.16195627674377988`\), 
+      1.9692380042233122`, \(-0.00544600316670175`\), 
+      45.91922305974382`, \(-0.13506477495474487`\), 2.1973829745882507`, 
+      0.1789213573399117`, \(-2.2444994961743587`\), 26.62299407383405`, 
+      0.07744485136786486`}\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \( (*\ Doesn' t\ seem\ to\ be\ converging\ *) \)], "Input"],
+
+Cell[BoxData[
+    \(partc =. \)], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(d)", "Subsection"],
+
+Cell[BoxData[
+    \(\(partd = 
+        nriter[Function[x, 
+            E\^\(3  x\) - 27  x\^6 + 27 \( x\^4\) E\^x - 
+              9 \( x\^2\) E\^\(2  x\)]];\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(NestList[partd, 4.0, 50]\)], "Input"],
+
+Cell[BoxData[
+    \({4.`, 0.32796430310871705`, \(-0.11764194463021184`\), 
+      0.19659857248084384`, 0.007872828155331735`, 0.1626069317900175`, 
+      0.04134225981992956`, 0.14268165915519715`, 0.06032878717468235`, 
+      0.1295682459092824`, 0.0724550216361398`, 0.12056010607376526`, 
+      0.08058386990826044`, 0.11426153309048706`, 0.08616051302765`, 
+      0.10982523460994158`, 0.09003216485248755`, 0.10669194694971317`, 
+      0.09273756881316877`, 0.10447718747674829`, 0.09463497162447006`, 
+      0.10291169579721617`, 0.09596855929725615`, 0.10180545229788814`, 
+      0.09690709609439362`, 0.10102400119221533`, 0.09756814946532846`, 
+      0.10047215599916282`, 0.09803400398693868`, 0.10008255347000675`, 
+      0.09836241246469443`, 0.09980754860403844`, 0.09859398068099728`, 
+      0.09961346243236953`, 0.09875729030007635`, 0.09947649999213362`, 
+      0.09887247409063689`, 0.09937985618127335`, 0.09895372033680357`, 
+      0.09931166598836048`, 0.09901103130199213`, 0.09926355412918875`, 
+      0.0990514598212296`, 0.09922960959992809`, 0.09907997978284355`, 
+      0.09920566108898192`, 0.09910009930909837`, 0.09918876520516351`, 
+      0.09911429289022282`, 0.09917684513431943`, 
+      0.09912430602431412`}\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \( (*Not\ converging\ very\ fast\ at\ \(\(all\)\(.\)\)*) \)], "Input"],
+
+Cell[BoxData[
+    \(partd =. \)], "Input"]
+}, Open  ]]
+}, Open  ]]
+},
+FrontEndVersion->"5.2 for Microsoft Windows",
+ScreenRectangle->{{0, 1600}, {0, 1087}},
+WindowSize->{562, 740},
+WindowMargins->{{Automatic, 462}, {123, Automatic}}
+]
+
+(*******************************************************************
+Cached data follows.  If you edit this Notebook file directly, not
+using Mathematica, you must remove the line containing CacheID at
+the top of  the file.  The cache data will then be recreated when
+you save this file from within Mathematica.
+*******************************************************************)
+
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+
+(*NotebookFileOutline
+Notebook[{
+Cell[1754, 51, 26, 0, 30, "Input"],
+
+Cell[CellGroupData[{
+Cell[1805, 55, 24, 0, 73, "Section"],
+Cell[1832, 57, 146, 3, 66, "Input"],
+
+Cell[CellGroupData[{
+Cell[2003, 64, 25, 0, 38, "Subsection"],
+Cell[2031, 66, 127, 3, 31, "Input"],
+
+Cell[CellGroupData[{
+Cell[2183, 73, 57, 1, 30, "Input"],
+Cell[2243, 76, 310, 5, 48, "Output"]
+}, Open  ]],
+Cell[2568, 84, 42, 1, 30, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[2647, 90, 25, 0, 38, "Subsection"],
+Cell[2675, 92, 137, 3, 31, "Input"],
+
+Cell[CellGroupData[{
+Cell[2837, 99, 62, 1, 30, "Input"],
+Cell[2902, 102, 325, 5, 48, "Output"]
+}, Open  ]],
+Cell[3242, 110, 42, 1, 30, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[3321, 116, 25, 0, 38, "Subsection"],
+Cell[3349, 118, 215, 4, 52, "Input"],
+
+Cell[CellGroupData[{
+Cell[3589, 126, 57, 1, 30, "Input"],
+Cell[3649, 129, 264, 5, 67, "Output"]
+}, Open  ]],
+Cell[3928, 137, 62, 1, 30, "Input"],
+
+Cell[CellGroupData[{
+Cell[4015, 142, 57, 1, 30, "Input"],
+Cell[4075, 145, 561, 9, 86, "Output"]
+}, Open  ]],
+Cell[4651, 157, 77, 1, 30, "Input"],
+Cell[4731, 160, 42, 1, 30, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[4810, 166, 25, 0, 38, "Subsection"],
+Cell[4838, 168, 172, 4, 31, "Input"],
+
+Cell[CellGroupData[{
+Cell[5035, 176, 57, 1, 30, "Input"],
+Cell[5095, 179, 1257, 18, 200, "Output"]
+}, Open  ]],
+Cell[6367, 200, 88, 1, 30, "Input"],
+Cell[6458, 203, 42, 1, 30, "Input"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+
+
+(*******************************************************************
+End of Mathematica Notebook file.
+*******************************************************************)
+

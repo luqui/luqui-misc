@@ -1,0 +1,819 @@
+(************** Content-type: application/mathematica **************
+                     CreatedBy='Mathematica 5.0'
+
+                    Mathematica-Compatible Notebook
+
+This notebook can be used with any Mathematica-compatible
+application, such as Mathematica, MathReader or Publicon. The data
+for the notebook starts with the line containing stars above.
+
+To get the notebook into a Mathematica-compatible application, do
+one of the following:
+
+* Save the data starting with the line of stars above into a file
+  with a name ending in .nb, then open the file inside the
+  application;
+
+* Copy the data starting with the line of stars above to the
+  clipboard, then use the Paste menu command inside the application.
+
+Data for notebooks contains only printable 7-bit ASCII and can be
+sent directly in email or through ftp in text mode.  Newlines can be
+CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+
+NOTE: If you modify the data for this notebook not in a Mathematica-
+compatible application, you must delete the line below containing
+the word CacheID, otherwise Mathematica-compatible applications may
+try to use invalid cache data.
+
+For more information on notebooks and Mathematica-compatible 
+applications, contact Wolfram Research:
+  web: http://www.wolfram.com
+  email: info@wolfram.com
+  phone: +1-217-398-0700 (U.S.)
+
+Notebook reader applications are available free of charge from 
+Wolfram Research.
+*******************************************************************)
+
+(*CacheID: 232*)
+
+
+(*NotebookFileLineBreakTest
+NotebookFileLineBreakTest*)
+(*NotebookOptionsPosition[     16909,        575]*)
+(*NotebookOutlinePosition[     17595,        598]*)
+(*  CellTagsIndexPosition[     17551,        594]*)
+(*WindowFrame->Normal*)
+
+
+
+Notebook[{
+Cell["\<\
+Luke Palmer
+MATH 4650
+2006-02-24\
+\>", "Text"],
+
+Cell[CellGroupData[{
+
+Cell["2.4.4", "Section"],
+
+Cell[BoxData[
+    \(nriter[f_]\  := \ 
+      Function[x, \[IndentingNewLine]\(f[x] \(f'\)[x]\)\/\(\(f'\)[x]\^2 - \
+f[x] \(f''\)[x]\)]\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell["(a)", "Subsection"],
+
+Cell[BoxData[
+    \(\(parta = 
+        nriter[Function[x, 
+            1 - 4  x\ Cos[x] + 2  x\^2 + Cos[2  x]]];\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(NestList[parta, 0.5, 10]\)], "Input"],
+
+Cell[BoxData[
+    \({0.5`, \(-0.2216635041043578`\), \(-0.5257368088302673`\), \
+\(-0.47743233346105585`\), \(-0.490425392795258`\), \
+\(-0.48710106518206286`\), \(-0.4879638364708492`\), \
+\(-0.48774072219490566`\), \(-0.487798474011426`\), \(-0.4877835289088023`\), \
+\(-0.48778739666730864`\)}\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \(parta =. \)], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(b)", "Subsection"],
+
+Cell[BoxData[
+    \(\(partb = 
+        nriter[Function[x, 
+            x\^2 + 6  x\^5 + 9  x\^4 - 2  x\^3 - 6  x\^2 + 1]];\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(NestList[partb, \(-2.5\), 10]\)], "Input"],
+
+Cell[BoxData[
+    \({\(-2.5`\), \(-1.7223097498234692`\), \(-0.6139174410429937`\), 
+      0.01867857231708095`, \(-0.01845560459955353`\), 
+      0.018647047959267377`, \(-0.01842485522430332`\), 
+      0.01861568231757126`, \(-0.018394259248487504`\), 
+      0.018584474065940236`, \(-0.018363815400312622`\)}\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \(partb =. \)], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(c)", "Subsection"],
+
+Cell[BoxData[
+    \(\(partc\  = \ 
+        nriter[\[IndentingNewLine]Function[x, 
+            Sin[3  x] + 3 \( E\^\(\(-2\) x\)\) Sin[x] - 
+              3 \( E\^\(-x\)\) Sin[2  x] - E\^\(\(-3\) x\)]];\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(NestList[partc, 3.5, 10]\)], "Input"],
+
+Cell[BoxData[
+    \({3.5`, 0.1395043259069943`, \(-2.307234058487681`\), 
+      17.85494256443884`, 
+      0.05171610801132746`, \(-4.977919459490407`\), \
+\(-237.54932578203739`\), ComplexInfinity, Indeterminate, Indeterminate, 
+      Indeterminate}\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \( (*\ Ooh, \ it\ diverges\ *) \)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(NestList[partc, 3.0, 20]\)], "Input"],
+
+Cell[BoxData[
+    \({3.`, \(-0.12813438252243978`\), 2.2780934639876826`, 
+      0.19345193333632427`, \(-2.3335163966846677`\), 15.866098409649688`, 
+      0.13545386770922618`, \(-2.3361043856648434`\), 
+      15.699639198455062`, \(-0.00832060929202801`\), 
+      30.067210808520546`, \(-0.16195627674377988`\), 
+      1.9692380042233122`, \(-0.00544600316670175`\), 
+      45.91922305974382`, \(-0.13506477495474487`\), 2.1973829745882507`, 
+      0.1789213573399117`, \(-2.2444994961743587`\), 26.62299407383405`, 
+      0.07744485136786486`}\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \( (*\ Doesn' t\ seem\ to\ be\ converging\ *) \)], "Input"],
+
+Cell[BoxData[
+    \(partc =. \)], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(d)", "Subsection"],
+
+Cell[BoxData[
+    \(\(partd = 
+        nriter[Function[x, 
+            E\^\(3  x\) - 27  x\^6 + 27 \( x\^4\) E\^x - 
+              9 \( x\^2\) E\^\(2  x\)]];\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(NestList[partd, 4.0, 50]\)], "Input"],
+
+Cell[BoxData[
+    \({4.`, 0.32796430310871705`, \(-0.11764194463021184`\), 
+      0.19659857248084384`, 0.007872828155331735`, 0.1626069317900175`, 
+      0.04134225981992956`, 0.14268165915519715`, 0.06032878717468235`, 
+      0.1295682459092824`, 0.0724550216361398`, 0.12056010607376526`, 
+      0.08058386990826044`, 0.11426153309048706`, 0.08616051302765`, 
+      0.10982523460994158`, 0.09003216485248755`, 0.10669194694971317`, 
+      0.09273756881316877`, 0.10447718747674829`, 0.09463497162447006`, 
+      0.10291169579721617`, 0.09596855929725615`, 0.10180545229788814`, 
+      0.09690709609439362`, 0.10102400119221533`, 0.09756814946532846`, 
+      0.10047215599916282`, 0.09803400398693868`, 0.10008255347000675`, 
+      0.09836241246469443`, 0.09980754860403844`, 0.09859398068099728`, 
+      0.09961346243236953`, 0.09875729030007635`, 0.09947649999213362`, 
+      0.09887247409063689`, 0.09937985618127335`, 0.09895372033680357`, 
+      0.09931166598836048`, 0.09901103130199213`, 0.09926355412918875`, 
+      0.0990514598212296`, 0.09922960959992809`, 0.09907997978284355`, 
+      0.09920566108898192`, 0.09910009930909837`, 0.09918876520516351`, 
+      0.09911429289022282`, 0.09917684513431943`, 
+      0.09912430602431412`}\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \( (*Not\ converging\ very\ fast\ at\ \(\(all\)\(.\)\)*) \)], "Input"],
+
+Cell[BoxData[
+    \(partd =. \)], "Input"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["2.4.6", "Section"],
+
+Cell[CellGroupData[{
+
+Cell["(a)", "Subsection"],
+
+Cell[BoxData[
+    \(Show\ \(lim\+\(n \[Rule] \[Infinity]\)\ 
+          Abs[1\/\(n + 1\)]\/Abs[1\/n]\) < 1\)], "Input"],
+
+Cell[BoxData[
+    \(1/n\  > \ 0\ whenever\ n\  > \ 0, \ \(\(so\)\(:\)\)\)], "Input"],
+
+Cell[BoxData[
+    \(Show\ \(lim\+\(n \[Rule] \[Infinity]\)\ n\/\(n + 1\)\) < 1\)], "Input"],
+
+Cell[BoxData[
+    \(But\ \[Lambda] \[Equal] 1, \ and\ is\ not\  < \ 1, \ 
+    so\ it' s\ not\ linearly\ convergent\ \(\(formally\)\(.\)\)\)], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(b)", "Subsection"],
+
+Cell[BoxData[
+    \(Show\ \(lim\+\(n \[Rule] \[Infinity]\)\ 
+          Abs[1\/\((n + 1)\)\^2]\/Abs[1\/n\^2]\) < 1\)], "Input"],
+
+Cell[BoxData[
+    \(1/n\^2 > \ 0\ whenever\ n\  \[NotEqual] \ 
+      0, \ \(\(so\)\(:\)\)\)], "Input"],
+
+Cell[BoxData[
+    \(Show\ \(lim\+\(n \[Rule] \[Infinity]\)n\^2\/\((n + 1)\)\^2\) \[Equal] 
+      lim\+\(n \[Rule] \[Infinity]\)\ \(2  n\)\/\(2 \((n + 1)\)\) \[Equal] 
+      1\  < \ 1\)], "Input"],
+
+Cell[BoxData[
+    \(Again, \ \[Lambda]\ is\ not\  < \ 1, \ 
+    so\ it' s\ not\ linearly\ \(\(convergent\)\(.\)\)\)], "Input"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["2.4.8", "Section"],
+
+Cell[CellGroupData[{
+
+Cell["(a)", "Subsection"],
+
+Cell[BoxData[
+    \(TraditionalForm\`Show\ \(lim\+\(n \[Rule] \[Infinity]\)\
+\[LeftBracketingBar]10\^\(-2\^\(n + 1\)\)\[RightBracketingBar]\/\
+\[LeftBracketingBar]10\^\(-2\^n\)\[RightBracketingBar]\^2\ is\ finite\)\)], \
+"Input"],
+
+Cell["These quantities are always positive, so:", "Text"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(\(\ \)\(lim\+\(n \[Rule] \[Infinity]\)10\^\(2*2\^n - \
+2\^\(n + 1\)\) \[Equal] lim\+\(n \[Rule] \[Infinity]\)10\^0 \[Equal] 
+      1\)\)\)], "Input"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(b)", "Section"],
+
+Cell[BoxData[
+    \(TraditionalForm\`Show\ \(lim\+\(n \[Rule] \[Infinity]\)\
+\[LeftBracketingBar]10\^\(-\((n + 1)\)\^k\)\[RightBracketingBar]\/\
+\[LeftBracketingBar]10\^\(-n\^k\)\[RightBracketingBar]\^2\ is\ not\ \
+finite\)\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`It\ suffices\ to\ show\ that\ \ \(lim\+\(n \[Rule] \
+\[Infinity]\)2 
+             n\^k\) - \((n + 1)\)\^k\ goes\ to\  + \
+\(\(\[Infinity]\)\(.\)\)\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`The\ k' th\ order\ term\ in\ \(\((n + 1)\)\^k\) 
+      will\ always\ be\ monic, \ 
+    so\ 2  n\^k - \(\((n + 1)\)\^k\) 
+        will\ always\ look\ like\ n\^k - \((some\ other\ stuff\ that\ depends\
+\ on\ powers\  < \ k\ of\ n)\) . \ \ In\ the\ limit, \ 
+    the\ k' th\ order\ term\ will\ dominate, \ 
+    so\ that\ expression\ diverges\ to\  + \(\(\[Infinity]\)\(.\)\)\)], "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["2.5.1a", "Section"],
+
+Cell[BoxData[
+    \(TraditionalForm\`aitken[s_, n_]\  := \ 
+      s[n] - \((s[n + 1] - s[n])\)\^2\/\(s[n + 2] - 2  s[n + 1] + s[n]\)\)], \
+"Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`seq[0] := 0.5\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`seq[n_]\  := \ 3\^\(-seq[n - 1]\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`Map[aitken[seq, #] &, Range[5]]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{0.5479150736907433`, 0.5478470420686419`, 
+      0.5478225654636338`, 0.5478136657539343`, 
+      0.5478104499689254`}\)], "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["2.5.4", "Section"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(\(stef[f_]\  := \ 
+      Function[p0, \[IndentingNewLine]Module[{p1, 
+            p2}, \[IndentingNewLine]p1 = f[p0]; \[IndentingNewLine]p2 = 
+            f[p1]; \[IndentingNewLine]p0 - \((p1 - p0)\)\^2\/\(p2 - 2  p1 + \
+p0\)]]\)\(\[IndentingNewLine]\)
+    \)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`\(stef[1 + Sin[#]\^2 &]\)[1. ]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`2.15290462899938`\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`\(stef[1 + Sin[#]\^2 &]\)[%]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`1.8734640435142802`\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \(TraditionalForm\`p\_0\%\((1)\) \[Equal] 
+      2.1529\ and\ p\_0\%\((2)\) \[Equal] 1.87346\)], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["2.5.12", "Section"],
+
+Cell[CellGroupData[{
+
+Cell["(a)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`NestList[stef[2 + Sin[#] &], 1. , 5]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{1.`, 2.4204362803774164`, 2.5520120399284414`, 
+      2.5541953527701837`, 2.5541959528369977`, 
+      2.554195952837043`}\)], "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(b)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`NestList[stef[#\^3 - # - 5 &], 3. , 20]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{3.`, 2.9623529411764706`, 2.923248681812499`, 
+      2.882558319005902`, 2.8401366426516623`, 2.795820189509681`, 
+      2.749425615088731`, 2.700749071786744`, 2.649568032051972`, 
+      2.5956485471711304`, 2.5387642002536714`, 2.4787400255318754`, 
+      2.4155499226829873`, 2.349529060640345`, 2.2818292155827096`, 
+      2.2153420875643532`, 2.1562166194311563`, 2.1144668967316558`, 
+      2.097027304987658`, 2.094592955822337`, 2.094551493316986`}\)], "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(c)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`NestList[stef[3  #\^2 - \[ExponentialE]\^# + # &], 
+      1. , 5]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{1.`, 0.9239696803102233`, 0.9104428319912878`, 
+      0.910008016714995`, 0.9100075724891724`, 
+      0.910007572488709`}\)], "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(d)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`NestList[stef[cos(#) &], 1. , 4]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{1.`, 0.7280103614676172`, 0.7390669669086738`, 
+      0.7390851331660755`, 0.7390851332151607`}\)], "Output"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["3.1.3c", "Section"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{"(", GridBox[{
+            {"k", "x", \(f(x)\), " ", " "},
+            {"0", "0", "0", "0.7833", \(-0.123\)},
+            {"1", "0.6", "0.47", "0.6726", " "},
+            {"2", "0.9", "0.6418", " ", " "}
+            }], ")"}], TraditionalForm]], "Input"],
+
+Cell["Order 1 polynomial: ", "Text"],
+
+Cell[BoxData[{
+    \(TraditionalForm\`\(\(f\_1\)(x) \[Equal] 
+        0.7833  x;\)\ \), "\[IndentingNewLine]", 
+    \(TraditionalForm\`\(\(f\_1\)(0.45) \[Equal] 
+        0.3524;\)\), "\[IndentingNewLine]", 
+    \(TraditionalForm\`\(ln(0.45 + 1)\  \[Equal] 
+        0.3716;\)\ \), "\[IndentingNewLine]", 
+    \(TraditionalForm\`Error\  \[Equal] \ \[LeftBracketingBar]\(1\/2\) \(\(-1\
+\)\/\((\[Xi](0.45) + 1)\)\^2\) \((0.45 - 0)\) \((0.45 - 
+              0.6)\)\[RightBracketingBar]\), "\[IndentingNewLine]", 
+    \(TraditionalForm\` (*\ 
+      Where\ \(\[Xi](
+            0.45)\)\  \[Element] \ \((0, 
+                0.6)\) . \ \ It\ takes\ on\ its\ greatest\ value\ when\ \(\
+\[Xi](0.45)\)\  \[Equal] \ 0, \ and\ the\ error\ is\ 0.0337*) \)}], "Input"],
+
+Cell["Order 2 polynomial:", "Text"],
+
+Cell[BoxData[{
+    \(TraditionalForm\`\(\(f\_2\)(x) \[Equal] 
+        0.7833  x\  - 0.123  x\ \((x - 0.6)\);\)\), "\[IndentingNewLine]", 
+    \(TraditionalForm\`\(\(f\_2\)(0.45) \[Equal] 
+        0.3608;\)\), "\[IndentingNewLine]", 
+    \(TraditionalForm\`\(ln(0.45 + 1) \[Equal] 
+        0.3716;\)\), "\[IndentingNewLine]", 
+    \(TraditionalForm\`Error\  \[Equal] \ \[LeftBracketingBar]\(1\/6\) \
+\(2\/\((\[Xi](0.45) + 1)\)\^3\) \((0.45 - 0)\) \((0.45 - 0.6)\) \((0.45 - 
+              0.9)\)\[RightBracketingBar]\), "\[IndentingNewLine]", 
+    \(TraditionalForm\` (*Where\ \(\[Xi](
+            0.45)\)\  \[Element] \ \((0, 
+                0.9)\) . \ \ It\ takes\ on\ its\ greatest\ value\ when\ \(\
+\[Xi](0.45)\)\  \[Equal] \ 0, \ and\ the\ error\ is\ 0.0101*) \)}], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["3.1.4c", "Section"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`\[PartialD]\_\(x\[InvisibleComma]x\[InvisibleComma]x\)\
+\(\(log(3  x - 1)\)\/\(log(10)\)\)\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`54\/\(\((3\ x - 1)\)\^3\ \(log(10)\)\)\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \(TraditionalForm\`Error\  \[Equal] \ \[LeftBracketingBar]\(1\/6\) \(54\/\
+\(\(\((3 \( \[Xi](1.4)\) - 1)\)\^3\) \(log(10)\)\)\) \((1.4 - 1.0)\) \((1.4 - 
+              1.25)\) \((1.4 - 1.6)\)\[RightBracketingBar]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`Where\ \(\[Xi](
+          1.4)\) \[Element] \((1.0, 1.6)\) . \ 
+            This\ attains\ its\ maximum\ value\ when\ \(\[Xi](
+            1.4)\)\  \[Equal] 1.0, \ 
+    and\ the\ error\ \(\(is\)\(:\)\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`\[LeftBracketingBar]\(1\/6\) \(54\/\(\(\((3*1 - 
+                      1)\)\^3\) \(log(10)\)\)\) \((1.4 - 1.0)\) \((1.4 - 
+            1.25)\)\[RightBracketingBar]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`0.029314877528469473`\)], "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["3.1.13", "Section"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{"(", GridBox[{
+            {"k", "x", \(f(x)\), " ", " ", " "},
+            {"0", "0", 
+              "0", \(2  y\), \(6 - 
+                4  y\), \(\(\((4  y - 14)\)/3 - 6 + 4  y\)\/2\)},
+            {"1", "0.5", "y", \(6 - 2  y\), \(\(4  y - 14\)\/3\), " "},
+            {"2", "1", "3", \(-1\), " ", " "},
+            {"3", "2", "2", " ", " ", " "}
+            }], ")"}], TraditionalForm]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`Solve[\(\((4  y - 14)\)/3 - 6 + 4  y\)\/2 \[Equal] 3, 
+      y]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{{y \[Rule] 25\/8}}\)], "Output"]
+}, Open  ]],
+
+Cell["And there you have it.", "SmallText"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["3.1.18", "Section"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(8 - P\_2\)\/\(0.75 - 0.5\) \[Equal] 2.4\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`8 - 2.4\/4 \[Equal] P\_2\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`7.4` \[Equal] P\_2\)], "Output"]
+}, Open  ]]
+}, Open  ]]
+},
+FrontEndVersion->"5.0 for Microsoft Windows",
+ScreenRectangle->{{0, 1280}, {0, 941}},
+ScreenStyleEnvironment->"Presentation",
+WindowSize->{495, 740},
+WindowMargins->{{192, Automatic}, {Automatic, 60}}
+]
+
+(*******************************************************************
+Cached data follows.  If you edit this Notebook file directly, not
+using Mathematica, you must remove the line containing CacheID at
+the top of  the file.  The cache data will then be recreated when
+you save this file from within Mathematica.
+*******************************************************************)
+
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+
+(*NotebookFileOutline
+Notebook[{
+Cell[1754, 51, 56, 4, 95, "Text"],
+
+Cell[CellGroupData[{
+Cell[1835, 59, 24, 0, 77, "Section"],
+Cell[1862, 61, 146, 3, 84, "Input"],
+
+Cell[CellGroupData[{
+Cell[2033, 68, 25, 0, 69, "Subsection"],
+Cell[2061, 70, 127, 3, 85, "Input"],
+
+Cell[CellGroupData[{
+Cell[2213, 77, 57, 1, 38, "Input"],
+Cell[2273, 80, 310, 5, 107, "Output"]
+}, Open  ]],
+Cell[2598, 88, 42, 1, 38, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[2677, 94, 25, 0, 69, "Subsection"],
+Cell[2705, 96, 137, 3, 85, "Input"],
+
+Cell[CellGroupData[{
+Cell[2867, 103, 62, 1, 38, "Input"],
+Cell[2932, 106, 325, 5, 107, "Output"]
+}, Open  ]],
+Cell[3272, 114, 42, 1, 38, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[3351, 120, 25, 0, 69, "Subsection"],
+Cell[3379, 122, 215, 4, 86, "Input"],
+
+Cell[CellGroupData[{
+Cell[3619, 130, 57, 1, 38, "Input"],
+Cell[3679, 133, 264, 5, 107, "Output"]
+}, Open  ]],
+Cell[3958, 141, 62, 1, 38, "Input"],
+
+Cell[CellGroupData[{
+Cell[4045, 146, 57, 1, 38, "Input"],
+Cell[4105, 149, 561, 9, 176, "Output"]
+}, Open  ]],
+Cell[4681, 161, 77, 1, 38, "Input"],
+Cell[4761, 164, 42, 1, 38, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[4840, 170, 25, 0, 69, "Subsection"],
+Cell[4868, 172, 172, 4, 85, "Input"],
+
+Cell[CellGroupData[{
+Cell[5065, 180, 57, 1, 38, "Input"],
+Cell[5125, 183, 1257, 18, 406, "Output"]
+}, Open  ]],
+Cell[6397, 204, 88, 1, 38, "Input"],
+Cell[6488, 207, 42, 1, 38, "Input"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[6579, 214, 24, 0, 77, "Section"],
+
+Cell[CellGroupData[{
+Cell[6628, 218, 25, 0, 69, "Subsection"],
+Cell[6656, 220, 118, 2, 75, "Input"],
+Cell[6777, 224, 84, 1, 38, "Input"],
+Cell[6864, 227, 91, 1, 51, "Input"],
+Cell[6958, 230, 150, 2, 84, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[7145, 237, 25, 0, 69, "Subsection"],
+Cell[7173, 239, 126, 2, 77, "Input"],
+Cell[7302, 243, 102, 2, 40, "Input"],
+Cell[7407, 247, 195, 3, 85, "Input"],
+Cell[7605, 252, 126, 2, 61, "Input"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[7780, 260, 24, 0, 77, "Section"],
+
+Cell[CellGroupData[{
+Cell[7829, 264, 25, 0, 69, "Subsection"],
+Cell[7857, 266, 229, 4, 81, "Input"],
+Cell[8089, 272, 57, 0, 45, "Text"],
+Cell[8149, 274, 188, 3, 53, "Input"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[8386, 283, 22, 0, 77, "Section"],
+Cell[8411, 285, 236, 4, 87, "Input"],
+Cell[8650, 291, 196, 4, 74, "Input"],
+Cell[8849, 297, 420, 7, 114, "Text"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[9306, 309, 25, 0, 77, "Section"],
+Cell[9334, 311, 147, 3, 69, "Input"],
+Cell[9484, 316, 63, 1, 39, "Input"],
+Cell[9550, 319, 83, 1, 40, "Input"],
+
+Cell[CellGroupData[{
+Cell[9658, 324, 81, 1, 39, "Input"],
+Cell[9742, 327, 170, 3, 39, "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[9961, 336, 24, 0, 77, "Section"],
+Cell[9988, 338, 311, 6, 214, "Input"],
+
+Cell[CellGroupData[{
+Cell[10324, 348, 80, 1, 42, "Input"],
+Cell[10407, 351, 68, 1, 39, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[10512, 357, 78, 1, 42, "Input"],
+Cell[10593, 360, 70, 1, 39, "Output"]
+}, Open  ]],
+Cell[10678, 364, 123, 2, 43, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[10838, 371, 25, 0, 77, "Section"],
+
+Cell[CellGroupData[{
+Cell[10888, 375, 25, 0, 69, "Subsection"],
+
+Cell[CellGroupData[{
+Cell[10938, 379, 86, 1, 39, "Input"],
+Cell[11027, 382, 174, 3, 39, "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[11250, 391, 25, 0, 69, "Subsection"],
+
+Cell[CellGroupData[{
+Cell[11300, 395, 89, 1, 42, "Input"],
+Cell[11392, 398, 508, 7, 111, "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[11949, 411, 25, 0, 69, "Subsection"],
+
+Cell[CellGroupData[{
+Cell[11999, 415, 115, 2, 42, "Input"],
+Cell[12117, 419, 173, 3, 39, "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[12339, 428, 25, 0, 69, "Subsection"],
+
+Cell[CellGroupData[{
+Cell[12389, 432, 82, 1, 39, "Input"],
+Cell[12474, 435, 147, 2, 39, "Output"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[12682, 444, 25, 0, 77, "Section"],
+Cell[12710, 446, 295, 7, 98, "Input"],
+Cell[13008, 455, 36, 0, 45, "Text"],
+Cell[13047, 457, 754, 14, 214, "Input"],
+Cell[13804, 473, 35, 0, 45, "Text"],
+Cell[13842, 475, 779, 13, 238, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[14658, 493, 25, 0, 77, "Section"],
+
+Cell[CellGroupData[{
+Cell[14708, 497, 140, 2, 66, "Input"],
+Cell[14851, 501, 89, 1, 59, "Output"]
+}, Open  ]],
+Cell[14955, 505, 243, 3, 144, "Input"],
+Cell[15201, 510, 251, 5, 111, "Input"],
+
+Cell[CellGroupData[{
+Cell[15477, 519, 213, 3, 66, "Input"],
+Cell[15693, 524, 72, 1, 39, "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[15814, 531, 25, 0, 77, "Section"],
+Cell[15842, 533, 443, 10, 152, "Input"],
+
+Cell[CellGroupData[{
+Cell[16310, 547, 113, 2, 63, "Input"],
+Cell[16426, 551, 70, 1, 56, "Output"]
+}, Open  ]],
+Cell[16511, 555, 43, 0, 37, "SmallText"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[16591, 560, 25, 0, 77, "Section"],
+Cell[16619, 562, 91, 1, 63, "Input"],
+
+Cell[CellGroupData[{
+Cell[16735, 567, 74, 1, 63, "Input"],
+Cell[16812, 570, 69, 1, 39, "Output"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+
+
+(*******************************************************************
+End of Mathematica Notebook file.
+*******************************************************************)
+

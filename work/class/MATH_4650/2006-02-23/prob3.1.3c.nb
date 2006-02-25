@@ -1,0 +1,143 @@
+(************** Content-type: application/mathematica **************
+                     CreatedBy='Mathematica 5.0'
+
+                    Mathematica-Compatible Notebook
+
+This notebook can be used with any Mathematica-compatible
+application, such as Mathematica, MathReader or Publicon. The data
+for the notebook starts with the line containing stars above.
+
+To get the notebook into a Mathematica-compatible application, do
+one of the following:
+
+* Save the data starting with the line of stars above into a file
+  with a name ending in .nb, then open the file inside the
+  application;
+
+* Copy the data starting with the line of stars above to the
+  clipboard, then use the Paste menu command inside the application.
+
+Data for notebooks contains only printable 7-bit ASCII and can be
+sent directly in email or through ftp in text mode.  Newlines can be
+CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+
+NOTE: If you modify the data for this notebook not in a Mathematica-
+compatible application, you must delete the line below containing
+the word CacheID, otherwise Mathematica-compatible applications may
+try to use invalid cache data.
+
+For more information on notebooks and Mathematica-compatible 
+applications, contact Wolfram Research:
+  web: http://www.wolfram.com
+  email: info@wolfram.com
+  phone: +1-217-398-0700 (U.S.)
+
+Notebook reader applications are available free of charge from 
+Wolfram Research.
+*******************************************************************)
+
+(*CacheID: 232*)
+
+
+(*NotebookFileLineBreakTest
+NotebookFileLineBreakTest*)
+(*NotebookOptionsPosition[      3731,        100]*)
+(*NotebookOutlinePosition[      4416,        123]*)
+(*  CellTagsIndexPosition[      4372,        119]*)
+(*WindowFrame->Normal*)
+
+
+
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["3.1.3c", "Section"],
+
+Cell[BoxData[
+    FormBox[
+      RowBox[{"(", GridBox[{
+            {"k", "x", \(f(x)\), " ", " "},
+            {"0", "0", "0", "0.7833", \(-0.123\)},
+            {"1", "0.6", "0.47", "0.6726", " "},
+            {"2", "0.9", "0.6418", " ", " "}
+            }], ")"}], TraditionalForm]], "Input"],
+
+Cell["Order 1 polynomial: ", "Text"],
+
+Cell[BoxData[{
+    \(TraditionalForm\`\(\(f\_1\)(x) \[Equal] 
+        0.7833  x;\)\ \), "\[IndentingNewLine]", 
+    \(TraditionalForm\`\(\(f\_1\)(0.45) \[Equal] 
+        0.3524;\)\), "\[IndentingNewLine]", 
+    \(TraditionalForm\`\(ln(0.45 + 1)\  \[Equal] 
+        0.3716;\)\ \), "\[IndentingNewLine]", 
+    \(TraditionalForm\`Error\  \[Equal] \ \[LeftBracketingBar]\(1\/2\) \(\(-1\
+\)\/\((\[Xi](0.45) + 1)\)\^2\) \((0.45 - 0)\) \((0.45 - 
+              0.6)\)\[RightBracketingBar]\), "\[IndentingNewLine]", 
+    \(TraditionalForm\` (*\ 
+      Where\ \(\[Xi](
+            0.45)\)\  \[Element] \ \((0, 
+                0.6)\) . \ \ It\ takes\ on\ its\ greatest\ value\ when\ \(\
+\[Xi](0.45)\)\  \[Equal] \ 0, \ and\ the\ error\ is\ 0.0337*) \)}], "Input"],
+
+Cell["Order 2 polynomial:", "Text"],
+
+Cell[BoxData[{
+    \(TraditionalForm\`\(\(f\_2\)(x) \[Equal] 
+        0.7833  x\  - 0.123  x\ \((x - 0.6)\);\)\), "\[IndentingNewLine]", 
+    \(TraditionalForm\`\(\(f\_2\)(0.45) \[Equal] 
+        0.3608;\)\), "\[IndentingNewLine]", 
+    \(TraditionalForm\`\(ln(0.45 + 1) \[Equal] 
+        0.3716;\)\), "\[IndentingNewLine]", 
+    \(TraditionalForm\`Error\  \[Equal] \ \[LeftBracketingBar]\(1\/6\) \
+\(2\/\((\[Xi](0.45) + 1)\)\^3\) \((0.45 - 0)\) \((0.45 - 0.6)\) \((0.45 - 
+              0.9)\)\[RightBracketingBar]\), "\[IndentingNewLine]", 
+    \(TraditionalForm\` (*Where\ \(\[Xi](
+            0.45)\)\  \[Element] \ \((0, 
+                0.9)\) . \ \ It\ takes\ on\ its\ greatest\ value\ when\ \(\
+\[Xi](0.45)\)\  \[Equal] \ 0, \ and\ the\ error\ is\ 0.0101*) \)}], "Input"]
+}, Open  ]]
+},
+FrontEndVersion->"5.0 for Microsoft Windows",
+ScreenRectangle->{{0, 1280}, {0, 941}},
+ScreenStyleEnvironment->"Presentation",
+WindowSize->{495, 740},
+WindowMargins->{{96, Automatic}, {47, Automatic}}
+]
+
+(*******************************************************************
+Cached data follows.  If you edit this Notebook file directly, not
+using Mathematica, you must remove the line containing CacheID at
+the top of  the file.  The cache data will then be recreated when
+you save this file from within Mathematica.
+*******************************************************************)
+
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+
+(*NotebookFileOutline
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[1776, 53, 25, 0, 77, "Section"],
+Cell[1804, 55, 295, 7, 98, "Input"],
+Cell[2102, 64, 36, 0, 45, "Text"],
+Cell[2141, 66, 754, 14, 214, "Input"],
+Cell[2898, 82, 35, 0, 45, "Text"],
+Cell[2936, 84, 779, 13, 238, "Input"]
+}, Open  ]]
+}
+]
+*)
+
+
+
+(*******************************************************************
+End of Mathematica Notebook file.
+*******************************************************************)
+

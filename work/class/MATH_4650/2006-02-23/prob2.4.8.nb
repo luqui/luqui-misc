@@ -1,0 +1,152 @@
+(************** Content-type: application/mathematica **************
+                     CreatedBy='Mathematica 5.0'
+
+                    Mathematica-Compatible Notebook
+
+This notebook can be used with any Mathematica-compatible
+application, such as Mathematica, MathReader or Publicon. The data
+for the notebook starts with the line containing stars above.
+
+To get the notebook into a Mathematica-compatible application, do
+one of the following:
+
+* Save the data starting with the line of stars above into a file
+  with a name ending in .nb, then open the file inside the
+  application;
+
+* Copy the data starting with the line of stars above to the
+  clipboard, then use the Paste menu command inside the application.
+
+Data for notebooks contains only printable 7-bit ASCII and can be
+sent directly in email or through ftp in text mode.  Newlines can be
+CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+
+NOTE: If you modify the data for this notebook not in a Mathematica-
+compatible application, you must delete the line below containing
+the word CacheID, otherwise Mathematica-compatible applications may
+try to use invalid cache data.
+
+For more information on notebooks and Mathematica-compatible 
+applications, contact Wolfram Research:
+  web: http://www.wolfram.com
+  email: info@wolfram.com
+  phone: +1-217-398-0700 (U.S.)
+
+Notebook reader applications are available free of charge from 
+Wolfram Research.
+*******************************************************************)
+
+(*CacheID: 232*)
+
+
+(*NotebookFileLineBreakTest
+NotebookFileLineBreakTest*)
+(*NotebookOptionsPosition[      3281,        100]*)
+(*NotebookOutlinePosition[      3967,        123]*)
+(*  CellTagsIndexPosition[      3923,        119]*)
+(*WindowFrame->Normal*)
+
+
+
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["2.4.8", "Section"],
+
+Cell[CellGroupData[{
+
+Cell["(a)", "Subsection"],
+
+Cell[BoxData[
+    \(TraditionalForm\`Show\ \(lim\+\(n \[Rule] \[Infinity]\)\
+\[LeftBracketingBar]10\^\(-2\^\(n + 1\)\)\[RightBracketingBar]\/\
+\[LeftBracketingBar]10\^\(-2\^n\)\[RightBracketingBar]\^2\ is\ finite\)\)], \
+"Input"],
+
+Cell["These quantities are always positive, so:", "Text"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(\(\ \)\(lim\+\(n \[Rule] \[Infinity]\)10\^\(2*2\^n - \
+2\^\(n + 1\)\) \[Equal] lim\+\(n \[Rule] \[Infinity]\)10\^0 \[Equal] 
+      1\)\)\)], "Input"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(b)", "Section"],
+
+Cell[BoxData[
+    \(TraditionalForm\`Show\ \(lim\+\(n \[Rule] \[Infinity]\)\
+\[LeftBracketingBar]10\^\(-\((n + 1)\)\^k\)\[RightBracketingBar]\/\
+\[LeftBracketingBar]10\^\(-n\^k\)\[RightBracketingBar]\^2\ is\ not\ \
+finite\)\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`It\ suffices\ to\ show\ that\ \ \(lim\+\(n \[Rule] \
+\[Infinity]\)2 
+             n\^k\) - \((n + 1)\)\^k\ goes\ to\  + \
+\(\(\[Infinity]\)\(.\)\)\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`The\ k' th\ order\ term\ in\ \(\((n + 1)\)\^k\) 
+      will\ always\ be\ monic, \ 
+    so\ 2  n\^k - \(\((n + 1)\)\^k\) 
+        will\ always\ look\ like\ n\^k - \((some\ other\ stuff\ that\ depends\
+\ on\ powers\  < \ k\ of\ n)\) . \ \ In\ the\ limit, \ 
+    the\ k' th\ order\ term\ will\ dominate, \ 
+    so\ that\ expression\ diverges\ to\  + \(\(\[Infinity]\)\(.\)\)\)], "Text"]
+}, Open  ]]
+},
+FrontEndVersion->"5.0 for Microsoft Windows",
+ScreenRectangle->{{0, 1280}, {0, 941}},
+ScreenStyleEnvironment->"Presentation",
+WindowSize->{639, 726},
+WindowMargins->{{307, Automatic}, {60, Automatic}}
+]
+
+(*******************************************************************
+Cached data follows.  If you edit this Notebook file directly, not
+using Mathematica, you must remove the line containing CacheID at
+the top of  the file.  The cache data will then be recreated when
+you save this file from within Mathematica.
+*******************************************************************)
+
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+
+(*NotebookFileOutline
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[1776, 53, 24, 0, 77, "Section"],
+
+Cell[CellGroupData[{
+Cell[1825, 57, 25, 0, 69, "Subsection"],
+Cell[1853, 59, 229, 4, 81, "Input"],
+Cell[2085, 65, 57, 0, 45, "Text"],
+Cell[2145, 67, 188, 3, 53, "Input"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[2382, 76, 22, 0, 77, "Section"],
+Cell[2407, 78, 236, 4, 87, "Input"],
+Cell[2646, 84, 196, 4, 49, "Input"],
+Cell[2845, 90, 420, 7, 114, "Text"]
+}, Open  ]]
+}
+]
+*)
+
+
+
+(*******************************************************************
+End of Mathematica Notebook file.
+*******************************************************************)
+

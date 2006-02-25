@@ -1,0 +1,139 @@
+(************** Content-type: application/mathematica **************
+                     CreatedBy='Mathematica 5.0'
+
+                    Mathematica-Compatible Notebook
+
+This notebook can be used with any Mathematica-compatible
+application, such as Mathematica, MathReader or Publicon. The data
+for the notebook starts with the line containing stars above.
+
+To get the notebook into a Mathematica-compatible application, do
+one of the following:
+
+* Save the data starting with the line of stars above into a file
+  with a name ending in .nb, then open the file inside the
+  application;
+
+* Copy the data starting with the line of stars above to the
+  clipboard, then use the Paste menu command inside the application.
+
+Data for notebooks contains only printable 7-bit ASCII and can be
+sent directly in email or through ftp in text mode.  Newlines can be
+CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+
+NOTE: If you modify the data for this notebook not in a Mathematica-
+compatible application, you must delete the line below containing
+the word CacheID, otherwise Mathematica-compatible applications may
+try to use invalid cache data.
+
+For more information on notebooks and Mathematica-compatible 
+applications, contact Wolfram Research:
+  web: http://www.wolfram.com
+  email: info@wolfram.com
+  phone: +1-217-398-0700 (U.S.)
+
+Notebook reader applications are available free of charge from 
+Wolfram Research.
+*******************************************************************)
+
+(*CacheID: 232*)
+
+
+(*NotebookFileLineBreakTest
+NotebookFileLineBreakTest*)
+(*NotebookOptionsPosition[      2911,         89]*)
+(*NotebookOutlinePosition[      3597,        112]*)
+(*  CellTagsIndexPosition[      3553,        108]*)
+(*WindowFrame->Normal*)
+
+
+
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["3.1.4c", "Section"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`\[PartialD]\_\(x\[InvisibleComma]x\[InvisibleComma]x\)\
+\(\(log(3  x - 1)\)\/\(log(10)\)\)\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`54\/\(\((3\ x - 1)\)\^3\ \(log(10)\)\)\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \(TraditionalForm\`Error\  \[Equal] \ \[LeftBracketingBar]\(1\/6\) \(54\/\
+\(\(\((3 \( \[Xi](1.4)\) - 1)\)\^3\) \(log(10)\)\)\) \((1.4 - 1.0)\) \((1.4 - 
+              1.25)\) \((1.4 - 1.6)\)\[RightBracketingBar]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`Where\ \(\[Xi](
+          1.4)\) \[Element] \((1.0, 1.6)\) . \ 
+            This\ attains\ its\ maximum\ value\ when\ \(\[Xi](
+            1.4)\)\  \[Equal] 1.0, \ 
+    and\ the\ error\ \(\(is\)\(:\)\)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`\[LeftBracketingBar]\(1\/6\) \(54\/\(\(\((3*1 - 
+                      1)\)\^3\) \(log(10)\)\)\) \((1.4 - 1.0)\) \((1.4 - 
+            1.25)\)\[RightBracketingBar]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`0.029314877528469473`\)], "Output"]
+}, Open  ]]
+}, Open  ]]
+},
+FrontEndVersion->"5.0 for Microsoft Windows",
+ScreenRectangle->{{0, 1280}, {0, 941}},
+ScreenStyleEnvironment->"Presentation",
+WindowSize->{495, 740},
+WindowMargins->{{120, Automatic}, {17, Automatic}}
+]
+
+(*******************************************************************
+Cached data follows.  If you edit this Notebook file directly, not
+using Mathematica, you must remove the line containing CacheID at
+the top of  the file.  The cache data will then be recreated when
+you save this file from within Mathematica.
+*******************************************************************)
+
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+
+(*NotebookFileOutline
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[1776, 53, 25, 0, 77, "Section"],
+
+Cell[CellGroupData[{
+Cell[1826, 57, 140, 2, 66, "Input"],
+Cell[1969, 61, 89, 1, 59, "Output"]
+}, Open  ]],
+Cell[2073, 65, 243, 3, 144, "Input"],
+Cell[2319, 70, 251, 5, 111, "Input"],
+
+Cell[CellGroupData[{
+Cell[2595, 79, 213, 3, 66, "Input"],
+Cell[2811, 84, 72, 1, 39, "Output"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+
+
+(*******************************************************************
+End of Mathematica Notebook file.
+*******************************************************************)
+

@@ -1,0 +1,249 @@
+(************** Content-type: application/mathematica **************
+                     CreatedBy='Mathematica 5.0'
+
+                    Mathematica-Compatible Notebook
+
+This notebook can be used with any Mathematica-compatible
+application, such as Mathematica, MathReader or Publicon. The data
+for the notebook starts with the line containing stars above.
+
+To get the notebook into a Mathematica-compatible application, do
+one of the following:
+
+* Save the data starting with the line of stars above into a file
+  with a name ending in .nb, then open the file inside the
+  application;
+
+* Copy the data starting with the line of stars above to the
+  clipboard, then use the Paste menu command inside the application.
+
+Data for notebooks contains only printable 7-bit ASCII and can be
+sent directly in email or through ftp in text mode.  Newlines can be
+CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+
+NOTE: If you modify the data for this notebook not in a Mathematica-
+compatible application, you must delete the line below containing
+the word CacheID, otherwise Mathematica-compatible applications may
+try to use invalid cache data.
+
+For more information on notebooks and Mathematica-compatible 
+applications, contact Wolfram Research:
+  web: http://www.wolfram.com
+  email: info@wolfram.com
+  phone: +1-217-398-0700 (U.S.)
+
+Notebook reader applications are available free of charge from 
+Wolfram Research.
+*******************************************************************)
+
+(*CacheID: 232*)
+
+
+(*NotebookFileLineBreakTest
+NotebookFileLineBreakTest*)
+(*NotebookOptionsPosition[      4476,        159]*)
+(*NotebookOutlinePosition[      5161,        182]*)
+(*  CellTagsIndexPosition[      5117,        178]*)
+(*WindowFrame->Normal*)
+
+
+
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["2.5.4", "Section"],
+
+Cell[BoxData[
+    \(TraditionalForm\`\(\(stef[f_]\  := \ 
+      Function[p0, \[IndentingNewLine]Module[{p1, 
+            p2}, \[IndentingNewLine]p1 = f[p0]; \[IndentingNewLine]p2 = 
+            f[p1]; \[IndentingNewLine]p0 - \((p1 - p0)\)\^2\/\(p2 - 2  p1 + \
+p0\)]]\)\(\[IndentingNewLine]\)
+    \)\)], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`\(stef[1 + Sin[#]\^2 &]\)[1. ]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`2.15290462899938`\)], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`\(stef[1 + Sin[#]\^2 &]\)[%]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`1.8734640435142802`\)], "Output"]
+}, Open  ]],
+
+Cell[BoxData[
+    \(TraditionalForm\`p\_0\%\((1)\) \[Equal] 
+      2.1529\ and\ p\_0\%\((2)\) \[Equal] 1.87346\)], "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["2.5.12", "Section"],
+
+Cell[CellGroupData[{
+
+Cell["(a)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`NestList[stef[2 + Sin[#] &], 1. , 5]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{1.`, 2.4204362803774164`, 2.5520120399284414`, 
+      2.5541953527701837`, 2.5541959528369977`, 
+      2.554195952837043`}\)], "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(b)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`NestList[stef[#\^3 - # - 5 &], 3. , 20]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{3.`, 2.9623529411764706`, 2.923248681812499`, 
+      2.882558319005902`, 2.8401366426516623`, 2.795820189509681`, 
+      2.749425615088731`, 2.700749071786744`, 2.649568032051972`, 
+      2.5956485471711304`, 2.5387642002536714`, 2.4787400255318754`, 
+      2.4155499226829873`, 2.349529060640345`, 2.2818292155827096`, 
+      2.2153420875643532`, 2.1562166194311563`, 2.1144668967316558`, 
+      2.097027304987658`, 2.094592955822337`, 2.094551493316986`}\)], "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(c)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`NestList[stef[3  #\^2 - \[ExponentialE]\^# + # &], 
+      1. , 5]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{1.`, 0.9239696803102233`, 0.9104428319912878`, 
+      0.910008016714995`, 0.9100075724891724`, 
+      0.910007572488709`}\)], "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["(d)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+    \(TraditionalForm\`NestList[stef[cos(#) &], 1. , 4]\)], "Input"],
+
+Cell[BoxData[
+    \(TraditionalForm\`{1.`, 0.7280103614676172`, 0.7390669669086738`, 
+      0.7390851331660755`, 0.7390851332151607`}\)], "Output"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+FrontEndVersion->"5.0 for Microsoft Windows",
+ScreenRectangle->{{0, 1280}, {0, 941}},
+ScreenStyleEnvironment->"Presentation",
+WindowSize->{495, 740},
+WindowMargins->{{48, Automatic}, {Automatic, 60}}
+]
+
+(*******************************************************************
+Cached data follows.  If you edit this Notebook file directly, not
+using Mathematica, you must remove the line containing CacheID at
+the top of  the file.  The cache data will then be recreated when
+you save this file from within Mathematica.
+*******************************************************************)
+
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+
+(*NotebookFileOutline
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[1776, 53, 24, 0, 77, "Section"],
+Cell[1803, 55, 311, 6, 214, "Input"],
+
+Cell[CellGroupData[{
+Cell[2139, 65, 80, 1, 42, "Input"],
+Cell[2222, 68, 68, 1, 39, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[2327, 74, 78, 1, 42, "Input"],
+Cell[2408, 77, 70, 1, 39, "Output"]
+}, Open  ]],
+Cell[2493, 81, 123, 2, 43, "Input"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[2653, 88, 25, 0, 77, "Section"],
+
+Cell[CellGroupData[{
+Cell[2703, 92, 25, 0, 69, "Subsection"],
+
+Cell[CellGroupData[{
+Cell[2753, 96, 86, 1, 39, "Input"],
+Cell[2842, 99, 174, 3, 39, "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[3065, 108, 25, 0, 69, "Subsection"],
+
+Cell[CellGroupData[{
+Cell[3115, 112, 89, 1, 42, "Input"],
+Cell[3207, 115, 508, 7, 111, "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[3764, 128, 25, 0, 69, "Subsection"],
+
+Cell[CellGroupData[{
+Cell[3814, 132, 115, 2, 42, "Input"],
+Cell[3932, 136, 173, 3, 39, "Output"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[4154, 145, 25, 0, 69, "Subsection"],
+
+Cell[CellGroupData[{
+Cell[4204, 149, 82, 1, 39, "Input"],
+Cell[4289, 152, 147, 2, 39, "Output"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+
+
+(*******************************************************************
+End of Mathematica Notebook file.
+*******************************************************************)
+

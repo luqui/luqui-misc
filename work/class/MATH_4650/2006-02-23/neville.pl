@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 
+# Neville's method
+# Luke Palmer
+# MATH 4650
+# 2006-02-24
+
 use Term::ReadLine;
 
 sub neville {

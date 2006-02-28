@@ -1,0 +1,35 @@
+Proc_time:
+ normal:
+  0.002279
+  0.002286
+  0.002277
+  0.002279
+  0.002275
+ prefetch:
+  0.002212
+  0.002224
+  0.002215
+  0.002216
+  0.002217
+ concat:
+  0.002268
+  0.002274
+  0.002272
+  0.002283
+  0.002273
+ prefetch_concat:
+  0.002225
+  0.002214
+  0.002197
+  0.002212
+  0.002214
+
+
+                  Mean         StdDev
+ normal:          0.002279  |  4.147e-6
+ prefetch:        0.002207  |  2.137e-5
+ concat:          0.002383  |  2.497e-4
+ prefetch_concat: 0.002212  |  1.002e-5
+
+ normal->prefetch:        3.2%  speedup
+ concat->prefetch_concat: 7.2%  speedup

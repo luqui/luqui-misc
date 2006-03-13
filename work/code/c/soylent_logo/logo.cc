@@ -56,10 +56,11 @@ int init_gl()
 {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_SetVideoMode(1400, 900, 0, SDL_OPENGL | SDL_FULLSCREEN);
+    SDL_ShowCursor(0);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(LEFT,RIGHT,BOTTOM,TOP);
+    gluOrtho2D(2*LEFT,2*RIGHT,2*BOTTOM,2*TOP);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
@@ -120,8 +121,8 @@ void integrate_particles()
             }
         }
         float dep = (*depression)[px][py];
-        p.vx += (dx - (1 - dep) * p.vx) * STEP;
-        p.vy += (dy - (1 - dep) * p.vy) * STEP;
+        p.vx += (dx - 2*(1 - dep) * p.vx) * STEP;
+        p.vy += (dy - 2*(1 - dep) * p.vy) * STEP;
         p.x += p.vx * STEP;
         p.y += p.vy * STEP;
 
@@ -143,8 +144,8 @@ void draw()
         int py = y2py(particles[i].y);
         float v = particles[i].vx * particles[i].vy;
         float dep = (*depression)[px][py];
-        float r = particles[i].vx + (1 - v) * dep;
-        float g = particles[i].vy + (1 - v) * dep;
+        float r = 2*particles[i].vx;
+        float g = 2*particles[i].vy;
         float b = fabs(1-v);
         glColor3f(r, g, b);
         glVertex2f(particles[i].x, particles[i].y);

@@ -187,7 +187,7 @@ int main()
     for (int i = 0; i < FIXED_POINTS; i++) {
         (*depression)[fixed[i][0]][fixed[i][1]] = 1;
     }
-    integrate_depression();
+    //integrate_depression();
 
     while (true) {
         events();

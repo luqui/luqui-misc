@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+# Luke Palmer
+# MATH 4650
+# 2006-03-13
+
 use strict;    
 
 use IO::Prompt;

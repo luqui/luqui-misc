@@ -55,7 +55,7 @@ void load_fixed_points()
 int init_gl()
 {
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_SetVideoMode(1400, 900, 0, SDL_OPENGL);
+    SDL_SetVideoMode(1400, 900, 0, SDL_OPENGL | SDL_FULLSCREEN);
     SDL_ShowCursor(0);
 
     glMatrixMode(GL_PROJECTION);
@@ -120,16 +120,16 @@ void integrate_particles()
                 }
             }
         }
-        float dep = in_range(px,py) ? (*depression)[px][py] : 0;
+        float dep = (*depression)[px][py];
         p.vx += (dx - 2*(1 - dep) * p.vx) * STEP;
         p.vy += (dy - 2*(1 - dep) * p.vy) * STEP;
         p.x += p.vx * STEP;
         p.y += p.vy * STEP;
 
-        if (p.x < LEFT)   { p.vx += 8*STEP; }
-        if (p.x > RIGHT)  { p.vx -= 8*STEP; }
-        if (p.y < BOTTOM) { p.vy += 8*STEP; }
-        if (p.y > TOP)    { p.vy -= 8*STEP; }
+        if (p.x < LEFT)   { p.vx = -p.vx; p.x += 2 * p.vx * STEP; }
+        if (p.x > RIGHT)  { p.vx = -p.vx; p.x += 2 * p.vx * STEP; }
+        if (p.y < BOTTOM) { p.vy = -p.vy; p.y += 2 * p.vy * STEP; }
+        if (p.y > TOP)    { p.vy = -p.vy; p.y += 2 * p.vy * STEP; }
     }
 }
 
@@ -143,6 +143,7 @@ void draw()
         int px = x2px(particles[i].x);
         int py = y2py(particles[i].y);
         float v = particles[i].vx * particles[i].vy;
+        float dep = (*depression)[px][py];
         float r = 2*particles[i].vx;
         float g = 2*particles[i].vy;
         float b = fabs(1-v);
@@ -177,7 +178,8 @@ int main()
     depression_back = &depbuf2;
     
     for (int i = 0; i < PARTICLES; i++)
-        particles[i] = Particle(0, 0, randrange(-12,12), randrange(-12,12));
+        particles[i] = Particle(randrange(-4,4), randrange(-3,3), randrange(-12,12), randrange(-12,12));
+
     init_gl();
 
     load_fixed_points();

@@ -1,0 +1,57 @@
+Create a spline of sin(x) with how many points? 4
+Building spline...Done
+
+     a. Print a table of samples
+     b. Sample the spline at a point
+
+> a
+  number of samples = 8
+               x |                y
+-----------------+-----------------
+        0.000000 |         0.000000
+        0.448799 |         0.431750
+        0.897598 |         0.781695
+        1.346397 |         0.972069
+        1.795196 |         0.972069
+        2.243995 |         0.781695
+        2.692794 |         0.431750
+        3.141593 |         0.000000
+Again? y
+Create a spline of sin(x) with how many points? 10
+Building spline...Done
+
+     a. Print a table of samples
+     b. Sample the spline at a point
+
+> a
+  number of samples = 8
+               x |                y
+-----------------+-----------------
+        0.000000 |         0.000000
+        0.448799 |         0.433869
+        0.897598 |         0.781803
+        1.346397 |         0.974919
+        1.795196 |         0.974919
+        2.243995 |         0.781803
+        2.692794 |         0.433869
+        3.141593 |         0.000000
+Again? y
+Create a spline of sin(x) with how many points? 50
+Building spline...Done
+
+     a. Print a table of samples
+     b. Sample the spline at a point
+
+> a
+  number of samples = 8
+               x |                y
+-----------------+-----------------
+        0.000000 |         0.000000
+        0.448799 |         0.433884
+        0.897598 |         0.781831
+        1.346397 |         0.974928
+        1.795196 |         0.974928
+        2.243995 |         0.781831
+        2.692794 |         0.433884
+        3.141593 |         0.000000
+Again? n

@@ -20,7 +20,7 @@ float depbuf2[DEP_W][DEP_H];
 float (*depression)[DEP_W][DEP_H];
 float (*depression_back)[DEP_W][DEP_H];
 
-const int PARTICLES = 30000;
+const int PARTICLES = 12000;
 struct Particle {
     Particle() { }
     Particle(float x, float y, float vx = 0, float vy = 0)

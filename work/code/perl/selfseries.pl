@@ -19,6 +19,7 @@ sub converge {
     for (;;) {
         @seq = describe @seq;
         my $sum = reduce { $a + $b } @seq;
+		print "@seq\n";
         my $str = join ';', @seq;
         return $seen{$str} if $seen{$str};
         $seen{$str} = $sum;

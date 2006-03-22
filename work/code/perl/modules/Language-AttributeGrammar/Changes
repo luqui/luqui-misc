@@ -21,5 +21,9 @@ Revision history for Perl extension Language::AttributeGrammar.
 	- added some basic sanitty tests, and tests for errors.
 
 0.07  Wed Oct 19 00:46:00 2005
-        - complete rewrite in a way that is more memory efficient,
-          breaking the interface.  See documentation for details.
+	- complete rewrite in a way that is more memory efficient,
+	  breaking the interface.  See documentation for details.
+
+0.08  Wed Mar 22 13:34:34 2006
+	- fixed perlmonks bug regarding dynamically creating nodes
+	- added a couple tests relating to garbage collection

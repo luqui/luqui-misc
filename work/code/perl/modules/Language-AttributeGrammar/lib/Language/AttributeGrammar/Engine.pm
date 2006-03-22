@@ -164,17 +164,19 @@ sub get {
     my ($self, $key) = @_;
     my $kval = overload::StrVal($key);
     unless (exists $.hash{$kval}) {
-        $.hash{$kval} = $.vivi->($key);
-        $.hash{$kval};
+		my $value = $.vivi->($key);
+		$.hash{$kval} = { key => $key, value => $value };
+		$value;
     }
     else {
-        $.hash{$kval};
+        $.hash{$kval}{value}
     }
 }
 
 sub put {
     my ($self, $key, $value) = @_;
-    $.hash{overload::StrVal($key)} = $value;
+    $.hash{overload::StrVal($key)} = { key => $key, value => $value };
+	$value;
 }
 
 sub keys {

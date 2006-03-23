@@ -3,6 +3,7 @@
 #include <GL/glu.h>
 #include <cstdlib>
 #include <list>
+#include <cmath>
 
 // Algorithms from "Real Time Fluid Dynamics for Games" by Jos Stam.
 
@@ -158,12 +159,12 @@ void step()
 	add_source(DENSITY, DSOURCE);
 	add_source(U, USOURCE);
 	add_source(V, VSOURCE);
-	density_step(DENSITY, DENSITY_BACK, U, V, 0.001);
+	density_step(DENSITY, DENSITY_BACK, U, V, 1e-5);
 	velocity_step(U, V, U_BACK, V_BACK, 0.001);
 
 	for (list<Particle>::iterator i = particles.begin(); i != particles.end(); ++i) {
-		i->x = clamp(i->x, 1, W-2);
-		i->y = clamp(i->y, 1, H-2);
+		i->x = clamp(i->x, 2, W-3);
+		i->y = clamp(i->y, 2, H-3);
 		int ix = int(i->x);
 		int iy = int(i->y);
 		float u = U[ix][iy];
@@ -180,8 +181,8 @@ void draw()
 	for (int i = 0; i < W; i++) {
 		for (int j = 0; j < H; j++) {
 			float d = 500*DENSITY[i][j];
-			float s = USOURCE[i][j] * USOURCE[i][j] + VSOURCE[i][j] * VSOURCE[i][j] + DSOURCE[i][j];
-			glColor3f(d,s > 0 ? 0.5 : 0,0);
+			float s = USOURCE[i][j] * USOURCE[i][j] + VSOURCE[i][j] * VSOURCE[i][j] + fabs(DSOURCE[i][j]);
+			glColor3f(d,s > 0 ? 0.5 : 0,-d);
 			glVertex2f(i,j);
 		}
 	}
@@ -248,6 +249,7 @@ void events()
 			}
 		}
 		if (keys[SDLK_x]) DSOURCE[fx][fy] += 0.01;
+		if (keys[SDLK_c]) DSOURCE[fx][fy] -= 0.01;
 	}
 }
 

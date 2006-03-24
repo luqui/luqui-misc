@@ -202,7 +202,7 @@ void draw()
 	glEnd();
 	*/
 
-	glPointSize(2.0);
+	glPointSize(1.0);
 	glBegin(GL_POINTS);
 	glColor3f(0.8,0.8,0.8);
 	for (list<Particle>::iterator i = particles.begin(); i != particles.end(); ++i) {
@@ -214,7 +214,7 @@ void draw()
 void init_sdl() 
 {
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_SetVideoMode(640, 480, 0, SDL_OPENGL);
+	SDL_SetVideoMode(640, 480, 0, SDL_OPENGL | SDL_FULLSCREEN);
 	glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluOrtho2D(0, W, 0, H);
@@ -227,6 +227,7 @@ void events()
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
+			SDL_Quit();
 			exit(0);
 		}
 	}
@@ -267,7 +268,7 @@ int main()
 		}
 	}
 
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 5000; i++) {
 		particles.push_back(Particle(randrange(1,W-2), randrange(1,H-2)));
 	}
 

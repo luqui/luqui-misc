@@ -16,7 +16,7 @@ typedef float Scr[W][H];
 
 Scr U, V, U_BACK, V_BACK;
 Scr DENSITY, DENSITY_BACK;
-Scr DSOURCE, USOURCE, VSOURCE;
+Scr USOURCE, VSOURCE;
 const float DT = 0.01;
 
 struct Particle {
@@ -33,12 +33,14 @@ struct Player {
 	int score;
 };
 
-const float CRITICAL = 1.0/100.0;
+const float CRITICAL = 1e-3;
 const float PLSPEED = 35;
 const float SPEEDSCALE = PLSPEED/CRITICAL;
 const float FLOWSPEED = 300;
-const float DENSPEED = 1;
+const float DENSPEED = 10;
 const float EMPTYRATE = 3;
+const float VISCOSITY = 0.001;
+const float DIFFUSION = 0.001;
 const int DESTRAD = 5;
 Player red(1,10,H-11);
 Player blue(-1,W-11,10);
@@ -181,13 +183,11 @@ void step()
 	int winx, winy;
 	if (DENSITY[redx][redy] < -CRITICAL) {
 		blue.score++;
-		DSOURCE[redx][redy] = 1;
 		win = 1;
 		winx = redx; winy = redy;
 	}
 	else if (DENSITY[blux][bluy] > CRITICAL) {
 		red.score++;
-		DSOURCE[blux][bluy] = -1;
 		win = -1;
 		winx = blux; winy = bluy;
 	}
@@ -212,7 +212,6 @@ void step()
 	}
 
 
-	//add_source(DENSITY, DSOURCE);
 	if (red.storing) red.store += DENSPEED*DT;
 	else { 
 		DENSITY[redx][redy] += EMPTYRATE*red.store*DT + DENSPEED*DT; 
@@ -225,8 +224,8 @@ void step()
 	}
 	add_source(U, USOURCE);
 	add_source(V, VSOURCE);
-	density_step(DENSITY, DENSITY_BACK, U, V, 1e-5);
-	velocity_step(U, V, U_BACK, V_BACK, 0.001);
+	density_step(DENSITY, DENSITY_BACK, U, V, DIFFUSION);
+	velocity_step(U, V, U_BACK, V_BACK, VISCOSITY);
 
 	for (list<Particle>::iterator i = particles.begin(); i != particles.end(); ++i) {
 		i->x = clamp(i->x, 2, W-3);
@@ -246,10 +245,13 @@ void draw()
 	glBegin(GL_POINTS);
 	for (int i = 0; i < W; i++) {
 		for (int j = 0; j < H; j++) {
-			float d = DENSITY[i][j] / CRITICAL;
-			float s = USOURCE[i][j] * USOURCE[i][j] + VSOURCE[i][j] * VSOURCE[i][j] + fabs(DSOURCE[i][j]);
-			float g = fabs(d) > 1 ? 0.5 : 0;
-			glColor3f(d,g + (s > 0 ? 0.7 : 0),-d);
+			float d = 100*DENSITY[i][j];
+			if (d > 0) {
+				glColor3f(d, d/10, d/100);
+			}
+			else {
+				glColor3f(-d/100, -d/10, -d);
+			}
 			glVertex2f(i,j);
 		}
 	}
@@ -363,8 +365,8 @@ void events()
 		}
 	}
 
-	red.storing = keys[SDLK_n];
-	blue.storing = keys[SDLK_KP2];
+//	red.storing = keys[SDLK_n];
+//	blue.storing = keys[SDLK_KP2];
 
 	red.x = clamp(red.x, 2, W-3);
 	red.y = clamp(red.y, 2, H-3);
@@ -376,8 +378,8 @@ int main()
 {
 	init_sdl();
 
-	const int nclears = 9;
-	Scr* clear[nclears] = { &U, &V, &U_BACK, &V_BACK, &DENSITY, &DENSITY_BACK, &DSOURCE, &USOURCE, &VSOURCE };
+	const int nclears = 8;
+	Scr* clear[nclears] = { &U, &V, &U_BACK, &V_BACK, &DENSITY, &DENSITY_BACK, &USOURCE, &VSOURCE };
 	for (int c = 0; c < nclears; c++) {
 		for (int i = 0; i < W; i++) {
 			for (int j = 0; j < H; j++) {
@@ -389,9 +391,6 @@ int main()
 	for (int i = 0; i < 5000; i++) {
 		particles.push_back(Particle(randrange(1,W-2), randrange(1,H-2)));
 	}
-
-	DSOURCE[12][H-13] = 1;
-	DSOURCE[W-13][12] = -1;
 
 	while (true) {
 		events();

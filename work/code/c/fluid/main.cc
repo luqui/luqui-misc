@@ -16,7 +16,6 @@ typedef float Scr[W][H];
 
 Scr U, V, U_BACK, V_BACK;
 Scr DENSITY, DENSITY_BACK;
-Scr USOURCE, VSOURCE;
 const float DT = 0.01;
 
 struct Particle {
@@ -25,9 +24,10 @@ struct Particle {
 };
 
 struct Player {
-	Player(float sign, float x, float y) : sign(sign), x(x), y(y), score(0), store(0), storing(false) { }
+	Player(float sign, float x, float y) : sign(sign), x(x), y(y), score(0), store(0), storing(false), blowx(0), blowy(0) { }
 	float sign;  // positive or negative
 	float x, y;
+	float blowx, blowy;
 	float store;
 	bool storing;
 	int score;
@@ -38,14 +38,14 @@ float PARTICLES_PENDING = 0;
 
 const int INITIAL_PARTICLES = 10;
 const float PARTICLE_RATE = 1;
-const float CRITICAL = 1e-3;
+const float CRITICAL = 2e-3;
 const float PLSPEED = 60;
 const float SPEEDSCALE = 0;
 const float MAXSPEED = HUGE_VAL;
-const float FLOWSPEED = 300;
+const float FLOWSPEED = 3000;
 const float DENSPEED = 0;
 const float EMPTYRATE = 3;
-const float VISCOSITY = 0.001;
+const float VISCOSITY = 0.01;
 const float DIFFUSION = 0.001;
 const float EATDIST = 1.414;
 const float EATENERGY = 10;
@@ -213,12 +213,6 @@ void step()
 					}
 				}
 			}
-
-			for (int i = 0; i < W; i++) {
-				for (int j = 0; j < H; j++) {
-					USOURCE[i][j] = VSOURCE[i][j] = 0;
-				}
-			}
 		}
 	}
 	WINTIMER -= DT;
@@ -235,8 +229,10 @@ void step()
 		DENSITY[blux][bluy] -= EMPTYRATE*blue.store*DT + DENSPEED*DT;
 		blue.store -= EMPTYRATE*blue.store*DT;
 	}
-	add_source(U, USOURCE);
-	add_source(V, VSOURCE);
+	U[redx][redy] += DT * red.blowx;
+	V[redx][redy] += DT * red.blowy;
+	U[blux][bluy] += DT * blue.blowx;
+	V[blux][bluy] += DT * blue.blowy;
 	density_step(DENSITY, DENSITY_BACK, U, V, DIFFUSION);
 	velocity_step(U, V, U_BACK, V_BACK, VISCOSITY);
 
@@ -285,10 +281,10 @@ void draw()
 		for (int j = 0; j < H; j++) {
 			float d = 100*DENSITY[i][j];
 			if (d > 0) {
-				glColor3f(d, d/10, d/100);
+				glColor3f(d, d/4, d/16);
 			}
 			else {
-				glColor3f(-d/100, -d/10, -d);
+				glColor3f(-d/16, -d/4, -d);
 			}
 			glVertex2f(i,j);
 		}
@@ -373,35 +369,18 @@ void events()
 	if (keys[SDLK_DOWN])  blue.y -= bspeed * DT;
 	if (keys[SDLK_UP])    blue.y += bspeed * DT;
 
-	if (keys[SDLK_g])   USOURCE[redx][redy] -= FLOWSPEED * DT;
-	if (keys[SDLK_j])   USOURCE[redx][redy] += FLOWSPEED * DT;
-	if (keys[SDLK_h])   VSOURCE[redx][redy] -= FLOWSPEED * DT;
-	if (keys[SDLK_y])   VSOURCE[redx][redy] += FLOWSPEED * DT;
+	red.blowx = red.blowy = 0;
+	if (keys[SDLK_g])  red.blowx -= FLOWSPEED;
+	if (keys[SDLK_j])  red.blowx += FLOWSPEED;
+	if (keys[SDLK_h])  red.blowy -= FLOWSPEED;
+	if (keys[SDLK_y])  red.blowy += FLOWSPEED;
 
-	if (keys[SDLK_KP4]) USOURCE[blux][bluy] -= FLOWSPEED * DT;
-	if (keys[SDLK_KP6]) USOURCE[blux][bluy] += FLOWSPEED * DT;
-	if (keys[SDLK_KP5]) VSOURCE[blux][bluy] -= FLOWSPEED * DT;
-	if (keys[SDLK_KP8]) VSOURCE[blux][bluy] += FLOWSPEED * DT;
+	blue.blowx = blue.blowy = 0;
+	if (keys[SDLK_KP4]) blue.blowx -= FLOWSPEED;
+	if (keys[SDLK_KP6]) blue.blowx += FLOWSPEED;
+	if (keys[SDLK_KP5]) blue.blowy -= FLOWSPEED;
+	if (keys[SDLK_KP8]) blue.blowy += FLOWSPEED;
 
-	if (keys[SDLK_b]) {
-		for (int i = redx - DESTRAD; i <= redx + DESTRAD; i++) {
-			for (int j = redy - DESTRAD; j <= redy + DESTRAD; j++) {
-				if (0 <= i && i < W && 0 <= j && j < H) {
-					USOURCE[i][j] = VSOURCE[i][j] = 0;
-				}
-			}
-		}
-	}
-
-	if (keys[SDLK_KP1]) {
-		for (int i = blux - DESTRAD; i <= blux + DESTRAD; i++) {
-			for (int j = bluy - DESTRAD; j <= bluy + DESTRAD; j++) {
-				if (0 <= i && i < W && 0 <= j && j < H) {
-					USOURCE[i][j] = VSOURCE[i][j] = 0;
-				}
-			}
-		}
-	}
 
 //	red.storing = keys[SDLK_n];
 //	blue.storing = keys[SDLK_KP2];
@@ -416,8 +395,8 @@ int main()
 {
 	init_sdl();
 
-	const int nclears = 8;
-	Scr* clear[nclears] = { &U, &V, &U_BACK, &V_BACK, &DENSITY, &DENSITY_BACK, &USOURCE, &VSOURCE };
+	const int nclears = 6;
+	Scr* clear[nclears] = { &U, &V, &U_BACK, &V_BACK, &DENSITY, &DENSITY_BACK };
 	for (int c = 0; c < nclears; c++) {
 		for (int i = 0; i < W; i++) {
 			for (int j = 0; j < H; j++) {

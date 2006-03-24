@@ -204,7 +204,7 @@ void step()
 			WINTIMER = 5;
 			for (int i = 0; i < W; i++) {
 				for (int j = 0; j <= H; j++) {
-					if ((i - red.x)*(i - red.x) + (j - red.y)*(j - red.y)
+						if ((i - red.x)*(i - red.x) + (j - red.y)*(j - red.y)
 					  < (i - blue.x)*(i - blue.x) + (j - blue.y)*(j - blue.y)) {
 						DENSITY[i][j] = fabs(DENSITY[i][j]);
 					}
@@ -218,22 +218,23 @@ void step()
 	WINTIMER -= DT;
 	if (WINTIMER < 0) WINTIMER = 0;
 
-
 	if (red.storing) red.store += DENSPEED*DT;
 	else { 
 		DENSITY[redx][redy] += EMPTYRATE*red.store*DT + DENSPEED*DT; 
 		red.store -= EMPTYRATE*red.store*DT;
+		if (red.store < 0) red.store = 0;
 	}
 	if (blue.storing) blue.store += DENSPEED*DT;
 	else {
 		DENSITY[blux][bluy] -= EMPTYRATE*blue.store*DT + DENSPEED*DT;
 		blue.store -= EMPTYRATE*blue.store*DT;
+		if (blue.store < 0) blue.store = 0;
 	}
+	density_step(DENSITY, DENSITY_BACK, U, V, DIFFUSION);
 	U[redx][redy] += DT * red.blowx;
 	V[redx][redy] += DT * red.blowy;
 	U[blux][bluy] += DT * blue.blowx;
 	V[blux][bluy] += DT * blue.blowy;
-	density_step(DENSITY, DENSITY_BACK, U, V, DIFFUSION);
 	velocity_step(U, V, U_BACK, V_BACK, VISCOSITY);
 
 	for (list<Particle>::iterator i = particles.begin(); i != particles.end();) {
@@ -370,7 +371,7 @@ void events()
 	
 	int blux = int(blue.x);
 	int bluy = int(blue.y);
-
+	
 	float rspeed = PLSPEED + SPEEDSCALE*(DENSITY[redx][redy] - DENSPEED*DT);
 	rspeed = clamp(rspeed, 0, MAXSPEED);
 	float bspeed = PLSPEED - SPEEDSCALE*(DENSITY[blux][bluy] + DENSPEED*DT);

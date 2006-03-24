@@ -9,14 +9,14 @@
 
 using std::list;
 
-const int W = 160;
-const int H = 120;
+const int W = 120;
+const int H = 90;
 
 typedef float Scr[W][H];
 
 Scr U, V, U_BACK, V_BACK;
 Scr DENSITY, DENSITY_BACK;
-const float DT = 0.01;
+float DT = 0.01;
 
 struct Particle {
 	Particle(float x, float y) : x(x), y(y) { }
@@ -39,12 +39,12 @@ float PARTICLES_PENDING = 0;
 const int INITIAL_PARTICLES = 10;
 const float PARTICLE_RATE = 1;
 const float CRITICAL = 2e-3;
-const float PLSPEED = 60;
+const float PLSPEED = 20;
 const float SPEEDSCALE = 0;
 const float MAXSPEED = HUGE_VAL;
-const float FLOWSPEED = 3000;
+const float FLOWSPEED = 1000;
 const float DENSPEED = 0;
-const float EMPTYRATE = 3;
+const float EMPTYRATE = 1;
 const float VISCOSITY = 0.01;
 const float DIFFUSION = 0.001;
 const float EATDIST = 1.414;
@@ -201,7 +201,7 @@ void step()
 			winx = blux; winy = bluy;
 		}
 		if (win != 0) {
-			WINTIMER = 1;
+			WINTIMER = 5;
 			for (int i = 0; i < W; i++) {
 				for (int j = 0; j <= H; j++) {
 					if ((i - red.x)*(i - red.x) + (j - red.y)*(j - red.y)
@@ -273,20 +273,29 @@ void step()
 	}
 }
 
+void set_color_at(int i, int j) {
+	float d = 100*DENSITY[i][j];
+	if (d > 0) {
+		glColor3f(d, d/4, d/16);
+	}
+	else {
+		glColor3f(-d/16, -d/4, -d);
+	}
+}
+
 void draw()
 {
-	glPointSize(4.0);
-	glBegin(GL_POINTS);
-	for (int i = 0; i < W; i++) {
-		for (int j = 0; j < H; j++) {
-			float d = 100*DENSITY[i][j];
-			if (d > 0) {
-				glColor3f(d, d/4, d/16);
-			}
-			else {
-				glColor3f(-d/16, -d/4, -d);
-			}
+	glBegin(GL_QUADS);
+	for (int i = 0; i < W-1; i++) {
+		for (int j = 0; j < H-1; j++) {
+			set_color_at(i,j);
 			glVertex2f(i,j);
+			set_color_at(i+1,j);
+			glVertex2f(i+1,j);
+			set_color_at(i+1,j+1);
+			glVertex2f(i+1,j+1);
+			set_color_at(i,j+1);
+			glVertex2f(i,j+1);
 		}
 	}
 	glEnd();
@@ -326,7 +335,7 @@ void draw()
 
 void init_sdl() 
 {
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 	SDL_SetVideoMode(640, 480, 0, SDL_OPENGL | SDL_FULLSCREEN);
 	SDL_ShowCursor(0);
 	glMatrixMode(GL_PROJECTION);
@@ -334,6 +343,14 @@ void init_sdl()
 		gluOrtho2D(0, W, 0, H+3);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+}
+
+float get_step() {
+	static Uint32 last_time = SDL_GetTicks();
+	Uint32 this_time = SDL_GetTicks();
+	float timediff = float(this_time - last_time) / 1000;
+	last_time = this_time;
+	return timediff;
 }
 
 void events() 
@@ -409,11 +426,14 @@ int main()
 		particles.push_back(Particle(randrange(1,W-2), randrange(1,H-2)));
 	}
 
+	get_step();
+	DT = 0.01;
 	while (true) {
 		events();
 		step();
 		glClear(GL_COLOR_BUFFER_BIT);
 		draw();
 		SDL_GL_SwapBuffers();
+		DT = get_step();
 	}
 }

@@ -42,7 +42,8 @@ const float CRITICAL = 2e-3;
 const float PLSPEED = 20;
 const float SPEEDSCALE = 0;
 const float MAXSPEED = HUGE_VAL;
-const float FLOWSPEED = 20;
+const float FLOWSPEED = 30;
+const float PROPELSPEED = 10;
 const float DENSPEED = 0;
 const float EMPTYRATE = 1;
 const float VISCOSITY = 1e-5;
@@ -379,15 +380,15 @@ void events()
 
 	red.blowx = red.blowy = 0;
 	blue.blowx = blue.blowy = 0;
-	if (keys[SDLK_a]) { red.x -= rspeed * DT; red.blowx += FLOWSPEED; }
-	if (keys[SDLK_d]) { red.x += rspeed * DT; red.blowx -= FLOWSPEED; }
-	if (keys[SDLK_s]) { red.y -= rspeed * DT; red.blowy += FLOWSPEED; }
-	if (keys[SDLK_w]) { red.y += rspeed * DT; red.blowy -= FLOWSPEED; }
+	if (keys[SDLK_a]) { red.x -= rspeed * DT; red.blowx += PROPELSPEED; }
+	if (keys[SDLK_d]) { red.x += rspeed * DT; red.blowx -= PROPELSPEED; }
+	if (keys[SDLK_s]) { red.y -= rspeed * DT; red.blowy += PROPELSPEED; }
+	if (keys[SDLK_w]) { red.y += rspeed * DT; red.blowy -= PROPELSPEED; }
 
-	if (keys[SDLK_LEFT])  { blue.x -= bspeed * DT; blue.blowx += FLOWSPEED; }
-	if (keys[SDLK_RIGHT]) { blue.x += bspeed * DT; blue.blowx -= FLOWSPEED; }
-	if (keys[SDLK_DOWN])  { blue.y -= bspeed * DT; blue.blowy += FLOWSPEED; }
-	if (keys[SDLK_UP])    { blue.y += bspeed * DT; blue.blowy -= FLOWSPEED; }
+	if (keys[SDLK_LEFT])  { blue.x -= bspeed * DT; blue.blowx += PROPELSPEED; }
+	if (keys[SDLK_RIGHT]) { blue.x += bspeed * DT; blue.blowx -= PROPELSPEED; }
+	if (keys[SDLK_DOWN])  { blue.y -= bspeed * DT; blue.blowy += PROPELSPEED; }
+	if (keys[SDLK_UP])    { blue.y += bspeed * DT; blue.blowy -= PROPELSPEED; }
 
 	if (keys[SDLK_h])  red.blowx -= FLOWSPEED;
 	if (keys[SDLK_k])  red.blowx += FLOWSPEED;

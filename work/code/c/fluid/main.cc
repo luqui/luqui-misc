@@ -24,6 +24,24 @@ struct Particle {
 	float x, y;
 };
 
+struct Player {
+	Player(float sign, float x, float y) : sign(sign), x(x), y(y), score(0), store(0), storing(false) { }
+	float sign;  // positive or negative
+	float x, y;
+	float store;
+	bool storing;
+	int score;
+};
+
+const float CRITICAL = 1.0/100.0;
+const float PLSPEED = 35;
+const float SPEEDSCALE = PLSPEED/CRITICAL;
+const float FLOWSPEED = 300;
+const float DENSPEED = 1;
+const float EMPTYRATE = 3;
+const int DESTRAD = 5;
+Player red(1,10,H-11);
+Player blue(-1,W-11,10);
 list<Particle> particles;
 
 float randrange(float min, float max) {
@@ -156,7 +174,55 @@ void velocity_step(Scr u, Scr v, Scr u0, Scr v0, float visc) {
 
 void step()
 {
-	add_source(DENSITY, DSOURCE);
+	int redx = int(red.x);  int redy = int(red.y);
+	int blux = int(blue.x); int bluy = int(blue.y);
+
+	int win = 0;
+	int winx, winy;
+	if (DENSITY[redx][redy] < -CRITICAL) {
+		blue.score++;
+		DSOURCE[redx][redy] = 1;
+		win = 1;
+		winx = redx; winy = redy;
+	}
+	else if (DENSITY[blux][bluy] > CRITICAL) {
+		red.score++;
+		DSOURCE[blux][bluy] = -1;
+		win = -1;
+		winx = blux; winy = bluy;
+	}
+	if (win != 0) {
+		for (int i = 0; i < W; i++) {
+			for (int j = 0; j <= H; j++) {
+				if ((i - red.x)*(i - red.x) + (j - red.y)*(j - red.y)
+				  < (i - blue.x)*(i - blue.x) + (j - blue.y)*(j - blue.y)) {
+					DENSITY[i][j] = fabs(DENSITY[i][j]);
+				}
+				else {
+					DENSITY[i][j] = -fabs(DENSITY[i][j]);
+				}
+			}
+		}
+
+		for (int i = 0; i < W; i++) {
+			for (int j = 0; j < H; j++) {
+				USOURCE[i][j] = VSOURCE[i][j] = 0;
+			}
+		}
+	}
+
+
+	//add_source(DENSITY, DSOURCE);
+	if (red.storing) red.store += DENSPEED*DT;
+	else { 
+		DENSITY[redx][redy] += EMPTYRATE*red.store*DT + DENSPEED*DT; 
+		red.store -= EMPTYRATE*red.store*DT;
+	}
+	if (blue.storing) blue.store += DENSPEED*DT;
+	else {
+		DENSITY[blux][bluy] -= EMPTYRATE*blue.store*DT + DENSPEED*DT;
+		blue.store -= EMPTYRATE*blue.store*DT;
+	}
 	add_source(U, USOURCE);
 	add_source(V, VSOURCE);
 	density_step(DENSITY, DENSITY_BACK, U, V, 1e-5);
@@ -180,27 +246,14 @@ void draw()
 	glBegin(GL_POINTS);
 	for (int i = 0; i < W; i++) {
 		for (int j = 0; j < H; j++) {
-			float d = 500*DENSITY[i][j];
+			float d = DENSITY[i][j] / CRITICAL;
 			float s = USOURCE[i][j] * USOURCE[i][j] + VSOURCE[i][j] * VSOURCE[i][j] + fabs(DSOURCE[i][j]);
-			glColor3f(d,s > 0 ? 0.5 : 0,-d);
+			float g = fabs(d) > 1 ? 0.5 : 0;
+			glColor3f(d,g + (s > 0 ? 0.7 : 0),-d);
 			glVertex2f(i,j);
 		}
 	}
 	glEnd();
-
-	/*
-	glColor3f(0,0.2,0.8);
-	glBegin(GL_LINES);
-	for (int i = 1; i < W-1; i += 3) {
-		for (int j = 1; j < H-1; j += 3) {
-			float vx = 20*U[i][j];
-			float vy = 20*V[i][j];
-			glVertex2f(i,j);
-			glVertex2f(i+vx, j+vy);
-		}
-	}
-	glEnd();
-	*/
 
 	glPointSize(1.0);
 	glBegin(GL_POINTS);
@@ -209,15 +262,40 @@ void draw()
 		glVertex2f(i->x, i->y);
 	}
 	glEnd();
+
+	glPointSize(6.0);
+	glBegin(GL_POINTS);
+		glColor3f(1,0.7,0.7);
+		glVertex2f(red.x,red.y);
+		for (int i = 0; i < red.score; i++) {
+			glVertex2f(3*i+3, H+1);
+		}
+		glColor3f(0.7,0.7,1);
+		glVertex2f(blue.x,blue.y);
+		for (int i = 0; i < blue.score; i++) {
+			glVertex2f(W-3*i-4, H+1);
+		}
+	glEnd();
+
+	glLineWidth(3.0);
+	glBegin(GL_LINES);
+		glColor3f(1,0,0);
+		glVertex2f(3, H);
+		glVertex2f(3+red.store, H);
+		glColor3f(0,0,1);
+		glVertex2f(W-4, H);
+		glVertex2f(W-4-blue.store, H);
+	glEnd();
 }
 
 void init_sdl() 
 {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_SetVideoMode(640, 480, 0, SDL_OPENGL | SDL_FULLSCREEN);
+	SDL_ShowCursor(0);
 	glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		gluOrtho2D(0, W, 0, H);
+		gluOrtho2D(0, W, 0, H+3);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
@@ -231,27 +309,67 @@ void events()
 			exit(0);
 		}
 	}
-	int x, y;
-	SDL_GetMouseState(&x, &y);
-	int fx = x/(640/W);
-	int fy = (480-y)/(480/H);
 
-	if (fx > 0 && fx < W-1 && fy > 0 && fy < H-1) {
-		Uint8* keys = SDL_GetKeyState(NULL);
-		if (keys[SDLK_a]) USOURCE[fx][fy] -= 3;
-		if (keys[SDLK_d]) USOURCE[fx][fy] += 3;
-		if (keys[SDLK_s]) VSOURCE[fx][fy] -= 3;
-		if (keys[SDLK_w]) VSOURCE[fx][fy] += 3;
-		if (keys[SDLK_z]) {
-			for (int i = -1; i <= 1; i++) {
-				for (int j = -1; j <= 1; j++) {
-					USOURCE[fx+i][fy+j] = VSOURCE[fx+i][fy+j] = DSOURCE[fx][fy] = 0;
+	Uint8* keys = SDL_GetKeyState(NULL);
+
+	int redx = int(red.x);
+	int redy = int(red.y);
+	
+	int blux = int(blue.x);
+	int bluy = int(blue.y);
+
+	float rspeed = PLSPEED + SPEEDSCALE*DENSITY[redx][redy];
+	rspeed = clamp(rspeed, 0, 2*PLSPEED);
+	float bspeed = PLSPEED - SPEEDSCALE*DENSITY[blux][bluy];
+	bspeed = clamp(bspeed, 0, 2*PLSPEED);
+
+	if (keys[SDLK_a]) red.x -= rspeed * DT;
+	if (keys[SDLK_d]) red.x += rspeed * DT;
+	if (keys[SDLK_s]) red.y -= rspeed * DT;
+	if (keys[SDLK_w]) red.y += rspeed * DT;
+
+	if (keys[SDLK_LEFT])  blue.x -= bspeed * DT;
+	if (keys[SDLK_RIGHT]) blue.x += bspeed * DT;
+	if (keys[SDLK_DOWN])  blue.y -= bspeed * DT;
+	if (keys[SDLK_UP])    blue.y += bspeed * DT;
+
+	if (keys[SDLK_g])   USOURCE[redx][redy] -= FLOWSPEED * DT;
+	if (keys[SDLK_j])   USOURCE[redx][redy] += FLOWSPEED * DT;
+	if (keys[SDLK_h])   VSOURCE[redx][redy] -= FLOWSPEED * DT;
+	if (keys[SDLK_y])   VSOURCE[redx][redy] += FLOWSPEED * DT;
+
+	if (keys[SDLK_KP4]) USOURCE[blux][bluy] -= FLOWSPEED * DT;
+	if (keys[SDLK_KP6]) USOURCE[blux][bluy] += FLOWSPEED * DT;
+	if (keys[SDLK_KP5]) VSOURCE[blux][bluy] -= FLOWSPEED * DT;
+	if (keys[SDLK_KP8]) VSOURCE[blux][bluy] += FLOWSPEED * DT;
+
+	if (keys[SDLK_b]) {
+		for (int i = redx - DESTRAD; i <= redx + DESTRAD; i++) {
+			for (int j = redy - DESTRAD; j <= redy + DESTRAD; j++) {
+				if (0 <= i && i < W && 0 <= j && j < H) {
+					USOURCE[i][j] = VSOURCE[i][j] = 0;
 				}
 			}
 		}
-		if (keys[SDLK_x]) DSOURCE[fx][fy] += 0.01;
-		if (keys[SDLK_c]) DSOURCE[fx][fy] -= 0.01;
 	}
+
+	if (keys[SDLK_KP1]) {
+		for (int i = blux - DESTRAD; i <= blux + DESTRAD; i++) {
+			for (int j = bluy - DESTRAD; j <= bluy + DESTRAD; j++) {
+				if (0 <= i && i < W && 0 <= j && j < H) {
+					USOURCE[i][j] = VSOURCE[i][j] = 0;
+				}
+			}
+		}
+	}
+
+	red.storing = keys[SDLK_n];
+	blue.storing = keys[SDLK_KP2];
+
+	red.x = clamp(red.x, 2, W-3);
+	red.y = clamp(red.y, 2, H-3);
+	blue.x = clamp(blue.x, 2, W-3);
+	blue.y = clamp(blue.y, 2, H-3);
 }
 
 int main() 
@@ -271,6 +389,9 @@ int main()
 	for (int i = 0; i < 5000; i++) {
 		particles.push_back(Particle(randrange(1,W-2), randrange(1,H-2)));
 	}
+
+	DSOURCE[12][H-13] = 1;
+	DSOURCE[W-13][12] = -1;
 
 	while (true) {
 		events();

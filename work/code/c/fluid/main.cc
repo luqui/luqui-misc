@@ -33,14 +33,22 @@ struct Player {
 	int score;
 };
 
+float WINTIMER = 0;
+float PARTICLES_PENDING = 0;
+
+const int INITIAL_PARTICLES = 10;
+const float PARTICLE_RATE = 1;
 const float CRITICAL = 1e-3;
-const float PLSPEED = 35;
-const float SPEEDSCALE = PLSPEED/CRITICAL;
+const float PLSPEED = 60;
+const float SPEEDSCALE = 0;
+const float MAXSPEED = HUGE_VAL;
 const float FLOWSPEED = 300;
-const float DENSPEED = 10;
+const float DENSPEED = 0;
 const float EMPTYRATE = 3;
 const float VISCOSITY = 0.001;
 const float DIFFUSION = 0.001;
+const float EATDIST = 1.414;
+const float EATENERGY = 10;
 const int DESTRAD = 5;
 Player red(1,10,H-11);
 Player blue(-1,W-11,10);
@@ -179,37 +187,42 @@ void step()
 	int redx = int(red.x);  int redy = int(red.y);
 	int blux = int(blue.x); int bluy = int(blue.y);
 
-	int win = 0;
-	int winx, winy;
-	if (DENSITY[redx][redy] < -CRITICAL) {
-		blue.score++;
-		win = 1;
-		winx = redx; winy = redy;
-	}
-	else if (DENSITY[blux][bluy] > CRITICAL) {
-		red.score++;
-		win = -1;
-		winx = blux; winy = bluy;
-	}
-	if (win != 0) {
-		for (int i = 0; i < W; i++) {
-			for (int j = 0; j <= H; j++) {
-				if ((i - red.x)*(i - red.x) + (j - red.y)*(j - red.y)
-				  < (i - blue.x)*(i - blue.x) + (j - blue.y)*(j - blue.y)) {
-					DENSITY[i][j] = fabs(DENSITY[i][j]);
-				}
-				else {
-					DENSITY[i][j] = -fabs(DENSITY[i][j]);
+	if (WINTIMER == 0) {
+		int win = 0;
+		int winx, winy;
+		if (DENSITY[redx][redy] < -CRITICAL) {
+			blue.score++;
+			win = 1;
+			winx = redx; winy = redy;
+		}
+		else if (DENSITY[blux][bluy] > CRITICAL) {
+			red.score++;
+			win = -1;
+			winx = blux; winy = bluy;
+		}
+		if (win != 0) {
+			WINTIMER = 1;
+			for (int i = 0; i < W; i++) {
+				for (int j = 0; j <= H; j++) {
+					if ((i - red.x)*(i - red.x) + (j - red.y)*(j - red.y)
+					  < (i - blue.x)*(i - blue.x) + (j - blue.y)*(j - blue.y)) {
+						DENSITY[i][j] = fabs(DENSITY[i][j]);
+					}
+					else {
+						DENSITY[i][j] = -fabs(DENSITY[i][j]);
+					}
 				}
 			}
-		}
 
-		for (int i = 0; i < W; i++) {
-			for (int j = 0; j < H; j++) {
-				USOURCE[i][j] = VSOURCE[i][j] = 0;
+			for (int i = 0; i < W; i++) {
+				for (int j = 0; j < H; j++) {
+					USOURCE[i][j] = VSOURCE[i][j] = 0;
+				}
 			}
 		}
 	}
+	WINTIMER -= DT;
+	if (WINTIMER < 0) WINTIMER = 0;
 
 
 	if (red.storing) red.store += DENSPEED*DT;
@@ -227,7 +240,7 @@ void step()
 	density_step(DENSITY, DENSITY_BACK, U, V, DIFFUSION);
 	velocity_step(U, V, U_BACK, V_BACK, VISCOSITY);
 
-	for (list<Particle>::iterator i = particles.begin(); i != particles.end(); ++i) {
+	for (list<Particle>::iterator i = particles.begin(); i != particles.end();) {
 		i->x = clamp(i->x, 2, W-3);
 		i->y = clamp(i->y, 2, H-3);
 		int ix = int(i->x);
@@ -236,6 +249,31 @@ void step()
 		float v = V[ix][iy];
 		i->x += 60*DT*u;
 		i->y += 60*DT*v;
+
+		bool eaten = false;
+		if ((i->x - red.x)*(i->x - red.x) + (i->y - red.y)*(i->y - red.y) < EATDIST*EATDIST) {
+			red.store += EATENERGY;
+			eaten = true;
+		}
+		if ((i->x - blue.x)*(i->x - blue.x) + (i->y - blue.y)*(i->y - blue.y) < EATDIST*EATDIST) {
+			blue.store += EATENERGY;
+			eaten = true;
+		}
+		if (eaten) {
+			list<Particle>::iterator iprime = i;
+			++iprime;
+			particles.erase(i);
+			i = iprime;
+		}
+		else {
+			++i;
+		}
+	}
+
+	PARTICLES_PENDING += PARTICLE_RATE * DT;
+	while (PARTICLES_PENDING > 1) {
+		PARTICLES_PENDING -= 1;
+		particles.push_back(Particle(randrange(2,W-3), randrange(2,H-3)));
 	}
 }
 
@@ -320,10 +358,10 @@ void events()
 	int blux = int(blue.x);
 	int bluy = int(blue.y);
 
-	float rspeed = PLSPEED + SPEEDSCALE*DENSITY[redx][redy];
-	rspeed = clamp(rspeed, 0, 2*PLSPEED);
-	float bspeed = PLSPEED - SPEEDSCALE*DENSITY[blux][bluy];
-	bspeed = clamp(bspeed, 0, 2*PLSPEED);
+	float rspeed = PLSPEED + SPEEDSCALE*(DENSITY[redx][redy] - DENSPEED*DT);
+	rspeed = clamp(rspeed, 0, MAXSPEED);
+	float bspeed = PLSPEED - SPEEDSCALE*(DENSITY[blux][bluy] + DENSPEED*DT);
+	bspeed = clamp(bspeed, 0, MAXSPEED);
 
 	if (keys[SDLK_a]) red.x -= rspeed * DT;
 	if (keys[SDLK_d]) red.x += rspeed * DT;
@@ -388,7 +426,7 @@ int main()
 		}
 	}
 
-	for (int i = 0; i < 5000; i++) {
+	for (int i = 0; i < INITIAL_PARTICLES; i++) {
 		particles.push_back(Particle(randrange(1,W-2), randrange(1,H-2)));
 	}
 

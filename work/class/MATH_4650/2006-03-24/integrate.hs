@@ -68,4 +68,34 @@ main = do
     putStrLn $ "error = " ++ show (abs (approx - actual))
     putStrLn $ "error bound = " ++ show bound
 
+{- OUTPUT:
+Integrating ln(x) over [a,b]
+a = 1
+b = 2
+What method (simpsons, trapezoidal, midpoint)? midpoint
+How many points? 11^?0
+How many points? 10
+output = 0.38650248251865815
+error = 2.0812139876758007e-4
+error bound = 2.2456463644367818e-4
+
+Integrating ln(x) over [a,b]
+a = 1
+b = 2
+What method (simpsons, trapezoidal, midpoint)? trapezoidal
+How many points? 10
+output = 0.3858779367457544
+error = 4.164243741361928e-4
+error bound = 4.4912927288735636e-4
+
+Integrating ln(x) over [a,b]
+a = 1
+b = 2
+What method (simpsons, trapezoidal, midpoint)? simpsons
+How many points? 10
+output = 0.3862943005943569
+error = 6.052553369606528e-8
+error bound = 7.119885704688327e-8
+-}
+
 -- vim: expandtab :

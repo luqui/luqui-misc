@@ -5,32 +5,29 @@
 #include <list>
 #include <cmath>
 
+#include "config.h"
+#include "vec.h"
+#include "FluidGrid.h"
+
 // Algorithms from "Real Time Fluid Dynamics for Games" by Jos Stam.
 
 using std::list;
 
-const int W = 120;
-const int H = 90;
-
-typedef float Scr[W][H];
-
-Scr U, V, U_BACK, V_BACK;
-Scr DENSITY, DENSITY_BACK;
 float DT = 0.01;
 
 struct Particle {
-	Particle(float x, float y) : x(x), y(y) { }
-	float x, y;
+	Particle(vec p) : p(p) { }
+	vec p;
 };
 
 struct Player {
-	Player(float sign, float x, float y) : sign(sign), x(x), y(y), score(0), store(0), storing(false), blowx(0), blowy(0) { }
+	Player(float sign, vec p) : sign(sign), p(p), score(0), store(0), storing(false) { }
 	float sign;  // positive or negative
-	float x, y;
-	float blowx, blowy;
+	vec p;
+	int score;
 	float store;
 	bool storing;
-	int score;
+	vec blow;
 };
 
 float WINTIMER = 0;
@@ -51,169 +48,31 @@ const float DIFFUSION = 1e-5;
 const float EATDIST = 1.414;
 const float EATENERGY = 5;
 const int DESTRAD = 5;
-Player red(1,10,H-11);
-Player blue(-1,W-11,10);
+Player red(1,vec(10,H-11));
+Player blue(-1,vec(W-11,10));
 list<Particle> particles;
+
+FluidDensityGrid FIELD(vec(0,0), vec(W,H), DIFFUSION, VISCOSITY);
+FluidUtils::Bound BOUND;
 
 float randrange(float min, float max) {
 	return float(rand()) / RAND_MAX * (max - min) + min;
 }
 
-float clamp(float x, float lo, float hi)
-{
-	if (x <= lo) return lo;
-	if (x >= hi) return hi;
-	return x;
-}
-
-void set_bnd(int ty, Scr x) {
-	for (int i = 1; i < W-1; i++) {
-		x[i][0]   = ty == 2 ? -x[i][1]   : x[i][1];
-		x[i][H-1] = ty == 2 ? -x[i][H-2] : x[i][H-2];
-	}
-	for (int j = 1; j < H-1; j++) {
-		x[0][j]   = ty == 1 ? -x[1][j]   : x[1][j];
-		x[W-1][j] = ty == 1 ? -x[W-2][j] : x[W-2][j];
-	}
-	x[0][0]     = 0.5*(x[1][0]   + x[0][1]);
-	x[0][H-1]   = 0.5*(x[1][H-1] + x[0][H-2]);
-	x[W-1][0]   = 0.5*(x[W-2][0] + x[W-1][1]);
-	x[W-1][H-1] = 0.5*(x[W-2][H-1] + x[W-1][H-2]);
-}
-
-void add_source(Scr x, Scr s) 
-{
-	for (int i = 0; i < W; i++) {
-		for (int j = 0; j < H; j++) {
-			x[i][j] += DT*s[i][j];
-		}
-	}
-}
-
-void diffuse(int ty, Scr x, Scr x0, float diff)
-{
-	float da = DT * diff * (W-2)*(H-2);
-	
-	for (int k = 0; k < 20; k++) {  // XXX 20?
-		for (int i = 1; i < W-1; i++) {
-			for (int j = 1; j < H-1; j++) {
-				x[i][j] = (x0[i][j] + da * (x[i-1][j] + x[i+1][j]
-							              + x[i][j-1] + x[i][j+1])) / (1+4*da);
-			}
-		}
-		set_bnd(ty, x);
-	}
-}
-
-void advect(int ty, Scr d, Scr d0, Scr u, Scr v)
-{
-	for (int i = 1; i < W-1; i++) {
-		for (int j = 1; j < H-1; j++) {
-			float x = i - DT*W*u[i][j];
-			float y = j - DT*H*v[i][j];
-			int i0 = int(clamp(x, 0.5, W-1.5));
-			int i1 = i0+1;
-			int j0 = int(clamp(y, 0.5, H-1.5));
-			int j1 = j0+1;
-			float s1 = x - i0; float s0 = 1 - s1;
-			float t1 = y - j0; float t0 = 1 - t1;
-			d[i][j] = s0*(t0*d0[i0][j0] + t1*d0[i0][j1])
-				    + s1*(t0*d0[i1][j0] + t1*d0[i1][j1]);
-		}
-	}
-	set_bnd(ty, d);
-}
-
-void project(Scr u, Scr v, Scr p, Scr div)
-{
-	float hx = 1.0/W;
-	float hy = 1.0/H;
-
-	for (int i = 1; i < W-1; i++) {
-		for (int j = 1; j < H-1; j++) {
-			div[i][j] = -0.5*( hx*(u[i+1][j] - u[i-1][j])
-					         + hy*(v[i][j+1] - v[i][j-1]));
-			p[i][j] = 0;
-		}
-	}
-
-	set_bnd(0, div);
-	set_bnd(0, p);
-
-	for (int k = 0; k < 20; k++) {   // XXX 20?
-		for (int i = 1; i < W-1; i++) {
-			for (int j = 1; j < H-1; j++) {
-				p[i][j] = (div[i][j] + p[i-1][j] + p[i+1][j]
-									 + p[i][j-1] + p[i][j+1]) / 4.0;
-			}
-		}
-		set_bnd(0, p);
-	}
-
-	for (int i = 1; i < W-1; i++) {
-		for (int j = 1; j < H-1; j++) {
-			u[i][j] -= 0.5 * (p[i+1][j] - p[i-1][j]) / hx;
-			v[i][j] -= 0.5 * (p[i][j+1] - p[i][j-1]) / hy;
-		}
-	}
-	set_bnd(1, u);
-	set_bnd(2, v);
-}
-
-template<class T>
-void swap(T& x, T& y) 
-{
-	T tmp = x;
-	x = y;
-	y = tmp;
-}
-
-void density_step(Scr x, Scr x0, Scr u, Scr v, float diff)
-{
-	diffuse(0, x0, x, diff);
-	advect(0, x, x0, u, v);
-}
-
-void velocity_step(Scr u, Scr v, Scr u0, Scr v0, float visc) {
-	diffuse(1, u0, u, visc);
-	diffuse(2, v0, v, visc);
-	project(u0, v0, u, v);
-	advect(1, u, u0, u0, v0);
-	advect(2, v, v0, u0, v0);
-	project(u, v, u0, v0);
-}
-
 void step()
 {
-	int redx = int(red.x);  int redy = int(red.y);
-	int blux = int(blue.x); int bluy = int(blue.y);
-
 	if (WINTIMER == 0) {
 		int win = 0;
-		int winx, winy;
-		if (DENSITY[redx][redy] < -CRITICAL) {
+		if (FIELD.get_density(red.p) < -CRITICAL) {
 			blue.score++;
 			win = 1;
-			winx = redx; winy = redy;
 		}
-		else if (DENSITY[blux][bluy] > CRITICAL) {
+		else if (FIELD.get_density(blue.p) > CRITICAL) {
 			red.score++;
 			win = -1;
-			winx = blux; winy = bluy;
 		}
 		if (win != 0) {
 			WINTIMER = 5;
-			for (int i = 0; i < W; i++) {
-				for (int j = 0; j <= H; j++) {
-						if ((i - red.x)*(i - red.x) + (j - red.y)*(j - red.y)
-					  < (i - blue.x)*(i - blue.x) + (j - blue.y)*(j - blue.y)) {
-						DENSITY[i][j] = fabs(DENSITY[i][j]);
-					}
-					else {
-						DENSITY[i][j] = -fabs(DENSITY[i][j]);
-					}
-				}
-			}
 		}
 	}
 	WINTIMER -= DT;
@@ -221,62 +80,56 @@ void step()
 
 	if (red.storing) red.store += DENSPEED*DT;
 	else { 
-		DENSITY[redx][redy] += EMPTYRATE*red.store*DT + DENSPEED*DT; 
+		FIELD.add_density(red.p, EMPTYRATE*red.store + DENSPEED); 
 		red.store -= EMPTYRATE*red.store*DT;
 		if (red.store < 0) red.store = 0;
 	}
 	if (blue.storing) blue.store += DENSPEED*DT;
 	else {
-		DENSITY[blux][bluy] -= EMPTYRATE*blue.store*DT + DENSPEED*DT;
+		FIELD.add_density(blue.p, -EMPTYRATE*blue.store - DENSPEED);
 		blue.store -= EMPTYRATE*blue.store*DT;
 		if (blue.store < 0) blue.store = 0;
 	}
-	density_step(DENSITY, DENSITY_BACK, U, V, DIFFUSION);
-	U[redx][redy] += DT * red.blowx;
-	V[redx][redy] += DT * red.blowy;
-	U[blux][bluy] += DT * blue.blowx;
-	V[blux][bluy] += DT * blue.blowy;
-	velocity_step(U, V, U_BACK, V_BACK, VISCOSITY);
+	FIELD.step_density(BOUND);
+	FIELD.add_velocity(red.p, red.blow);
+	FIELD.add_velocity(blue.p, blue.blow);
+	FIELD.step_velocity(BOUND);
 
 	for (list<Particle>::iterator i = particles.begin(); i != particles.end();) {
-		i->x = clamp(i->x, 2, W-3);
-		i->y = clamp(i->y, 2, H-3);
-		int ix = int(i->x);
-		int iy = int(i->y);
-		float u = U[ix][iy];
-		float v = V[ix][iy];
-		i->x += 60*DT*u;
-		i->y += 60*DT*v;
+		i->p.x = clamp(i->p.x, 2, W-3);
+		i->p.y = clamp(i->p.y, 2, H-3);
+		vec v = FIELD.get_velocity(i->p);
+		i->p += 60*DT*v;
 
 		bool eaten = false;
-		if ((i->x - red.x)*(i->x - red.x) + (i->y - red.y)*(i->y - red.y) < EATDIST*EATDIST) {
+		if ((i->p - red.p).norm2() < EATDIST*EATDIST) {
 			red.store += EATENERGY;
 			eaten = true;
 		}
-		if ((i->x - blue.x)*(i->x - blue.x) + (i->y - blue.y)*(i->y - blue.y) < EATDIST*EATDIST) {
+		if ((i->p - blue.p).norm2() < EATDIST*EATDIST) {
 			blue.store += EATENERGY;
 			eaten = true;
 		}
-		if (eaten) {
+		if (!eaten) {
+			++i;
+		}
+		else {
 			list<Particle>::iterator iprime = i;
 			++iprime;
 			particles.erase(i);
 			i = iprime;
-		}
-		else {
-			++i;
 		}
 	}
 
 	PARTICLES_PENDING += PARTICLE_RATE * DT;
 	while (PARTICLES_PENDING > 1) {
 		PARTICLES_PENDING -= 1;
-		particles.push_back(Particle(randrange(2,W-3), randrange(2,H-3)));
+		particles.push_back(Particle(vec(randrange(2,W-3), randrange(2,H-3))));
 	}
 }
 
-void set_color_at(int i, int j) {
-	float d = 100*DENSITY[i][j];
+void set_color_at(int x, int y) {
+	float d = 100*FIELD.get_density_direct(x,y);
 	if (d > 0) {
 		glColor3f(d, d/4, d/16);
 	}
@@ -306,19 +159,19 @@ void draw()
 	glBegin(GL_POINTS);
 	glColor3f(0.8,0.8,0.8);
 	for (list<Particle>::iterator i = particles.begin(); i != particles.end(); ++i) {
-		glVertex2f(i->x, i->y);
+		glVertex2f(i->p.x, i->p.y);
 	}
 	glEnd();
 
 	glPointSize(6.0);
 	glBegin(GL_POINTS);
 		glColor3f(1,0.7,0.7);
-		glVertex2f(red.x,red.y);
+		glVertex2f(red.p.x,red.p.y);
 		for (int i = 0; i < red.score; i++) {
 			glVertex2f(3*i+3, H+1);
 		}
 		glColor3f(0.7,0.7,1);
-		glVertex2f(blue.x,blue.y);
+		glVertex2f(blue.p.x,blue.p.y);
 		for (int i = 0; i < blue.score; i++) {
 			glVertex2f(W-3*i-4, H+1);
 		}
@@ -367,65 +220,58 @@ void events()
 
 	Uint8* keys = SDL_GetKeyState(NULL);
 
-	int redx = int(red.x);
-	int redy = int(red.y);
-	
-	int blux = int(blue.x);
-	int bluy = int(blue.y);
-	
-	float rspeed = PLSPEED + SPEEDSCALE*(DENSITY[redx][redy] - DENSPEED*DT);
-	rspeed = clamp(rspeed, 0, MAXSPEED);
-	float bspeed = PLSPEED - SPEEDSCALE*(DENSITY[blux][bluy] + DENSPEED*DT);
-	bspeed = clamp(bspeed, 0, MAXSPEED);
+	red.blow = vec();
+	blue.blow = vec();
+	if (keys[SDLK_a]) { red.p.x -= PLSPEED * DT; red.blow.x += PROPELSPEED; }
+	if (keys[SDLK_d]) { red.p.x += PLSPEED * DT; red.blow.x -= PROPELSPEED; }
+	if (keys[SDLK_s]) { red.p.y -= PLSPEED * DT; red.blow.y += PROPELSPEED; }
+	if (keys[SDLK_w]) { red.p.y += PLSPEED * DT; red.blow.y -= PROPELSPEED; }
 
-	red.blowx = red.blowy = 0;
-	blue.blowx = blue.blowy = 0;
-	if (keys[SDLK_a]) { red.x -= rspeed * DT; red.blowx += PROPELSPEED; }
-	if (keys[SDLK_d]) { red.x += rspeed * DT; red.blowx -= PROPELSPEED; }
-	if (keys[SDLK_s]) { red.y -= rspeed * DT; red.blowy += PROPELSPEED; }
-	if (keys[SDLK_w]) { red.y += rspeed * DT; red.blowy -= PROPELSPEED; }
+	if (keys[SDLK_LEFT])  { blue.p.x -= PLSPEED * DT; blue.blow.x += PROPELSPEED; }
+	if (keys[SDLK_RIGHT]) { blue.p.x += PLSPEED * DT; blue.blow.x -= PROPELSPEED; }
+	if (keys[SDLK_DOWN])  { blue.p.y -= PLSPEED * DT; blue.blow.y += PROPELSPEED; }
+	if (keys[SDLK_UP])    { blue.p.y += PLSPEED * DT; blue.blow.y -= PROPELSPEED; }
 
-	if (keys[SDLK_LEFT])  { blue.x -= bspeed * DT; blue.blowx += PROPELSPEED; }
-	if (keys[SDLK_RIGHT]) { blue.x += bspeed * DT; blue.blowx -= PROPELSPEED; }
-	if (keys[SDLK_DOWN])  { blue.y -= bspeed * DT; blue.blowy += PROPELSPEED; }
-	if (keys[SDLK_UP])    { blue.y += bspeed * DT; blue.blowy -= PROPELSPEED; }
+	if (keys[SDLK_h])  red.blow.x -= FLOWSPEED;
+	if (keys[SDLK_k])  red.blow.x += FLOWSPEED;
+	if (keys[SDLK_j])  red.blow.y -= FLOWSPEED;
+	if (keys[SDLK_u])  red.blow.y += FLOWSPEED;
 
-	if (keys[SDLK_h])  red.blowx -= FLOWSPEED;
-	if (keys[SDLK_k])  red.blowx += FLOWSPEED;
-	if (keys[SDLK_j])  red.blowy -= FLOWSPEED;
-	if (keys[SDLK_u])  red.blowy += FLOWSPEED;
+	if (keys[SDLK_KP4]) blue.blow.x -= FLOWSPEED;
+	if (keys[SDLK_KP6]) blue.blow.x += FLOWSPEED;
+	if (keys[SDLK_KP5]) blue.blow.y -= FLOWSPEED;
+	if (keys[SDLK_KP8]) blue.blow.y += FLOWSPEED;
 
-	if (keys[SDLK_KP4]) blue.blowx -= FLOWSPEED;
-	if (keys[SDLK_KP6]) blue.blowx += FLOWSPEED;
-	if (keys[SDLK_KP5]) blue.blowy -= FLOWSPEED;
-	if (keys[SDLK_KP8]) blue.blowy += FLOWSPEED;
-
-
-//	red.storing = keys[SDLK_n];
-//	blue.storing = keys[SDLK_KP2];
-
-	red.x = clamp(red.x, 2, W-3);
-	red.y = clamp(red.y, 2, H-3);
-	blue.x = clamp(blue.x, 2, W-3);
-	blue.y = clamp(blue.y, 2, H-3);
+	red.p.x  = clamp(red.p.x,  2, W-3);
+	red.p.y  = clamp(red.p.y,  2, H-3);
+	blue.p.x = clamp(blue.p.x, 2, W-3);
+	blue.p.y = clamp(blue.p.y, 2, H-3);
 }
 
 int main() 
 {
 	init_sdl();
 
-	const int nclears = 6;
-	Scr* clear[nclears] = { &U, &V, &U_BACK, &V_BACK, &DENSITY, &DENSITY_BACK };
-	for (int c = 0; c < nclears; c++) {
-		for (int i = 0; i < W; i++) {
-			for (int j = 0; j < H; j++) {
-				(*clear[c])[i][j] = 0;
-			}
-		}
+	for (int i = 1; i < W-1; i++) {
+		BOUND[i][0]  .full   = true;
+		BOUND[i][0]  .normal = vec(0,1);
+		BOUND[i][H-1].full   = true;
+		BOUND[i][H-1].normal = vec(0,-1);
 	}
-
+	for (int j = 1; j < H-1; j++) {
+		BOUND[0]  [j].full   = true;
+		BOUND[0]  [j].normal = vec(1,0);
+		BOUND[W-1][j].full   = true;
+		BOUND[W-1][j].normal = vec(-1,0);
+	}
+	BOUND[0][0].full = BOUND[0][H-1].full = BOUND[W-1][0].full = BOUND[W-1][H-1].full = true;
+	BOUND[0][0]    .normal = ~vec(1,1);
+	BOUND[0][H-1]  .normal = ~vec(1,-1);
+	BOUND[W-1][0]  .normal = ~vec(-1,1);
+	BOUND[W-1][H-1].normal = ~vec(-1,-1);
+	
 	for (int i = 0; i < INITIAL_PARTICLES; i++) {
-		particles.push_back(Particle(randrange(1,W-2), randrange(1,H-2)));
+		particles.push_back(Particle(vec(randrange(1,W-2), randrange(1,H-2))));
 	}
 
 	get_step();

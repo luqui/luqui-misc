@@ -388,10 +388,10 @@ void events()
 	if (keys[SDLK_UP])    blue.y += bspeed * DT;
 
 	red.blowx = red.blowy = 0;
-	if (keys[SDLK_g])  red.blowx -= FLOWSPEED;
-	if (keys[SDLK_j])  red.blowx += FLOWSPEED;
-	if (keys[SDLK_h])  red.blowy -= FLOWSPEED;
-	if (keys[SDLK_y])  red.blowy += FLOWSPEED;
+	if (keys[SDLK_h])  red.blowx -= FLOWSPEED;
+	if (keys[SDLK_k])  red.blowx += FLOWSPEED;
+	if (keys[SDLK_j])  red.blowy -= FLOWSPEED;
+	if (keys[SDLK_u])  red.blowy += FLOWSPEED;
 
 	blue.blowx = blue.blowy = 0;
 	if (keys[SDLK_KP4]) blue.blowx -= FLOWSPEED;

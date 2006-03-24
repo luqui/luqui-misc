@@ -186,6 +186,19 @@ void draw()
 		glVertex2f(W-4, H);
 		glVertex2f(W-4-blue.store, H);
 	glEnd();
+
+	if (WINTIMER > 0) {
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBegin(GL_QUADS);
+		glColor4f(0,0,0,WINTIMER/5);
+		glVertex2f(0,0);
+		glVertex2f(0,H);
+		glVertex2f(W,H);
+		glVertex2f(W,0);
+		glEnd();
+		glDisable(GL_BLEND);
+	}
 }
 
 void init_sdl() 

@@ -377,23 +377,23 @@ void events()
 	float bspeed = PLSPEED - SPEEDSCALE*(DENSITY[blux][bluy] + DENSPEED*DT);
 	bspeed = clamp(bspeed, 0, MAXSPEED);
 
-	if (keys[SDLK_a]) red.x -= rspeed * DT;
-	if (keys[SDLK_d]) red.x += rspeed * DT;
-	if (keys[SDLK_s]) red.y -= rspeed * DT;
-	if (keys[SDLK_w]) red.y += rspeed * DT;
-
-	if (keys[SDLK_LEFT])  blue.x -= bspeed * DT;
-	if (keys[SDLK_RIGHT]) blue.x += bspeed * DT;
-	if (keys[SDLK_DOWN])  blue.y -= bspeed * DT;
-	if (keys[SDLK_UP])    blue.y += bspeed * DT;
-
 	red.blowx = red.blowy = 0;
+	blue.blowx = blue.blowy = 0;
+	if (keys[SDLK_a]) { red.x -= rspeed * DT; red.blowx += FLOWSPEED; }
+	if (keys[SDLK_d]) { red.x += rspeed * DT; red.blowx -= FLOWSPEED; }
+	if (keys[SDLK_s]) { red.y -= rspeed * DT; red.blowy += FLOWSPEED; }
+	if (keys[SDLK_w]) { red.y += rspeed * DT; red.blowy -= FLOWSPEED; }
+
+	if (keys[SDLK_LEFT])  { blue.x -= bspeed * DT; blue.blowx += FLOWSPEED; }
+	if (keys[SDLK_RIGHT]) { blue.x += bspeed * DT; blue.blowx -= FLOWSPEED; }
+	if (keys[SDLK_DOWN])  { blue.y -= bspeed * DT; blue.blowy += FLOWSPEED; }
+	if (keys[SDLK_UP])    { blue.y += bspeed * DT; blue.blowy -= FLOWSPEED; }
+
 	if (keys[SDLK_h])  red.blowx -= FLOWSPEED;
 	if (keys[SDLK_k])  red.blowx += FLOWSPEED;
 	if (keys[SDLK_j])  red.blowy -= FLOWSPEED;
 	if (keys[SDLK_u])  red.blowy += FLOWSPEED;
 
-	blue.blowx = blue.blowy = 0;
 	if (keys[SDLK_KP4]) blue.blowx -= FLOWSPEED;
 	if (keys[SDLK_KP6]) blue.blowx += FLOWSPEED;
 	if (keys[SDLK_KP5]) blue.blowy -= FLOWSPEED;

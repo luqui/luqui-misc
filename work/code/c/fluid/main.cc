@@ -48,7 +48,7 @@ const float EMPTYRATE = 1;
 const float VISCOSITY = 1e-5;
 const float DIFFUSION = 1e-5;
 const float EATDIST = 1.414;
-const float EATENERGY = 10;
+const float EATENERGY = 5;
 const int DESTRAD = 5;
 Player red(1,10,H-11);
 Player blue(-1,W-11,10);

@@ -32,17 +32,7 @@ public:
 	}
 
 	static void set_boundary(BoundComputation comp, Bound bound, Scr x, int i, int j) {
-		switch (comp) {
-			case NONE:
-				x[i][j] = 0;
-				break;
-			case UNORM:
-				x[i][j] = x[i][j] - bound[i][j].normal.x * x[i][j];
-				break;
-			case VNORM:
-				x[i][j] = x[i][j] - bound[i][j].normal.y * x[i][j];
-				break;
-		}
+		x[i][j] = 0;
 	}
 	
 	static void diffuse(BoundComputation comp, Bound bound, Scr x, Scr x0, float diffusion) {

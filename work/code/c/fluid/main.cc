@@ -22,19 +22,21 @@ struct Particle {
 };
 
 struct Player {
-	Player(float sign, vec p) : sign(sign), p(p), store(0), storing(false), life(5), tex(0) { }
+	Player(float sign, vec p) : sign(sign), p(p), store(0), storing(false), life(5), texup(0), texdown(0) { }
 	float sign;  // positive or negative
 	vec p;
 	float store;
 	bool storing;
 	int life;
 	vec blow;
-	Texture* tex;
+	Texture* texup;
+	Texture* texdown;
 };
 
 float WINTIMER = 0;
 float PARTICLES_PENDING = 0;
 
+bool WINGSUP = false;
 const int INITIAL_PARTICLES = 10;
 const float PARTICLE_RATE = 1;
 const float CRITICAL = 2e-3;
@@ -177,12 +179,12 @@ void draw()
 	glEnd();
 
 	{
-		TextureBinding b = red.tex->bind();
+		TextureBinding b = (WINGSUP ? red.texup : red.texdown)->bind();
 		draw_rect(red.p - vec(3,3), red.p + vec(3,3));
 	}
 	
 	{
-		TextureBinding b = blue.tex->bind();
+		TextureBinding b = (WINGSUP ? blue.texup : blue.texdown)->bind();
 		draw_rect(blue.p - vec(3,3), blue.p + vec(3,3));
 	}
 
@@ -195,6 +197,8 @@ void draw()
 	for (int i = 0; i < red.life; i++) {
 		draw_rect(vec(W-4-3*i-2, H), vec(W-4-3*i, H+2));
 	}
+
+	WINGSUP = !WINGSUP;
 
 	glLineWidth(3.0);
 	glBegin(GL_LINES);
@@ -289,9 +293,11 @@ void reset()
 	FIELD = new FluidDensityGrid(vec(0,0), vec(W,H), DIFFUSION, VISCOSITY);
 
 	red = Player(1,vec(10,H-11));
-	red.tex = load_texture("firefly.png");
+	red.texup = load_texture("firefly-up.png");
+	red.texdown = load_texture("firefly-down.png");
 	blue = Player(-1,vec(W-11,10));
-	blue.tex = load_texture("firefly.png");
+	blue.texup = load_texture("firefly-up.png");
+	blue.texdown = load_texture("firefly-down.png");
 
 	WINTIMER = 0;
 	

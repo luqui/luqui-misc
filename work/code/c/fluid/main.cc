@@ -21,12 +21,12 @@ struct Particle {
 };
 
 struct Player {
-	Player(float sign, vec p) : sign(sign), p(p), score(0), store(0), storing(false) { }
+	Player(float sign, vec p) : sign(sign), p(p), store(0), storing(false), life(5) { }
 	float sign;  // positive or negative
 	vec p;
-	int score;
 	float store;
 	bool storing;
+	int life;
 	vec blow;
 };
 
@@ -52,7 +52,7 @@ Player red(1,vec(10,H-11));
 Player blue(-1,vec(W-11,10));
 list<Particle> particles;
 
-FluidDensityGrid FIELD(vec(0,0), vec(W,H), DIFFUSION, VISCOSITY);
+FluidDensityGrid* FIELD = 0;
 FluidUtils::Bound BOUND;
 
 float randrange(float min, float max) {
@@ -63,13 +63,15 @@ void step()
 {
 	if (WINTIMER == 0) {
 		int win = 0;
-		if (FIELD.get_density(red.p) < -CRITICAL) {
-			blue.score++;
+		if (FIELD->get_density(red.p) < -CRITICAL) {
+			red.life--;
 			win = 1;
+			red.store += 50;
 		}
-		else if (FIELD.get_density(blue.p) > CRITICAL) {
-			red.score++;
+		else if (FIELD->get_density(blue.p) > CRITICAL) {
+			blue.life--;
 			win = -1;
+			blue.store += 50;
 		}
 		if (win != 0) {
 			WINTIMER = 5;
@@ -80,25 +82,25 @@ void step()
 
 	if (red.storing) red.store += DENSPEED*DT;
 	else { 
-		FIELD.add_density(red.p, EMPTYRATE*red.store + DENSPEED); 
+		FIELD->add_density(red.p, EMPTYRATE*red.store + DENSPEED); 
 		red.store -= EMPTYRATE*red.store*DT;
 		if (red.store < 0) red.store = 0;
 	}
 	if (blue.storing) blue.store += DENSPEED*DT;
 	else {
-		FIELD.add_density(blue.p, -EMPTYRATE*blue.store - DENSPEED);
+		FIELD->add_density(blue.p, -EMPTYRATE*blue.store - DENSPEED);
 		blue.store -= EMPTYRATE*blue.store*DT;
 		if (blue.store < 0) blue.store = 0;
 	}
-	FIELD.step_density(BOUND);
-	FIELD.add_velocity(red.p, red.blow);
-	FIELD.add_velocity(blue.p, blue.blow);
-	FIELD.step_velocity(BOUND);
+	FIELD->step_density(BOUND);
+	FIELD->add_velocity(red.p, red.blow);
+	FIELD->add_velocity(blue.p, blue.blow);
+	FIELD->step_velocity(BOUND);
 
 	for (list<Particle>::iterator i = particles.begin(); i != particles.end();) {
 		i->p.x = clamp(i->p.x, 2, W-3);
 		i->p.y = clamp(i->p.y, 2, H-3);
-		vec v = FIELD.get_velocity(i->p);
+		vec v = FIELD->get_velocity(i->p);
 		i->p += 60*DT*v;
 
 		bool eaten = false;
@@ -129,7 +131,7 @@ void step()
 }
 
 void set_color_at(int x, int y) {
-	float d = 100*FIELD.get_density_direct(x,y);
+	float d = 100*FIELD->get_density_direct(x,y);
 	if (d > 0) {
 		glColor3f(d, d/4, d/16);
 	}
@@ -167,12 +169,12 @@ void draw()
 	glBegin(GL_POINTS);
 		glColor3f(1,0.7,0.7);
 		glVertex2f(red.p.x,red.p.y);
-		for (int i = 0; i < red.score; i++) {
+		for (int i = 0; i < red.life; i++) {
 			glVertex2f(3*i+3, H+1);
 		}
 		glColor3f(0.7,0.7,1);
 		glVertex2f(blue.p.x,blue.p.y);
-		for (int i = 0; i < blue.score; i++) {
+		for (int i = 0; i < blue.life; i++) {
 			glVertex2f(W-3*i-4, H+1);
 		}
 	glEnd();
@@ -261,10 +263,16 @@ void events()
 	blue.p.y = clamp(blue.p.y, 2, H-3);
 }
 
-int main() 
+void reset()
 {
-	init_sdl();
+	delete FIELD;
+	FIELD = new FluidDensityGrid(vec(0,0), vec(W,H), DIFFUSION, VISCOSITY);
 
+	red = Player(1,vec(10,H-11));
+	blue = Player(-1,vec(W-11,10));
+
+	WINTIMER = 0;
+	
 	for (int i = 1; i < W-1; i++) {
 		BOUND[i][0]  .full   = true;
 		BOUND[i][0]  .normal = vec(0,1);
@@ -283,9 +291,17 @@ int main()
 	BOUND[W-1][0]  .normal = ~vec(-1,1);
 	BOUND[W-1][H-1].normal = ~vec(-1,-1);
 	
+	particles.clear();
 	for (int i = 0; i < INITIAL_PARTICLES; i++) {
 		particles.push_back(Particle(vec(randrange(1,W-2), randrange(1,H-2))));
 	}
+}
+
+int main() 
+{
+	init_sdl();
+
+	reset();
 
 	get_step();
 	DT = 0.01;
@@ -296,5 +312,9 @@ int main()
 		draw();
 		SDL_GL_SwapBuffers();
 		DT = get_step();
+
+		if (red.life <= 0 || blue.life <= 0) {
+			reset();
+		}
 	}
 }

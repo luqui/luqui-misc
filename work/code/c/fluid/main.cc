@@ -142,6 +142,15 @@ void set_color_at(int x, int y) {
 	}
 }
 
+void draw_rect(vec ll, vec ur) {
+	glBegin(GL_QUADS);
+		glTexCoord2f(0,1);  glVertex2f(ll.x,ll.y);
+		glTexCoord2f(1,1);  glVertex2f(ur.x,ll.y);
+		glTexCoord2f(1,0);  glVertex2f(ur.x,ur.y);
+		glTexCoord2f(0,0);  glVertex2f(ll.x,ur.y);
+	glEnd();
+}
+
 void draw()
 {
 	glBegin(GL_QUADS);
@@ -169,24 +178,24 @@ void draw()
 
 	{
 		TextureBinding b = red.tex->bind();
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);  glVertex2f(red.p.x-3,red.p.y-3);
-			glTexCoord2f(1,1);  glVertex2f(red.p.x+3,red.p.y-3);
-			glTexCoord2f(1,0);  glVertex2f(red.p.x+3,red.p.y+3);
-			glTexCoord2f(0,0);  glVertex2f(red.p.x-3,red.p.y+3);
-		glEnd();
+		draw_rect(red.p - vec(3,3), red.p + vec(3,3));
 	}
 	
 	{
 		TextureBinding b = blue.tex->bind();
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);  glVertex2f(blue.p.x-3,blue.p.y-3);
-			glTexCoord2f(1,1);  glVertex2f(blue.p.x+3,blue.p.y-3);
-			glTexCoord2f(1,0);  glVertex2f(blue.p.x+3,blue.p.y+3);
-			glTexCoord2f(0,0);  glVertex2f(blue.p.x-3,blue.p.y+3);
-		glEnd();
+		draw_rect(blue.p - vec(3,3), blue.p + vec(3,3));
+	}
+
+	glColor3f(1,0.5,0);
+	for (int i = 0; i < red.life; i++) {
+		draw_rect(vec(3+3*i, H), vec(3+3*i+2, H+2));
 	}
 	
+	glColor3f(0,0.5,1);
+	for (int i = 0; i < red.life; i++) {
+		draw_rect(vec(W-4-3*i-2, H), vec(W-4-3*i, H+2));
+	}
+
 	glLineWidth(3.0);
 	glBegin(GL_LINES);
 		glColor3f(1,0,0);

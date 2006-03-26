@@ -66,18 +66,18 @@ float randrange(float min, float max) {
 void step()
 {
 	if (WINTIMER == 0) {
-		int win = 0;
+		bool win = false;
 		if (FIELD->get_density(red.p) < -CRITICAL) {
 			red.life--;
-			win = 1;
+			win = true;
 			red.store += 50;
 		}
 		else if (FIELD->get_density(blue.p) > CRITICAL) {
 			blue.life--;
-			win = -1;
+			win = true;
 			blue.store += 50;
 		}
-		if (win != 0) {
+		if (win) {
 			WINTIMER = 5;
 		}
 	}
@@ -194,7 +194,7 @@ void draw()
 	}
 	
 	glColor3f(0,0.5,1);
-	for (int i = 0; i < red.life; i++) {
+	for (int i = 0; i < blue.life; i++) {
 		draw_rect(vec(W-4-3*i-2, H), vec(W-4-3*i, H+2));
 	}
 

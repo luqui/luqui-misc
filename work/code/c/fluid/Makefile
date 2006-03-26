@@ -1,7 +1,7 @@
 CXXFLAGS = -Wall -O2 `sdl-config --cflags`
-LDLIBS = -lSDL -lGL -lGLU
+LDLIBS = -lSDL -lGL -lGLU -lSDL_image
 
-all: main
+all: fluid
 
-main: main.cc FluidGrid.h config.h
-	g++ $(CXXFLAGS) $< -o main $(LDLIBS)
+fluid: main.o Texture.o
+	$(CXX) -o $@ $^ $(LDLIBS)

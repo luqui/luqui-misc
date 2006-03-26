@@ -8,6 +8,7 @@
 #include "config.h"
 #include "vec.h"
 #include "FluidGrid.h"
+#include "Texture.h"
 
 // Algorithms from "Real Time Fluid Dynamics for Games" by Jos Stam.
 
@@ -21,13 +22,14 @@ struct Particle {
 };
 
 struct Player {
-	Player(float sign, vec p) : sign(sign), p(p), store(0), storing(false), life(5) { }
+	Player(float sign, vec p) : sign(sign), p(p), store(0), storing(false), life(5), tex(0) { }
 	float sign;  // positive or negative
 	vec p;
 	float store;
 	bool storing;
 	int life;
 	vec blow;
+	Texture* tex;
 };
 
 float WINTIMER = 0;
@@ -165,20 +167,26 @@ void draw()
 	}
 	glEnd();
 
-	glPointSize(6.0);
-	glBegin(GL_POINTS);
-		glColor3f(1,0.7,0.7);
-		glVertex2f(red.p.x,red.p.y);
-		for (int i = 0; i < red.life; i++) {
-			glVertex2f(3*i+3, H+1);
-		}
-		glColor3f(0.7,0.7,1);
-		glVertex2f(blue.p.x,blue.p.y);
-		for (int i = 0; i < blue.life; i++) {
-			glVertex2f(W-3*i-4, H+1);
-		}
-	glEnd();
-
+	{
+		TextureBinding b = red.tex->bind();
+		glBegin(GL_QUADS);
+			glTexCoord2f(0,1);  glVertex2f(red.p.x-3,red.p.y-3);
+			glTexCoord2f(1,1);  glVertex2f(red.p.x+3,red.p.y-3);
+			glTexCoord2f(1,0);  glVertex2f(red.p.x+3,red.p.y+3);
+			glTexCoord2f(0,0);  glVertex2f(red.p.x-3,red.p.y+3);
+		glEnd();
+	}
+	
+	{
+		TextureBinding b = blue.tex->bind();
+		glBegin(GL_QUADS);
+			glTexCoord2f(0,1);  glVertex2f(blue.p.x-3,blue.p.y-3);
+			glTexCoord2f(1,1);  glVertex2f(blue.p.x+3,blue.p.y-3);
+			glTexCoord2f(1,0);  glVertex2f(blue.p.x+3,blue.p.y+3);
+			glTexCoord2f(0,0);  glVertex2f(blue.p.x-3,blue.p.y+3);
+		glEnd();
+	}
+	
 	glLineWidth(3.0);
 	glBegin(GL_LINES);
 		glColor3f(1,0,0);
@@ -206,8 +214,11 @@ void draw()
 void init_sdl() 
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
-	SDL_SetVideoMode(640, 480, 0, SDL_OPENGL | SDL_FULLSCREEN);
+	SDL_SetVideoMode(1440, 900, 0, SDL_OPENGL | SDL_FULLSCREEN);
 	SDL_ShowCursor(0);
+
+	glEnable(GL_TEXTURE_2D);
+	
 	glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		gluOrtho2D(0, W, 0, H+3);
@@ -269,7 +280,9 @@ void reset()
 	FIELD = new FluidDensityGrid(vec(0,0), vec(W,H), DIFFUSION, VISCOSITY);
 
 	red = Player(1,vec(10,H-11));
+	red.tex = load_texture("firefly.png");
 	blue = Player(-1,vec(W-11,10));
+	blue.tex = load_texture("firefly.png");
 
 	WINTIMER = 0;
 	

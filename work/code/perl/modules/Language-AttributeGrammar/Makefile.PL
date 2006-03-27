@@ -9,6 +9,7 @@ WriteMakefile(
                 Parse::RecDescent => 0,
                 Carp::Clan        => 0,
 				Test::Exception   => 0,
+				List::Util		  => 0,
 	},
     ABSTRACT_FROM     => 'lib/Language/AttributeGrammar.pm',
     AUTHOR            => 'Luke Palmer <lrpalmer@gmail.com>',

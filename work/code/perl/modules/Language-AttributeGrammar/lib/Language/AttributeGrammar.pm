@@ -184,7 +184,7 @@ blessed hash (eg. a blessed array), then we give up.
 If your tree has a different convention for extracting child nodes, you may use
 the backtick syntax described above:
 
-    Cons:  $/.sum = { `$/->get_child('head')`.sum + `$/->get_child('tail')`.sum }
+    Cons:  $/.sum = { `$/->get_child('head')`.sum[0] + `$/->get_child('tail')`.sum[0] }
     Nil:   $/.sum = { 0 }
 
     Cons:  `$/->get_child('head')`.gsum = { $/.gsum }

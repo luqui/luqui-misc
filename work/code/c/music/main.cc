@@ -1,36 +1,15 @@
-#include <fluidsynth.h>
 #include <SDL.h>
 #include <iostream>
 #include <cstdlib>
 #include <map>
+#include <memory>
 #include <unistd.h>
 
+#include "Synth.h"
+
+using std::auto_ptr;
+
 #define DIE { std::cerr << "Died.\n"; exit(1); }
-
-fluid_settings_t* SETTINGS;
-fluid_synth_t* SYNTH;
-
-void init_fluid()
-{
-	std::cout << "Creating settings\n";
-	SETTINGS = new_fluid_settings();
-	if (!SETTINGS) DIE;
-	fluid_settings_setstr(SETTINGS, "audio.driver", "oss");
-	fluid_settings_setint(SETTINGS, "audio.periods", 16);
-	fluid_settings_setint(SETTINGS, "audio.period-size", 64);
-
-	std::cout << "Creating fluidsynth\n";
-	SYNTH = new_fluid_synth(SETTINGS);
-	if (!SYNTH) DIE;
-	
-	std::cout << "Loading samples\n";
-	int sfid = fluid_synth_sfload(SYNTH, "airfont.sf2", 1);
-	if (sfid == -1) DIE;
-	
-	std::cout << "Starting audio driver\n";
-	fluid_audio_driver_t* driver = new_fluid_audio_driver(SETTINGS, SYNTH);
-	if (!driver) DIE;
-}
 
 void init_sdl()
 {
@@ -65,13 +44,13 @@ void init_keymap()
 void quit()
 {
 	SDL_Quit();
-	delete_fluid_synth(SYNTH);
-	delete_fluid_settings(SETTINGS);
 }
 
 int main()
 {
-	init_fluid();
+	auto_ptr<Synth> synth(new FluidSynth("airfont.sf2"));
+	auto_ptr<SynthTrack> track(synth->new_track());
+
 	init_keymap();
 	init_sdl();
 
@@ -81,13 +60,13 @@ int main()
 			if (e.key.keysym.sym == SDLK_ESCAPE) quit();
 			keymap_t::iterator i = KEYMAP.find(e.key.keysym.sym);
 			if (i != KEYMAP.end()) {
-				fluid_synth_noteon(SYNTH, 0, i->second, 100);
+				track->note_on(i->second);
 			}
 		}
 		if (e.type == SDL_KEYUP) {
 			keymap_t::iterator i = KEYMAP.find(e.key.keysym.sym);
 			if (i != KEYMAP.end()) {
-				fluid_synth_noteoff(SYNTH, 0, i->second);
+				track->note_off(i->second);
 			}
 		}
 	}

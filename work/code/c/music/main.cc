@@ -6,15 +6,24 @@
 #include <unistd.h>
 
 #include "Synth.h"
+#include "NoteList.h"
 
 using std::auto_ptr;
 
 #define DIE { std::cerr << "Died.\n"; exit(1); }
 
+NoteList NOTELIST;
+float TIME0 = 0;
+float BEAT = 0;
+FluidSynth SYNTH("airfont.sf2");
+FluidSynthTrack* TRACK;
+FluidSynthTrack* DRUMS;
+SDL_TimerID TIMER;
+
 void init_sdl()
 {
 	std::cout << "Starting SDL video\n";
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 	SDL_SetVideoMode(640, 480, 0, 0);
 }
 
@@ -46,11 +55,39 @@ void quit()
 	SDL_Quit();
 }
 
+float time_now() {
+	return SDL_GetTicks() / 1000.0;
+}
+
+float bpm2dt(float bpm) {
+	return 60.0/bpm;
+}
+
+float find_beat() {
+	float bestcor = HUGE_VAL, bestbeat = 0;
+	for (float bpm = 60.0; bpm < 600.0; bpm += 1) {
+		float dt = bpm2dt(bpm);
+		float cor = NOTELIST.correlate(dt, TIME0);
+		if (cor < bestcor) { bestcor = cor;  bestbeat = bpm; }
+	}
+	std::cout << "BPM: " << bestbeat << " (correlation = " << bestcor << ")\n";
+	return bestbeat;
+}
+
+Uint32 callback(Uint32 interval, void* param) {
+	std::cout << "Dng\n";
+	DRUMS->note_off(60);
+	DRUMS->note_on(60);
+	return Uint32(1000*BEAT);
+}
+
 int main()
 {
-	auto_ptr<Synth> synth(new FluidSynth("airfont.sf2"));
-	auto_ptr<SynthTrack> track(synth->new_track());
+	TRACK = SYNTH.new_track();
+	DRUMS = SYNTH.new_track();
 
+	DRUMS->set_patch(115);
+	
 	init_keymap();
 	init_sdl();
 
@@ -60,13 +97,24 @@ int main()
 			if (e.key.keysym.sym == SDLK_ESCAPE) quit();
 			keymap_t::iterator i = KEYMAP.find(e.key.keysym.sym);
 			if (i != KEYMAP.end()) {
-				track->note_on(i->second);
+				TRACK->note_on(i->second);
+			}
+			if (TIME0 == 0) TIME0 = time_now();
+			NOTELIST.add_note(NoteOn(i->second, 100, time_now()));
+			if (NOTELIST.size() == 16) {
+				BEAT = bpm2dt(find_beat());
+				float time = time_now();
+				float nextbeat = TIME0;
+				while (nextbeat < time) nextbeat += BEAT;
+				SDL_RemoveTimer(TIMER);
+				TIMER = SDL_AddTimer(Uint32(1000*(nextbeat - time)), &callback, NULL);
+				NOTELIST.clear();
 			}
 		}
 		if (e.type == SDL_KEYUP) {
 			keymap_t::iterator i = KEYMAP.find(e.key.keysym.sym);
 			if (i != KEYMAP.end()) {
-				track->note_off(i->second);
+				TRACK->note_off(i->second);
 			}
 		}
 	}

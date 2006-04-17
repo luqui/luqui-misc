@@ -1,0 +1,58 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsopn}
+
+\newcommand{\qed}{\hfill $\square$}
+\DeclareMathOperator{\rng}{rng}
+\DeclareMathOperator{\seg}{seg}
+
+\begin{document}
+\noindent 
+Luke Palmer \\
+MATH 4730 \\
+2006-04-16
+
+\begin{description}
+\item [(11a)] Given a non-empty subset $S$ of $\mathbb{Z}$, consider the
+disjoint subsets $S^+ = \{ s \in S: s >= 0 \}$ and $S^- = \{ -s \in S: s
+< 0 \}$ covering $S$, and observe that each is order-isomorphic to a
+subset of $\omega$.  If $S^+$ is nonempty, then the least element of $S$
+is $\min S^+$, otherwise the least element is $-\min S^-$. \qed
+
+\item [(11b)] $E(3) = 3$.  $E(-1) = \omega$.  $E(-2) = \omega+1$.
+$\rng E = \omega + \omega$.
+
+\item [(14)] Given $a,b \in A$ such that $a < b$, show $F(a) \subset
+F(b)$.  Notice that $a \in F(a)$ but $b \not\in F(a)$, so $F(a) \not=
+F(b)$.  If $F(a) = \emptyset$, then $F(a) \subseteq F(b)$.  So assume
+that $F(a) \not= \emptyset$ and $a' \in F(a)$.  $a' \leq a < b$, so
+$a' \in F(b)$. \qed
+
+\item [(16)] The following three cases follow from Theorem 7K about
+well-orderings:
+ \begin{itemize}
+ \item $\alpha^+ = \seg b$ for some $b \in \beta$: Then $\alpha^+ \in
+   \beta$ and therefore $\alpha^+ \in \beta^+$.
+ \item $\alpha^+ = \beta$: Then $\alpha^+ \in \beta \cup \{\beta\} =
+   \beta^+$.
+ \item $\beta = \seg a$ for some $a \in \alpha^+$:  Then $\beta \in
+   \alpha^+$, so $\beta \in \alpha \subseteq \beta$ or $\beta = \alpha
+   \in \beta$, a contradiction.
+ \end{itemize}
+
+\item [(18)] If $\bigcup S =
+\alpha^+$ then for every element $s$ of $S$, $s \subseteq \alpha^+$.
+Since $s$ is an ordinal, either $s \in \alpha^+$ or $s = \alpha^+$.
+Also, $\bigcup S = \alpha^+ \in S$, so $\alpha^+$ is the greatest
+element.  This proves part \textit{(i)} by contrapositive, and its
+negation trivially implies part \textit{(ii)}.  \qed
+
+\item [(20)] $S$ has no infinitely descending sequence, and $S$ has no
+infinitely ascending sequence under $R$.  Since $R$ is a linear
+ordering, $S$ must be finite.  \qed
+
+\end{description}
+
+\end{document}

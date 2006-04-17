@@ -39,7 +39,7 @@ well-orderings:
    \beta^+$.
  \item $\beta = \seg a$ for some $a \in \alpha^+$:  Then $\beta \in
    \alpha^+$, so $\beta \in \alpha \subseteq \beta$ or $\beta = \alpha
-   \in \beta$, a contradiction.
+   \in \beta$, a contradiction. \qed
  \end{itemize}
 
 \item [(18)] If $\bigcup S =
@@ -49,10 +49,10 @@ Also, $\bigcup S = \alpha^+ \in S$, so $\alpha^+$ is the greatest
 element.  This proves part \textit{(i)} by contrapositive, and its
 negation trivially implies part \textit{(ii)}.  \qed
 
-\item [(20)] $S$ has no infinitely descending sequence, and $S$ has no
-infinitely ascending sequence under $R$.  Since $R$ is a linear
-ordering, $S$ must be finite.  \qed
-
+\item [(20)] Suppose that $S$ were infinite.  We can construct an infinitely
+ascending sequence of $R$ by induction.  However, this sequence will
+be an infinitely descending sequence of $R^{-1}$, contradicting its
+being a well-ordering. \qed
 \end{description}
 
 \end{document}

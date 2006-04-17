@@ -14,6 +14,7 @@ import qualified Data.Set as Set
 type Vertex = Int
 
 data Graph = Graph { graphEdges :: Set.Set (Vertex,Vertex) }
+	deriving Show
 
 empty :: Graph
 empty = Graph (Set.empty)

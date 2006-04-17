@@ -28,6 +28,13 @@ drawVertex (x,y) = do
 	white :: GL.Color3 Double
 	white = GL.Color3 1 1 1
 
+drawLine :: (Double,Double) -> (Double,Double) -> IO ()
+drawLine (x,y) (x',y') =
+	GL.renderPrimitive GL.Lines $ do
+		GL.vertex $ GL.Vertex2 x y
+		GL.vertex $ GL.Vertex2 x' y'
+
 displayGraph :: VertexMap -> Graph.Graph -> IO ()
-displayGraph (VertexMap vtxs) g =
+displayGraph (VertexMap vtxs) g = do
 	mapM_ (drawVertex . (vtxs Map.!)) (Graph.vertices g)
+	mapM_ (\ (u,v) -> drawLine (vtxs Map.! u) (vtxs Map.! v)) (Graph.edges g)

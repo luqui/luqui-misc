@@ -30,7 +30,7 @@ rectPoints (x,y) (x',y') = do
 drawVertex :: (Double,Double) -> IO ()
 drawVertex (x,y) = do
 	GL.color black
-	GL.rect (GL.Vertex2 (x-0.48) (y-0.48)) (GL.Vertex2 (x+0.48) (y+0.48))
+	GL.rect (GL.Vertex2 (x-0.5) (y-0.5)) (GL.Vertex2 (x+0.5) (y+0.5))
 	GL.color white
 	GL.renderPrimitive GL.LineLoop $ rectPoints (x-0.5, y-0.5) (x+0.5, y+0.5)
 	where

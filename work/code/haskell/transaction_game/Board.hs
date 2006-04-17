@@ -12,6 +12,7 @@ type Army = Int
 data NodeState
 	= Unowned
 	| Owned { nodePlayer :: Player.Player, nodeArmy :: Army }
+	deriving Show
 
 adjustArmy :: (Army -> Army) -> NodeState -> NodeState
 adjustArmy _ Unowned = error "Can't adjust unowned space without owner"
@@ -19,6 +20,14 @@ adjustArmy f s = s { nodeArmy = f (nodeArmy s) }
 
 data Board
 	= Board { boardState :: Map.Map Vertex NodeState }
+	deriving Show
+
+emptyBoard :: Board
+emptyBoard = Board { boardState = Map.empty }
+
+getSpace :: Vertex -> Map.Map Vertex NodeState -> NodeState
+getSpace = Map.findWithDefault Unowned
+
 
 data Move
 	= Place      
@@ -45,11 +54,12 @@ data Move
 		, moveTo     :: Vertex
 		, moveArmy   :: Army
 		}
+	deriving Show
 
 runMove :: Move -> Board -> Maybe Board
 -- Place requires that the target vertex is owned by the player
 runMove move@(Place {}) (Board board)
-	| Owned { nodePlayer = p } <- board Map.! moveVertex move,
+	| Owned { nodePlayer = p } <- getSpace (moveVertex move) board,
 	  p == movePlayer move
 	= Just $ Board $ Map.adjust (adjustArmy (+ moveArmy move)) (moveVertex move) board
 
@@ -57,8 +67,8 @@ runMove move@(Place {}) (Board board)
 -- and that 'from' has at least 'army' troops
 runMove move@(Transfer {}) (Board board)
 	| Owned { nodePlayer = fromOwner, nodeArmy = fromArmy } 
-		 <- board Map.! moveFrom move,
-	  Owned { nodePlayer = toOwner }   <- board Map.! moveTo move,
+		 <- getSpace (moveFrom move) board,
+	  Owned { nodePlayer = toOwner }   <- getSpace (moveTo move) board,
 	  fromOwner == movePlayer move,
 	  toOwner   == movePlayer move,
 	  fromArmy >= moveArmy move
@@ -67,8 +77,8 @@ runMove move@(Transfer {}) (Board board)
 
 runMove move@(Occupy {}) (Board board)
 	| Owned { nodePlayer = fromOwner, nodeArmy = fromArmy }
-		 <- board Map.! moveFrom move,
-	  Unowned <- board Map.! moveTo move,
+		 <- getSpace (moveFrom move) board,
+	  Unowned <- getSpace (moveTo move) board,
 	  fromOwner == movePlayer move,
 	  fromArmy >= moveArmy move
 	= Just $ Board $ (Map.insert (moveTo move) (Owned { nodePlayer = movePlayer move, nodeArmy = moveArmy move }) .
@@ -76,9 +86,9 @@ runMove move@(Occupy {}) (Board board)
 
 runMove move@(Attack {}) (Board board)
 	| Owned { nodePlayer = fromOwner, nodeArmy = fromArmy } 
-		<- board Map.! moveFrom move,
+		<- getSpace (moveFrom move) board,
 	  Owned { nodePlayer = toOwner,   nodeArmy = toArmy }   
-		<- board Map.! moveTo move,
+		<- getSpace (moveTo move) board,
 	  fromOwner == movePlayer move,
 	  toOwner   == moveVictim move,
 	  fromArmy >= moveArmy move,
@@ -88,6 +98,7 @@ runMove move@(Attack {}) (Board board)
 
 runMove _ _ = Nothing
 
+-- Note that the last move in the transaction is the first in the list!
 type Transaction = [Move]
 
 tryTransaction :: Transaction -> Board -> Maybe Board

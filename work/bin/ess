@@ -4,6 +4,12 @@ use XML::Simple;
 use LWP::Simple;
 
 my $feed;
+my $pretend = 0;
+
+if (@ARGV && $ARGV[0] eq '-p') {
+	shift;
+	$pretend = 1;
+}
 
 if (@ARGV == 1) {
     get_feed();
@@ -15,8 +21,13 @@ if (@ARGV == 1) {
     }
     my $link = $feed->{channel}{item}[$shows[0]]{link};
     $link =~ s/\/listen.pls$//;
-    exec "mplayer -cache 512 '$link'";
-    die "couldn't fork mplayer: $!\n";
+	if ($pretend) {
+		print "mplayer -cache 512 '$link'\n";
+	}
+	else {
+		exec "mplayer -cache 512 '$link'";
+		die "couldn't fork mplayer: $!\n";
+	}
 }
 elsif (@ARGV == 0) {
     get_feed();

@@ -1,3 +1,5 @@
+import System.IO
+
 cyclePeriod :: (Eq a) => [a] -> Int
 cyclePeriod xs = until (\i -> and (zipWith (==) xs (drop i $ cycle xs)))
                        (+1) 1
@@ -24,3 +26,8 @@ numCycles x = length $ numCycles' (allBinaries x)
         if cyclePeriod a == x && all (not . shequiv a) pcycs
             then a:pcycs
             else pcycs
+
+main :: IO ()
+main = do
+	hSetBuffering stdout NoBuffering
+	print $ map numCycles [1..]

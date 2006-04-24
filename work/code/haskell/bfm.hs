@@ -36,7 +36,7 @@ instance Monad Omega where
 -- For example, this function will generate a list of pairs in N^2,
 -- with the property that every pair in N^2 is in a "finiteth" position
 -- in the list.
-sums :: Omega Int
+sums :: Omega (Int,Int)
 sums = do
 	x <- Omega [0..]
 	y <- Omega [0..]

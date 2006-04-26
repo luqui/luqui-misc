@@ -1,3 +1,6 @@
+import Data.Maybe
+import Control.Monad
+
 -- The Omega monad.
 -- It's like the list monad, but all results produced are reachable
 -- in a finite number of steps.  I.e. the list it returns is of order
@@ -25,19 +28,25 @@ diagonal = diagonal' 0
 		let (nstripe, nlists) = stripe (n-1) xss in
 		(x:nstripe, xs:nlists)
 
-newtype Omega a = Omega { runOmega :: [a] }
+newtype Omega a = Omega { runOmega :: [Maybe a] }
 	deriving Show
 
 instance Monad Omega where
-	Omega m >>= f  =  Omega $ diagonal $ map (runOmega . f) m
-	return x       =  Omega [x]
-	fail _         =  Omega []
+	Omega m >>= f  =  Omega $ diagonal $ map (runOmega . f) $ catMaybes m
+	return x       =  Omega [Just x]
+	fail _         =  Omega [Nothing]
+
+from :: [a] -> Omega a
+from [] = Omega [Nothing]
+from xs = Omega $ map Just xs
 
 -- For example, this function will generate a list of pairs in N^2,
 -- with the property that every pair in N^2 is in a "finiteth" position
 -- in the list.
 sums :: Omega (Int,Int)
 sums = do
-	x <- Omega [0..]
-	y <- Omega [0..]
-	return (x,y)
+	x <- from [0..]
+	y <- from [0..]
+	if x == 3 
+		then return (x,y)
+		else fail ""

@@ -1,0 +1,72 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+\DeclareMathOperator{\ssup}{ssup}
+\DeclareMathOperator{\cf}{cf}
+\DeclareMathOperator{\rng}{rng}
+\newtheorem*{lemma*}{Lemma}
+
+\begin{document}
+\noindent Luke Palmer \\
+2006-04-30 \\
+MATH 4730: Set Theory
+
+\section*{9.12}
+
+$\cf{0} = 0$, and $0 = \ssup \emptyset$;  $\cf{(\kappa+1)} = 1$, and
+$\kappa+1 = \ssup{\{\kappa\}}$, which is clearly of minimal cardinality.
+
+Suppose $\lambda$ is a limit ordinal.  Let $S$ be a set of ordinals
+smaller than $\lambda$ of cardinality strictly smaller than $\cf
+\lambda$.  Then there exists a $\beta < \lambda$ which is strictly
+greater than every element of $S$.  But then $\ssup S$ is at most $\beta
+< \lambda$.  Therefore a set with strict supremum $\lambda$ must have
+cardinality at least $\cf \lambda$.  A set with size exactly $\cf
+\lambda$ exists by the definition of cofinality. \qed
+
+\section*{9.17}
+
+Suppose that there exists an $f: \bigcup\limits_{i \in I} A_i
+\xrightarrow{\text{onto}} \bigotimes\limits_{i \in I} B_i$.  Let's view
+the elements of $\rng f$ as functions $I \mapsto B_i$.  Create by the
+axiom of choice a function $h$ where $h(i) \in B_i \setminus f[A_i]$
+(which is always nonempty because $\bar{\bar{A_i}} < \bar{\bar{B_i}}$).
+There is no element of $\bigcup\limits_{i \in I} A_i$ which maps to $h$,
+so $f$ must not have been onto. \qed
+
+\section*{9.19}
+
+Since $\kappa$ is a regular cardinal, $\cup S < \kappa$ because
+$\bar{\bar{S}} < \kappa$.  Since $\kappa$ is a cardinal and thus a limit
+ordinal, $V_\kappa = \bigcup\limits_{\theta \in \kappa} V_\theta$.
+Therefore there exists a $\theta < \kappa$ where $S \in V_\theta$, so $S
+\in V_\kappa$.  \qed
+
+\section*{Plus}
+
+\begin{description}
+\item[(i)] A series of informal proofs, because most of the results are
+fairly obvious.
+ \begin{itemize}
+ \item $5 \not\cong [1,5) \cong 4$.
+ \item $omega$ is indecomposable, because any smaller number is finite,
+ and there are $\aleph_0$-many numbers between any finite number and
+ $\omega$.
+ \item $\omega+\omega \not\cong [\omega,\omega+\omega) \cong \omega$.
+ \item $\omega^2$ is indecomposable, for any smaller number is of the
+ form $\omega \cdot m + n$ for finite numbers $m$ and $n$.  Attempting
+ to decompose, we find $\omega \cdot m + n + \omega^2 = \omega \cdot m
+ + \omega^2 = \omega^2$.
+ \item $\omega_1$ is indecomposable, because for any smaller number
+ $\kappa$, $[0,\kappa) = \kappa$ has cardinality at most $\aleph_0$, so
+ $[\kappa,\omega_1)$ must have cardinality $\aleph_1$, and the order
+ type of this range is certainly no larger than $\omega_1$.
+ \item $\omega_1 + \omega^2$ is nonindecomposable, because it is
+ not isomorphic to $[\omega_1,\omega_1+\omega^2) \cong \omega^2$.
+ \end{itemize}
+\item[(ii)] Consider the ordinal $\omega_1 \cdot \omega$.  This is
+indecomposable for a similar reason that $\omega^2$ is above, and has
+all the other desired properties.
+\end{description}
+\end{document}

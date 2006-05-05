@@ -1,4 +1,5 @@
 import Data.Maybe
+import System.IO
 import Control.Monad
 
 -- The Omega monad.
@@ -7,6 +8,9 @@ import Control.Monad
 -- type omega or less.
 
 -- Define an omega-list to be a list of order type omega or less.
+
+assert :: (Monad m) => Bool -> m ()
+assert c = if c then return () else fail "assertion failed"
 
 -- Given a omega-list of omega-lists, return an omega-list ordering
 -- the members of members of the argument.
@@ -32,7 +36,7 @@ newtype Omega a = Omega { runOmega :: [Maybe a] }
 	deriving Show
 
 instance Monad Omega where
-	Omega m >>= f  =  Omega $ diagonal $ map (runOmega . f) $ catMaybes m
+	Omega m >>= f  =  Omega $ diagonal $ map (runOmega . maybe (fail "") f) m
 	return x       =  Omega [Just x]
 	fail _         =  Omega [Nothing]
 
@@ -47,6 +51,10 @@ sums :: Omega (Int,Int)
 sums = do
 	x <- from [0..]
 	y <- from [0..]
-	if x == 3 
-		then return (x,y)
-		else fail ""
+	assert (x == 3)
+	return (x,y)
+
+main :: IO ()
+main = do
+	hSetBuffering stdout NoBuffering
+	print $ takeWhile ((< 2000) . snd) $ catMaybes $ runOmega sums

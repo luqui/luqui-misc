@@ -1,0 +1,86 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{float}
+
+\floatstyle{boxed}
+\newfloat{Figure}{tbp}{}
+
+\title{Syntactic Typology of Programming Languages}
+\author{Luke Palmer}
+
+\begin{document}
+\maketitle
+
+\section{Paradigm Axes}
+
+It is widely believed throughout the programmer's community that there
+are four fundamental paradigms of programming: Procedural,
+Object-oriented, Functional, and Logical.   However, \cite{Palmer-2005}
+provides an analysis enumerating six different paradigms as a
+combination of two axes, called the \textit{control style} and the
+\textit{abstraction style}.  These are semantic styles and in theory
+have nothing to do with the syntax, but in practice, they are highly
+correlated to syntax.
+
+Computer programs are built inductively, by building a complex structure
+out of smaller forms of the same structure.  The first axis, control
+style, indicates what kind of structure is being built.  It takes on
+three values: imperative, functional, and logical.  
+
+\begin{description}
+\item[Imperative] programs build a sequence of instructions for the
+computer to execute like a cooking recipe.  This is done inductively
+using \textit{procedures}, which are smaller sequences of instructions
+that are combined together to make the final program.  For example, they
+may issue an instruction ``ask for the user's age'', then do some
+computation and decide to issue the instruction to ``display `you are
+too old'{}''.  Imperative programs are so called because every statement
+is read as though it were in the imperative mood.
+\item[Functional] programs build a large mapping from input to output,
+out of smaller such mappings called \textit{functions}.  As a contrast
+to the imperative paradigm, a functional program would implement a
+function which takes a number as input (representing the user's age) and
+returns a string (the description of their age) as output. 
+\item[Logical] programs build a complex boolean (true or false)
+condition that the computer tries to make true by assigning to
+variables.  The logical languages do not make up an interesting
+syntactic category, so this is the last we will hear of them.
+\end{description}
+
+The other axis, abstraction style, indicates how the smaller pieces are
+layed out to be combined.  There are two common abstraction styles:
+procedural and object-oriented.
+
+\begin{description}
+\item[Procedural] abstraction is essentially a substitution filter.  For
+example, I could build a procedural English sentence like so: Let
+$\mathit{L}(x)$ = ``I like $x$''; I told Mark that $L(\text{Jane})$.
+\item[Object-oriented] abstraction, instead, defines names as conceptual
+entities to be associated to some object, whose behavior may differ
+based on the type of that object.  English is already object-oriented in
+a sense, where we can say ``I rode my horse'', and ``I rode my bike''.
+The speaker is riding something, but the way in which a horse and a bike
+are ridden are quite different, even though they have the same
+grammattical structure.
+\end{description}
+
+Figure \ref{fig:paradigm-table} presents table of common languages, most
+of which we will discuss in this paper, categorized by their control and
+abstraction styles.  Many of these languages are multi-paradigm, so they
+have been categorized by their most common use.
+
+\begin{Figure}
+\label{fig:paradigm-table}
+\begin{tabular}{l|ll}
+                      & \textbf{Procedural}  & \textbf{Object-oriented} \\
+  \hline
+  \textbf{Imperative} & C, Pascal, ALGOL     & C++, Java, Smalltalk \\
+  \textbf{Functional} & Scheme, ML           & OCaml, Haskell, Lisp \\
+  \textbf{Logical}    & Prolog, Curry        & \textit{none} \\
+\end{tabular}
+\caption{Common languages categorized by their control and abstraction
+styles.} 
+\end{Figure}
+
+\end{document}

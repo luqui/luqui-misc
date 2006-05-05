@@ -12,6 +12,14 @@
 \begin{document}
 \maketitle
 
+\textit{\textbf{Abstract:} Programming languages, interfaces for telling
+computers what to do designed in a Human-friendly way, exhibit many of
+the same phenomena as natural Human languages.  This paper categorizes
+programming languages along two orthogonal axes. It then describes some
+of the properties that each programming language family has and
+similarities between programming language culture and natural language
+culture.}
+
 \section{Paradigm Axes}
 
 It is widely believed throughout the programmer's community that there
@@ -20,8 +28,8 @@ Object-oriented, Functional, and Logical.   However, \cite{Palmer-2005}
 provides an analysis enumerating six different paradigms as a
 combination of two axes, called the \textit{control style} and the
 \textit{abstraction style}.  These are semantic styles and in theory
-have nothing to do with the syntax, but in practice, they are highly
-correlated to syntax.
+they have nothing to do with the syntax, but in practice, they are
+highly correlated to syntax.
 
 Computer programs are built inductively, by building a complex structure
 out of smaller forms of the same structure.  The first axis, control
@@ -54,7 +62,7 @@ procedural and object-oriented.
 
 \begin{description}
 \item[Procedural] abstraction is essentially a substitution filter.  For
-example, I could build a procedural English sentence like so: Let
+example, we could build a procedural English sentence like so: Let
 $\mathit{L}(x)$ = ``I like $x$''; I told Mark that $L(\text{Jane})$.
 \item[Object-oriented] abstraction, instead, defines names as conceptual
 entities to be associated to some object, whose behavior may differ
@@ -76,11 +84,235 @@ have been categorized by their most common use.
                       & \textbf{Procedural}  & \textbf{Object-oriented} \\
   \hline
   \textbf{Imperative} & C, Pascal, ALGOL     & C++, Java, Smalltalk \\
-  \textbf{Functional} & Scheme, ML           & OCaml, Haskell, Lisp \\
+  \textbf{Functional} & Scheme, ML           & O'Caml, Haskell, Lisp \\
   \textbf{Logical}    & Prolog, Curry        & \textit{none} \\
 \end{tabular}
 \caption{Common languages categorized by their control and abstraction
 styles.} 
 \end{Figure}
+
+\section{Imperative Syntax}
+
+An extreme majority of languages used today are imperative.  According
+to \texttt{freshmeat.net} statistics\cite{Welton-2004}, the top six
+languages in use in open source projects are C, Java, C++, Perl, PHP,
+and Python, which account for 95\% of all projects.  \textit{All six} of
+these are imperative languages\footnote{Perl could be considered on the
+border between imperative and functional, but common use is in its
+imperative form.}.  C, Java, and C++ have very similar syntax to each
+other (we will call these C languages), Perl and PHP are syntactic
+derivatives of the C languages.  Python is the only outlier, having a
+very different ``first glance'' look from the other five, but some
+analysis shows that it is still very close.
+
+These six languages are almost precisely the same in terms of syntax.
+Their differences could be considered morphological, or even literal.
+The comparison chart in Figure \ref{fig:imperative-comparison-chart}
+shows some of the differences.
+
+\begin{Figure}
+\label{fig:imperative-comparison-chart}
+\begin{tabular}{l|l|l|l}
+\textbf{C/Java/C++} & \textbf{Python} & \textbf{Perl}     & \textbf{PHP} \\
+\hline
+\verb+int x = 1;+   & \verb+x = 1+        & \verb+my $x = 1;+   & \verb+$x = 1+     \\
+\verb|x++;|         & \verb|x = x + 1|    & \verb|$x++;|        & \verb|$x++;|      \\
+\verb+array+		& \verb+array+        & \verb+@array+		& \verb+$array+     \\
+\verb+array[4]+		& \verb+array[4]+     & \verb+$array[4]+    & \verb+$array[4]+  \\
+\verb+foo(4)+       & \verb+foo(4)+       & \verb+foo 4+        & \verb+foo 4+      \\
+\verb+obj.member+   & \verb+obj.member+   & \verb+$obj->member+ & \verb+$obj->member+ \\
+\verb+obj.method()+ & \verb+obj.method()+ & \verb+$obj->method+ & \verb+$obj->method()+ \\
+\end{tabular}
+\caption{Contrast in the C language family.}
+\end{Figure}
+
+There seems to be a fair amount of variation, but the word order is
+always the same, and the operators, when not identical, can easily be
+transliterated.  Also keep in mind that, except for constructs present
+in one language and completely missing in another, these are almost the
+only the variations.
+
+There are some key differences.  The largest variation is demonstrated
+on the first line where the programmer declares a new variable.  Each of
+the languages does something different here.  The C-languages declare a
+new variable by stating its type (\texttt{int} (for integer) in this
+case, but it could easily be \texttt{float}, \texttt{class String},
+\texttt{double (* const)(int, char)}, etc.).  None of the other
+languages declare a type.  Perl uses the placeholder \texttt{my} to
+indicate that a variable is being declared.  Python uses the fact that a
+variable is being assigned to declare the variable.  PHP uses any
+reference of a variable to be an implicit declaration.  The following
+example clarifies the distinction between the last two:
+
+\begin{verbatim}
+# Python code
+x = 4
+def foo():
+    x = x + 1  # make x 5
+
+# PHP code
+$x = 4
+function foo() {
+    $x = $x + 1;  # declare a new $x (defaulting to 0)
+                  # and add 1 to it
+}
+\end{verbatim}
+
+Another interesting distinction is that Python uses indentation to
+determine where blocks are, whereas all the other languages use curly
+braces.  The above example demonstrates that as well.  This is where
+Python gets it unique look.
+
+\section{Functional Syntax}
+
+Functional languages account for even less than the remaining 5\% of the
+most common languages.  Nonetheless, there is much more variety in the
+syntax of functional languages than that of the imperative languages.
+There are two possible reasons for this: 
+
+\begin{enumerate}
+\item All of the functional languages covered here emerged out of
+academic research, whereas most of the imperative languages above
+emerged out of industrial research.  Academics are more willing to
+experiment with strange new ideas, because there is not nearly as much
+on the line if they get it wrong.  
+\item Imperative languages have a fairly straightforward compositional
+approach: do this, then do that.  Complex units are combined in simple
+ways.  Functional languages instead combine simple units in complex
+ways.  That is, imperative programming is about content words;
+functional programming is about function words.
+\end{enumerate}
+
+We will focus on two language families: Lisp/Scheme (the Lisp family)
+and ML/Haskell/O'Caml (the ML family). Lisp and Scheme have precisely
+the same syntax (they differ in their semantic models and libraries).
+ML and O'Caml have similar syntax, but O'Caml adds some features.  Figure
+\ref{fig:functional-comparison} gives a comparison of some syntactic
+features of Lisp, ML, and Haskell.
+
+\begin{Figure}
+\label{fig:functional-comparison}
+\begin{tabular}{l|l|l}
+\textbf{Lisp}            & \textbf{ML}                   & \textbf{Haskell} \\
+\hline
+\verb+(let ((x 4)) x)+   & \verb+let val x = 4 in x end+ & \verb+let x = 4 in x+ \\
+\verb|(+ x 1)|           & \verb|x + 1|                  & \verb|x + 1| \\
+\verb|(if 'nil 0 1)|     & \verb+if false then 0 else 1+ & \verb+if False then 0 else 1+ \\
+\verb|(lambda (x) (+ x 1))| & \verb|fn x => x + 1|       & \verb|(+1)| \\
+\verb|(foo x y)|         & \verb|foo x y|                & \verb|foo x y| \\
+\end{tabular}
+\caption{Contrast in the functional languages.}
+\end{Figure}
+
+It would take more space than we have here to explain all the
+differences demonstrated in that table.  One thing to notice is that
+Lisp in minimalist in a sense.  All function calls look like
+\texttt{(func arg1 arg2 ...)}, and everything is a function.  ML and
+Haskell provide a lot more ``syntactic sugar'', to make programs easier
+for Humans to read.
+
+\section{Relation to Natural Language}
+
+Constructs in programming languages are usually inspired by constructs
+in Human language.  Every language described here has been developed by
+native English speakers\footnote{With the exception of C++, created by
+Danish computer scientist Bjarne Stroustrup.  But C++ is such a close
+derivative of C that it doesn't really count.}.
+
+There is one very interesting languages to look at when considering
+natural language.  This is Perl, created by linguist Larry Wall and
+modeled after English.
+
+Perl was designed as an ``idiomatic'' language.  That is, Perl gives the
+programmer a lot of syntactic freedom, and relies on the culture to
+enforce certain styles to maintain readability.  In this way, Perl
+gathers a very Human-like culturalism.  ``Foreign'' speakers---those who
+come from other programming language backgrounds---write Perl as if it
+were a transliteration of the language they are comfortable with.  The
+more a person codes in Perl, the more it starts to look ``native'', but
+programmers may always maintain some kind of ``accent''.    Here are
+three ways in Perl to compute the factorial of a number \texttt{\$n}.
+
+\begin{description}
+\item[Perl with a C accent]
+\begin{verbatim}
+
+my $result = 1:
+for (my $i = 1; $i <= $n; $i++) {
+    $result *= $i;
+}
+\end{verbatim}
+
+\item[Perl with a functional accent] 
+\begin{verbatim}
+
+sub fact {
+    my ($n) = @_;
+    if ($n == 0) { 1 }
+    else         { $n * fact($n-1) }
+}
+my $result = fact($n);
+\end{verbatim}
+
+\item[Idiomatic Perl]
+\begin{verbatim}
+
+my $result = reduce { $a * $b } 1..$n;
+\end{verbatim}
+\end{description}
+
+Another phenomenon to explore in programming languages is the sentential
+complexity present in functional programs.  Consider the following
+``Schwartzian Transform'' in Haskell:
+
+\begin{verbatim}
+map snd (sort (map (\x -> (f x,x)) list))
+\end{verbatim}
+
+The two important things in that sentence are \texttt{sort} and
+\texttt{list}, both of which are hidden in the depths of the
+expression.  Also note the following ``center embedded''
+sentence:
+
+\begin{verbatim}
+maybe Nothing (maybe Nothing (maybe Nothing (lookup locations)) 
+        (lookup addresses)) (lookup names) x
+\end{verbatim}
+
+Such expressions are common in functional programs, and notoriously hard
+to read.  That is to be expected, as it is equally hard to read the
+following example from \cite{Abe-Hatasa-Cowan-1988}: ``The boy the girl
+the teacher flunked kissed cried''.
+
+\section{Conclusions}
+
+Even in explicitly-designed, special-purpose programming languages, we
+find a lot of the syntactic phenomena found in natural languages leaping
+out of anyone's specific intention.  From the Mandarin Lisp programmer
+who can not comprehend the Cantonese Haskell programmer to the
+Californian C++ programmer who just thinks New York Java is rude,
+language boundaries and attitudes form inside programming cultures.  C
+programmers speak an awkward Perl accent and seek help from their
+experienced, native friends in the culture.  It seems that such
+linguistic phenomena appear whenever humans have to learn
+syntax-semantic mappings.
+
+\begin{thebibliography}{4in}
+\bibitem{Abe-Hatasa-Cowan-1988} Abe Y., Kazumi H., Cowan J R. (1988).
+Investigating universals of sentence complexity.  \textit{Typological
+Studies in Language 17}, 77--92.
+\bibitem{Palmer-2005} Palmer L. (2005).  \textit{What is the fourth
+paradigm?}  Retrieved 2005-05-05 from 
+\verb+http://use.perl.org/~luqui/journal/27651+.
+\bibitem{Randal-Sugalski-Toetsch-2003} Randal A., Sugalski D., T\:otsch
+L. (2003).  \textit{Perl 6 Design Philosophy}.  Retrieved 2005-05-05
+from \verb+http://www.perl.com/pub/a/2003/06/25/perl6essentials.html+.
+\bibitem{Welton-2004} Welton D. (2004). \textit{Programming Language
+Popularity}.  Retrieved 2005-05-05 from
+\verb+http://www.dedasys.com/articles/language_popularity.html+.
+\bibitem{Wikipedia-C-programming-language} Wikipedia.  \textit{C programming
+language}.  Retrieved 2005-05-05 from 
+\verb+http://en.wikipedia.org/wiki/C_programming_language#History+
+\end{thebibliography}
 
 \end{document}

@@ -91,7 +91,9 @@ have been categorized by their most common use.
 styles.} 
 \end{Figure}
 
-\section{Imperative Syntax}
+\section{Control Style}
+
+\subsection{Imperative Syntax}
 
 An extreme majority of languages used today are imperative.  According
 to \texttt{freshmeat.net} statistics\cite{Welton-2004}, the top six
@@ -163,7 +165,7 @@ determine where blocks are, whereas all the other languages use curly
 braces.  The above example demonstrates that as well.  This is where
 Python gets it unique look.
 
-\section{Functional Syntax}
+\subsection{Functional Syntax}
 
 Functional languages account for even less than the remaining 5\% of the
 most common languages.  Nonetheless, there is much more variety in the
@@ -206,10 +208,54 @@ features of Lisp, ML, and Haskell.
 
 It would take more space than we have here to explain all the
 differences demonstrated in that table.  One thing to notice is that
-Lisp in minimalist in a sense.  All function calls look like
+Lisp is minimalist in a sense.  All function calls look like
 \texttt{(func arg1 arg2 ...)}, and everything is a function.  ML and
 Haskell provide a lot more ``syntactic sugar'', to make programs easier
 for Humans to read.
+
+\section{Abstraction Syntax}
+
+\begin{Figure}
+\label{fig:procedural-comparison}
+\begin{tabular}{l|l|l}
+\textbf{C}     & \textbf{Scheme} & \textbf{ML} \\
+\hline
+\verb+func(x)+ & \verb+(func x)+              & \verb+func x+ \\
+\verb+&fptr+   & \verb+(lambda (x) (fptr x))+ & \verb+fptr+ \\
+\verb+int foo() {...}+ & \verb+(define (foo) (...))+ & \verb+fun foo ():int+ \\
+\end{tabular}
+\caption{Contrast across procedural languages.}
+\end{Figure}
+
+\begin{Figure}
+\label{fig:object-oriented-comparison}
+\begin{tabular}{l|l|l}
+\textbf{C++} & \textbf{Smalltalk} & \textbf{Haskell} \\
+\hline
+\verb+obj.meth(arg)+ & \verb+obj meth: arg+ & \verb+meth arg obj+ \\
+\verb+class Foo : Bar+ & \verb+Bar subclass: #Foo+ & \verb+class (Bar a) => Foo a+ \\
+\verb+int foo(int x) {...}+ & \verb+foo | x | ...+ & \verb+foo x self = ...+ \\
+\end{tabular}
+\caption{Contrast across object-oriented languages.}
+\end{Figure}
+
+Figures \ref{fig:procedural-comparison} and
+\ref{fig:object-oriented-comparison} compare features across the
+procedural and functional languages in different control styles.  There
+is vast variation here: word and clause order, naming conventions,
+braces, argument passing styles, etc.  In all of these languages,
+classes and objects (the units that make up object-oriented programming)
+behave approximately the same, but the programmers from different
+languages think about these concepts very differently.  
+
+For example, the second line defines \texttt{Foo} as a subtype of
+\texttt{Bar} (for example we would define \texttt{Dog} as a subtype of
+\texttt{Animal}).  However, C++ programmers would translate into English
+as ``Define a class \texttt{Foo} derived from \texttt{Bar}''.  Smalltalk
+programmers would translate ``Tell \texttt{Bar} to subclass itself into
+\texttt{Foo}''.  Haskell programmers would say ``Any \texttt{Foo} must
+also be a \texttt{Bar}''.  The end meaning is the same, but the mental
+space when dealing with these concepts is very different.  
 
 \section{Relation to Natural Language}
 
@@ -288,6 +334,22 @@ code culture.
 
 \section{Conclusions}
 
+The control style of a programming language correlates with its
+syntactic structure, but the abstraction style shows no correlation.
+This could indicate that the control style determines the way people
+think a more heavily than the abstraction style.  Categorizations of the
+world vary in usefulness across domains, and Humans are good at
+understanding new categorizations because they depend on it to survive.
+The abstraction style of a programming language is a categorization of
+the concepts of a program.  However, Humans are typically not very good
+at coming up with new interpretations of how the universe as a whole
+behaves (quantum mechanics, mathematically simple at its core, continues
+to haunt and perplex even accomplished physicists).  Rethinking how your
+program executes---the control style---is analogous to rethinking how
+the universe behaves.  This is hard for Humans, so new concepts in that
+area are rarely defined, so new language structures don't have any way
+to get in.
+
 Even in explicitly-designed, special-purpose programming languages, we
 find a lot of the syntactic phenomena found in natural languages leaping
 out of anyone's specific intention.  From the Mandarin Lisp programmer
@@ -296,10 +358,13 @@ Californian C++ programmer who just thinks New York Java is rude,
 language boundaries and attitudes form inside programming cultures.  C
 programmers speak an awkward Perl accent and seek help from their
 experienced, native friends in the culture.  It seems that such
-linguistic phenomena appear whenever humans have to learn
-syntax-semantic mappings.
+linguistic phenomena appear whenever humans have to learn any
+syntax-semantic mapping.
+
+\newpage
 
 \begin{thebibliography}{4in}
+\raggedright
 \bibitem{Abe-Hatasa-Cowan-1988} Abe Y., Kazumi H., Cowan J R. (1988).
 Investigating universals of sentence complexity.  \textit{Typological
 Studies in Language 17}, 77--92.

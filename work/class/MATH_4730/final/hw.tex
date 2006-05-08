@@ -1,0 +1,65 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+\DeclareMathOperator{\cf}{cf}
+\DeclareMathOperator{\rnk}{rnk}
+
+\newcommand{\card}[1]{\bar{\bar{#1}}}
+
+\begin{document}
+\begin{description}
+\item[(1)]
+  If $\kappa$, $\lambda$, and $\mu$ are cardinals, then $\kappa^{\lambda
+  + \mu} = \kappa^\lambda \cdot \kappa^\mu$.
+  \begin{proof}
+	Given $\card{K} = \kappa$, $\card{L} = \lambda$, $\card{M} = \mu$,
+	and $L \cap M = \emptyset$.  Given a function $f: L \cup M \mapsto
+	K$.  Construct $g: L \mapsto K = f \upharpoonright L$ and $h: M
+	\mapsto K = f \upharpoonright M$.  So $\kappa^{\lambda + \mu} \le
+	\kappa^\lambda \cdot \kappa^\mu$.
+
+	Given a pair of functions $g: L \mapsto K$ and $h: M \mapsto K$.
+	Construct $f: L \cup M \mapsto K = g \cup h$.  $g$ and $h$ have
+	disjoint domains, so $f$ is a function.  Therefore $\kappa^\lambda
+	\cdot \kappa^\mu \le \kappa^{\lambda + \mu}$, and therefore they are
+	equal.
+  \end{proof}
+
+\item[(2)]
+  $2^{\aleph_0} \neq \aleph_{\omega_1 \cdot 49 + \omega}$
+  \begin{proof} 
+    Let $\beta = \omega_1 \cdot 49 + \omega$.  $\beta$ is a limit ordinal, 
+	so $\cf{\aleph_\beta} = \cf{\beta} = \aleph_0$ (by Enderton's
+	Theorem 9N).  However, by K\"onig's theorem, $\aleph_0 <
+	\cf{2^{\aleph_0}}$.
+  \end{proof}
+
+\item[(3)]
+  If $A$ is a set well-ordered by $(<)$ and $f:A \mapsto A$ satisfies $x
+  < y \Rightarrow f(x) < f(y)$, then for all $x \in A$, $x \le f(x)$.
+  \begin{proof}
+	If not, then there is a least $x$ such that $f(x) < x$.  Construct
+	by recursion $R:\omega \mapsto A$ where $R(0) = x$; $R(a+1) =
+	f(R(a))$.  $R(1) < R(0)$, and given $R(n+1) < R(n)$, $f(R(n+1)) <
+	f(R(n))$, so $R(n+2) < R(n+1)$.  Therefore $R$ is an infinitely
+	descending sequence in $A$, a contradiction.
+  \end{proof}
+
+\item[(7)]
+  Given a set $P$ of $\aleph_0$-many people.  There is an infinite
+  subset of that set such that all people have met each other or all
+  people have not met each other.
+  \begin{proof}
+	Let $M \cup \tilde{M} = P^{(2)}$, where $P^{(2)}$ is the set of
+	2-element subsets of $P$.  $M$ represents the set of pairs of people
+	who have met, and $\tilde{M}$ represents the set of pairs of people
+	who have not.  Then by Ramsey's theorem, there exists a $P'
+	\subseteq P$ where $\card{P'} = \aleph_0$ and either $P'^{(2)}
+	\subseteq M$ or $P'^{(2)} \subseteq \tilde{M}$.
+  \end{proof}
+
+\end{description}
+\end{document}

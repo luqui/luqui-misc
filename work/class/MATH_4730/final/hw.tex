@@ -6,6 +6,8 @@
 
 \DeclareMathOperator{\cf}{cf}
 \DeclareMathOperator{\rnk}{rnk}
+\DeclareMathOperator{\rng}{rng}
+\DeclareMathOperator{\wcard}{card}
 
 \newcommand{\card}[1]{\bar{\bar{#1}}}
 
@@ -48,6 +50,26 @@
 	descending sequence in $A$, a contradiction.
   \end{proof}
 
+\item[(4)]
+  There exists a sequence of sets $A_0 \supseteq A_1 \supseteq \cdots \supseteq
+  A_\alpha \supseteq \cdots$ ($\alpha < \omega_1$) with
+  $\bigcap\limits_{\alpha}{A_\alpha} = \emptyset$, and all $A_\alpha$
+  uncountable.  
+  \begin{proof}
+    Namely, let $A_\alpha = \omega_1 - \alpha$.  Every
+    $\alpha < \omega_1$ is countable, so subtracting it from uncountable
+    $\omega_1$ leaves an uncountable set.  Also, any ordinal $\alpha
+    \notin A_{\alpha+1}$, so the intersection is empty.
+  \end{proof}
+  
+\item[(5)]
+  For $\lambda$ an infinite cardinal, $2^\lambda = \lambda^\lambda$.
+  \begin{proof}
+    By the Schr\"oder-Bernstein theorem, $2^\lambda \le \lambda^\lambda
+	\le (2^\lambda)^\lambda \le 2^{\lambda \cdot \lambda} \le
+	2^\lambda$.
+  \end{proof}
+
 \item[(7)]
   Given a set $P$ of $\aleph_0$-many people.  There is an infinite
   subset of that set such that all people have met each other or all
@@ -59,6 +81,47 @@
 	who have not.  Then by Ramsey's theorem, there exists a $P'
 	\subseteq P$ where $\card{P'} = \aleph_0$ and either $P'^{(2)}
 	\subseteq M$ or $P'^{(2)} \subseteq \tilde{M}$.
+  \end{proof}
+
+\item[(8ai)]
+  There is a countable subset of $[0,1]$ isomorphic to $\omega^2$ under
+  the usual $(<)$ of the real line.
+  \begin{proof}
+    Define $v: \mathbb{R} \times \mathbb{R} \times \omega \mapsto
+	\mathbb{R}$ by $v(a,b,n) = b - 2^{-n}(b-a)$.  Now define $w:
+	\omega^2 \mapsto \mathbb{R}$ by $w(\omega \cdot c + d) = v(1 -
+	2^{-c}, 1 - 2^{-(c+1)}, d)$.  The set $W = \rng{w}$ is a subset of
+	$[0,1]$ and isomorphic to $\omega^2$.  Since the domain of $w$ is a
+	set of ordinals, if $w$ is monotonically increasing then $W$ is
+	well-ordered.  Notice that $v(a,b,n) \in [a,b)$ for any $n$ and it
+	is monotonically increasing in $n$.  Then it is easy to see that $w$
+	is monotonically increasing.
+  \end{proof}
+
+\item[(8aii)]
+  There is no $X \subseteq [0,1]$ with $X$ well-ordered by the usual
+  $(<)$ of the real line and $X$ uncountable.
+  \begin{proof}
+	Assume that there is.  Let $f: \card{X} \mapsto X$ be the function
+	that well-orders $X$ (for example, $f(0) = \text{the smallest
+	element in X}$, etc.).  Let $q: \mathbb{R} \times \mathbb{R} \mapsto
+	\mathbb{Q}$ be a function that selects a rational between its two
+	arguments.  Let $g: \card{X} \xrightarrow{1-1}
+	\mathbb{Q}$, by induction: $g(0) = q(f(0), f(1))$; $g(\alpha+1) =
+	q(f(\alpha+1), f(\alpha+2))$; $g(\lambda) = q(f(\lambda),
+	f(\lambda+1))$.  We have just shown that $\card{X} \le
+	\card{\mathbb{Q}}$, contradicting that $X$ is uncountable.
+  \end{proof}
+
+\item[(9)]
+  $\aleph_\omega^{\aleph_0} > \aleph_\omega$.
+  \begin{proof}
+    Let $\card{I} = \aleph_0$, and let $A_i$ for $i \in I$ be a bunch of
+	disjoint sets each with cardinality $\aleph_\omega$.
+	By a theorem due to K\"onig, $\aleph_\omega^{\aleph_0} = 
+	\wcard{\bigotimes\limits_{i}{A_i}} > 
+	\wcard{\bigcup\limits_{i}{A_i}} = \aleph_\omega \cdot
+	\aleph_\omega = \aleph_\omega$.
   \end{proof}
 
 \end{description}

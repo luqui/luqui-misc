@@ -10,8 +10,18 @@
 \DeclareMathOperator{\wcard}{card}
 
 \newcommand{\card}[1]{\bar{\bar{#1}}}
+\newcommand{\power}[1]{\mathcal{P}(#1)}
+\newcommand{\functionsof}[2]{\;^{#1}\!#2}
+
+\newtheorem*{lemma*}{Lemma}
+\newtheorem*{theorem*}{Theorem}
 
 \begin{document}
+\noindent Luke Palmer \\
+2006-05-10 \\
+MATH 4730: Set Theory \\
+Final Exam
+
 \begin{description}
 \item[(1)]
   If $\kappa$, $\lambda$, and $\mu$ are cardinals, then $\kappa^{\lambda
@@ -70,6 +80,26 @@
 	2^\lambda$.
   \end{proof}
 
+\item[(6)]
+  The set of hereditarily finite sets is equal to $V_\omega$.
+  \begin{proof}	
+    It suffices to show that $x \in V_\omega$ iff $TC(x)$ is finite.
+
+	$(\Rightarrow)$ Of course, $x$ has finite rank iff $x \in V_\omega$.
+	By induction on $\rnk{x}$.  If $\rnk{x} = 0$ then $x = TC(x) =
+	\emptyset$.  Suppose all sets of rank $\alpha$ or less have finite
+	transitive closure.  Given $\rnk{A} = \alpha+1$.  $TC(A) = \{A\}
+	\cup \bigcup\limits_{a \in A}{TC(a)}$.  Every element of $A$ must
+	have rank $\alpha$ or less, and $A$ itself must be finite because it
+	has finite rank, so $TC(A)$ must be finite.
+
+	$(\Leftarrow)$ If $TC(x)$ is finite, then it has finite rank (for if
+	it didn't, then it would have to contain an infinite set, and
+	$TC(x)$ would have to be infinite).  So every element of $TC(x)$ has
+	a smaller rank, and is thus an element of $V_\omega$.  $x \in
+	TC(x)$, so $x \in V_\omega$.
+  \end{proof}
+
 \item[(7)]
   Given a set $P$ of $\aleph_0$-many people.  There is an infinite
   subset of that set such that all people have met each other or all
@@ -111,6 +141,46 @@
 	q(f(\alpha+1), f(\alpha+2))$; $g(\lambda) = q(f(\lambda),
 	f(\lambda+1))$.  We have just shown that $\card{X} \le
 	\card{\mathbb{Q}}$, contradicting that $X$ is uncountable.
+  \end{proof}
+
+\item[(8b)]
+  \begin{lemma*}
+	Given an uncountable $Z \subseteq [a,b]$, there exists an $r \in
+	(a,b)$ such that both $Z \cap [a,r]$ and $Z \cap [r,b]$ are
+	uncountable.
+  \end{lemma*}
+  \begin{proof}
+	Suppose not.  Then for every $r \in [a,b]$, either $[a,r] \cap Z$ is
+	countable or $[r,a] \cap Z$ is countable.  Let $L = \sup{\{ r \in Z
+	| Z \cap [a,r]\; \text{countable} \}}$, $R = \sup{\{ r \in Z | Z
+	\cap [r,b]\; \text{countable} \}}$.  Clearly $L < R$, because if
+	$R \le L$, then $\frac{1}{2}(R + L)$ would have a countable number of
+	elements below it and above it, and $Z$ itself would be countable.
+	But then $\frac{1}{2}(R + L)$ has an uncountable number of things on
+	both sides of it, contradicting our assumption that it didn't.
+  \end{proof}
+  \begin{theorem*}
+    If $Y \subseteq [0,1]$, closed, and uncountable, then $\card{Y} =
+    2^{\aleph_0}$.
+  \end{theorem*}
+  \begin{proof}
+	First, choose a well-ordering of the reals $(\prec)$.  Construct a
+	function $f: \functionsof{<\omega}{2} \mapsto \power{\mathbb{R}}$ by
+	the following: $f(\langle\rangle) = Y$.  Given some finite sequence
+	$S$, pick the least $r$ (according to $(\prec)$) so that both $f(S)
+	\cap [0,r]$ and $f(S) \cap [r,1]$ are uncountable.  Let $f(S :
+	\langle 0 \rangle) = f(S) \cap [0,r]$ and $f(S : \langle 1 \rangle)
+	= f(S) \cap [r,1]$ (where the notation $S : \langle n \rangle$ means
+	the sequence $S$ with $n$ tacked on the end).  Now define $g:
+	\functionsof{\omega}{2} \mapsto \power{\mathbb{R}}$ by: $g(S) =
+	\bigcap\limits_{s \in \omega}{f(S \upharpoonright s)}$ for $S$ an
+	infinite sequence.
+
+	Notice that $g(S)$ for any sequence is nonempty, because it is made
+	up of descending sequences of nonempty closed sets.  Also $g(S) \cap
+	g(T) = \emptyset$ when $S \ne T$ by the construction. Pick a choice
+	function $h: \power{\mathbb{R}} \mapsto \mathbb{R}$.  $h \circ g$ is
+	1-1, so $2^{\aleph_0} \le \card{Y} \le 2^{\aleph_0}$.
   \end{proof}
 
 \item[(9)]

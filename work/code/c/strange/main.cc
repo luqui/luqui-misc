@@ -131,7 +131,7 @@ int main()
 	reset();
 	while(true) {
 		events();
-		drift(0.001);
+		drift(0.0002);
 		glClear(GL_COLOR_BUFFER_BIT);
 		draw();
 		SDL_GL_SwapBuffers();

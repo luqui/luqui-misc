@@ -104,6 +104,7 @@ void draw_attractor(float x, float y)
 void draw()
 {
 	draw_attractor(0,0);
+	/*
 	glPointSize(4.0);
 	glColor3f(1,1,1);
 	glBegin(GL_POINTS);
@@ -111,6 +112,7 @@ void draw()
 		glVertex2f((P[i]-PM[i])/PA[i], (P[i+5]-PM[i+5])/PA[i+5]);
 	}
 	glEnd();
+	*/
 }
 
 int main()
@@ -129,7 +131,7 @@ int main()
 	reset();
 	while(true) {
 		events();
-		drift(0.0001);
+		drift(0.001);
 		glClear(GL_COLOR_BUFFER_BIT);
 		draw();
 		SDL_GL_SwapBuffers();

@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+
+use Tk;
+use Tk::Font;
+
+my $arg = join '', @ARGV;
+my $result = eval $arg;
+
+my $top = MainWindow->new;
+$top->Label(-text => $result, -padx => 30, -pady => 30,
+			-font => $top->Font(
+				-family => 'Courier',
+				-size => 18))
+	->pack;
+MainLoop;

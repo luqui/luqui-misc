@@ -1,23 +1,33 @@
 import System
+import System.IO
+import Data.List
 
 divides :: (Integral a) => a -> a -> Bool
 divides a b = b `mod` a == 0
 
-primes :: (Integral a) => a -> [a]
-primes 2 = 2:primes 3   -- bootstrap
-primes from =
+primesFrom :: (Integral a) => a -> [a]
+primesFrom 2 = 2:primesFrom 3   -- bootstrap
+primesFrom from =
     if flip any possiblePrimes (`divides` from)
-        then primes (from+2)
-        else from : primes (from+2) 
+        then primesFrom (from+2)
+        else from : primesFrom (from+2) 
     where
-    possiblePrimes = takeWhile (\x -> fromIntegral x <= sqrt (fromIntegral from)) $ primes 2
+    possiblePrimes = takeWhile (\x -> fromIntegral x <= sqrt (fromIntegral from)) $ primesFrom 2
+
+primes :: (Integral a) => [a]
+primes = primesFrom 2
+
+isPrime :: (Integral a) => a -> Bool
+isPrime n
+	| n < 2     = False
+	| otherwise = last (takeWhile (<= n) primes) == n
 
 seqDiff :: (Num a) => [a] -> [a]
 seqDiff (x:x':xs) = (x' - x) : seqDiff (x':xs)
 seqDiff [_] = []
 
 primeDiff :: (Integral a) => [a]
-primeDiff = seqDiff $ primes 2
+primeDiff = seqDiff primes
 
 agreeBeginning :: (Eq a) => [a] -> [a] -> Int
 agreeBeginning [] (_:_) = 0
@@ -32,8 +42,5 @@ printList xs = mapM_ print xs
 
 main :: IO ()
 main = do
-    args <- getArgs
-    case args of
-        []    -> printList $ primes 2
-        [num] -> printList $ take (read num) (primes 2)
-        _     -> error "Usage: primes [number]"
+	hSetBuffering stdout NoBuffering
+	print $ filter isPrime $ map sum $ inits primes

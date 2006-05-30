@@ -23,6 +23,8 @@ const float PM[10] = { 0, 1.5, 0, .5, 1.5,
 					   0, 1.5, 0, .5, 1.5 };
 const float PA[10] = { 2.0, 3.5, 3.5, 2.5, 4.7,
 					   1.5, 3.5, 3.6, 2.5, 4.7 };
+int iters = 10000;
+float offset = 0;
 typedef std::map<SDLKey, int> paramcoord_t;
 paramcoord_t PARAMX;
 paramcoord_t PARAMY;
@@ -36,11 +38,21 @@ void reset() {
 void events()
 {
 	SDL_Event e;
+	SDLMod mods = SDL_GetModState();
 	while (SDL_PollEvent(&e)) {
 		if (e.type == SDL_MOUSEMOTION) {
 			Uint8* keys = SDL_GetKeyState(NULL);
 			float dxf = float(e.motion.xrel)/640;
 			float dyf = -float(e.motion.yrel)/512;
+
+			if (mods & KMOD_SHIFT) {
+				dxf /= 10;
+				dyf /= 10;
+			}
+			if (mods & KMOD_CTRL) {
+				dxf /= 100;
+				dyf /= 100;
+			}
 
 			for (paramcoord_t::iterator i = PARAMX.begin(); i != PARAMX.end(); ++i) {
 				if (keys[i->first]) {
@@ -61,6 +73,12 @@ void events()
 			if (e.key.keysym.sym == SDLK_r) {
 				reset();
 			}
+			if (e.key.keysym.sym == SDLK_MINUS) {
+				iters /= 2;
+			}
+			if (e.key.keysym.sym == SDLK_EQUALS) {
+				iters *= 2;
+			}
 		}
 	}
 }
@@ -80,6 +98,7 @@ void drift(float amt)
 
 void set_palette(float phase)
 {
+	phase += offset;
 	glColor3f(
 			0.5*sin(2*M_PI*phase)+0.5,
 			0.5*cos(5*M_PI*phase)+0.5,
@@ -90,12 +109,12 @@ void draw_attractor(float x, float y)
 {
 	glPointSize(2.0);
 	glBegin(GL_POINTS);
-	for (int i = 0; i < 10000; i++) {
+	for (int i = 0; i < iters; i++) {
 		float nx = P[0] - y*(P[1] * x*x + P[2] * x*y + P[3] * y*y + P[4] * x*x*y);
 		float ny = P[5] + x*(P[6] * x*x + P[7] * x*y + P[8] * y*y + P[9] * y*y*x);
 		x = nx;
 		y = ny;
-		set_palette(float(i)/10000);
+		set_palette(float(i)/iters);
 		glVertex2f(x,y);
 	}
 	glEnd();
@@ -131,7 +150,8 @@ int main()
 	reset();
 	while(true) {
 		events();
-		drift(0.0002);
+//		drift(0.0002);
+		offset += 0.00002;
 		glClear(GL_COLOR_BUFFER_BIT);
 		draw();
 		SDL_GL_SwapBuffers();

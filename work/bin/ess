@@ -8,6 +8,7 @@ use LWP::Simple;
 use IO::All;
 use Getopt::Long;
 
+my $cachedcopy = 0;
 my $feed;
 my %options;
 
@@ -42,6 +43,9 @@ elsif (@ARGV == 0) {
     for (0..@{$feed->{channel}{item}}-1) {
         show_title($_);
     }
+	if ($cachedcopy) {
+		print "*** This schedule was generated from a cached feed; it is not up-to-date\n";
+	}
 }
 else {
     usage();
@@ -68,6 +72,7 @@ sub get_feed {
 			print "Failed.  Using cached copy of feed.\n";
 			$xml = io("$ENV{HOME}/.essrss.xml")->slurp;
 			$feed = XMLin($xml) or die "Parse failed (absurd!)\n";
+			$cachedcopy = 1;
 		}
 		else {
 			print "Failed.  No cached copy found; retrying\n";

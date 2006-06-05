@@ -40,8 +40,15 @@ else {
 }
 
 sub get_feed {
+	my $retry = 1;
     return if $feed;
-    $feed = XMLin(get('http://ess.tv/ess.rss')) or die "Couldn't get feed\n";
+	while ($retry) {
+		$retry = !eval {
+			print "Fetching RSS feed...\n";
+			$feed = XMLin(get('http://ess.tv/ess.rss')) or die "Couldn't get feed\n";
+			1;
+		};
+	}
 }
 
 sub select_show {

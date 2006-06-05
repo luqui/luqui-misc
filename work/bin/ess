@@ -14,7 +14,10 @@ my %options;
 Getopt::Long::Configure('bundling');
 GetOptions(\%options,
 	'pretend|p',
-	'nocache|c');
+	'nocache|c',
+	'help|h') or usage();
+
+usage() if $options{help};
 
 if (@ARGV == 1) {
     get_feed();
@@ -102,10 +105,14 @@ sub show_title {
 
 sub usage {
     print <<EOU;
-Usage: ess command [args]
-  Commands:
-  ess                        Show what is playing on all channels
-  ess <criterion>            Watch the specified show
+Usage: ess                   Print a schedule
+       ess <number>          Watch that stream number
+       ess <string>          Watch the show whose title contains that string
+  Options:
+       -p --pretend          Print the command that would be executed 
+                                 instead of executing it
+       -c --nocache          Turn off caching when the feed is broken
+       -h --help             This help message
 EOU
     exit;
 }

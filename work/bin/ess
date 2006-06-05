@@ -1,15 +1,20 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
 use XML::Simple;
 use LWP::Simple;
+use IO::All;
+use Getopt::Long;
 
 my $feed;
-my $pretend = 0;
+my %options;
 
-if (@ARGV && $ARGV[0] eq '-p') {
-	shift;
-	$pretend = 1;
-}
+Getopt::Long::Configure('bundling');
+GetOptions(\%options,
+	'pretend|p',
+	'nocache|c');
 
 if (@ARGV == 1) {
     get_feed();
@@ -21,7 +26,7 @@ if (@ARGV == 1) {
     }
     my $link = $feed->{channel}{item}[$shows[0]]{link};
     $link =~ s/\/listen.pls$//;
-	if ($pretend) {
+	if ($options{pretend}) {
 		print "mplayer -cache 512 '$link'\n";
 	}
 	else {
@@ -40,14 +45,31 @@ else {
 }
 
 sub get_feed {
-	my $retry = 1;
     return if $feed;
-	while ($retry) {
-		$retry = !eval {
-			print "Fetching RSS feed...\n";
-			$feed = XMLin(get('http://ess.tv/ess.rss')) or die "Couldn't get feed\n";
-			1;
-		};
+	my $xml;
+	my $success = eval {
+		print "Fetching RSS feed from ess.tv\n";
+		$xml = get('http://ess.tv/ess.rss') or die "Fetch failed\n";
+		$feed = XMLin($xml) or die "Parse failed\n";
+		1;
+	};
+	if ($success) {
+		$xml > io("$ENV{HOME}/.essrss.xml");
+	}
+	else {
+		if ($options{nocache}) {
+			print "Failed.  Caching disabled; retrying\n";
+			goto &get_feed;
+		}
+		elsif (-e "$ENV{HOME}/.essrss.xml") {
+			print "Failed.  Using cached copy of feed.\n";
+			$xml = io("$ENV{HOME}/.essrss.xml")->slurp;
+			$feed = XMLin($xml) or die "Parse failed (absurd!)\n";
+		}
+		else {
+			print "Failed.  No cached copy found; retrying\n";
+			goto &get_feed;
+		}
 	}
 }
 

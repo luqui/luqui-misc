@@ -52,7 +52,6 @@ else {
 }
 
 sub get_feed {
-	my $retry = 1;
     return if $feed;
 	my $xml;
 	my $success = eval {

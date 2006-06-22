@@ -15,17 +15,21 @@ my %options;
 Getopt::Long::Configure('bundling');
 GetOptions(\%options,
 	'pretend|p',
-	'nocache|c',
+	'retry|r',
+	'fail|f',
 	'help|h') or usage();
 
 usage() if $options{help};
+
+die "Make up your mind, do you want to retry or fail?\n" if 
+	$options{retry} && $options{fail};
 
 if (@ARGV == 1) {
     get_feed();
     my $show = shift;
     my @shows = select_show($show);
     if (@shows > 1) {
-        print "Multiple shows found for criterion '$show'\n";
+        print STDERR "Multiple shows found for criterion '$show'\n";
         exit 1;
     }
     my $link = $feed->{channel}{item}[$shows[0]]{link};
@@ -39,6 +43,9 @@ if (@ARGV == 1) {
 	}
 }
 elsif (@ARGV == 0) {
+	if ($options{pretend}) {
+		die "You must provide a stream to use --pretend.\n";
+	}
     get_feed();
     for (0..@{$feed->{channel}{item}}-1) {
         show_title($_);
@@ -55,7 +62,7 @@ sub get_feed {
     return if $feed;
 	my $xml;
 	my $success = eval {
-		print "Fetching RSS feed from ess.tv\n";
+		print STDERR "Fetching RSS feed from ess.tv\n";
 		$xml = get('http://ess.tv/ess.rss') or die "Fetch failed\n";
 		$feed = XMLin($xml) or die "Parse failed\n";
 		1;
@@ -64,18 +71,21 @@ sub get_feed {
 		$xml > io("$ENV{HOME}/.essrss.xml");
 	}
 	else {
-		if ($options{nocache}) {
-			print "Failed.  Caching disabled; retrying\n";
+		if ($options{retry}) {
+			print STDERR "Failed.  Caching disabled; retrying\n";
 			goto &get_feed;
 		}
+		elsif ($options{fail}) {
+			die "Failed.\n";
+		}
 		elsif (-e "$ENV{HOME}/.essrss.xml") {
-			print "Failed.  Using cached copy of feed.\n";
+			print STDERR "Failed.  Using cached copy of feed.\n";
 			$xml = io("$ENV{HOME}/.essrss.xml")->slurp;
 			$feed = XMLin($xml) or die "Parse failed (absurd!)\n";
 			$cachedcopy = 1;
 		}
 		else {
-			print "Failed.  No cached copy found; retrying\n";
+			print STDERR "Failed.  No cached copy found; retrying\n";
 			goto &get_feed;
 		}
 	}
@@ -94,7 +104,7 @@ sub select_show {
             }
         }
         if (@matches == 0) {
-            print "No match found for '$crit'\n";
+            print STDERR "No match found for '$crit'\n";
             exit 1;
         }
         else {
@@ -116,7 +126,8 @@ Usage: ess                   Print a schedule
   Options:
        -p --pretend          Print the command that would be executed 
                                  instead of executing it
-       -c --nocache          Turn off caching when the feed is broken
+       -r --retry            Retry when unable to get RSS feed
+       -f --fail             Exit when unable to get RSS feed
        -h --help             This help message
 EOU
     exit;

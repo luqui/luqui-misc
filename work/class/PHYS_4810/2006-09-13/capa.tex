@@ -1,0 +1,148 @@
+\documentclass[11pt]{article}
+
+\usepackage{fancyhdr}
+\usepackage{gensymb}
+\usepackage{amsmath}
+
+\lhead[\fancyplain]{Luke Palmer}
+\chead[\fancyplain]{2006-09-13}
+\rhead[\fancyplain]{PHYS 4810}
+\pagestyle{fancyplain}
+
+\begin{document}
+Chapter 24 in HRW 5th edition covers Gauss's law.  They start by
+introducing Gauss's law as a technique which can take advantage of
+symmetry of problems.  Flux is defined first using the Riemann sum $\Phi
+= \sum \mathbf{E}\cdot\mathbf{\Delta A}$.  I was thinking, is this
+supposed to help people who don't understand integrals?  What the heck
+does $\mathbf{\Delta A}$ mean?  A change vector, even though it is
+hardly representing a change so much as a finite infinitesimal (!).  I
+don't see the utility of this representation. Anyway, they go on to
+define flux in the integral form and then state Gauss's law in terms of
+that, followed by a few derivations of things we already knew and some
+new problems.
+
+\section*{3}
+An electric flux of $\Phi = \# Nm^2/C$ passes through a flat horizontal
+surface that has an area of $A = \# m^2$.  The flux is due to a
+uniform electric field.  What is the magnitude of the electric field if
+the field points $\theta = \# \degree$ above the horizontal?
+
+I used limit cases to figure out which trig function to use.  When the
+E-field is horizontal, there is no flux so there is no way to tell what
+the E-field is; i.e. we are dividing by 0, so we are dividing by $\sin$.
+Then we have to incorporate the area, so I used dimensional analysis to
+figure out whether to multiply or divide: divide.  The final formula
+comes out to
+\[ \frac{\Phi}{A \sin{\theta}} \]
+
+I'll coin the method I used ``speed solving''.  Essentially, I quickly
+scanned the problem to get an image so I can determine the \textit{type}
+of operations I'll be doing (in this case, multiplying/dividing and some
+trig) and then use the easiest-to-think-about cues to trim the branches
+of what the solution could be until there is only one.
+
+Mathematically, this problem draws on the definition $\Phi =
+\mathbf{E}\cdot\mathbf{A}$ and the well-known definition
+$\mathbf{E}\cdot\mathbf{A} = EA\cos{\theta}$.  However, I used neither
+of these things formally; instead I used a visual conception of flux and
+a good intuitive understanding of the role of trig functions.
+Interestingly, the only thing we needed to know about an E-field was
+that it is a vector field.
+
+I'd say this is a mediocre problem.  It's good from the standpoint that
+it's a little bit unusual in that you have to divide by a trig function.
+I liked the hint: ``It's easy to get confused about which angle to use.
+Draw a diagram.''  However, it's kind of a plug-and-chug problem, as is
+demonstrated by the ``speed solving'' method I used.  It wasn't given
+real-world context and you do the standard ``multiply the variables
+together with a trig function'' solution.  A student who doesn't
+understand isn't likely to make a discovery with this problem (do
+most students usually have ephiphanies while solving problems?).
+
+\section*{4 \& 5}
+
+A cubic cardboard box of side $a = \# m$ is placed so its edges are
+parallel to the coordinate axes\footnote{That wording is a little
+strange; I would place the coordinate axes so that they are parallel to
+the edges of the box \texttt{:-)}}.  There is \textbf{NO} net electric
+charge inside the box, but the space in and around the box is filled
+with a nonuniform electric field of the following form:
+$\mathbf{E}(x,y,z) = Kz\mathbf{j} + Ky\mathbf{k}$, where $K = \# N/Cm$.
+What is the electric flux throught the top face of the box (where $z =
+a$).
+
+I looked at the problem and tried to visualize the electric field with
+my fingers.  That really didn't help my visualization, so I continued
+with math.  I set up the integral over the top face and evaluated:
+
+\begin{align*}
+\int_0^a\int_0^a{(Kz\mathbf{j} + Ky\mathbf{k})\cdot\mathbf{k}\,dy\,dx}
+&= \int_0^a\int_0^a{Ky\,dy\,dx} \\
+&= \int_0^a{\frac{1}{2}Ka^2\,dx} \\
+&= \frac{1}{2}Ka^3
+\end{align*}
+
+I checked my units then plugged in the numbers.
+
+I'm now noting from the hint that I didn't even think in terms of
+$\mathbf{dA}$; I automatically substituted $\mathbf{k}\,dy\,dx$.  I'm
+not sure how relevant that is.
+
+For problem 5, Gauss's law told me to negate my answer to problem 4.
+That was fun.
+
+Problem 4 drew on the same physics concepts as problem 3, but the
+problem is in a slightly more sophisticated setting due to the integral.
+In particular, folks with a weak calculus background will probably have
+more trouble here than with problem 3, especially if we are talking in
+terms of $\mathbf{dA}$ and whatnot.
+
+Especially in combination with problem 5, this is a good problem.  At
+least, to me it was a good problem.  It exercised integrals which feels
+more like a nontrivial application of what we're learning; i.e. more
+than just regurgitation.  However, the integral was pretty easy, so it
+didn't get bogged down in a lot of sticky calculus.  Problem 5 was one
+of those problems that could be really hard or really easy depending on
+how you approach it.  For me, whenever I see a problem that would be
+\textit{that} tedious, it forces me to think if there's a clever way to
+do it.  The problem is of that nature that (hopefully) encourages
+students to think outside the box by thinking about the charge inside
+the box.
+
+\section*{12}
+
+(The problem relies heavily on the diagram, so I won't repeat it)
+
+To solve this problem, I recalled what happened in this case because I
+had figured it out before.  However, supposing I hadn't, this would be a
+heavy Gauss's law problem.  For a (inside the shell), consider the
+sphere at a's radius surrounding.  We can assume the problem is
+symmetrical, and there must be some flux (because there is charge inside
+the sphere), so the E-field must not be zero.
+
+For the inner surface of the shell, consider the sphere inside the
+conductor.  The E-field must always be zero, so there is no flux.
+Therefore, there must be no net charge inside the sphere, and since this
+is true at all radii inside the conductor, the only place it could go
+would be on the inner surface.
+
+For c (inside the conductor), the field is zero because it's a
+conductor.
+
+For e (outside the shell), consider the sphere at e's radius from the
+charge in the center.  The net charge in the sphere in nonzero, so there
+must be flux.  Since the problem is symmetrical, we can argue that the
+E-field ought to be distributed equally along that sphere, so the field
+is nonzero there.
+
+The whole shell problem is, in my opinion, an excellent exercise in
+physics reasoning.  It gives the student who solves the problem a taste
+of the power of Gauss's law.  Sometimes you have to use Gauss's law to
+find the field based on the enclosed charge, sometimes you have to use
+it the other way around.  However, there aren't a variety of ways to
+solve it, which can be a weakness.  If a student doesn't grok Gauss's
+law, there isn't much he can do.  This may also be a strength in that it
+forces the student to ask for help.
+
+\end{document}

@@ -5,6 +5,7 @@
 #include <map>
 #include <cstdlib>
 #include <cmath>
+#include <iostream>
 
 void init_sdl()
 {
@@ -136,7 +137,9 @@ void draw()
 
 int main()
 {
+	std::cout << "Initing\n";
 	init_sdl();
+	std::cout << "Inited\n";
 	PARAMX[SDLK_a] = 0;
 	PARAMY[SDLK_a] = 5;
 	PARAMX[SDLK_s] = 1;

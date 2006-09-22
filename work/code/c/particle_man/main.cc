@@ -40,6 +40,7 @@ struct Enemy {
 
 typedef std::list<Particle> particles_t;
 particles_t PARTICLES;
+int NPARTICLES = 0;
 typedef std::list<Enemy> enemies_t;
 enemies_t ENEMIES;
 
@@ -48,6 +49,41 @@ void init_sdl()
 	INIT.set_fullscreen();
 	INIT.init();
 	VIEW.activate();
+}
+
+void draw_score(int score) {
+	const int colors = 4;
+	const int color[colors][3] = {
+		{ 0, 1, 0 },
+		{ 0, 0, 1 },
+		{ 1, 0, 0 },
+		{ 1, 1, 1 } };
+	const int value[colors] = { 100, 25, 5, 1 };
+
+	int counter = 0;
+	int row = 0;
+	int col = 0;
+
+	while (score > 0) {
+		while (score < value[counter]) { counter++; }
+		score -= value[counter];
+		
+		glColor3f(color[counter][0], color[counter][1], color[counter][2]);
+		
+		while (col > 10) {
+			row++;
+			col -= 10;
+		}
+
+		glBegin(GL_QUADS);
+			glVertex2f(2*col+1, 2*row+1);
+			glVertex2f(2*col+2, 2*row+1);
+			glVertex2f(2*col+2, 2*row+2);
+			glVertex2f(2*col+1, 2*row+2);
+		glEnd();
+
+		col++;
+	}
 }
 
 void draw() 
@@ -85,6 +121,8 @@ void draw()
 			glVertex2f(center.x + 36*cos(theta), center.y + 36*sin(theta));
 		}
 	glEnd();
+
+	draw_score(NPARTICLES);
 }
 
 void events()
@@ -108,11 +146,7 @@ void step()
 		bool killparticle = false;
 
 		vec2 accel;
-		if (MOUSE_DOWN) {
-			double dist = (MOUSE - i->pos).norm();
-			if (dist < 0.05) dist = 0.05;
-			accel = MOUSE_ATTRACTION * ~(MOUSE - i->pos);
-		}
+		accel = (MOUSE_DOWN ? -1 : 1) * MOUSE_ATTRACTION * ~(MOUSE - i->pos);
 		
 		for (particles_t::iterator j = PARTICLES.begin(); j != PARTICLES.end(); ++j) {
 			if (i == j) continue;
@@ -144,6 +178,7 @@ void step()
 					vec2 offs(randrange(-1,1), randrange(-1,1));
 					PARTICLES.push_back(Particle(j->pos + offs, 10*offs));
 				}
+				NPARTICLES++;
 				enemies_t::iterator k = j;
 				++j;
 				ENEMIES.erase(k);
@@ -194,10 +229,12 @@ void step()
 int main()
 {
 	FrameRateLockTimer timer(DT);
+	srand(time(NULL));
 	init_sdl();
 	for (int i = 0; i < 2; i++) {
 		PARTICLES.push_back(Particle(vec2(randrange(32,64),randrange(24,48)), vec2(0,0)));
 	}
+	NPARTICLES += 2;
 	float spawn_timer = 3.0/20.0;
 	while (true) {
 		events();

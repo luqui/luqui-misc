@@ -10,6 +10,7 @@
 
 const double MOUSE_ATTRACTION = 10;
 const double DAMPING = 0.035;
+const double ENEMY_DAMPING = 0.1;
 const double POWER = 1;
 double ENEMY_GROW_RATE = 0;
 const double ENEMY_GROW_RATE_RATE = 0.001;
@@ -147,13 +148,18 @@ void events()
 	if (keys[SDLK_a]) vel += vec2(-r,0);
 	if (keys[SDLK_s]) vel += vec2(0,-r);
 	if (keys[SDLK_d]) vel += vec2(r,0);
-	if (vel.norm2() > 0) {
+	if (!TWO_PLAYERS && vel.norm2() > 0) {
 		TWO_PLAYERS = true;
+		for (int i = 0; i < 5; i++) {
+			PARTICLES.push_back(Particle(vec2(randrange(32,64),randrange(24,48)), vec2(0,0)));
+		}
 	}
 	
 	if (TWO_PLAYERS) {
 		for (enemies_t::iterator i = ENEMIES.begin(); i != ENEMIES.end(); ++i) {
-			i->vel = vel;
+			double rad = i->radius;
+			if (rad < 0.5) rad = 0.5;
+			i->vel += DT*vel/(i->radius*i->radius) - DT * ENEMY_DAMPING * i->vel.norm() * i->vel;
 		}
 	}
 }

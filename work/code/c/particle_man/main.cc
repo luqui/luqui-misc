@@ -17,6 +17,7 @@ double ENEMY_SPAWN_RATE = 0.05;
 const double ENEMY_SPAWN_RATE_RATE = 0.0002;
 bool MOUSE_DOWN = false;
 const int HISTORY_SIZE = 10;
+bool TWO_PLAYERS = false;
 
 double DT = 1/30.0;
 SoyInit INIT;
@@ -138,6 +139,23 @@ void events()
 	Uint8 buts = SDL_GetMouseState(&x, &y);
 	MOUSE = coord_convert(INIT.pixel_view(), VIEW, vec2(x,y));
 	MOUSE_DOWN = !!(buts & SDL_BUTTON(1));
+
+	Uint8* keys = SDL_GetKeyState(NULL);
+	vec2 vel;
+	double r = ENEMY_SPAWN_RATE;
+	if (keys[SDLK_w]) vel += vec2(0,r);
+	if (keys[SDLK_a]) vel += vec2(-r,0);
+	if (keys[SDLK_s]) vel += vec2(0,-r);
+	if (keys[SDLK_d]) vel += vec2(r,0);
+	if (vel.norm2() > 0) {
+		TWO_PLAYERS = true;
+	}
+	
+	if (TWO_PLAYERS) {
+		for (enemies_t::iterator i = ENEMIES.begin(); i != ENEMIES.end(); ++i) {
+			i->vel = vel;
+		}
+	}
 }
 
 void step()
@@ -245,8 +263,9 @@ int main()
 		
 		spawn_timer -= ENEMY_SPAWN_RATE*DT;
 		while (spawn_timer < 0) {
-			double r = ENEMY_SPAWN_RATE;
-			ENEMIES.push_back(Enemy(vec2(randrange(16,80),randrange(12,60)), vec2(randrange(-r,r),randrange(-r,r)), 1.1));
+			double r = TWO_PLAYERS ? 0 : ENEMY_SPAWN_RATE;
+			vec2 speed(randrange(-r,r),randrange(-r,r));
+			ENEMIES.push_back(Enemy(vec2(randrange(16,80),randrange(12,60)), speed, 1.1));
 			ENEMIES.back().particles++;
 			spawn_timer += 1;
 		}

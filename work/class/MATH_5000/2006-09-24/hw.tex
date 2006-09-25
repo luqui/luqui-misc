@@ -1,0 +1,168 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+\DeclareMathOperator{\rng}{rng}
+\DeclareMathOperator{\wcard}{card}
+
+\newcommand{\card}[1]{\bar{\bar{#1}}}
+\newcommand{\power}[1]{\mathcal{P}(#1)}
+\newcommand{\functionsof}[2]{\;^{#1}\!#2}
+
+\newtheorem*{lemma*}{Lemma}
+\newtheorem*{theorem*}{Theorem}
+
+\begin{document}
+\noindent Luke Palmer \\
+MATH 5000 \\
+Homework 3
+
+\begin{description}
+\item[(1)] Let $(A,<)$ be a well ordering.  For each $a \in A$ let
+$f(a)$ be the unique ordinal $\alpha$ such that $\alpha \cong A_{<a}$.
+Then $\rng{f}$ is an ordinal.
+  \begin{proof}
+    Clearly, $\rng{f}$ is a set of ordinals, so it suffices to show that
+	$\rng{f}$ is transitive.
+
+	Suppose $\beta \in \alpha \in \rng{f}$.  Then there is some $a \in A$
+	such that $\alpha \cong A_{<a}$.  $\beta$ is an ordinal $< \alpha$,
+	so there must be a $b \in A$ with $\beta \cong A_{<b}$.  But $\beta
+	= f(b)$, so $\beta \in \rng{f}$.
+  \end{proof}
+
+\item[(2)] $\omega$ is an ordinal.
+  \begin{proof}
+    $\omega$ is a set of ordinals, so it suffices to show that $\omega$
+	is transitive.
+
+	If $\omega$ weren't transitive, then we could take the least $\alpha
+	\in \omega$ where $\alpha \not\subseteq \omega$.  $\alpha$ couldn't
+	be $\emptyset$, so there must be some $\beta \in \omega$ such that
+	$\alpha = S\beta = \beta \cup \{\beta\}$.  Then either $\beta
+	\not\subseteq \omega$ (impossible because $\alpha > \beta$ and
+	$\alpha$ was the least) or $\beta \not\in \omega$ (also impossible).
+  \end{proof}
+
+\item[(3)] Given a functional $\varphi(x,y)$, the $f: \alpha \mapsto B$
+defined by recursion by $\varphi$ is unique.
+  \begin{proof}
+	Trivial.  $f$ ends up being a union of approximation functions;
+	there can't be two different values for that union  (read:  I
+	apparently don't understand what I'm proving and it is too late to
+	ask \texttt{:-/}).
+  \end{proof}
+
+\item[(4)] 
+  \begin{description}
+    \item[(i)] $m+1 = Sm$
+	  \begin{proof}
+	    $1 = S0$, so $m + S0$ = $S(m + 0)$ = $Sm$
+	  \end{proof}
+	\item[(ii)] $0+m = m$
+	  \begin{proof}
+	    $0+0=0$.  Suppose $0+m = m$: $0+Sm=Sm$ iff $S(0+m)=Sm$ iff  $Sm=Sm$.
+	  \end{proof}
+	\item[(iii)] $Sm+n = S(m+n)$
+	  \begin{proof}
+	    $Sm + 0 = S(m + 0) = Sm$.  Suppose $Sm+n = S(m+n)$: $Sm+Sn = S(Sm+n)
+		= SS(m+n) = S(m+Sn)$.
+	  \end{proof}
+	\item[(iv)] $m+n=n+m$
+	  \begin{proof}
+	    $m+0 = 0+m = m$.  Suppose $m+n = n+m$:  $m+Sn = S(m+n) = S(n+m)
+		= Sn + m$.
+	  \end{proof}
+	\item[(v)] $m+(n+p) = (m+n)+p$
+	  \begin{proof}
+	    $m+(n+0) = (m+n)+0 = m+n$.  Suppose $m+(n+p)=m+(n+p)$:
+		\begin{align*}
+		  m+(n+Sp) &= m+S(n+p) \\
+		           &= S(m+(n+p)) \\
+				   &= S((m+n)+p) \\
+				   &= (m+n)+Sp
+		\end{align*}
+	  \end{proof}
+  \end{description}
+
+\item[(5)]
+  \begin{description}
+    \item[(i)] $m \cdot 1 = m$
+	  \begin{proof}
+	    $1 = S0$ so $m \cdot S0 = m \cdot 0 + m = m$.
+	  \end{proof}
+	\item[(ii)] $0 \cdot m = 0$
+	  \begin{proof}
+	    $0 \cdot 0 = 0$.  Suppose $0m=0$: $0 \cdot Sm = 0m + 0 = 0$.
+	  \end{proof}
+	\item[(iii)] $Sm \cdot n = mn + n$
+	  \begin{proof}
+	    $Sm \cdot 0 = m \cdot 0 + 0 = 0$.  Suppose $Sm \cdot n = mn +
+		n$:
+		\begin{align*}
+		  Sm \cdot Sn &= Sm \cdot n + Sm \\
+		              &= mn + n + Sm \\
+					  &= mn + m + Sn \\
+		              &= m \cdot Sn + Sn
+		\end{align*}
+	  \end{proof}
+	\item[(iv)] $mn = nm$
+	  \begin{proof}
+	    $m \cdot 0 = 0m = 0$.  Suppose $mn = nm$: $m \cdot Sn = mn + m =
+		nm + m = Sn \cdot m$.
+	  \end{proof}
+	\item[(v)] $m(n+p) = mn + mp$
+	  \begin{proof}
+	    $m(n+0) = mn + m\cdot0 = mn$.  Suppose $m(n+p) = mn + mp$:
+		\begin{align*}
+		  m(n+Sp) &= m \cdot S(n+p) \\
+		          &= m(n+p) + m \\
+				  &= mn + mp + m \\
+				  &= mn + m \cdot Sp
+		\end{align*}
+	  \end{proof}
+	\item[(vi)] $m(np) = (mn)p$
+	  \begin{proof}
+	    $m(n \cdot 0) = (mn) \cdot 0 = 0$.  Suppose $m(np) = (mn)p$:
+		\begin{align*}
+		  m(n \cdot Sp) &= m(np+n) \\
+		                &= m(np) + mn \\
+						&= (mn)p + mn \\
+						&= (mn) \cdot Sp
+		\end{align*}
+	  \end{proof}
+  \end{description}
+
+\item[(6)] There is a unique function $f:\omega \times \omega \mapsto
+\omega$ such that for all $m,n \in \omega$: $f(m,0) = 1$ and
+$f(m,Sn)=f(m,n) \cdot m$.
+  \begin{proof}
+	Given any $m \in \omega$, we can construct the unique function $g:
+	\omega \mapsto \omega$ by recursion: $g(0) = 1$ and $g(Sn) = g(n)
+	\cdot m$.  Let $f': \omega \mapsto (\omega \mapsto \omega)$ be the
+	function that takes this $m$ to this $g$.  Then let $f = \{((m,n),g)
+	| (m,(n,g)) \in f'\}$.
+  \end{proof}
+
+	
+
+\item[(7)] Let $A = \{a_1,a_2,\cdots,a_n\}$ be a finite set.  $x \in
+\triangle A$ iff $\{ a \in A | x \in a \}$ has an odd number of
+elements.
+  \begin{proof}
+    If $n = 1$ then $\{ a \in A | x \in a \}$ has an odd number of
+	elements iff $x$ is in the only member of $A$.
+
+	Suppose $b \not\in A$. $x \in \triangle(A \cup \{b\})$ iff $x \in
+	(\triangle A) \triangle b$.  Case 1: If $x \in \triangle A$ and $x
+	\not\in b$, then $x$ is in an odd number of the elements of $A$, so
+	$x$ is in an odd number of the elements of $A \cup \{b\}$  (converse
+	similar).  Case 2: If $x \not\in \triangle A$ and $x \in b$, then
+	$x$ is in an even number of the elements of $A$, so $x$ is in an odd
+	number of the elements of $A \cup \{b\}$ (converse similar).
+  \end{proof}
+\end{description}
+
+\end{document}

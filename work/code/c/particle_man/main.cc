@@ -12,13 +12,20 @@ const double MOUSE_ATTRACTION = 10;
 const double DAMPING = 0.035;
 const double ENEMY_DAMPING = 0.1;
 const double POWER = 1;
+const double DIVIDE_TIME = 8;
+const double DIVIDE_VAR = 1;
+const double MASS_PER_PARTICLE = 0.9;
+const int MAX_INCUBATE = 10;
 double ENEMY_GROW_RATE = 0;
-const double ENEMY_GROW_RATE_RATE = 0.001;
+double INITIAL_SIZE = 1.1;
+const double ENEMY_INIT_RATE = 0.003;
+const double ENEMY_GROW_RATE_RATE = 0;
 double ENEMY_SPAWN_RATE = 0.05;
-const double ENEMY_SPAWN_RATE_RATE = 0.0002;
+const double ENEMY_SPAWN_RATE_RATE = 0.001;
 bool MOUSE_DOWN = false;
 const int HISTORY_SIZE = 10;
 bool TWO_PLAYERS = false;
+double TIME = 0;
 
 double DT = 1/30.0;
 SoyInit INIT;
@@ -34,10 +41,12 @@ struct Particle {
 };
 
 struct Enemy {
-	Enemy(vec2 pos, vec2 vel, double radius) : pos(pos), vel(vel), radius(radius), particles(0) { }
+	Enemy(vec2 pos, vec2 vel, double radius) : pos(pos), vel(vel), radius(radius), particles(0), init_particles(0) { }
 	vec2 pos, vel;
 	double radius;
 	int particles;
+	int init_particles;
+	std::list<double> incubate;
 };
 
 typedef std::list<Particle> particles_t;
@@ -166,6 +175,9 @@ void events()
 
 void step()
 {
+	TIME += DT;
+	INITIAL_SIZE += ENEMY_INIT_RATE * DT;
+
 	for (particles_t::iterator i = PARTICLES.begin(); i != PARTICLES.end();) {
 		bool killparticle = false;
 
@@ -194,6 +206,10 @@ void step()
 				if (newr2 < 0) { kill = true; }
 				else           { j->radius = sqrt(newr2); }
 				j->particles++;
+				j->init_particles++;
+				if (j->incubate.size() < MAX_INCUBATE) {
+					j->incubate.push_back(TIME + DIVIDE_TIME + randrange(-DIVIDE_VAR, DIVIDE_VAR));
+				}
 				killparticle = true;
 			}
 
@@ -202,6 +218,7 @@ void step()
 					vec2 offs(randrange(-1,1), randrange(-1,1));
 					PARTICLES.push_back(Particle(j->pos + offs, 10*offs));
 				}
+				//NPARTICLES += j->particles - j->init_particles;
 				NPARTICLES++;
 				enemies_t::iterator k = j;
 				++j;
@@ -233,6 +250,15 @@ void step()
 			accel += 0.05 * (center - i->pos) * (outside - 36);
 		}
 
+		while (i->incubate.size() && TIME >= i->incubate.front()) {
+			i->incubate.pop_front();
+			i->particles++;
+			i->radius = sqrt(i->radius*i->radius + MASS_PER_PARTICLE);
+			if (i->incubate.size() < MAX_INCUBATE) {
+				i->incubate.push_back(TIME + DIVIDE_TIME + randrange(-DIVIDE_VAR, DIVIDE_VAR));
+			}
+		}
+
 		i->radius = sqrt(i->radius*i->radius + ENEMY_GROW_RATE*DT);
 		i->vel += DT * accel;
 		i->pos += i->vel;
@@ -247,7 +273,7 @@ void step()
 	}
 
 	ENEMY_GROW_RATE += ENEMY_GROW_RATE_RATE*DT;
-	ENEMY_SPAWN_RATE += ENEMY_GROW_RATE_RATE*DT;
+	ENEMY_SPAWN_RATE += ENEMY_SPAWN_RATE_RATE*DT;
 }
 
 int main()
@@ -255,10 +281,9 @@ int main()
 	FrameRateLockTimer timer(DT);
 	srand(time(NULL));
 	init_sdl();
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 3; i++) {
 		PARTICLES.push_back(Particle(vec2(randrange(32,64),randrange(24,48)), vec2(0,0)));
 	}
-	NPARTICLES += 2;
 	float spawn_timer = 3.0/20.0;
 	while (true) {
 		events();
@@ -271,8 +296,7 @@ int main()
 		while (spawn_timer < 0) {
 			double r = TWO_PLAYERS ? 0 : ENEMY_SPAWN_RATE;
 			vec2 speed(randrange(-r,r),randrange(-r,r));
-			ENEMIES.push_back(Enemy(vec2(randrange(16,80),randrange(12,60)), speed, 1.1));
-			ENEMIES.back().particles++;
+			ENEMIES.push_back(Enemy(vec2(randrange(16,80),randrange(12,60)), speed, INITIAL_SIZE));
 			spawn_timer += 1;
 		}
 		

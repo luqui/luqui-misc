@@ -8,23 +8,27 @@
 #include <GL/glu.h>
 #include <list>
 
-const double MOUSE_ATTRACTION = 10;
-const double DAMPING = 0.035;
+const double MOUSE_ATTRACTION = 20;
+const double HISTORY_TIME = 1/30.0;
+const double ATTRACTION = 4;
+const double SPREAD_REPULSION = 10;
+const double DAMPING = 0.015;
 const double ENEMY_DAMPING = 0.1;
 const double POWER = 1;
 const double DIVIDE_TIME = 8;
 const double DIVIDE_VAR = 1;
 const double MASS_PER_PARTICLE = 0.9;
+const double PARTICLE_MOMENTUM = 0.8;
 const int MAX_INCUBATE = 10;
 double ENEMY_GROW_RATE = 0;
-double INITIAL_SIZE = 1.1;
-const double ENEMY_INIT_RATE = 0.003;
-const double ENEMY_GROW_RATE_RATE = 0;
+double INITIAL_SIZE = 1;
+const double ENEMY_INIT_RATE = 0.01;
+const double ENEMY_GROW_RATE_RATE = 0.003;
 double ENEMY_SPAWN_RATE = 0.05;
 const double ENEMY_SPAWN_RATE_RATE = 0.001;
 bool MOUSE_DOWN = false;
-const int HISTORY_SIZE = 10;
-bool TWO_PLAYERS = false;
+bool RIGHT_MOUSE_DOWN = false;
+const int HISTORY_SIZE = 15;
 double TIME = 0;
 
 double DT = 1/30.0;
@@ -35,8 +39,9 @@ vec2 MOUSE;
 
 struct Particle {
 	typedef std::list<vec2> history_t;
-	Particle(vec2 pos, vec2 vel) : pos(pos), vel(vel) { }
+	Particle(vec2 pos, vec2 vel) : pos(pos), vel(vel), last_history(0) { }
 	vec2 pos, vel;
+	double last_history;
 	history_t history;
 };
 
@@ -100,15 +105,19 @@ void draw_score(int score) {
 void draw() 
 {
 	glLoadIdentity();
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glLineWidth(2.0);
 	for (particles_t::iterator i = PARTICLES.begin(); i != PARTICLES.end(); ++i) {
 		glBegin(GL_LINE_STRIP);
-			glColor3f(1,1,1);
+			glColor4f(1,1,1,0.75);
 			glVertex2f(i->pos.x, i->pos.y);
 			float col = 1;
+			float ratio = exp(4.5 / HISTORY_SIZE);
 			for (Particle::history_t::iterator j = i->history.begin(); j != i->history.end(); ++j) {
-				glColor3f(col,10*col,col);
+				glColor4f(col,1,col,0.75*col);
 				glVertex2f(j->x, j->y);
-				col /= 1.5;
+				col /= ratio;
 			}
 		glEnd();
 	}
@@ -143,34 +152,20 @@ void events()
 		if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
 			exit(0);
 		}
+		if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
+			for (particles_t::iterator i = PARTICLES.begin(); i != PARTICLES.end(); ++i) {
+				double scale = ~i->vel * ~(MOUSE - i->pos);
+				if (scale < 0) scale = 0;
+				i->vel = scale * i->vel.norm() * ~(MOUSE - i->pos);
+			}
+		}
 	}
 
 	int x, y;
 	Uint8 buts = SDL_GetMouseState(&x, &y);
 	MOUSE = coord_convert(INIT.pixel_view(), VIEW, vec2(x,y));
 	MOUSE_DOWN = !!(buts & SDL_BUTTON(1));
-
-	Uint8* keys = SDL_GetKeyState(NULL);
-	vec2 vel;
-	double r = ENEMY_SPAWN_RATE;
-	if (keys[SDLK_w]) vel += vec2(0,r);
-	if (keys[SDLK_a]) vel += vec2(-r,0);
-	if (keys[SDLK_s]) vel += vec2(0,-r);
-	if (keys[SDLK_d]) vel += vec2(r,0);
-	if (!TWO_PLAYERS && vel.norm2() > 0) {
-		TWO_PLAYERS = true;
-		for (int i = 0; i < 5; i++) {
-			PARTICLES.push_back(Particle(vec2(randrange(32,64),randrange(24,48)), vec2(0,0)));
-		}
-	}
-	
-	if (TWO_PLAYERS) {
-		for (enemies_t::iterator i = ENEMIES.begin(); i != ENEMIES.end(); ++i) {
-			double rad = i->radius;
-			if (rad < 0.5) rad = 0.5;
-			i->vel += DT*vel/(i->radius*i->radius) - DT * ENEMY_DAMPING * i->vel.norm() * i->vel;
-		}
-	}
+	RIGHT_MOUSE_DOWN = !!(buts & SDL_BUTTON(3));
 }
 
 void step()
@@ -182,15 +177,16 @@ void step()
 		bool killparticle = false;
 
 		vec2 accel;
-		accel = (MOUSE_DOWN ? -1 : 1) * MOUSE_ATTRACTION * ~(MOUSE - i->pos);
+		accel = MOUSE_ATTRACTION * ~(MOUSE - i->pos);
 		
 		for (particles_t::iterator j = PARTICLES.begin(); j != PARTICLES.end(); ++j) {
 			if (i == j) continue;
-			double dist = (i->pos - j->pos).norm();
-			double coef = -1/dist + 1/(dist*dist);
+			double dist1 = 1/(i->pos - j->pos).norm();
+			double coef = dist1*dist1*dist1 - dist1*dist1;
 			if (coef > 100) coef = 100;
 			if (coef < -100) coef = -100;
-			accel += coef * ~(i->pos - j->pos);
+			if (RIGHT_MOUSE_DOWN) coef *= -10/ATTRACTION;
+			accel += ATTRACTION * coef * (i->pos - j->pos)*dist1;
 		}
 
 		const vec2 center(48,36);
@@ -247,7 +243,7 @@ void step()
 		const vec2 center(48,36);
 		double outside = (center - i->pos).norm();
 		if (outside > 36) {
-			accel += 0.05 * (center - i->pos) * (outside - 36);
+			accel += 0.35 * (center - i->pos) * (outside - 36);
 		}
 
 		while (i->incubate.size() && TIME >= i->incubate.front()) {
@@ -261,13 +257,16 @@ void step()
 
 		i->radius = sqrt(i->radius*i->radius + ENEMY_GROW_RATE*DT);
 		i->vel += DT * accel;
-		i->pos += i->vel;
+		i->pos += DT * i->vel;
 	}
 	
 	for (particles_t::iterator i = PARTICLES.begin(); i != PARTICLES.end(); ++i) {
-		i->history.push_front(i->pos);
-		if (i->history.size() > HISTORY_SIZE) {
-			i->history.pop_back();
+		if (TIME >= i->last_history + HISTORY_TIME) {
+			i->history.push_front(i->pos);
+			if (i->history.size() > HISTORY_SIZE) {
+				i->history.pop_back();
+			}
+			i->last_history = TIME;
 		}
 		i->pos += DT * i->vel;
 	}
@@ -278,13 +277,14 @@ void step()
 
 int main()
 {
-	FrameRateLockTimer timer(DT);
+	Timer timer;
 	srand(time(NULL));
 	init_sdl();
 	for (int i = 0; i < 3; i++) {
 		PARTICLES.push_back(Particle(vec2(randrange(32,64),randrange(24,48)), vec2(0,0)));
 	}
 	float spawn_timer = 3.0/20.0;
+	timer.init();
 	while (true) {
 		events();
 		step();
@@ -294,12 +294,13 @@ int main()
 		
 		spawn_timer -= ENEMY_SPAWN_RATE*DT;
 		while (spawn_timer < 0) {
-			double r = TWO_PLAYERS ? 0 : ENEMY_SPAWN_RATE;
+			double r = 30 * ENEMY_SPAWN_RATE;
 			vec2 speed(randrange(-r,r),randrange(-r,r));
-			ENEMIES.push_back(Enemy(vec2(randrange(16,80),randrange(12,60)), speed, INITIAL_SIZE));
+			ENEMIES.push_back(Enemy(vec2(randrange(16,80),randrange(12,60)), speed, sqrt(INITIAL_SIZE)));
 			spawn_timer += 1;
 		}
 		
-		timer.lock();
+		DT = timer.get_time_diff();
+		if (DT > 1/15.0) DT = 1/15.0;
 	}
 }

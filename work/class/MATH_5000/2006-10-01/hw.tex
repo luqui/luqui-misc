@@ -1,0 +1,181 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{empheq}
+
+\DeclareMathOperator{\rng}{rng}
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\wcard}{card}
+
+\newcommand{\card}[1]{\bar{\bar{#1}}}
+\newcommand{\power}[1]{\mathscr{P}(#1)}
+\newcommand{\functionsof}[2]{\;^{#1}\!#2}
+
+\newtheorem*{lemma*}{Lemma}
+\newtheorem*{theorem*}{Theorem}
+
+\begin{document}
+\noindent Luke Palmer \\
+MATH 5000 \\
+2006-10-01
+
+\begin{description}
+\item[(1)] To define the transitive closure $TC(x)$, define recursively
+$g(0) = x$, $g(n+1) = \cup g(n)$ and then take $TC(x)$ = $\bigcup\limits_{n
+< \omega}{g(n)}$.
+
+\begin{theorem*}
+$TC(x)$ is transitive.
+\end{theorem*}
+\begin{proof}
+Given $b \in a \in TC(x)$.  Then there must be a least $n$ where $a \in
+g(n)$.  $b \in \cup g(n) = g(n+1)$, so $b \in \bigcup\limits_{n <
+\omega}{g(n)} = TC(x)$.
+\end{proof}
+
+\begin{theorem*}
+If $Y$ is a transitive set and $X \subseteq Y$, then $TC(X) \subseteq
+Y$.
+\end{theorem*}
+\begin{proof}
+$g(0) = X \subseteq Y$.  Suppose $g(n) \subseteq Y$.  Let $x \in
+g(n+1)$.  Since $g(n+1) = \cup g(n)$, there is a $x' \in g(n)$ such that
+$x \in x'$.  However, $x' \in Y$, and since $Y$ is transitive, $x \in
+Y$. 
+
+So all $g(n) \subseteq Y$, so their union $\subseteq Y$.
+\end{proof}
+
+\item[(2)] For every ordinal $\alpha$, $\alpha \in V_{\alpha+1} - V_\alpha$.
+\begin{proof}
+Suppose that for every ordinal $\gamma < \alpha$, $\gamma \in
+V_{\gamma+1} - V_\gamma$.
+
+\begin{description}
+\item[Case 0:] $\alpha = 0$.  Obvious.
+\item[Case 1:] $\alpha = \beta+1 = \beta \cup \{\beta\}$.  $\beta \in
+  V_{\beta+1} - V_\beta$.  $\alpha \in V_{\alpha+1}$ because $\beta, \{\beta\}
+  \in V_{\alpha} \cup \power{V_{\alpha}} = V_{\alpha+1}$.  
+  
+  $\alpha \not\in V_{\alpha}$ because $\beta \not\in V_\beta$, so
+  $\{\beta\} \not\in V_{\beta+1} = V_{\alpha}$.
+\item[Case 2:] $\alpha$ is a limit ordinal.  $V_\alpha =
+\bigcup\limits_{\gamma < \alpha}{V_\gamma}$, and and each $\gamma$ is in
+$V_{\gamma+1}$, so $\alpha \subseteq V_\alpha$.  Therefore, $\alpha \in
+V_{\alpha+1}$.  
+
+Suppose $\alpha \in V_\alpha$.  Then there must be some $\gamma <
+\alpha$ such that $\alpha \in V_\gamma$.  However, $\gamma \not\in
+V_\gamma$, contradicting $\gamma \in \alpha$.  So $\alpha \not\in
+V_\alpha$.
+\end{description}
+\end{proof}
+
+\item[(3)]
+\begin{theorem*}
+  $AC \Leftrightarrow$ Given $P$ a partition of $A$, there is a subset
+  $X$ of $A$ such that each $x \cap X$ for $x \in P$ is a singleton.
+\end{theorem*}
+
+\begin{proof}
+\begin{description}
+\item[$\Rightarrow$] Pick a choice function $f$ on $P$.  Then define $X
+= \rng{f}$.  It is easy to see that this satifies the conditions.
+\item[$\Leftarrow$] Given a collection of nonempty sets $\mathscr{A}$.
+\textit{Wlg} assume they are disjoint.  Then $\mathscr{A}$ is a
+partition of $\cup \mathscr{A}$, so there is an $X \subseteq \cup
+\mathscr{A}$ such that each $x \cap X$ for $x \in \mathscr{A}$ is a
+singleton.  Then $f(x) = \cup(x \cap X)$ is a choice function on
+$\mathscr{A}$.
+\end{description}
+\end{proof}
+
+\begin{theorem*}
+  For any two sets $A$ and $B$, the following are equivalent to the
+  axiom of choice:  
+    
+	(i) Either there is a function $A \xmapsto{1-1} B$ or there
+	is a function $B \xmapsto{1-1} A$.
+	
+	(ii) Either there is a function $A \xmapsto{onto} B$ or there
+	is a function $B \xmapsto{onto} A$.
+\end{theorem*}
+\begin{proof}
+ \begin{description}
+ \item[(i) $\Rightarrow$ (ii):]  
+ Assume \textit{wlg} that there is an $f: A \xmapsto{1-1} B$.  Since $f$
+ is 1-1, there is a function $f^{-1}$, which is obviously onto $A$,
+ because $A$ was $f$'s domain.
+ 
+ \item[(ii) $\!\wedge\, AC \Rightarrow$ (i):]
+ Assume \textit{wlg} that there is an $f: A \xmapsto{onto} B$.  Then
+ $f^{-1}$ is a relation with domain $B$.  Pick a choice function $c$ on
+ $\power{A}-\{0\}$.  Define $g: B \mapsto A$ by $g(x) =
+ c(f^{-1}[\{x\}])$.  $g(b) = g(b') \Rightarrow f(g(b)) = f(g(b'))
+ \Rightarrow b = b'$, so $g$ is 1-1.
+ 
+ \item[$AC \Rightarrow$ (ii):] Fix a well-ordering $<_A$ for $A$ and
+ $<_B$ for $B$.  Let $a: A \mapsto \alpha$ be the isomorphism from
+ $(A,<_A)$ to its unique ordinal $\alpha$.  Likewise $b: B \mapsto
+ \beta$.  Assume \textit{wlg} $\alpha \le \beta$.  Define $f: B \mapsto
+ A$ by $f(x) = a^{-1}(b(x))$ whenever $b(x) < \alpha$, and $f(x) = a'$
+ otherwise, where $a'$ some constant member of $A$.  $f$ is onto $A$.
+ 
+ \item[(ii) $\Rightarrow AC$:] Given any set $A$, let $\alpha$ be its
+ Hartog ordinal.  So there is no map from $A$ onto $\alpha$, so there
+ must (by \textit{(ii)}) be a function $f: \alpha \xmapsto{onto} A$.
+ Now define $g: A \mapsto \alpha$ by $g(x) = $ the least ordinal $\beta$
+ such that $f(\beta) = x$.  Then $(A,<_A)$ where $a <_A b$ iff $f(a) <
+ f(b)$ is a well-ordering of $A$.
+ \end{description}
+\end{proof}
+
+\begin{theorem*}
+  $AC \Leftrightarrow$ Every linearly ordered subset $L$ of a poset $P$
+  can be extended to a maximal $L' \supseteq L$ subset of $P$ which is
+  linearly ordered.
+\end{theorem*}
+
+\begin{proof}
+\begin{description}
+\item[$\Rightarrow$] Let $\mathscr{L}$ be the set of all linear
+orderings of $P$, and order the orderings by $\subset$.  Every
+linearly-ordered (by $\subset$) $L \subseteq \mathscr{L}$ has an upper
+bound, namely $\cup L$ (which also must be linearly ordered, thus in
+$\mathscr{L}$).  By Zorn's lemma, there is a maximal linear ordering
+$L'$ in $\mathscr{L}$, i.e. $L' \supseteq L$ for all $L \in \mathscr{L}$.
+\item[$\Leftarrow$] (By showing $\Rightarrow$ (i) above)  Given $A$ and
+$B$, let $P$ be the set of all 1-1 function subsets of $A \times B$,
+with $f < g$ iff $f \subset g$.  Then, since the empty set is a linear
+ordering, there is a maximal linearly-ordered subset $L' \subset P$.
+$f = \cup L'$ is a 1-1 function either from $A$ to $B$ or vice versa.  If
+its domain weren't (\textit{wlg}) $A$, then we could pick $a \in A -
+\dom f$ and $b \in B - \rng f$ and add $\langle a,b \rangle$ to the
+ordering, contradicting $L'$'s maximality.\footnote{This one is very
+fuzzy, and I'm not sure if I have succeeded in proving this.  I think
+the idea of what to do with the ``maximal linear ordering'' has me
+confused.}
+\end{description}
+\end{proof}
+
+
+\begin{theorem*}
+  $AC \Leftrightarrow$ for any $A$, there is a function $f$ with domain
+  $\power{A}-\{0\}$ such that $f(x) \in x$.
+\end{theorem*}
+\begin{proof}
+\begin{description}
+\item[$\Rightarrow$] Let $f$ be a choice function on
+$\power{A}-\{0\}$
+\item[$\Leftarrow$]  Given a collection of nonempty sets $\mathscr{A}$.
+Let $A = \cup\mathscr{A}$, so that $\mathscr{A} \subseteq \power{A}$.
+Then there is an $f$ from above, so we can construct a choice function
+on $\mathscr{A}$ by $f \upharpoonright \mathscr{A}$.
+\end{description}
+\end{proof}
+\end{description}
+
+\end{document}

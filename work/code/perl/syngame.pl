@@ -112,6 +112,11 @@ GAME: while (1) {
 			system "dict '$_'";
 			next;
 		}
+
+		if (/^_*(.*?)_*\*_*(.*?)_*$/) {
+			print "Shared synonyms of $1 and $2: " . (synset($1) * synset($2)) . "\n\n";
+			next;
+		}
 		
 		print "Synonyms of $_: " . (synset($_) - $_) . "\n\n";
 		my $c = connect_in(\%data, $_);

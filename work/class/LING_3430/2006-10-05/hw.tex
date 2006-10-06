@@ -1,0 +1,134 @@
+\documentclass[12pt]{article}
+
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+
+\lhead[\fancyplain]{Luke Palmer}
+\chead[\fancyplain]{2006-10-05}
+\rhead[\fancyplain]{LING 3430}
+\pagestyle{fancyplain}
+
+\newcommand{\true}{\mathbf{T}}
+\newcommand{\false}{\mathbf{F}}
+\newcommand{\reduc}{\;\vdash\;}
+
+\begin{document}
+\section*{4.3}
+(I'll use $\vdash$ to indicate reduction steps)
+\begin{description}
+\item[S1] 
+ \begin{gather*}
+   \neg (p \vee q) \reduc \neg (\true \vee \false)
+    \reduc \neg \true \reduc \false \\
+   \neg p \vee q \reduc \neg \true \vee \false
+    \reduc \false \vee \false \reduc \false
+ \end{gather*}
+\item[S2]
+ \begin{gather*}
+  \neg (p \vee q) \reduc \neg (\true \vee \true)
+   \reduc \neg \true \reduc \false \\
+  \neg p \vee q \reduc \neg \true \vee \true
+   \reduc \false \vee \true \reduc \true
+ \end{gather*}
+\item[S3]
+ \begin{gather*}
+  \neg (p \vee q) \reduc \neg (\false \vee \true)
+   \reduc \neg \true \reduc \false \\
+  \neg p \vee q \reduc \neg \false \vee \true
+   \reduc \true \vee \true \reduc \true
+ \end{gather*}
+\end{description}
+
+\section*{4.5}
+\begin{description}
+\item[a.] ``The train will either arrive or it won't arrive.'' This is
+not analytically true; it is a logical tautology (of the form $p \vee
+\neg p$).
+\item[b.] ``If it rains, we'll get wet.''  I think this has to be
+synthetic, because the speaker could be holding an umbrella, which would
+make the statement false.
+\item[c.] ``Every doctor is a doctor.''  Though Saeed's discussion
+classified ``my father is my father'' as analytic, I tend to disagree.
+I'd say this is a tautology.  Denote ``$x$ is a doctor'' by $p(x)$.
+Then this statement is of the form $\forall x. p(x) \Rightarrow p(x)$,
+which is a logical tautology; i.e. it holds no matter what $p$ means.
+If I understood the discussion correctly, analytic truths are
+tautological only once you incorporate the meanings of the words.
+\item[d.] ``If albert killed a deer, then Albert killed an animal.''
+Finally, this is analytic, because in our language, a deer is an animal,
+so this statement must be true (but only after knowing the relationship
+between deer and animal).
+\item[e.] ``Madrid is the captial of Spain.'' This is synthetic, as it
+is concievable that Madrid could, one day, not be the capital of Spain
+anymore.
+\item[f.] ``Every city has pollution problems.''  This is synthetic, as
+it may not even be true right now.
+\end{description}
+
+\section*{4.6}
+\begin{description}
+\item[1.] $a$ entails $b$, because ``passed'' and ``failed'' are simple
+antonyms (i.e. ``passed'' is the same as ``didn't fail'').
+\item[2.] $a$ entails $b$, because, well, of the relationship between
+the words ``inherit'' and ``own''.
+\item[3.] $a$ does not entail $b$, since Cassidy could have sold the
+farm.
+\item[4.] $a$ entails $b$ (under the assumption that the word ``poison''
+implies ``kill'', rather than just ``make sick'' or something).
+\item[5.] $a$ entails $b$, since $b$ is just the passive construction of
+$a$ (thus $b$ entails $a$ also).
+\item[6.] $a$ does not entail $b$, because if nobody liked the show,
+then it is still true that ``not everyone'' liked the show.
+\end{description}
+
+Um, how were we supposed to use the composite truth table for those?
+
+\section*{4.7}
+\begin{description}
+\item[announce] Factive: ``he announced that \#4 took the lead'' and ``he
+didn't announce that \#4 took the lead'' both presuppose that ``\#4 took
+the lead'' (this is arguable, because just because something is
+announced does not make it true).
+\item[assume] Not factive: ``she assumed that armageddon was not
+coming'' does not presuppose that ``armageddon was not coming''.
+\item[be] Not factive.
+\item[aware] Factive:  ``he was aware that she had been crying'' and
+``he was not aware that she had been crying'' both presuppose that ``she
+had been crying''.
+\item[believe] Not factive.  Neither ``John believes that aliens exist''
+nor ``John doesn't believe that aliens exist'' presuppose that ``aliens
+exist''.
+\item[be fearful] Hmmm, not factive, I think.  ``Sue was fearful of
+aliens coming'' does not presuppose that aliens were coming.
+\item[be glad] Factive.  ``Jamie was glad that it was christmas'' and
+``Jamie was not glad that it was christmas'' both presuppose that it was
+christmas.
+\item[be sorry] Factive.  Use the same sentence as above.\footnote{Yeah,
+I'm lazy, I know.}
+\item[be worried] Not factive.  ``Paul was worried that the red coats
+were coming'' does not presuppose that they were coming.
+\item[know] Factive.  ``Daniel knew that there was a blue horse'' and
+``Daniel didn't know that there was a blue horse'' both presuppose that
+``there was a blue horse''.
+\item[reason] Factive.  That is arguable, because ``Willard Quine
+reasoned that `this statement is false' must be false'' doesn't
+presuppose that what he reasoned was true, only that he reasoned it.
+\item[reported] Factive.  ``Jimmy reported that the ant colony had
+grown'' and ``Jimmy did not report that the ant colony had grown'' both
+presuppose that ``the ant colony had grown''.
+\end{description}
+
+\section*{4.8}
+The following will be the reasoning, so I don't have to monotonously
+repeat it.  If I say ``presuppose'', then I negated the sentence and $b$
+was still true.  If I say ``entail'', then I negated the sentence and
+$b$ did not necessarily follow anymore.
+
+\begin{description}
+\item[1.] Presuppose.
+\item[2.] Entail.
+\item[3.] Presuppose.
+\item[4.] Entail.
+\item[5.] Presuppose.
+\end{description}
+\end{document}

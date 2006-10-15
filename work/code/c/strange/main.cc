@@ -1,22 +1,92 @@
 #include <SDL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <SDL_mixer.h>
+#include <fftw3.h>
 #include <stdlib.h>
 #include <map>
 #include <cstdlib>
 #include <cmath>
 #include <iostream>
+#include <soy/Timer.h>
+
+const int NBUFS = 32;
+const int SAMPLES = 65536;
+
+Mix_Chunk* CHANS[NBUFS];
+Sint16* BUFS[NBUFS];
+
+SDL_AudioSpec AUDIO;
+fftw_complex* fourier;
+fftw_complex* tmpfourier;
+fftw_complex* tmpaudio;
+double* audio;
+fftw_plan PLAN;
+
+int CURBUF = 0;
+
+void channel_finished(int channel) {
+	Mix_FreeChunk(CHANS[channel]);
+	fftw_free(BUFS[channel]);
+}
+
+void gensound() {
+	fftw_execute(PLAN);
+
+	for (int i = 0; i < SAMPLES; i++) {
+		audio[i] = tmpaudio[i][0];
+	}
+
+	double max = 0;
+	for (int i = 0; i < SAMPLES; i++) {
+		double samp = audio[i];
+		if (fabs(samp) > max) max = fabs(samp);
+	}
+
+	Sint16* stream = (Sint16*)fftw_malloc(sizeof(Sint16) * SAMPLES);
+	double scale = max > 1.0/NBUFS ? 1.0 / NBUFS / max : 1;
+	for (int i = 0; i < SAMPLES; i++) {
+		double samp = audio[i];
+		double fade = i < 300 ? i / 300.0 : 1;
+		stream[i] = Sint16(((1<<15)-1)*scale*fade*samp);
+	}
+
+	Mix_Chunk* chunk = Mix_QuickLoad_RAW((Uint8*)stream, sizeof(Sint16)*SAMPLES);
+	int chan = Mix_PlayChannel(-1, chunk, 0);
+	Mix_FadeOutChannel(chan, 1000);
+	CHANS[chan] = chunk;
+	BUFS[chan] = stream;
+}
 
 void init_sdl()
 {
-	SDL_Init(SDL_INIT_VIDEO);
-	SDL_SetVideoMode(1280,1024,0,SDL_OPENGL | SDL_FULLSCREEN);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+	SDL_SetVideoMode(1024,768,0,SDL_OPENGL | SDL_FULLSCREEN);
 	SDL_ShowCursor(0);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-2,2,-1.5,1.5);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	int retval = Mix_OpenAudio(44100, AUDIO_S16SYS, 1, SAMPLES/NBUFS);
+	if (retval < 0) {
+		std::cerr << "Couldn't open audio driver: " << SDL_GetError() << "\n";
+		SDL_Quit();
+		exit(1);
+	}
+
+	Mix_AllocateChannels(NBUFS);
+	Mix_ChannelFinished(&channel_finished);
+
+	fourier    = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * SAMPLES);
+	tmpfourier = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * SAMPLES);
+	tmpaudio   = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * SAMPLES);
+	audio      = (double*)fftw_malloc(sizeof(double) * SAMPLES);
+
+	PLAN = fftw_plan_dft_1d(SAMPLES, fourier, tmpaudio, FFTW_BACKWARD, FFTW_ESTIMATE);
 }
 
 float P[10];
@@ -36,10 +106,13 @@ void reset() {
 	}
 }
 
+bool MOVED = false;
+
 void events()
 {
 	SDL_Event e;
 	SDLMod mods = SDL_GetModState();
+	MOVED = false;
 	while (SDL_PollEvent(&e)) {
 		if (e.type == SDL_MOUSEMOTION) {
 			Uint8* keys = SDL_GetKeyState(NULL);
@@ -57,11 +130,13 @@ void events()
 
 			for (paramcoord_t::iterator i = PARAMX.begin(); i != PARAMX.end(); ++i) {
 				if (keys[i->first]) {
+					MOVED = true;
 					P[i->second] += PA[i->second]*dxf;
 				}
 			}
 			for (paramcoord_t::iterator i = PARAMY.begin(); i != PARAMY.end(); ++i) {
 				if (keys[i->first]) {
+					MOVED = true;
 					P[i->second] += PA[i->second]*dyf;
 				}
 			}
@@ -100,25 +175,52 @@ void drift(float amt)
 void set_palette(float phase)
 {
 	phase += offset;
-	glColor3f(
+	glColor4f(
 			0.5*sin(2*M_PI*phase)+0.5,
 			0.5*cos(5*M_PI*phase)+0.5,
-			0.5*sin(11*M_PI*phase)+0.5);
+			0.5*sin(11*M_PI*phase)+0.5,
+			0.4);
 }
 
 void draw_attractor(float x, float y)
 {
+	for (int i = 0; i < SAMPLES; i++) {
+		tmpfourier[i][0] = tmpfourier[i][1] = 0;
+	}
+	
 	glPointSize(2.0);
 	glBegin(GL_POINTS);
+	glColor4f(1,0,0,0.6);
+	glVertex2f(0,0);
 	for (int i = 0; i < iters; i++) {
 		float nx = P[0] - y*(P[1] * x*x + P[2] * x*y + P[3] * y*y + P[4] * x*x*y);
 		float ny = P[5] + x*(P[6] * x*x + P[7] * x*y + P[8] * y*y + P[9] * y*y*x);
 		x = nx;
 		y = ny;
+		do {
+			float fx = x/4, fy = y/3;
+			float r = sqrt(fx*fx + fy*fy);
+			if (r >= 1 || !std::isfinite(r)) break;
+			tmpfourier[int(r*SAMPLES)/10][0] += 0.01*cos(2*M_PI*i/iters);
+			tmpfourier[int(r*SAMPLES)/10][1] += 0.01*sin(2*M_PI*i/iters);
+		} while (false);
+
 		set_palette(float(i)/iters);
 		glVertex2f(x,y);
 	}
 	glEnd();
+	
+	for (int i = 0; i < SAMPLES; i++) {
+		float mag = sqrt(tmpfourier[i][0]*tmpfourier[i][0] + tmpfourier[i][1]*tmpfourier[i][1]);
+		float newmag = log(mag+1);
+		float scale = mag > 0 ? newmag/mag : 0;
+		fourier[i][0] *= 0;
+		fourier[i][1] *= 0;
+		if (MOVED) {
+			fourier[i][0] += tmpfourier[i][0]*scale;
+			fourier[i][1] += tmpfourier[i][1]*scale;
+		}
+	}
 }
 
 void draw()
@@ -137,6 +239,7 @@ void draw()
 
 int main()
 {
+	Timer timer;
 	std::cout << "Initing\n";
 	init_sdl();
 	std::cout << "Inited\n";
@@ -151,13 +254,22 @@ int main()
 	PARAMX[SDLK_g] = 4;
 	PARAMY[SDLK_g] = 9;
 	reset();
+	SDL_PauseAudio(0);
+
+	float time = 0.05;
+	timer.init();
 	while(true) {
 		events();
-//		drift(0.0002);
 		offset += 0.00002;
 		glClear(GL_COLOR_BUFFER_BIT);
 		draw();
 		SDL_GL_SwapBuffers();
+		
+		time -= timer.get_time_diff();
+		if (time < 0) {
+			gensound();
+			time = 0.05;
+		}
 	}
 	SDL_Quit();
 }

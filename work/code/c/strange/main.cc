@@ -44,18 +44,23 @@ void gensound() {
 	}
 
 	Sint16* stream = (Sint16*)fftw_malloc(sizeof(Sint16) * SAMPLES);
-	double scale = max > 1.0/NBUFS ? 1.0 / NBUFS / max : 1;
+	double scale = max > 0.9/NBUFS ? (0.9 / NBUFS) / max : 1;
 	for (int i = 0; i < SAMPLES; i++) {
 		double samp = audio[i];
-		double fade = i < 300 ? i / 300.0 : 1;
-		stream[i] = Sint16(((1<<15)-1)*scale*fade*samp);
+		double fadein = i < 300 ? i/300.0 : 1;
+		double fadeout = i > SAMPLES/2 ? double(SAMPLES-i)/(SAMPLES/2) : 1;
+		stream[i] = Sint16(((1<<15)-1)*scale*fadein*fadeout*samp);
 	}
 
 	Mix_Chunk* chunk = Mix_QuickLoad_RAW((Uint8*)stream, sizeof(Sint16)*SAMPLES);
 	int chan = Mix_PlayChannel(-1, chunk, 0);
-	Mix_FadeOutChannel(chan, 1000);
-	CHANS[chan] = chunk;
-	BUFS[chan] = stream;
+	if (chan >= 0) {
+		CHANS[chan] = chunk;
+		BUFS[chan] = stream;
+	}
+	else {
+		fftw_free(stream);
+	}
 }
 
 void init_sdl()
@@ -106,13 +111,14 @@ void reset() {
 	}
 }
 
-bool MOVED = false;
+bool PLAY = false;
+bool WILLPLAY = false;
+bool SUSTAIN = false;
 
 void events()
 {
 	SDL_Event e;
 	SDLMod mods = SDL_GetModState();
-	MOVED = false;
 	while (SDL_PollEvent(&e)) {
 		if (e.type == SDL_MOUSEMOTION) {
 			Uint8* keys = SDL_GetKeyState(NULL);
@@ -130,13 +136,11 @@ void events()
 
 			for (paramcoord_t::iterator i = PARAMX.begin(); i != PARAMX.end(); ++i) {
 				if (keys[i->first]) {
-					MOVED = true;
 					P[i->second] += PA[i->second]*dxf;
 				}
 			}
 			for (paramcoord_t::iterator i = PARAMY.begin(); i != PARAMY.end(); ++i) {
 				if (keys[i->first]) {
-					MOVED = true;
 					P[i->second] += PA[i->second]*dyf;
 				}
 			}
@@ -156,7 +160,23 @@ void events()
 				iters *= 2;
 			}
 		}
+		if (e.type == SDL_MOUSEBUTTONDOWN) {
+			if (e.button.button == SDL_BUTTON_LEFT) {
+				WILLPLAY = true;
+			}
+		}
 	}
+
+	int buts = SDL_GetMouseState(0, 0);
+	if (buts & SDL_BUTTON(1)) {
+		PLAY = true;
+	}
+	else {
+		PLAY = false;
+	}
+
+	Uint8* keys = SDL_GetKeyState(NULL);
+	SUSTAIN = keys[SDLK_SPACE];
 }
 
 float randrange(float a, float b)
@@ -199,14 +219,17 @@ void draw_attractor(float x, float y)
 		y = ny;
 		do {
 			float fx = x/4, fy = y/3;
-			float r = sqrt(fx*fx + fy*fy);
+			float r = log(sqrt(fx*fx + fy*fy)+1);
 			if (r >= 1 || !std::isfinite(r)) break;
-			tmpfourier[int(r*SAMPLES)/10][0] += 0.01*cos(2*M_PI*i/iters);
-			tmpfourier[int(r*SAMPLES)/10][1] += 0.01*sin(2*M_PI*i/iters);
+			float mag = r > 0.2 ? 0.2/r : 1;
+			tmpfourier[int(r*SAMPLES)/10][0] += 0.01*mag*cos(2*M_PI*i/iters);
+			tmpfourier[int(r*SAMPLES)/10][1] += 0.01*mag*sin(2*M_PI*i/iters);
 		} while (false);
 
 		set_palette(float(i)/iters);
-		glVertex2f(x,y);
+		float rad = sqrt(x*x+y*y);
+		float newrad = log(rad+1);
+		glVertex2f(newrad * x/rad, newrad * y/rad);
 	}
 	glEnd();
 	
@@ -214,9 +237,16 @@ void draw_attractor(float x, float y)
 		float mag = sqrt(tmpfourier[i][0]*tmpfourier[i][0] + tmpfourier[i][1]*tmpfourier[i][1]);
 		float newmag = log(mag+1);
 		float scale = mag > 0 ? newmag/mag : 0;
-		fourier[i][0] *= 0;
-		fourier[i][1] *= 0;
-		if (MOVED) {
+		if (SUSTAIN) {
+			fourier[i][0] *= 0.99;
+			fourier[i][1] *= 0.99;
+		}
+		else {
+			fourier[i][0] *= 0;
+			fourier[i][1] *= 0;
+		}
+		if (PLAY || WILLPLAY) {
+			WILLPLAY = false;
 			fourier[i][0] += tmpfourier[i][0]*scale;
 			fourier[i][1] += tmpfourier[i][1]*scale;
 		}

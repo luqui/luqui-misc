@@ -227,9 +227,12 @@ void draw_attractor(float x, float y)
 		} while (false);
 
 		set_palette(float(i)/iters);
+		/*
 		float rad = sqrt(x*x+y*y);
 		float newrad = log(rad+1);
 		glVertex2f(newrad * x/rad, newrad * y/rad);
+		*/
+		glVertex2f(x,y);
 	}
 	glEnd();
 	

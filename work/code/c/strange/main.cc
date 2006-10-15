@@ -94,11 +94,11 @@ void init_sdl()
 	PLAN = fftw_plan_dft_1d(SAMPLES, fourier, tmpaudio, FFTW_BACKWARD, FFTW_ESTIMATE);
 }
 
-float P[10];
-const float PM[10] = { 0, 1.5, 0, .5, 1.5,
-					   0, 1.5, 0, .5, 1.5 };
-const float PA[10] = { 2.0, 3.5, 3.5, 2.5, 4.7,
-					   1.5, 3.5, 3.6, 2.5, 4.7 };
+float P[12];
+const float PM[12] = { 0, 1.5, 0, .5, 1.5,
+					   0, 1.5, 0, .5, 1.5, 0, 0 };
+const float PA[12] = { 2.0, 3.5, 3.5, 2.5, 4.7,
+					   1.5, 3.5, 3.6, 2.5, 4.7, 2.0, 2.0 };
 int iters = 10000;
 float offset = 0;
 typedef std::map<SDLKey, int> paramcoord_t;
@@ -106,7 +106,7 @@ paramcoord_t PARAMX;
 paramcoord_t PARAMY;
 
 void reset() {
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 12; i++) {
 		P[i] = PM[i];
 	}
 }
@@ -202,12 +202,31 @@ void set_palette(float phase)
 			0.4);
 }
 
+void draw_circle(float rad) {
+	glBegin(GL_LINE_LOOP);
+	for (int i = 0; i < 48; i++) {
+		float theta =  2*M_PI*i/48;
+		glVertex2f(rad*cos(theta), rad*sin(theta));
+	}
+	glEnd();
+}
+
 void draw_attractor(float x, float y)
 {
 	for (int i = 0; i < SAMPLES; i++) {
 		tmpfourier[i][0] = tmpfourier[i][1] = 0;
 	}
 	
+	glColor4f(0,0,1,0.3);
+	double a440 = 1.1;
+	double octave = log(2)/2;
+	draw_circle(a440);
+	draw_circle(a440-octave);
+	draw_circle(a440-2*octave);
+	draw_circle(a440-3*octave);
+	draw_circle(a440+octave);
+	draw_circle(a440+2*octave);
+
 	glPointSize(2.0);
 	glBegin(GL_POINTS);
 	glColor4f(1,0,0,0.6);
@@ -218,12 +237,17 @@ void draw_attractor(float x, float y)
 		x = nx;
 		y = ny;
 		do {
-			float fx = x/4, fy = y/3;
-			float r = log(sqrt(fx*fx + fy*fy)+1);
+			float fx = x + P[10], fy = y + P[11];
+			float r = exp(2*sqrt(fx*fx + fy*fy));
+			r /= 450;
 			if (r >= 1 || !std::isfinite(r)) break;
-			float mag = r > 0.2 ? 0.2/r : 1;
-			tmpfourier[int(r*SAMPLES)/10][0] += 0.01*mag*cos(2*M_PI*i/iters);
-			tmpfourier[int(r*SAMPLES)/10][1] += 0.01*mag*sin(2*M_PI*i/iters);
+			float mag = 0.02/r;
+			tmpfourier[int(r*SAMPLES)][0] += 0.01*mag*cos(M_PI*i/iters);
+			tmpfourier[int(r*SAMPLES)][1] += 0.01*mag*sin(M_PI*i/iters);
+			/*
+			tmpfourier[int(r*SAMPLES)][0] += 0.01*mag*fx/r;
+			tmpfourier[int(r*SAMPLES)][1] += 0.01*mag*fy/r;
+			*/
 		} while (false);
 
 		set_palette(float(i)/iters);
@@ -232,7 +256,7 @@ void draw_attractor(float x, float y)
 		float newrad = log(rad+1);
 		glVertex2f(newrad * x/rad, newrad * y/rad);
 		*/
-		glVertex2f(x,y);
+		glVertex2f(x + P[10], y + P[11]);
 	}
 	glEnd();
 	
@@ -286,6 +310,8 @@ int main()
 	PARAMY[SDLK_f] = 8;
 	PARAMX[SDLK_g] = 4;
 	PARAMY[SDLK_g] = 9;
+	PARAMX[SDLK_z] = 10;
+	PARAMY[SDLK_z] = 11;
 	reset();
 	SDL_PauseAudio(0);
 

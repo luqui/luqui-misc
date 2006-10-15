@@ -242,12 +242,13 @@ void draw_attractor(float x, float y)
 			r /= 450;
 			if (r >= 1 || !std::isfinite(r)) break;
 			float mag = 0.02/r;
+			/*
 			tmpfourier[int(r*SAMPLES)][0] += 0.01*mag*cos(M_PI*i/iters);
 			tmpfourier[int(r*SAMPLES)][1] += 0.01*mag*sin(M_PI*i/iters);
-			/*
+			*/
 			tmpfourier[int(r*SAMPLES)][0] += 0.01*mag*fx/r;
 			tmpfourier[int(r*SAMPLES)][1] += 0.01*mag*fy/r;
-			*/
+			
 		} while (false);
 
 		set_palette(float(i)/iters);
@@ -262,7 +263,7 @@ void draw_attractor(float x, float y)
 	
 	for (int i = 0; i < SAMPLES; i++) {
 		float mag = sqrt(tmpfourier[i][0]*tmpfourier[i][0] + tmpfourier[i][1]*tmpfourier[i][1]);
-		float newmag = log(mag+1);
+		float newmag = log(log(mag+1)+1);
 		float scale = mag > 0 ? newmag/mag : 0;
 		if (SUSTAIN) {
 			fourier[i][0] *= 0.99;

@@ -211,6 +211,18 @@ void draw_circle(float rad) {
 	glEnd();
 }
 
+void draw_keys(float rad, float octave) {
+	glColor4f(0,0,1,0.3);
+	draw_circle(rad);
+	glColor4f(1,0,0,0.15);
+	draw_circle(rad+2*octave/12);
+	draw_circle(rad+4*octave/12);
+	draw_circle(rad+5*octave/12);
+	draw_circle(rad+7*octave/12);
+	draw_circle(rad+9*octave/12);
+	draw_circle(rad+11*octave/12);
+}
+
 void draw_attractor(float x, float y)
 {
 	for (int i = 0; i < SAMPLES; i++) {
@@ -220,12 +232,12 @@ void draw_attractor(float x, float y)
 	glColor4f(0,0,1,0.3);
 	double a440 = 1.1;
 	double octave = log(2)/2;
-	draw_circle(a440);
-	draw_circle(a440-octave);
-	draw_circle(a440-2*octave);
-	draw_circle(a440-3*octave);
-	draw_circle(a440+octave);
-	draw_circle(a440+2*octave);
+	draw_keys(a440, octave);
+	draw_keys(a440-octave, octave);
+	draw_keys(a440-2*octave, octave);
+	draw_keys(a440-3*octave, octave);
+	draw_keys(a440+octave, octave);
+	draw_keys(a440+2*octave, octave);
 
 	glPointSize(2.0);
 	glBegin(GL_POINTS);

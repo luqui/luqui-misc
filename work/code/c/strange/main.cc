@@ -212,13 +212,15 @@ void draw_circle(float rad) {
 }
 
 void draw_keys(float rad, float octave) {
-	glColor4f(0,0,1,0.3);
+	glColor4f(0,1,1,0.15);
 	draw_circle(rad);
-	glColor4f(1,0,0,0.15);
+	glColor4f(1,0,0,0.10);
 	draw_circle(rad+2*octave/12);
 	draw_circle(rad+4*octave/12);
 	draw_circle(rad+5*octave/12);
+	glColor4f(1,0,0,0.15);
 	draw_circle(rad+7*octave/12);
+	glColor4f(1,0,0,0.10);
 	draw_circle(rad+9*octave/12);
 	draw_circle(rad+11*octave/12);
 }
@@ -248,6 +250,9 @@ void draw_attractor(float x, float y)
 		float ny = P[5] + x*(P[6] * x*x + P[7] * x*y + P[8] * y*y + P[9] * y*y*x);
 		x = nx;
 		y = ny;
+
+		if (i < 30) continue;
+		
 		do {
 			float fx = x + P[10], fy = y + P[11];
 			float r = exp(2*sqrt(fx*fx + fy*fy));
@@ -275,7 +280,7 @@ void draw_attractor(float x, float y)
 	
 	for (int i = 0; i < SAMPLES; i++) {
 		float mag = sqrt(tmpfourier[i][0]*tmpfourier[i][0] + tmpfourier[i][1]*tmpfourier[i][1]);
-		float newmag = log(log(mag+1)+1);
+		float newmag = log(mag+1);
 		float scale = mag > 0 ? newmag/mag : 0;
 		if (SUSTAIN) {
 			fourier[i][0] *= 0.99;

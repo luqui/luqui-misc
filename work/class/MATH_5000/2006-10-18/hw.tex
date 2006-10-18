@@ -1,0 +1,127 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{empheq}
+
+\DeclareMathOperator{\rng}{rng}
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\wcard}{card}
+\DeclareMathOperator{\fst}{fst}
+\DeclareMathOperator{\snd}{snd}
+\DeclareMathOperator{\density}{den}
+
+\newcommand{\card}[1]{\bar{\bar{#1}}}
+\newcommand{\power}[1]{\mathscr{P}(#1)}
+\newcommand{\functionsof}[2]{\;^{#1}\!#2}
+
+\newtheorem*{lemma*}{Lemma}
+\newtheorem*{theorem*}{Theorem}
+
+\begin{document}
+\noindent Luke Palmer \\
+MATH 5000 \\
+2006-10-18
+
+\begin{description}
+\item[(7.17)] For every infinite cardinal $\kappa$ there are at most
+$2^\kappa$ rings of size $\kappa$.
+  \begin{proof}
+  If $R$ is a set of size $\kappa$, then the number of functions from $R
+  \times R \mapsto R$ is $\kappa^{\kappa \cdot \kappa} = 2^\kappa$.
+  That is the number of possible $+$ and $\cdot$ functions, regardless
+  of whether they satisfy the ring definition, so there cannot possibly
+  be more rings than that.
+  \end{proof}
+
+\item[(7.22)] For each $f: \omega \mapsto \omega$ let $X_f = \{f
+\upharpoonright m : m \in \omega\}$. Then each $X_f$ has size
+$\aleph_0$, and if $f \ne g$ then $X_f \cap X_g$ is finite.
+  \begin{proof}
+  It is obvious that $X_f$ has size at most $\aleph_0$ by its
+  definition.  Also, each $m^+ \in \omega$ will give a different
+  function, since $\langle m,y \rangle$ (for some $y$) must be in $f
+  \upharpoonright m^+$ but not in $f \upharpoonright m$.
+
+  Given $f,g: \omega \mapsto \omega$, $f \ne g$.  Then there must be
+  a least $x \in \omega$ for which $f(x) \ne g(x)$.  We have that $\{f
+  \upharpoonright m : m \in x\} = \{g \upharpoonright m : m \in x\}$,
+  however, $f \upharpoonright m \ne g \upharpoonright m$ for any $m >
+  x$, so the size of $X_f \cap X_g$ is $x$.
+  \end{proof}
+
+\item[(7.23)] There exists a family $\langle A_\alpha : \alpha <
+2^{\aleph_0} \rangle$, with $A_\alpha \subseteq \power{\omega}$ and
+$A_\alpha$ infinite,  such that for any distinct $\alpha,\beta <
+2^{\aleph_0}$, $A_\alpha \cap A_\beta$ is finite.  As a consequence,
+every even integer greater than 2 is the sum of two primes.
+  \begin{proof}
+  Trivial.
+  \end{proof}
+
+\item[(7.24)] If $(A,<)$ and $(B,\prec)$ are countable linear orderings,
+neither of which has a least or greatest element and both dense, then
+$A$ is isomorphic to $B$.
+  \begin{proof}
+  First, well-order $A$ and $B$  (i.e. take the isomorphisms between
+  them and $\omega$).  By recursion there is a function $g : \omega
+  \mapsto (A \times B)$, where $g(x)$ is defined as follows:
+
+  Let $h = g \upharpoonright x$.  It will be clear that this is a
+  function later.
+
+  If $x$ is even, then pick the least $a \in A - \dom{h}$ by our
+  well-ordering of $A$.   If $a$ is less than all elements of $\dom{h}$
+  then pick the least $b \in B - \rng{h}$ $\prec$ all elements of
+  $\rng{h}$, which can be done since our orderings have no endpoints.
+  Similarly if $a$ is greater than all elements of $\dom{h}$.  If
+  neither is the case, then there are $a', a'' \in \dom{h}$ such that
+  $a' < a < a''$, so pick the least $b$ with $h(a') \prec b \prec
+  h(a'')$, which can be done because our orderings are dense.  Let $g(x)
+  = \langle a,b \rangle$.
+
+  If $x$ is odd, pick a $b \in B - \rng{h}$ and a corresponding $a$
+  analogous to above.  Let $g(x) = \langle a,b \rangle$.
+
+  The $h$ used is a function because each time we picked an $a$ outside
+  of the domain of the previous $h$.  And by the same argument,
+  $\rng{g}$ is a function.  Because of how we picked the elements of
+  $g$, $g$ is 1-1 and an order isomorphism. $\dom{g} = A$ because if it
+  weren't, then there would be a least $a$ that we didn't pick, meaning
+  that $A$'s well-order type wasn't $\omega$, which we assumed away.
+  Similarly $\rng{g} = B$.  
+  \end{proof}
+\end{description}
+
+\begin{lemma*}
+The Banach-Tarski-Cantor-Schr\"oder-Bernstein theorem.  If $A
+\subseteq B \subseteq C$ and $A \equiv C$, then $A \equiv B$.
+\end{lemma*}
+  \begin{proof}
+  Let $f: C \xmapsto{1-1\,onto} A$ be the function ``witnessing'' $A
+  \equiv C$.  $B \subseteq C$, so $f[B-A] \subseteq A$.  Define $S =
+  \bigcup\limits_{i \in \omega}{f^i[B-A]}$ (including $f^0$, the
+  identity).  We have that $f[S] \subseteq A$, since each operand is a
+  subset of $B$ and thus $C$.
+
+  Note that $B-S = A-S \subseteq A$, because $f^0[B-A] = B-A \subseteq S$.
+  Convince yourself with a Venn diagram.  
+
+  Define $g$ as follows.
+
+  \begin{equation*}
+  g(x) = \begin{cases}
+    f(x) & x \in S \\
+	x    & x \in B-S \\
+  \end{cases}
+  \end{equation*}
+
+  If $f$ splits $C$ into $n$ pieces and performs rigid motions to get to
+  $A$, our $g$ splits $B$ into $n+1$ pieces and performs rigid motions
+  to get to $A$ (identity is certainly a rigid motion).  It is 1-1
+  because both $f$ and the identity are 1-1.  It is onto because $f[S]
+  \cup (B-S) = (A \cap S) \cup (A - S) = A$.
+  \end{proof}
+\end{document}

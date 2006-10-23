@@ -9,8 +9,8 @@
 
 typedef float num;
 
-const int buf_width  = 200;
-const int buf_height = 200;
+const int buf_width  = 400;
+const int buf_height = 400;
 const num screen_left = -2;
 const num screen_right = 1;
 const num screen_bottom = -1;

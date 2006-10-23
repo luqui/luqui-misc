@@ -55,7 +55,7 @@ void load_fixed_points()
 int init_gl()
 {
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_SetVideoMode(1400, 900, 0, SDL_OPENGL | SDL_FULLSCREEN);
+    SDL_SetVideoMode(1024, 768, 0, SDL_OPENGL | SDL_FULLSCREEN);
     SDL_ShowCursor(0);
 
     glMatrixMode(GL_PROJECTION);
@@ -121,8 +121,8 @@ void integrate_particles()
             }
         }
         float dep = (*depression)[px][py];
-        p.vx += (dx - 2*(1 - dep) * p.vx) * STEP;
-        p.vy += (dy - 2*(1 - dep) * p.vy) * STEP;
+        p.vx += (dx - 0.1*(1 - dep) * p.vx) * STEP;
+        p.vy += (dy - 0.1*(1 - dep) * p.vy) * STEP;
         p.x += p.vx * STEP;
         p.y += p.vy * STEP;
 

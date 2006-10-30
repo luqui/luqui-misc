@@ -1,6 +1,9 @@
 #include <fftw3.h>
 #include <SDL.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <cstdlib>
+#include <cassert>
 #include <iostream>
 #include <string>
 #include <stdlib.h>
@@ -118,7 +121,15 @@ void play_wave(fftw_complex* wave, int length) {
 void init()
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-	SDL_SetVideoMode(640, 480, 0, 0);
+	SDL_SetVideoMode(800, 600, 0, SDL_OPENGL);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-1, 1, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	SDL_AudioSpec desired;
 		desired.freq = 44100;
@@ -161,6 +172,19 @@ fftw_complex* backward_fourier(fftw_complex* in, int length) {
 	return out;
 }
 
+void normalize(fftw_complex* in, int length) {
+	double maxmag = 0;
+	for (int i = 0; i < length; i++) {
+		double mag = in[i][0]*in[i][0] + in[i][1]*in[i][1];
+		if (mag > maxmag) maxmag = mag;
+	}
+	
+	for (int i = 0; i < length; i++) {
+		in[i][0] /= maxmag;
+		in[i][1] /= maxmag;
+	}
+}
+
 fftw_complex* interpolate(fftw_complex* f, fftw_complex* g, int length, double alpha) {
 	fftw_complex* ret = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * length);
 	for (int i = 0; i < length; i++) {
@@ -170,17 +194,20 @@ fftw_complex* interpolate(fftw_complex* f, fftw_complex* g, int length, double a
 	std::cout << "Smoothly interpolating " << length << " samples (this might take a little while)\n";
 
 	double alpha1 = 1 / alpha;
+	int lp = (length-1)/2;
 
-	for (int x = 0; x < length; x++) {
-		if (x % 100 == 0) {
-			std::cout << "\r" << x << std::flush;
+	glColor3f(1,0.3,0);
+	glBegin(GL_POINTS);
+	for (int x = -lp; x <= lp; x++) {
+		if (abs(x) % 500 == 0) {
+			SDL_GL_SwapBuffers();
 		}
 
 		double real = 0;
 		double imag = 0;
 		
-		double dminIf = clamp(x / (1 - alpha), 0, length-1);
-		double dmaxIf = clamp((alpha * length - x) / (alpha - 1), 0, length-1);
+		double dminIf = clamp((-alpha * lp - x)/(alpha - 1), -lp, lp);
+		double dmaxIf = clamp(( alpha * lp - x)/(alpha - 1), -lp, lp);
 		if (dminIf > dmaxIf) { std::swap(dminIf, dmaxIf); }
 
 		int minIf = int(std::ceil(dminIf));
@@ -188,13 +215,19 @@ fftw_complex* interpolate(fftw_complex* f, fftw_complex* g, int length, double a
 
 		for (int If = minIf; If <= maxIf; If++) {
 			int Ig = If + int((x - If) * alpha1);
-			real += f[If][0] * g[Ig][0] - f[If][1] * g[Ig][1];
-			imag += f[If][0] * g[Ig][1] + f[If][1] * g[Ig][0];
+			int Pf = If < 0 ? length + If : If;
+			int Pg = Ig < 0 ? length + Ig : Ig;
+			real += f[Pf][0] * g[Pg][0] - f[Pf][1] * g[Pg][1];
+			imag += f[Pf][0] * g[Pg][1] + f[Pf][1] * g[Pg][0];
 		}
 		
-		ret[x][0] = real;
-		ret[x][1] = imag;
+		int Px = x < 0 ? length - x : x;
+		ret[Px][0] = real;
+		ret[Px][1] = imag;
+		
+		glVertex2f(double(x)/lp, 1e9*real);
 	}
+	glEnd();
 
 	std::cout << "\nDone.\n";
 	
@@ -228,19 +261,21 @@ fftw_complex* read_wave(std::string file, int* length) {
 	return ret;
 }
 
-void interpolate() {
+void interpolate(std::string a, std::string b, bool quiet) {
 	int lowlen;
-	fftw_complex* lowc = load_wav("lowc.wav", &lowlen);
+	fftw_complex* lowc = load_wav(a, &lowlen);
 	
 	int hilen;
-	fftw_complex* hic  = load_wav("hic.wav", &hilen);
+	fftw_complex* hic  = load_wav(b, &hilen);
 	
 	int midlen = std::min(lowlen, hilen);
 	
 	fftw_complex* lowcf = forward_fourier(lowc, midlen);
+	normalize(lowcf, midlen);
 	fftw_complex* hicf  = forward_fourier(hic, midlen);
+	normalize(hicf, midlen);
 	
-	fftw_complex* midcf = interpolate(lowcf, hicf, midlen, 0.20);
+	fftw_complex* midcf = interpolate(lowcf, hicf, midlen, 0.5);
 	fftw_complex* midc  = backward_fourier(midcf, midlen);
 
 	write_wave("interpolated.fcad", midc, midlen);
@@ -249,10 +284,12 @@ void interpolate() {
 	fftw_free(hicf);
 	fftw_free(midcf);
 
-	SDL_PauseAudio(0);
-	play_wave(lowc, lowlen);
-	play_wave(hic, hilen);
-	play_wave(midc, midlen);
+	if (!quiet) {
+		SDL_PauseAudio(0);
+		play_wave(lowc, lowlen);
+		play_wave(hic, hilen);
+		play_wave(midc, midlen);
+	}
 
 	fftw_free(lowc);
 	fftw_free(hic);
@@ -270,13 +307,17 @@ void play_fcad(std::string file) {
 int main(int argc, char** argv)
 {
 	init();
-	if (argc == 1) {
-		interpolate();
+
+	if (argc == 3) {
+		interpolate(argv[1], argv[2], false);
+	}
+	else if (argc == 4 && std::string(argv[1]) == "-q") {
+		interpolate(argv[2], argv[3], true);
 	}
 	else if (argc == 2) {
 		play_fcad(argv[1]);
 	}
 	else {
-		std::cerr << "I don't want more than one argument in a day!\n";
+		std::cerr << "Huh?\n";
 	}
 }

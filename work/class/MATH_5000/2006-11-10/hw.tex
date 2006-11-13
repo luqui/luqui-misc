@@ -1,0 +1,84 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{empheq}
+\usepackage[mathcal]{euscript}
+
+\DeclareMathOperator{\rng}{rng}
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\wcard}{card}
+
+\newcommand{\card}[1]{\bar{\bar{#1}}}
+\newcommand{\power}[1]{\mathscr{P}(#1)}
+\newcommand{\functionsof}[2]{\;^{#1}\!#2}
+\newcommand{\proves}[0]{\vdash}
+\newcommand{\elemsubmodel}{\prec}
+\newcommand{\submodel}{\le}
+
+\newtheorem*{lemma*}{Lemma}
+\newtheorem*{theorem*}{Theorem}
+
+\begin{document}
+\noindent Luke Palmer \\
+MATH 5000 \\
+2006-10-25
+
+\begin{description}
+\item[(1)] If $\mathcal{A},\mathcal{B} \elemsubmodel \mathcal{C}$ and
+$\mathcal{A} \submodel \mathcal{B}$, then $\mathcal{A} \elemsubmodel
+\mathcal{B}$.
+  \begin{proof}
+  Given a vector $\bar{a}$ of elements of $A$ and a formula
+  $\varphi(\bar{a})$.   We have that $\mathcal{A} \models
+  \varphi(\bar{a})$ iff $\mathcal{C} \models \varphi(\bar{a})$, since
+  $\mathcal{A} \elemsubmodel \mathcal{C}$.  However, since $A \subseteq
+  B$ and $\mathcal{B} \elemsubmodel \mathcal{C}$,  $\mathcal{B} \models
+  \varphi(\bar{a})$ iff $\mathcal{C} \models \varphi(\bar{a})$.
+  Therefore $\mathcal{A} \models \varphi(\bar{a})$ iff $\mathcal{B}
+  \models \varphi(\bar{a})$; i.e. $\mathcal{A} \elemsubmodel
+  \mathcal{B}$.
+  \end{proof}
+
+\item[(3)] A set of setences $\Gamma$ is complete iff any two models of
+$\Gamma$ are elementarily equivalent.
+  \begin{proof}
+  ($\Rightarrow$)  Suppose $\mathcal{A}$ and $\mathcal{B}$ are models of
+  $\Gamma$ and $\mathcal{A} \not\equiv \mathcal{B}$.  Then there must be
+  some sentence $\varphi$ such that $\mathcal{A} \models \varphi$ and
+  $\mathcal{B} \not\models \varphi$.  But if $\Gamma \models \varphi$,
+  then $\mathcal{B} \not\models \Gamma$, and similarly if $\Gamma
+  \not\models \varphi$ then $\mathcal{A} \not\models \Gamma$, so
+  $\Gamma$ must not be complete.
+
+  ($\Leftarrow$)  Suppose $\Gamma$ is not complete.  Then there is some
+  $\varphi$ such that neither $\Gamma \models \varphi$ nor $\Gamma
+  \models \neg\varphi$.  Thus there must be a model $\mathcal{A} \models
+  \Gamma \cup \{\varphi\}$ and a model $\mathcal{B} \models \Gamma \cup
+  \{\neg\varphi\}$.  Clearly $\mathcal{A} \not\equiv \mathcal{B}$.
+  \end{proof}
+
+\item[(4a)] A set of sentences $\Sigma \models \varphi$ iff $\Sigma \cup
+\{\neg\varphi\}$ is inconsistent.
+  \begin{proof}
+  ($\Leftarrow$) Suppose $\Sigma \cup \{\neg\varphi\}$ has no models.
+  Then either $\Sigma$ has no models or it has a model $\mathcal{A}$.
+  If it has none, then we're done.  It must be the case that
+  $\mathcal{A} \models \varphi$ because of our assumption.
+
+  ($\Rightarrow$) Suppose a structure $\mathcal{A} \models \Sigma$ and
+  $\Sigma \models \varphi$.  By definition $\mathcal{A} \models
+  \varphi$, so it is impossible that $\mathcal{A} \models \neg\varphi$.
+  \end{proof}
+
+\item[(5)] If $\mathcal{U}$ is an ultrafilter, $Y \in \mathcal{U}$, and
+$Y = \bigcup\limits_{i < n}{Y_i}$, then $Y_i \in \mathcal{U}$ for some $i$.
+  \begin{proof}
+  Suppose not.  Then $Y \in \mathcal{U}$ and $\bar{Y_i} \in \mathcal{U}$
+  for every $i < n$.  Then the intersection $Y \cap \bigcap\limits_{i <
+  n}{\bar{Y_i}}$ would be empty.
+  \end{proof}
+\end{description}
+\end{document}

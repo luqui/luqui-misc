@@ -1,0 +1,155 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{empheq}
+\usepackage[mathcal]{euscript}
+
+\DeclareMathOperator{\rng}{rng}
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\wcard}{card}
+\DeclareMathOperator{\theory}{Th}
+
+\newcommand{\card}[1]{\bar{\bar{#1}}}
+\newcommand{\power}[1]{\mathscr{P}(#1)}
+\newcommand{\functionsof}[2]{\;^{#1}\!#2}
+\newcommand{\proves}[0]{\vdash}
+\newcommand{\elemsubmodel}{\prec}
+\newcommand{\submodel}{\le}
+
+\newtheorem*{lemma*}{Lemma}
+\newtheorem*{theorem*}{Theorem}
+
+\begin{document}
+\noindent Luke Palmer \\
+MATH 5000 \\
+2006-11-17
+
+\begin{description}
+\item[(A)] Every group which has elements of arbitrarily large finite
+order is elementarily equivalent to a group which has an element of
+infinite order.
+  \begin{proof}
+	Given a model $\mathcal{G}$ of a group $(G,\cdot^\mathcal{G})$ which
+	has elements of arbitrarily large finite order. Let $\Sigma =
+	\theory{\mathcal{G}} \cup \{ cc \ne c, ccc \ne c, ... \}$ be a set
+	of statements in the language $(\cdot, c)$.  
+	
+	Claim: every finite subset of $\Sigma$ has a model.  Given a finite
+	$F \subseteq \Sigma$.  Wlg, $F = \{ \text{\it some statements in }
+	\theory{\mathcal{G}} \} \cup \{ c^2 \ne c, ..., c^n \ne c \}$.  Pick
+	$g \in G$ of order greater than $n$.  Then $(G, \cdot^G, g)$ is a
+	model of $F$ (it satisfies any subset of $\theory{\mathcal{G}}$
+	because $\mathcal{G}$ is still our model, and we chose $g$ to
+	satisfy the rest of the statements).
+
+	Therefore, there is a $\mathcal{G'} =
+	(G',\cdot^{\mathcal{G'}},c^{\mathcal{G'}}) \models \Sigma$.
+	$c^\mathcal{G'}$ is an element of infinite order, and the group
+	axioms were in $\theory{\mathcal{G}}$, so $\mathcal{G'}$ is a group.
+  \end{proof}
+
+\item[(B)] Every model of ZFC is elementarily equivalent to a model of
+the form $(V, \varepsilon)$ in which there is a sequence $\langle a_i :
+i \in \omega \rangle$, where $a_{i+1}\,\varepsilon\,a_i$ for all $i$;
+i.e. an infinitely descending $\varepsilon$-sequence.
+  \begin{proof}
+	Given a model $\mathcal{Z} = (Z, \in^\mathcal{Z})$ of ZFC (language
+	$\mathcal{L} = (\in)$).  Define $\mathcal{L'} = (\in, c_0,
+	c_1, ...)$.  Let $\Sigma = \theory{\mathcal{Z}} \cup \{ c_1 \in c_0,
+	c_2 \in c_1, ... \}$.  Any $\{ c_1 \in c_0, ..., c_{n+1} \in c_n \}$
+	together with a subset of $\theory{\mathcal{Z}}$ has a model (let
+	$c_i$ in the model be $i$ in our $\omega$).  The rest of the
+	argumentation is very similar to \textbf{(A)} above.
+  \end{proof}
+
+\item[(C)] Any infinite well-ordering $\mathcal{A} = (A,<)$ is
+elementarily equivalent to $\mathcal{B} = (B,<)$ such that $B$ has a
+subset isomorphic to the rationals.
+  \begin{proof}
+	Do the ``standard compactness argument'' to get $\mathcal{B}$, using
+	the following: $\mathcal{L'} = (<, \langle c_i : i \in \mathbb{Q}
+	\rangle)$, $\Sigma = \theory{\mathcal{A}} \cup \{ c_i \ne c_j : i
+	\ne j \in \mathbb{Q} \} \cup \{ (\exists x\; x < c_i \wedge \exists
+	x\; c_i < x) : i \in \mathbb{Q} \} \cup \{ \exists x\; (c_i < x
+	\wedge x < c_j) : i \in \mathbb{Q} \}$.  Finite subsets of $\Sigma$
+	will have models, because finite subsets of the sentences involving
+	$c_i$ will only demand the existence of finite linear-orderings,
+	which will definitely exist in an infinite well-ordering. 
+	
+	By construction, the $c_i$ in $\mathcal{B}$ will be isomorphic to
+	$\mathbb{Q}$.
+  \end{proof}
+
+\item[(D)] If $\mathcal{A} = (A, +, \cdot)$ is a countable nonstandard
+model of $\theory{(\omega, +, \cdot)}$, then $\mathcal{A}$ has order
+type $\omega + (\omega^* + \omega) \cdot \eta$.
+  \begin{proof}
+	There exists an $\chi \in A$ greater than all standard numbers by the
+	``standard compactness argument'' with $\Sigma =
+	\theory{(\omega,+,\cdot)} \cup \{ c \ne 0, c \ne 1, c \ne 1+1, ...
+	\}$, but there is no nonstandard number less than or between any of
+	the standard numbers because their nonexistence can be asserted in
+	first-order logic ($\neg \exists x\; x < 0$, $\forall x 
+	\neg \exists y (x < y \wedge y < x+1)$, with $<$, $0$, and $1$
+	defined appropriately).
+
+	A nonstandard $\chi+a$ for every standard $a$ exists, since if
+	$\chi+a$ were standard, say $n$, then the sentence $\forall x (x + a
+	= n \Rightarrow x < n)$ would be false in $\mathcal{A}$ but true in
+	$(\omega,+,\cdot)$.
+
+	Similarly $\chi-a$ for every standard $a$ exists.  If not, then let
+	take $a$ to be the least counterexample.  That would imply that
+	$\chi = a$, and thus not nonstandard.  This constructs an $\omega^*
+	+ \omega$ around $\chi$, and in fact around every nonstandard
+	number.
+
+	Given nonstandard $\kappa,\lambda$, with $\lambda < \kappa$ and
+	$\kappa \ne a+\lambda$ for any standard $a$.  There exists a $\mu$
+	such that either $2\mu = \kappa + \lambda$ or $2\mu = \kappa +
+	\lambda + 1$.  It can be shown that $\lambda < \mu < \kappa$.  There
+	is no standard $a$ such that $\lambda + a = \mu$ because:
+	\begin{gather*}
+	  \lambda + a = \mu \\
+	  2\lambda + 2a = 2\mu \\
+	  2\lambda + 2a = \lambda + \kappa \\
+	  \lambda + 2a = \kappa \\
+	\end{gather*}
+	But $2a$ is standard if $a$ is (the same argument works if $2\mu =
+	\kappa + \lambda + 1$).  A similar argument shows that there is no
+	standard $a$ such that $\mu + a = \kappa$.  This shows density among
+	the $(\omega^* + \omega)$ sections.
+
+	Given a nonstandard $\kappa$, $2\kappa$ is nonstandard and there is
+	no standard $a$ such that $\kappa + a = 2\kappa$, since that would
+	imply that $a = \kappa$, which is nonstandard.  Also, there is a
+	nonstandard $\lambda$ such that $2\lambda = \kappa$ (if $\lambda$
+	were standard then so, too, would be $\kappa$).  Also, there is no
+	standard $a$ such that $\lambda + a = \kappa$ because then $2\lambda
+	+ 2a = 2\kappa$, so $\kappa + 2a = 2\kappa$, so $2a = \kappa$
+	(again, $\kappa$ would be standard).  This shows lack of endpoints
+	among the $(\omega^* + \omega)$ sections.
+  \end{proof}
+
+\item[(E)] Every infinite graph $G = (V,E)$ is four-colorable, as long
+as every finite subgraph is planar.
+  \begin{proof}
+	Let $\mathcal{L} = (E^2, R^1, G^1, B^1, Y^1, \rangle c_v : v \in V
+	\langle)$.  Let $\Sigma = \{ \forall x $ ``exactly one of
+	$R(x),G(x),B(x),Y(x)$'' $, \forall x \forall y (E(x,y) \Rightarrow
+	(\neg (R(x) \wedge R(y)) \wedge ...)) \} \cup \{ E(c_i, c_j) : 
+	\langle i,j \rangle \in E \}$.  Every finite subset $F$ of $\Sigma$
+	has a model by the four-color theorem (trivially if either of the
+	first two sentences of $\Sigma$ are not in $F$).  Therefore there is
+	a model $\mathcal{G} \models \Sigma$.
+
+	To color $G$ using $\mathcal{G}$, simply say that a vertex $v$ is
+	red iff $\mathcal{G} \models R(c_v)$, etc. This is a coloring because
+	$\mathcal{G}$ must obey the first two sentences of $\Sigma$, and it
+	represents $G$ because of the rest of $\Sigma$.
+  \end{proof}
+\end{description}
+\end{document}

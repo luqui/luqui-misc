@@ -166,7 +166,7 @@ void spawn_enemy(vec2 pos) {
 			pos = vec2(randrange(-20, 20), randrange(10, 30));
 			bool again = false;
 			for (balls_t::iterator i = BALLS.begin(); i != BALLS.end(); ++i) {
-				if ((pos - (*i)->pos()).norm() > 1.2 + (*i)->radius()) {
+				if ((pos - (*i)->pos()).norm() < 1.2 + (*i)->radius()) {
 					again = true;
 					break;
 				}

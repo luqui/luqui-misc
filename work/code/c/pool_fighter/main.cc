@@ -23,7 +23,7 @@ int SCORE = 0;
 
 void draw_circle(double radius = 1);
 void rot_quat(const dQuaternion q);
-void spawn_enemy(vec2 pos);
+void spawn_enemy(vec2 pos = vec2());
 
 struct Hole {
 	Hole(vec2 pos, double radius) : pos(pos), radius(radius) { }
@@ -161,6 +161,21 @@ void draw()
 int shots_till_enemy = 3;
 
 void spawn_enemy(vec2 pos) {
+	if (pos.norm2() == 0) {
+		for (int tries = 0; tries < 10; tries++) {
+			pos = vec2(randrange(-20, 20), randrange(10, 30));
+			bool again = false;
+			for (balls_t::iterator i = BALLS.begin(); i != BALLS.end(); ) {
+				if ((pos - (*i)->pos()).norm() > 1.2 + (*i)->radius()) {
+					again = true;
+					break;
+				}
+			}
+
+			if (again) break;
+		}
+	}
+	
 	Enemy* enemy = new Enemy;
 	dBodySetPosition(enemy->body, pos.x, pos.y, 0);
 	BALLS.push_back(enemy);
@@ -169,7 +184,7 @@ void spawn_enemy(vec2 pos) {
 void step()
 {
 	while (shots_till_enemy <= 0) {
-		spawn_enemy(vec2(randrange(-20, 20), randrange(10, 30)));
+		spawn_enemy();
 		shots_till_enemy += 3;
 	}
 	
@@ -194,7 +209,7 @@ void step()
 			kill = true;
 			if (dynamic_cast<Enemy*>(*i)) {
 				SCORE += 3;
-				spawn_enemy(vec2(randrange(-20, 20), randrange(10, 30)));
+				spawn_enemy();
 			}
 		}
 
@@ -263,7 +278,7 @@ int main()
 	init();
 	
 	for (int i = 0; i < 7; i++) {
-		spawn_enemy(vec2(randrange(-20, 20), randrange(10, 30)));
+		spawn_enemy();
 	}
 	
 	while (true) {

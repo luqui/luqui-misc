@@ -9,12 +9,9 @@
 #include <string>
 #include <sstream>
 #include <list>
+#include <set>
 
-enum {
-	CAT_CUEBALL = 0x1,
-	CAT_WALL    = 0x2,
-	CAT_ENEMY   = 0x4
-};
+#include "Ball.h"
 
 const double DT = 1/60.0;
 
@@ -26,6 +23,7 @@ int SCORE = 0;
 
 void draw_circle(double radius = 1);
 void rot_quat(const dQuaternion q);
+void spawn_enemy(vec2 pos);
 
 struct Hole {
 	Hole(vec2 pos, double radius) : pos(pos), radius(radius) { }
@@ -42,88 +40,6 @@ struct Hole {
 	}
 };
 
-class Ball {
-public:
-	Ball(double radius) : body(dBodyCreate(WORLD)), geom(dCreateSphere(SPACE, radius)),
-						  plane2d(dJointCreatePlane2D(WORLD, 0)) {
-		dJointAttach(plane2d, body, 0);
-		dGeomSetBody(geom, body);
-	}
-	virtual ~Ball() {
-		dJointDestroy(plane2d);
-		dBodyDestroy(body);
-		dGeomDestroy(geom);
-	}
-
-	vec2 pos() const {
-		const dReal* ppos = dBodyGetPosition(body);
-		return vec2(ppos[0], ppos[1]);
-	}
-
-	dReal radius() const {
-		return dGeomSphereGetRadius(geom);
-	}
-
-	virtual void draw() const {
-		vec2 posi = pos();
-
-		glPushMatrix();
-		glTranslatef(posi.x, posi.y, 0);
-		
-		rot_quat(dBodyGetQuaternion(body));
-		draw_self();
-		glPopMatrix();
-	}
-
-	virtual void draw_self() const {
-		dReal rad = radius();
-		glColor3f(1,1,1);
-		draw_circle(rad);
-		glColor3f(0,0,0);
-		glBegin(GL_LINES);
-			glVertex2f(0,0);
-			glVertex2f(rad,0);
-		glEnd();
-	}
-	
-	virtual void step() { }
-
-	virtual int price() const { return 0; }
-
-	dBodyID body;
-	dGeomID geom;
-	dJointID plane2d;
-};
-
-class Enemy : public Ball {
-public:
-	Enemy() : Ball(1), fade_in(0) {
-		dGeomSetCategoryBits(geom, CAT_ENEMY);
-		dGeomSetCollideBits(geom, CAT_CUEBALL | CAT_ENEMY | CAT_WALL);
-	}
-
-	void draw_self() const {
-		dReal rad = radius();
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColor4f(1,0,0, fade_in);
-		draw_circle(rad);
-		glDisable(GL_BLEND);
-	}
-
-	void step() {
-		fade_in += DT;
-		if (fade_in > 1) fade_in = 1;
-	}
-
-	int price() const { return 10; }
-
-private:
-	double fade_in;
-};
-
-
-
 struct Player {
 	vec2 pos;
 };
@@ -137,6 +53,8 @@ vec2 MOUSE;
 
 typedef std::list<Ball*> balls_t;
 balls_t BALLS;
+
+std::set<Ball*> DELETE_SET;
 
 typedef std::list<Hole*> holes_t;
 holes_t HOLES;
@@ -152,6 +70,7 @@ void init()
 	
 	INIT.set_fullscreen();
 	INIT.init();
+	SDL_ShowCursor(0);
 	VIEW.activate();
 
 	WORLD = dWorldCreate();
@@ -161,11 +80,8 @@ void init()
 	set_wall(dCreatePlane(SPACE, -1,  0, 0, -24));
 	set_wall(dCreatePlane(SPACE,  1,  0, 0, -24));
 	set_wall(dCreatePlane(SPACE,  0, -1, 0, -34));
-	set_wall(dCreatePlane(SPACE,  0,  1, 0, -2));
 
-	HOLES.push_back(new Hole(vec2(-21, 15),  3));
 	HOLES.push_back(new Hole(vec2(-21, 31),  3));
-	HOLES.push_back(new Hole(vec2( 21, 15),  3));
 	HOLES.push_back(new Hole(vec2( 21, 31),  3));
 }
 
@@ -183,47 +99,27 @@ void check_collision(void* data, dGeomID ga, dGeomID gb)
 		dContactGeom contacts[max_contacts];
 		int ncontacts = dCollide(ga, gb, max_contacts, contacts, sizeof(dContactGeom));
 
+		if (ncontacts > 0) {
+			Ball* ba = (Ball*)dGeomGetData(ga);
+			Ball* bb = (Ball*)dGeomGetData(gb);
+			if (ba && bb && dynamic_cast<Shot*>(ba) && dynamic_cast<Shot*>(bb)) {
+				DELETE_SET.insert(ba);
+				DELETE_SET.insert(bb);
+				spawn_enemy(ba->pos());
+			}
+		}
+
 		for (int i = 0; i < ncontacts; i++) {
 			dContact contact;
 			contact.geom = contacts[i];
 			contact.surface.mode = dContactBounce;
 			contact.surface.mu = 10;
-			contact.surface.bounce = 0.8;
+			contact.surface.bounce = 1;
 			contact.surface.bounce_vel = 1;
 
 			dJointID ctct = dJointCreateContact(WORLD, CONTACTS, &contact);
 			dJointAttach(ctct, dGeomGetBody(ga), dGeomGetBody(gb));
 		}
-	}
-}
-
-void rot_quat(const dQuaternion q)
-{
-	dReal angle = 2 * acos(q[0]);
-	dVector3 axis;
-	dReal sina = sqrt(1 - q[0]*q[0]);
-	if (fabs(sina) < 0.0005) { sina = 1; }
-	axis[0] = q[1] / sina;
-	axis[1] = q[2] / sina;
-	axis[2] = q[3] / sina;
-
-	glRotatef(180/M_PI * angle, axis[0], axis[1], axis[2]);
-}
-
-void draw_circle(double radius) 
-{
-	glVertex2f(0,0);
-	glBegin(GL_TRIANGLE_FAN);
-	for (int i = 0; i < 24; i++) {
-		double theta = 2*M_PI*i/24;
-		glVertex2f(radius*cos(theta), radius*sin(theta));
-	}
-	glEnd();
-}
-
-void draw_text(std::string text) {
-	for (int i = 0; i < text.size(); i++) {
-		glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
 	}
 }
 
@@ -239,9 +135,9 @@ void draw()
 		glVertex2f(-0.5,  0.5);
 	glEnd();
 
-	vec2 pointing = ~(MOUSE - PLAYER.pos);
-	glLineWidth(2.0);
-	glColor3f(1,0,0);
+	vec2 pointing = (MOUSE - PLAYER.pos);
+	glLineWidth(1.0);
+	glColor3f(0,0,1);
 	glBegin(GL_LINES);
 		glVertex2f(0,0);
 		glVertex2f(pointing.x, pointing.y);
@@ -262,17 +158,19 @@ void draw()
 	draw_text(ss.str());
 }
 
-double enemy_timer = 1;
+int shots_till_enemy = 3;
+
+void spawn_enemy(vec2 pos) {
+	Enemy* enemy = new Enemy;
+	dBodySetPosition(enemy->body, pos.x, pos.y, 0);
+	BALLS.push_back(enemy);
+}
 
 void step()
 {
-	enemy_timer -= DT;
-	while (enemy_timer < 0) {
-		Enemy* enemy = new Enemy;
-		dBodySetPosition(enemy->body, randrange(-20, 20), randrange(15, 32), 0);
-		dBodySetLinearVel(enemy->body, 0, -0.5, 0);
-		BALLS.push_back(enemy);
-		enemy_timer += 10;
+	while (shots_till_enemy <= 0) {
+		spawn_enemy(vec2(randrange(-20, 20), randrange(10, 30)));
+		shots_till_enemy += 3;
 	}
 	
 	for (balls_t::iterator i = BALLS.begin(); i != BALLS.end(); ) {
@@ -289,15 +187,24 @@ void step()
 			}
 		}
 
-		if (pos.x < VIEW.center.x - VIEW.dim.x/2
-		 || pos.x > VIEW.center.x + VIEW.dim.x/2
-		 || pos.y < VIEW.center.y - VIEW.dim.y/2
-		 || pos.y > VIEW.center.y + VIEW.dim.y/2) {
+		if (pos.x + radius < VIEW.center.x - VIEW.dim.x/2
+		 || pos.x - radius > VIEW.center.x + VIEW.dim.x/2
+		 || pos.y + radius < VIEW.center.y - VIEW.dim.y/2
+		 || pos.y - radius > VIEW.center.y + VIEW.dim.y/2) {
 			kill = true;
+			if (dynamic_cast<Enemy*>(*i)) {
+				SCORE += 3;
+				spawn_enemy(vec2(randrange(-20, 20), randrange(10, 30)));
+			}
+		}
+
+		std::set<Ball*>::iterator del = DELETE_SET.find(*i);
+		if (del != DELETE_SET.end()) {
+			kill = true;
+			DELETE_SET.erase(del);
 		}
 
 		if (kill) {
-			SCORE += (*i)->price();
 			balls_t::iterator k = i;
 			++i;
 			delete *k;
@@ -313,13 +220,10 @@ void step()
 	dJointGroupEmpty(CONTACTS);
 }
 
+bool SHOOTING = false;
+
 void events()
 {
-	vec2 vel;
-	Uint8* keys = SDL_GetKeyState(NULL);
-	if (keys[SDLK_a]) { vel.x -= 5; }
-	if (keys[SDLK_d]) { vel.x += 5; }
-	
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
@@ -328,13 +232,19 @@ void events()
 		}
 
 		if (e.type == SDL_MOUSEBUTTONDOWN && e.button.button == SDL_BUTTON_LEFT) {
-			Ball* ball = new Ball(1);
+			SHOOTING = true;
+		}
+		if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_LEFT) {
+			Shot* ball = new Shot();
 			dBodySetPosition(ball->body, PLAYER.pos.x, PLAYER.pos.y, 0);
-			vec2 pointing = 5*~(MOUSE - PLAYER.pos);
-			dBodySetLinearVel(ball->body, pointing.x, pointing.y, 0);
-			dGeomSetCategoryBits(ball->geom, CAT_CUEBALL);
-			dGeomSetCollideBits(ball->geom, CAT_CUEBALL | CAT_ENEMY);
+			vec2 vel = MOUSE - PLAYER.pos;
+			dBodySetLinearVel(ball->body, vel.x, vel.y, 0);
 			BALLS.push_back(ball);
+			shots_till_enemy--;
+			SHOOTING = false;
+
+			vec2 mousepos = coord_convert(VIEW, INIT.pixel_view(), PLAYER.pos);
+			SDL_WarpMouse(int(mousepos.x), int(mousepos.y));
 		}
 	}
 
@@ -342,13 +252,19 @@ void events()
 	SDL_GetMouseState(&mx, &my);
 	MOUSE = coord_convert(INIT.pixel_view(), VIEW, vec2(mx, my));
 
-	PLAYER.pos += DT * vel;
+	if (!SHOOTING) {
+		PLAYER.pos = MOUSE;
+	}
 }
 
 int main()
 {
 	FrameRateLockTimer timer(DT);
 	init();
+	
+	for (int i = 0; i < 7; i++) {
+		spawn_enemy(vec2(randrange(-20, 20), randrange(10, 30)));
+	}
 	
 	while (true) {
 		events();

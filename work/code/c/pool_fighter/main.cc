@@ -10,6 +10,7 @@
 #include <sstream>
 #include <list>
 #include <set>
+#include <iomanip>
 
 #include "Ball.h"
 
@@ -19,7 +20,8 @@ dWorldID WORLD;
 dSpaceID SPACE;
 dJointGroupID CONTACTS;
 
-int SCORE = 0;
+int LIVES;
+double TIME;
 
 void draw_circle(double radius = 1);
 void rot_quat(const dQuaternion q);
@@ -42,6 +44,7 @@ struct Hole {
 
 struct Player {
 	vec2 pos;
+	ShotFactory* factory;
 };
 
 SoyInit INIT;
@@ -83,6 +86,8 @@ void init()
 
 	HOLES.push_back(new Hole(vec2(-21, 31),  3));
 	HOLES.push_back(new Hole(vec2( 21, 31),  3));
+
+	PLAYER.factory = new NormalShotFactory;
 }
 
 void check_collision(void* data, dGeomID ga, dGeomID gb) 
@@ -113,7 +118,7 @@ void check_collision(void* data, dGeomID ga, dGeomID gb)
 			dContact contact;
 			contact.geom = contacts[i];
 			contact.surface.mode = dContactBounce;
-			contact.surface.mu = 10;
+			contact.surface.mu = dInfinity;
 			contact.surface.bounce = 1;
 			contact.surface.bounce_vel = 1;
 
@@ -121,6 +126,49 @@ void check_collision(void* data, dGeomID ga, dGeomID gb)
 			dJointAttach(ctct, dGeomGetBody(ga), dGeomGetBody(gb));
 		}
 	}
+}
+
+double HIT = 0;
+
+void draw_status_bar()
+{
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColor4f(0.5, 0.5, 0.5, 0.25);
+	glBegin(GL_QUADS);
+		glVertex2f(-24, 34);
+		glVertex2f( 24, 34);
+		glVertex2f( 24, 32);
+		glVertex2f(-24, 32);
+	glEnd();
+	glDisable(GL_BLEND);
+
+	glColor3f(0.7, 0.7, 0.7);
+	for (int i = 0; i < LIVES; i++) {
+		double left = -2 + 2*i;
+		double width = 1;
+		glBegin(GL_QUADS);
+			glVertex2f(left, 33.5);
+			glVertex2f(left + width, 33.5);
+			glVertex2f(left + width, 32.5);
+			glVertex2f(left, 32.5);
+		glEnd();
+	}
+
+	glPushMatrix();
+	glTranslatef(10, 33, 0);
+	glScalef(0.75, 0.75, 1);
+	PLAYER.factory->draw_icon();
+	glPopMatrix();
+
+	std::stringstream ss;
+	ss << int(TIME/60) << ":";
+	ss.width(2);
+	ss.fill('0');
+	ss << int(TIME)%60;
+	glColor3f(1,1,1);
+	glRasterPos2f(-10, 32.5);
+	draw_text(ss.str());
 }
 
 void draw()
@@ -150,12 +198,21 @@ void draw()
 	for (holes_t::iterator i = HOLES.begin(); i != HOLES.end(); ++i) {
 		(*i)->draw();
 	}
+	
+	draw_status_bar();
 
-	std::stringstream ss;
-	ss << SCORE;
-	glColor3f(1,1,1);
-	glRasterPos2f(-2, 32);
-	draw_text(ss.str());
+	if (HIT > 0) {
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glColor4f(1, 0, 0, HIT);
+		glBegin(GL_QUADS);
+			glVertex2f(VIEW.center.x - VIEW.dim.x, VIEW.center.y - VIEW.dim.y);
+			glVertex2f(VIEW.center.x + VIEW.dim.x, VIEW.center.y - VIEW.dim.y);
+			glVertex2f(VIEW.center.x + VIEW.dim.x, VIEW.center.y + VIEW.dim.y);
+			glVertex2f(VIEW.center.x - VIEW.dim.x, VIEW.center.y + VIEW.dim.y);
+		glEnd();
+		glDisable(GL_BLEND);
+	}
 }
 
 int shots_till_enemy = 3;
@@ -183,6 +240,11 @@ void spawn_enemy(vec2 pos) {
 
 void step()
 {
+	HIT -= 5*DT;
+	if (HIT < 0) HIT = 0;
+
+	TIME += DT;
+	
 	while (shots_till_enemy <= 0) {
 		spawn_enemy();
 		shots_till_enemy += 3;
@@ -208,7 +270,8 @@ void step()
 		 || pos.y - radius > VIEW.center.y + VIEW.dim.y/2) {
 			kill = true;
 			if (dynamic_cast<Enemy*>(*i)) {
-				SCORE += 3;
+				LIVES--;
+				HIT = 1;
 				spawn_enemy();
 			}
 		}
@@ -229,7 +292,7 @@ void step()
 			++i;
 		}
 	}
-	
+
 	dSpaceCollide(SPACE, 0, &check_collision);
 	dWorldQuickStep(WORLD, DT);
 	dJointGroupEmpty(CONTACTS);
@@ -250,10 +313,7 @@ void events()
 			SHOOTING = true;
 		}
 		if (e.type == SDL_MOUSEBUTTONUP && e.button.button == SDL_BUTTON_LEFT) {
-			Shot* ball = new Shot();
-			dBodySetPosition(ball->body, PLAYER.pos.x, PLAYER.pos.y, 0);
-			vec2 vel = MOUSE - PLAYER.pos;
-			dBodySetLinearVel(ball->body, vel.x, vel.y, 0);
+			Shot* ball = PLAYER.factory->fire(PLAYER.pos, MOUSE - PLAYER.pos);
 			BALLS.push_back(ball);
 			shots_till_enemy--;
 			SHOOTING = false;
@@ -272,14 +332,50 @@ void events()
 	}
 }
 
+void death_screen()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(0.4,0,0);
+	glBegin(GL_QUADS);
+		glVertex2f(VIEW.center.x - VIEW.dim.x, VIEW.center.y - VIEW.dim.y);
+		glVertex2f(VIEW.center.x + VIEW.dim.x, VIEW.center.y - VIEW.dim.y);
+		glVertex2f(VIEW.center.x + VIEW.dim.x, VIEW.center.y + VIEW.dim.y);
+		glVertex2f(VIEW.center.x - VIEW.dim.x, VIEW.center.y + VIEW.dim.y);
+	glEnd();
+
+	glColor3f(1,1,1);
+	glRasterPos2f(-1, 16);
+	draw_text("Game Over");
+	draw_status_bar();
+	SDL_GL_SwapBuffers();
+
+	SDL_Event e;
+	while (SDL_WaitEvent(&e)) {
+		if (e.type == SDL_KEYDOWN || e.type == SDL_MOUSEBUTTONDOWN) {
+			return;
+		}
+	}
+}
+
+void reset() {
+	for (balls_t::iterator i = BALLS.begin(); i != BALLS.end(); ++i) {
+		delete *i;
+	}
+	BALLS.clear();
+
+	for (int i = 0; i < 7; i++) {
+		spawn_enemy();
+	}
+
+	TIME = 0;
+	LIVES = 2;
+}
+
 int main()
 {
 	FrameRateLockTimer timer(DT);
 	init();
-	
-	for (int i = 0; i < 7; i++) {
-		spawn_enemy();
-	}
+	reset();
 	
 	while (true) {
 		events();
@@ -290,5 +386,7 @@ int main()
 		SDL_GL_SwapBuffers();
 		
 		timer.lock();
+
+		if (LIVES < 0) { death_screen(); reset(); }
 	}
 }

@@ -89,6 +89,37 @@ public:
 	}
 };
 
+class ShotFactory
+{
+public:
+	virtual ~ShotFactory() { }
+
+	virtual Shot* fire(vec2 pos, vec2 dir) = 0;
+	virtual void draw_icon() const = 0;
+};
+
+class NormalShotFactory : public ShotFactory
+{
+public:
+	Shot* fire(vec2 pos, vec2 dir) {
+		Shot* ball = new Shot;
+		dBodySetPosition(ball->body, pos.x, pos.y, 0);
+		dBodySetLinearVel(ball->body, dir.x, dir.y, 0);
+		return ball;
+	}
+
+	void draw_icon() const {
+		glColor3f(1,1,1);
+		draw_circle(0.8);
+		glColor3f(0,0,0);
+		glBegin(GL_LINES);
+			glVertex2f(0,0);
+			glVertex2f(0.8,0);
+		glEnd();
+	}
+};
+
+
 class Enemy : public Ball {
 public:
 	Enemy() : Ball(1.2), fade_in(0) {

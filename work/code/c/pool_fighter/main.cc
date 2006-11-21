@@ -332,10 +332,15 @@ void events()
 	}
 }
 
-void death_screen()
+void death_screen(bool win)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	glColor3f(0.4,0,0);
+	if (win) {
+		glColor3f(0,0,0.4);
+	}
+	else {
+		glColor3f(0.4,0,0);
+	}
 	glBegin(GL_QUADS);
 		glVertex2f(VIEW.center.x - VIEW.dim.x, VIEW.center.y - VIEW.dim.y);
 		glVertex2f(VIEW.center.x + VIEW.dim.x, VIEW.center.y - VIEW.dim.y);
@@ -387,6 +392,11 @@ int main()
 		
 		timer.lock();
 
-		if (LIVES < 0) { death_screen(); reset(); }
+		if (LIVES < 0) { death_screen(false); reset(); }
+		int badballs = 0;
+		for (balls_t::iterator i = BALLS.begin(); i != BALLS.end(); ++i) {
+			if (dynamic_cast<Enemy*>(*i)) badballs++;
+		}
+		if (badballs == 0) { death_screen(true); reset(); }
 	}
 }

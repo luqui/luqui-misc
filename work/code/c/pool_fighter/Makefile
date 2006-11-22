@@ -3,4 +3,4 @@ LDLIBS = `sdl-config --libs` /home/luqui/devel/soylent/open/soylib/src/libsoy.so
 
 all: main
 
-main.o: main.cc util.h Ball.h
+main.o: main.cc util.h Ball.h GameMode.h

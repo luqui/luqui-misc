@@ -6,6 +6,22 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 
+struct PhysicsCxt {
+	PhysicsCxt() {
+		world = dWorldCreate();
+		contacts = dJointGroupCreate(0);
+		space = dSimpleSpaceCreate(0);
+	}
+
+	~PhysicsCxt() {
+		dWorldDestroy(world);
+	}
+	
+	dWorldID world;
+	dJointGroupID contacts;
+	dSpaceID space;
+};
+
 void rot_quat(const dQuaternion q)
 {
 	dReal angle = 2 * acos(q[0]);

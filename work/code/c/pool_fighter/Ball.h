@@ -10,14 +10,13 @@ enum {
 	CAT_ENEMY   = 0x4
 };
 
-extern dWorldID WORLD;
-extern dSpaceID SPACE;
 extern const double DT;
 
 class Ball {
 public:
-	Ball(double radius) : body(dBodyCreate(WORLD)), geom(dCreateSphere(SPACE, radius)),
-						  plane2d(dJointCreatePlane2D(WORLD, 0)) {
+	Ball(PhysicsCxt* phys, double radius) 
+		: body(dBodyCreate(phys->world)), geom(dCreateSphere(phys->space, radius)),
+		  plane2d(dJointCreatePlane2D(phys->world, 0)) {
 		dJointAttach(plane2d, body, 0);
 		dGeomSetBody(geom, body);
 		dGeomSetData(geom, this);
@@ -69,7 +68,7 @@ const double shot_mass = 1.2;
 
 class Shot : public Ball {
 public:
-	Shot() : Ball(shot_radius) { 
+	Shot(PhysicsCxt* phys) : Ball(phys, shot_radius) { 
 		dMass mass;
 		dMassSetSphere(&mass, shot_mass / (4/3 * M_PI * shot_radius*shot_radius*shot_radius), shot_radius);
 		dBodySetMass(body, &mass);
@@ -101,8 +100,10 @@ public:
 class NormalShotFactory : public ShotFactory
 {
 public:
+	NormalShotFactory(PhysicsCxt* phys) : phys_(phys) { }
+	
 	Shot* fire(vec2 pos, vec2 dir) {
-		Shot* ball = new Shot;
+		Shot* ball = new Shot(phys_);
 		dBodySetPosition(ball->body, pos.x, pos.y, 0);
 		dBodySetLinearVel(ball->body, dir.x, dir.y, 0);
 		return ball;
@@ -117,12 +118,14 @@ public:
 			glVertex2f(0.8,0);
 		glEnd();
 	}
+private:
+	PhysicsCxt* phys_;
 };
 
 
 class Enemy : public Ball {
 public:
-	Enemy() : Ball(1.2), fade_in(0) {
+	Enemy(PhysicsCxt* phys) : Ball(phys, 1.2), fade_in(0) {
 		dGeomSetCategoryBits(geom, CAT_ENEMY);
 		dGeomSetCollideBits(geom, CAT_CUEBALL | CAT_ENEMY | CAT_WALL);
 	}

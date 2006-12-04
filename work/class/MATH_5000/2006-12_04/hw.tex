@@ -1,0 +1,98 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{empheq}
+\usepackage[mathcal]{euscript}
+
+\DeclareMathOperator{\rng}{rng}
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\wcard}{card}
+\DeclareMathOperator{\theory}{Th}
+
+\newcommand{\card}[1]{\bar{\bar{#1}}}
+\newcommand{\power}[1]{\mathscr{P}(#1)}
+\newcommand{\functionsof}[2]{\;^{#1}\!#2}
+\newcommand{\proves}[0]{\vdash}
+\newcommand{\elemsubmodel}{\prec}
+\newcommand{\submodel}{\le}
+
+\newtheorem*{lemma*}{Lemma}
+\newtheorem*{theorem*}{Theorem}
+
+\begin{document}
+\noindent Luke Palmer \\
+MATH 5000 \\
+2006-12-04
+
+\begin{description}
+\item[(A)] If $\mathcal{A} = (A,+,\cdot)$ is a nonstandard model of
+$\theory{(\omega,+,\cdot)}$, then the twin prime conjecture is true in
+$(\omega,+,\cdot)$ if and only if there is a nonstandard $a \in A$ such
+that $\mathcal{A} \models \text{``}a\;\text{and}\;a+2\;\text{are
+prime''}$.
+  \begin{proof}
+  We have seen in an earlier homework how to define $<$ and
+  $\mathit{prime}$ in $(\omega,+,\cdot)$.  Let $\mathit{twin}(x)$ be
+  shorthand for $\mathit{prime}(x) \wedge \mathit{prime}(x+2)$.  Then we
+  can state the twin prime conjecture as follows: $\forall x \exists
+  y\,(x < y \wedge \mathit{twin}(y))$.
+
+  $(\Leftarrow)$  Suppose there is a nonstandard $a \in A$ with
+  $\mathcal{A} \models \mathit{twin}(a)$.  If the twin prime conjecture
+  were false in $(\omega,+,\cdot)$, then there would be some $b \in
+  \omega$ where $(\omega,+,\cdot) \models \neg \exists x\,(b < x \wedge
+  \mathit{twin}(x))$.  But, of course, $b$ can be written in the form
+  $1+1+\cdots+1$ a finite number of times, so that statement could be
+  written for (and would be true in) $\mathcal{A}$, too, contradicting
+  the existence of $a$.
+
+  $(\Rightarrow)$  Suppose that $(\omega,+,\cdot) \models \forall x
+  \exists y\,(x < y \wedge \mathit{twin}(y))$.  This sentence is also
+  true in $\mathcal{A}$, so pick some nonstandard $a \in A$.  Therefore,
+  there must exist $b \in A$ with $a < b$ (so $b$ is nonstandard) where
+  $\mathcal{A} \models \mathit{twin}(b)$.
+  \end{proof}
+
+\item[(B)] Given an infinite set of primes $P$.  There is a countable
+model $\mathcal{B} = (B,+,\cdot)$ of $\theory{(\omega,+,\cdot)}$ and a
+$b \in B$ such that for every prime $p \in \omega$, $\mathcal{B} \models
+\bar{p}|b$ if and only if $p \in P$.
+  \begin{proof}
+  Let $a|b$ mean $\exists n \; n \cdot a = b$.  Let $\mathcal{L} =
+  (+,\cdot,c)$.  Let $\Sigma = \theory{(\omega,+,\cdot)} \cup \{
+  (\bar{p}|c) | p \in P \} \cup \{ \neg(\bar{p}|c) | p \in \omega - P
+  \}$.
+
+  Given some finite $F \subseteq \Sigma$, $F$ will have some sentences
+  from $\theory{(\omega,+,\cdot)}$ and some sentences saying certain
+  primes do and do not divide $c$.  Build a model of $F$ by letting the
+  universe be $\omega$ and $c$ be the product of the primes which
+  $\Sigma$ says should divide $c$.  So by the compactness theorem,
+  $\Sigma$ has a model $\mathcal{B}$, and $c^\mathcal{B}$ has our desired
+  properties by construction.
+  \end{proof}
+
+\item[(Di)] $\{ \varphi_0, \varphi_1, \dots, \varphi_{n-1} \} \proves \psi$
+  if and only if $\proves (\varphi_0 \rightarrow (\varphi_1 \rightarrow
+  \cdots (\varphi_{n-1} \rightarrow \psi)))$.
+  \begin{proof}
+    By induction on $n$.  The atomic case $n=0$ is trivial.  $\{
+	\varphi_0, \varphi_1, \dots, \varphi_{n} \} \proves
+	\psi$ iff (by IH) $\{ \varphi_0 \} \proves (\varphi_1 \rightarrow
+	\cdots (\varphi_{n} \rightarrow \psi))$ iff (by the deduction
+	theorem) $\proves (\varphi_0 \rightarrow \cdots (\varphi_n
+	\rightarrow \psi))$.
+  \end{proof}
+\item[(Dii)] If $\Sigma \cup \{\varphi\} \proves \psi$ and $\Sigma \cup
+  \{\neg\varphi\} \proves \psi$, then $\Sigma \proves \psi$.
+  \begin{proof}
+    By (Di) we have that $\Sigma \proves (\varphi \rightarrow \psi)$ and
+	that $\Sigma \proves (\neg\varphi \rightarrow \psi)$, so $\psi$
+	follows as a logical consequence (and can thus be proved by the
+	completeness theorem).
+  \end{proof}
+\end{description}
+\end{document}

@@ -1,0 +1,102 @@
+\documentclass[12pt]{article}
+
+\begin{document}
+
+Assume that all programs begin with the following:
+\begin{verbatim}
+    #include <iostream>
+    using namespace std;
+\end{verbatim}
+
+Also, if code wouldn't compile as-is, but would if it were contained
+within the \texttt{main()} function, assume that it is in the
+\texttt{main()} function.
+
+\begin{enumerate}
+
+% This problem tests whether students make a distinction between
+% characters which are letters and the newline character.
+\item Consider the following code:
+  \begin{verbatim}
+    void out(char c) 
+    {
+        cout << c;
+    }
+    int main() 
+    {
+        out(?);
+        out(?);
+        out(?);
+        return 0;
+    }
+  \end{verbatim}
+
+  Is it possible to fill in the ``?''s above in order to make this
+  program output the following:
+  \begin{verbatim}
+    a
+    B
+  \end{verbatim}
+
+  If so, what would you fill in for the ``?''s in order to make it do
+  that?  If not, why not?
+  \newpage
+
+% This problem tests basic understanding of function calls with return
+% values.
+\item Consider the following code:
+  \begin{verbatim}
+    double getit() {
+        double r;
+
+        do {
+            cin >> r;
+        } while (r < 0);
+      
+        return r;
+    }
+    int main()
+    {
+        double num;
+        do {
+            num = getit();
+            cout << num << endl;
+        } while (num != 0);
+        return 0;
+    }
+  \end{verbatim}
+
+  Describe in a sentence or two what this program does.  \bigskip
+  \bigskip
+
+  What is the output of this program when given the following as input:
+  \begin{verbatim}
+    3
+    -1.71
+    21.4
+    -4
+    0
+  \end{verbatim}
+  \newpage
+
+% This problem tests whether students know what 'const' does.  This is
+% motivated by the students frantically putting 'const's all over their
+% program because the grader marks down when they don't use it.
+\item The following code does not compile (the line numbers are not part
+of the program):
+  \begin{verbatim}
+1   int main() 
+2   {
+3       const int multiplier = 1;
+4       double input;
+5       cin >> input;
+6       multiplier = 2;
+7       cout << multiplier * input << endl;
+8       return 0;
+9   }
+  \end{verbatim}
+
+  Why not?
+\end{enumerate}
+  
+\end{document}

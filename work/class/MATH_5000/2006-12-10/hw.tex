@@ -54,6 +54,25 @@ unique $k \in \omega$, $A \proves \tau = \bar{k}$.
 \item[(14)] If $f: \omega^n \mapsto \omega$ is a recursive function then
   there is a formula $\phi(\vec{x}, y)$ such that if $f(\vec{k}) = r$ then
   $A \proves \forall y [\phi(\overline{\vec{k}}, y) \Leftrightarrow y =
-  \bar{r}$.
+  \bar{r}]$.
+  \begin{proof}
+  Since $f$ is recursive, it is defined by a (recursive) formula
+  $\theta(\vec{x}, y)$ such that $A \proves \theta(\vec{x},y)$ iff
+  $f(\vec{x}) = y$.  Consider the formula $\varphi(\vec{x},y) =
+  \theta(\vec{x}, y) \wedge \forall z<y: \neg \theta(\vec{x},z)$.  Note
+  that $\varphi$ is recursive, since it is built up only from the
+  recursive $\theta$ and bounded quantification.
+
+  If $f(\vec{k}) = r$ then $A \proves \varphi(\vec{k}, r)$, since
+  $\theta$ holds there and $\varphi$ is recursive.
+
+  $A \proves \forall y < r: \neg \varphi(\vec{k}, r)$, since
+  $\theta$ does not hold for any $y < r$ and that formula is recursive.
+  $A \proves \forall y [r < y \Rightarrow \neg \varphi(\vec{k}, r)]$,
+  since we can use the proof of $\varphi(\vec{k}, r)$ as its
+  counterexample.  Then using (L3) (trichotomy), $A \proves \forall y [y
+  \ne r \Rightarrow \neg \varphi(\vec{k}, r)]$, and thus $A \proves
+  \forall y [\varphi(\vec{k}, y) \Leftrightarrow y = r]$.
+  \end{proof}
 \end{description}
 \end{document}

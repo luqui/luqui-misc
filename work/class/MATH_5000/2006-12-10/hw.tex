@@ -1,0 +1,59 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage[mathcal]{euscript}
+
+\DeclareMathOperator{\rng}{rng}
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\wcard}{card}
+\DeclareMathOperator{\theory}{Th}
+
+\newcommand{\card}[1]{\bar{\bar{#1}}}
+\newcommand{\power}[1]{\mathscr{P}(#1)}
+\newcommand{\functionsof}[2]{\;^{#1}\!#2}
+\newcommand{\proves}[0]{\vdash}
+\newcommand{\elemsubmodel}{\prec}
+\newcommand{\submodel}{\le}
+
+\newtheorem*{lemma*}{Lemma}
+\newtheorem*{theorem*}{Theorem}
+
+\begin{document}
+\noindent Luke Palmer \\
+MATH 5000 \\
+2006-12-10
+
+\begin{description}
+\item[(2)] If $\tau$ is a term containing no variables, then for some
+unique $k \in \omega$, $A \proves \tau = \bar{k}$.
+  \begin{proof}
+  \textit{By induction on $\tau$}.
+  \begin{itemize}
+    \item Case $\tau = \bar{0}$.  $A \proves \bar{0} = \bar{0}$.
+	\item Case $\tau = S\varsigma$.  By IH, there is a $k \in \omega$
+	with $A \proves \varsigma = \bar{k}$.  Therefore, $A \proves
+	S\varsigma = S\bar{k}$ by logic (no axioms in $A$ necessary), i.e.
+	$A \proves \tau = \overline{k+1}$.
+	\item Case $\tau = \rho + \varsigma$.  By IH, there are $j,k \in
+	\omega$ with $A \proves \rho = \bar{j}$ and $A \proves \varsigma =
+	\bar{k}$.  Thus $A \proves \tau = \bar{j} + \bar{k}$, and we have
+	already shown (in a homework long ago) that these axioms give the
+	correct result.
+	\item Case $\tau = \rho \cdot \varsigma$ and $\tau = \rho^\varsigma$
+	proceed similarly to above.
+  \end{itemize}
+
+  Uniqueness follows trivially, since if $A \proves \tau = \bar{j}$ and
+  $A \proves \tau = \bar{k}$ with $j \ne k$, then $A \proves \bar{j} =
+  \bar{k}$ which we have already shown impossible.
+  \end{proof}
+
+\item[(14)] If $f: \omega^n \mapsto \omega$ is a recursive function then
+  there is a formula $\phi(\vec{x}, y)$ such that if $f(\vec{k}) = r$ then
+  $A \proves \forall y [\phi(\overline{\vec{k}}, y) \Leftrightarrow y =
+  \bar{r}$.
+\end{description}
+\end{document}

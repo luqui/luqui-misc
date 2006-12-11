@@ -1,0 +1,84 @@
+\documentclass[12pt]{article}
+
+\usepackage{longtable}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+
+\lhead[\fancyplain]{Luke Palmer}
+\chead[\fancyplain]{2006-12-10}
+\rhead[\fancyplain]{LING 3430}
+\pagestyle{fancyplain}
+
+\newcommand{\proves}{\vdash}
+
+\begin{document}
+\section*{10.1}
+\begin{description}
+\item[a.] $K(a) \wedge W(m)$.
+\item[b.] $K(a) \Rightarrow Q(g)$.
+\item[c.] $K(a) \wedge P(a,e)$.
+\item[d.] $\neg A(m,l)$.
+\item[e.] $L(l,g) \vee L(g,l)$ \hspace{2em}  (or $L(l,g) \vee_e L(g,l)$ if the
+sentence didn't intend that they could both love each other).
+\item[f.] $W(m) \wedge A(m,a)$.
+\end{description}
+
+\section*{10.2}
+\begin{description}
+\item[a.] $\forall x D(x) \Rightarrow H(l,x)$.
+\item[b.] $\forall x D(x) \Rightarrow N(d,l)$.
+\item[c.] $\exists x \forall y (D(x) \wedge N(x,y))$.
+\item[d.] $\exists x S(x,h)$.
+\item[e.] First, ``maidens'' is not defined.  So let $M(x) = x\;\text{is
+a maiden}$.  Second, this one is ambiguous: $\forall x (D(x) \Rightarrow
+\forall y (M(y) \Rightarrow \neg K(x,y)))$ (every dragon was unkeen on
+  maidens) vs. $\neg \forall x (D(x) \Rightarrow \forall y (M(y)
+  \Rightarrow K(x,y)))$ (not every dragon was keen on maidens).
+\item[f.] $\forall x ((D(x) \wedge \forall y (M(x) \Rightarrow K(x,y)))
+  \Rightarrow N(x,l))$.
+\item[g.] $\neg \forall x S(x,h)$.
+\item[h.] $\neg \exists x D(x,l)$.
+\end{description}
+
+\section*{10.3}
+Though it's not technically correct, for the sake of conciseness I will
+substitute the constant symbols $l,g,e,i,d$ for their denotations in my
+explanations.
+\begin{description}
+\item[a.] \textit{true}, because $\langle g,i \rangle \in F(L)$.
+\item[b.] \textit{false}, because $\langle d,l \rangle \not\in F(C)$.
+\item[c.] \textit{false}, because $M(e)$ but $\neg L(e,g)$.
+\item[d.] \textit{true}, because $M(i)$ and $L(i,g)$.
+\item[e.] \textit{true}, because $S(l,d)$ and there was no knight that
+loved Elaine.
+\item[f.] \textit{true}, because Lancelot slew every dragon and freed
+every maiden (in the model, of course).
+\end{description}
+
+\section*{10.4}
+I'll use $\models$ to indicate reduction steps.
+\begin{description}
+\item[a.] $F(l,e) \vee F(l,i) \models T \vee T \models T$.
+\item[b.] $F(l,e) \vee_e F(l,i) \models T \vee_e T \models F$.
+\item[c.] $S(l,d) \Rightarrow F(l,e) \models T \Rightarrow T \models T$.
+\item[d.] $L(g,i) \Rightarrow F(g,i) \models F \Rightarrow F \models T$.
+\end{description}
+
+\section*{10.5}
+\begin{description}
+\item[(sweater/jumper)] I don't know what a jumper is, but according to WordNet,
+sweater and jumper are taxonomic sisters under garment: $\forall x
+(Sweater(x) \Rightarrow Garment(x)) \wedge \forall x (Jumper(x)
+\Rightarrow Garment(x))$.
+\item[(true/false)] $\forall x (True(x) \Rightarrow \neg False(x))$ (not
+a negated equivalence or an exclusive or on the account that certain
+things (eg. a banana) are neither true nor false).
+\item[(gun/weapon)] $\forall x (Gun(x) \Rightarrow Weapon(x))$.
+\item[(open/shut)] $\forall x (Door(x) \Rightarrow (Open(x) \vee_e
+Shut(x)))$ (this might seem a little strange, but I am being more
+specific in saying that not only can a door not be open and shut
+simultaneously, but that it has to be one or the other).
+\item[(uppercut/punch)] $\forall x (Uppercut(x) \Rightarrow Punch(x))$.
+\item[(car/automobile)] $\forall x (Car(x) \Rightarrow Automobile(x))$.
+\end{description}
+\end{document}

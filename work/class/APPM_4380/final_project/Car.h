@@ -46,11 +46,18 @@ public:
 			// x = v^2/2a  (distance it takes to stop)
 			double lightdist = (road_->get_dest()->get_position() - pos_) * road_->get_direction();
 			if (lightdist < vel_.norm2() / (2*max_accel_)) {
+				double target;
 				if (lightdist < 0) {
-					vel_ = vec2(0,0);
+					target = 0;
 				}
 				else {
-					vel_ = road_->get_direction() * sqrt(2 * max_accel_ * lightdist);
+					target = sqrt(2 * max_accel_ * lightdist);
+				}
+
+				// if the light suddenly turns, cars won't come to
+				// a screeching halt, but rather continue through
+				if (fabs(vel_.norm() - target) < 5 * max_accel_ * DT) {
+					vel_ = road_->get_direction() * target;
 				}
 			}
 		}

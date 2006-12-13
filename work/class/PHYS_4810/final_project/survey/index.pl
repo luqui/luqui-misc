@@ -3,6 +3,7 @@
 use strict;
 use CGI ();
 use Algorithm::Numerical::Shuffle qw<shuffle>;
+use Data::Dumper;
 
 my $ALMOST = "Almost correct.  The grader said that on the final she would " .
              "count off for incorrect cases and other such pedantic things, " .
@@ -49,10 +50,10 @@ EOT
 EOT
         evaluate => sub {
             my ($ans) = @_;
-            my $CORRECT = "The correct answer is <tt>Good 90</tt>.";
-            return "Correct" if $ans eq 'Good 90';
-            return $ALMOST . " $CORRECT" if $ans =~ /^good\s*9\s*0$/i;
-            if ($ans =~ /^good\s*9\s*1$/i) {
+            my $CORRECT = "The correct answer is <tt>Good 09</tt>.";
+            return "Correct" if $ans eq 'Good 09';
+            return $ALMOST . " $CORRECT" if $ans =~ /^good\s*0\s*9$/i;
+            if ($ans =~ /^good\s*1\s*9$/i) {
                 return <<'EOT';
     Incorrect.  Remember that if the left side of an || statement is
     true, then the right side is not evaluated.  In this case, y &gt;
@@ -62,6 +63,12 @@ EOT
     Y, you already know that X || Y is true.  && also does this, but
     it stops checking if the left argument is <i>false</i>.
 EOT
+            }
+            if ($ans =~ /^good\s*9\s*0$/) {
+                return "Pretty close.  Looks like you just transposed " .
+                       "the digits.  The program outputs x first, then " .
+                       "y  (this is an error I made when I tried the " .
+                       "problem <tt>:-)</tt>.";
             }
             return "Incorrect. $CORRECT";
         },
@@ -376,10 +383,10 @@ for my $param ($cgi->param) {
     $value =~ s/\s*$//;
     
     if ($param =~ /^(.*):(.*)$/) {
-        $answers{$1}{$2} = $cgi->param($param);
+        $answers{$1}{$2} = $value;
     }
     else {
-        $answers{$param} = $cgi->param($param);
+        $answers{$param} = $value;
     }
 }
 
@@ -409,6 +416,11 @@ Content-type: text/html
    background: #ccf;
    border: 1px black solid;
   }
+  div.explanation {
+   width: 6.5in;
+   margin-top: 4ex;
+   margin-left: 1in;
+  }
 
   div.correct {
    margin-left: 0.5in;
@@ -431,20 +443,30 @@ Content-type: text/html
 <body>
  <form action="index.pl" method="post">
   <input type="hidden" name="SEED" value="$answers{SEED}" />
+
+  <div class="explanation">
+   <p><b>Try to answer all the questions in the test before pushing "Submit"
+    at the bottom.  When you do submit, you will see a page indicating which
+    problems you got wrong and an explanation about what is going on in 
+    the problem.</b></p>
+   <p><b>Assume that the following two lines are at the top of every program:</b></p>
+   <pre>
+    #include &lt;iostream&gt;
+    using namespace std;
+   </pre>
+  </div>
+
   <table class="ident">
    <tr>
-    <td>First name:</td>
-    <td><input type="text" name="firstname" /></td>
-   </tr>
-   <tr>
-    <td>Last name:</td>
-    <td><input type="text" name="lastname" /></td>
+    <td>Full name:</td>
+    <td><input type="text" name="fullname" /></td>
    </tr>
    <tr>
     <td>Student ID:</td>
     <td><input type="text" name="studentid" /></td>
    </tr>
   </table>
+  
 EOT
 
 for my $problem (shuffle(keys %problems)) {
@@ -471,8 +493,18 @@ EOT
 }
 
 print <<'EOT';
- <input type="submit" />
+ <div class="explanation">
+  <center><input type="submit" value="Submit" style="font-size: 20pt"/></center>
+ </div>
  </form>
 </body>
 </html>
 EOT
+
+if ($cgi->param) {
+    my $surveyno = "0000";
+    $surveyno++ while -e "data/survey_$surveyno";
+    open my $fh, '>', "data/survey_$surveyno" or die "Damn, opening data/survey_$surveyno failed: $!";
+    print $fh Dumper(\%answers);
+    close $fh;
+}

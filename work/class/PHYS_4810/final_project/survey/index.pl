@@ -427,7 +427,6 @@ EOT
         print "<div class=\"answer\">\n" 
             . $problems{$problem}{evaluate}->($answers{$problem})
             . "</div>\n";
-        }
     }
     print "  </div>\n";
 }

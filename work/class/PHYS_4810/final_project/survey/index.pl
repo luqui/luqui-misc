@@ -67,7 +67,7 @@ EOT
     },
 
 ######################
-    'con-switch_default' => sub {
+    'con-switch_default' => {
         text => <<'EOT',
    The code following the <input type="text" name="con-switch_default" size="8" /> 
    case is executed if none of the other cases are matched in a 
@@ -83,7 +83,7 @@ EOT
     },
 
 ######################
-    'app-switch' => sub {
+    'app-switch' => {
         text => <<'EOT',
    The following program should read a number from the user and print
    the number in English.  It only knows how to do the numbers 1-3, and

@@ -356,7 +356,7 @@ EOT
 my $cgi = CGI->new;
 
 my %answers;
-for my $param ($cgi->params) {
+for my $param ($cgi->param) {
     if ($param =~ /^(.*):(.*)$/) {
         $answers{$1}{$2} = $cgi->param($param);
     }

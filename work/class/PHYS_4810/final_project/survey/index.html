@@ -1,0 +1,193 @@
+<html>
+<head>
+ <title> CSCI 1300 Concept-Application Test </title>
+ <style>
+  table.ident {
+   margin-left: 1in;
+   background: #ddd;
+   border: 1px black solid;
+   border-collapse: separate;
+   border-spacing: 4mm;
+  }
+
+  div.problem {
+   margin-left: 1in;
+   width: 6.5in;
+   margin-top: 2ex;
+   padding: 2mm;
+   background: #ccf;
+   border: 1px black solid;
+  }
+ </style>
+</head>
+<body>
+ <form action="evaluate.pl" method="post">
+  <table class="ident">
+   <tr>
+    <td>First name:</td>
+    <td><input type="text" name="firstname" /></td>
+   </tr>
+   <tr>
+    <td>Last name:</td>
+    <td><input type="text" name="lastname" /></td>
+   </tr>
+   <tr>
+    <td>Student ID:</td>
+    <td><input type="text" name="studentid" /></td>
+   </tr>
+  </table>
+
+  <div class="problem">
+   If the sub-expression on the left side of an <tt>||</tt> operator is true,
+   the expression on the right side will not be checked.<br />
+   <b>True</b> <input type="radio" name="con-shortcircuit" value="true" />
+   <b>False</b> <input type="radio" name="con-shortcircuit" value="false" />
+  </div>
+
+  <div class="problem">
+   <pre>
+    int main() 
+    {
+        int x = 0, y = 10;
+        if (y &gt; 5 || x++ == 5) 
+        {
+            cout &lt;&lt; "Good ";
+        }
+        else
+        {
+            cout &lt;&lt; "Bad ";
+        }
+
+        cout &lt;&lt; x &lt;&lt; y;
+        return 0;
+    }
+   </pre>
+   What is the output of running this program (write "error" followed by a 
+   reason if there is a compile error)? <br/>
+   <input type="text" name="app-shortcircuit" size="60"/>
+  </div>
+
+  <div class="problem">
+   The code following the <input type="text" name="con-switch-default" size="8" /> 
+   case is executed if none of the other cases are matched in a 
+   <tt>switch</tt> statement.
+  </div>
+
+  <div class="problem">
+   The following program should read a number from the user and print
+   the number in English.  It only knows how to do the numbers 1-3, and
+   if given any other number it should report "I don't know.".  Fill
+   in the blanks.
+   <pre>
+    int main()
+    {
+        int num;
+        cout &lt;&lt; "Please enter a number: ";
+        cin &gt;&gt; num;
+        switch (num) {
+            <input type="text" name="app-switch-case1" size="8" />
+                cout &lt;&lt; "One";
+                break;
+            <input type="text" name="app-switch-case2" size="8" />
+                cout &lt;&lt; "Two";
+                break;
+            <input type="text" name="app-switch-case3" size="8" />
+                cout &lt;&lt; "Three";
+                break;
+            <input type="text" name="app-switch-default" size="8" />
+                cout &lt;&lt; "I don't know.";
+                break;
+        }
+        return 0;
+    }
+   </pre>
+  </div>
+
+  <div class="problem">
+   The _____ statement causes a loop to terminate early.
+   <ul>
+    <li><input type="radio" name="con-break" value="terminate" /><tt>terminate</tt></li>
+    <li><input type="radio" name="con-break" value="stop" /><tt>stop</tt></li>
+    <li><input type="radio" name="con-break" value="break" /><tt>break</tt></li>
+    <li><input type="radio" name="con-break" value="quit" /><tt>quit</tt></li>
+    <li><input type="radio" name="con-break" value="none" />None of the above.</li>
+   </ul>
+  </div>
+
+  <div class="problem">
+   <pre>
+    int main()
+    {
+        int x = 1;
+        while (x &gt; 0) {
+            cout &lt;&lt; x &lt;&lt; " ";
+            if (x &gt; 10)
+            {
+                break;
+            }
+            x = x * 2;
+        }
+    }
+    What is the output of running this program (write "error" followed by a 
+    reason if there is a compile error, and write "infinite" if it is an
+    infinite loop)? <br/>
+    <input type="text" name="app-break" size="60"/>
+   </pre>
+  </div>
+
+  <div class="problem">
+   A <tt>for</tt> loop is considered a _____ loop.
+   <ul>
+    <li><input type="radio" name="con-pretest" value="infinite" />infinite</li>
+    <li><input type="radio" name="con-pretest" value="pre-test" />pre-test</li>
+    <li><input type="radio" name="con-pretest" value="post-test" />post-test</li>
+    <li><input type="radio" name="con-pretest" value="sentinel-controlled" />sentinel-controlled</li>
+    <li><input type="radio" name="con-pretest" value="none" />None of the above.</li>
+   </ul>
+  </div>
+
+  <div class="problem">
+   <pre>
+    int main()
+    {
+        int x = 0;
+        for (int i = 5; i &lt; 0; i++) {
+            x = x + 1;
+        }
+        cout &lt;&lt; x;
+    }
+   </pre>
+   What is the output of running this program (write "error" followed by a 
+   reason if there is a compile error, and write "infinite" if it is an
+   infinite loop)? <br/>
+   <input type="text" name="app-break" size="60"/>
+  </div>
+
+  <div class="problem">
+   The _____ operator is used in C++ to represent equality.
+   <ul>
+    <li><input type="radio" name="con-equality" value="=" /><tt>=</tt></li>
+    <li><input type="radio" name="con-equality" value="&lt;&gt;" /><tt>&lt;&gt;</tt></li>
+    <li><input type="radio" name="con-equality" value="==" /><tt>==</tt></li>
+    <li><input type="radio" name="con-equality" value="!!" /><tt>!!</tt></li>
+    <li><input type="radio" name="con-equality" value="none" />None of the above.</li>
+   </ul>
+  </div>
+
+  <div class="problem">
+   <pre>
+    int main()
+    {
+        int x;
+        x == 42;
+        cout &lt;&lt; x;
+    }
+   </pre>
+   What is the output of running this program (write "error" followed by a 
+   reason if there is a compile error)? <br/>
+   <input type="text" name="app-equality" size="60"/>
+  </div>
+ </form>
+</body>
+</html>
+

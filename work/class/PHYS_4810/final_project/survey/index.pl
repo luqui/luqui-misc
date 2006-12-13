@@ -2,6 +2,7 @@
 
 use strict;
 use CGI ();
+use Algorithm::Numerical::Shuffle qw<shuffle>;
 
 my $ALMOST = "Almost correct.  The grader said that on the final she would " .
              "count off for incorrect cases and other such pedantic things, " .
@@ -48,10 +49,10 @@ EOT
 EOT
         evaluate => sub {
             my ($ans) = @_;
-            my $CORRECT = "The correct answer is <tt>Good 95</tt>.";
-            return "Correct" if $ans eq 'Good 95';
-            return $ALMOST . " $CORRECT" if $ans =~ /^good\s*9\s*5$/i;
-            if ($ans =~ /^good\s*9\s*6$/i) {
+            my $CORRECT = "The correct answer is <tt>Good 90</tt>.";
+            return "Correct" if $ans eq 'Good 90';
+            return $ALMOST . " $CORRECT" if $ans =~ /^good\s*9\s*0$/i;
+            if ($ans =~ /^good\s*9\s*1$/i) {
                 return <<'EOT';
     Incorrect.  Remember that if the left side of an || statement is
     true, then the right side is not evaluated.  In this case, y &gt;
@@ -122,13 +123,16 @@ EOT
                 if ($ans->{"case$_"} =~ /^case\s+$_\s*:$/) {
                     'Correct'
                 }
-                elsif ($ans->{"case$_"} =~ /^case\s+$_\*:?$/) {
+                elsif ($ans->{"case$_"} =~ /^case\s+$_\*:?$/i) {
                     unless ($ramble++) {
                         "$ALMOST $CORRECT";
                     }
                     else {
                         "Almost (see above). $CORRECT";
                     }
+                }
+                else {
+                    "Incorrect. $CORRECT";
                 }
             } 1..3;
 
@@ -144,8 +148,16 @@ EOT
                     $reply{'default'} = "Almost (see above). $CORRECT";
                 }
             }
+            else {
+                $reply{'default'} = "Incorrect. $CORRECT";
+            }
 
-            return join "<br/>\n", map { "<b>$ans->{$_}</b> $reply{$_}" } qw<case1 case2 case3 default>;
+            if (!grep { $_ ne 'Correct' } @reply{qw<case1 case2 case3 default>}) {
+                return 'Correct';
+            }
+            else {
+                return join "<br/>\n", map { "<b>$ans->{$_}</b> $reply{$_}" } qw<case1 case2 case3 default>;
+            }
         },   
     },
 
@@ -189,11 +201,11 @@ EOT
         }
         return 0;
     }
+   </pre>
     What is the output of running this program (write "error" followed by a 
     reason if there is a compile error, and write "infinite" if it is an
     infinite loop)? <br/>
     <input type="text" name="app-break" size="60"/>
-   </pre>
 EOT
         evaluate => sub {
             my ($ans) = @_;
@@ -357,6 +369,12 @@ my $cgi = CGI->new;
 
 my %answers;
 for my $param ($cgi->param) {
+    my $value = $cgi->param($param);
+    
+    next unless $value =~ /\S/;
+    $value =~ s/^\s*//;
+    $value =~ s/\s*$//;
+    
     if ($param =~ /^(.*):(.*)$/) {
         $answers{$1}{$2} = $cgi->param($param);
     }
@@ -365,7 +383,10 @@ for my $param ($cgi->param) {
     }
 }
 
-print <<'EOT';
+$answers{SEED} ||= 1 + int rand 100000;
+srand($answers{SEED});
+
+print <<"EOT";
 Content-type: text/html
 
 <html>
@@ -389,7 +410,7 @@ Content-type: text/html
    border: 1px black solid;
   }
 
-  div.answer {
+  div.correct {
    margin-left: 0.5in;
    width: 4in;
    margin-top: 2ex;
@@ -397,10 +418,19 @@ Content-type: text/html
    background: #cfc;
    border: 1px black solid;
   }
+  div.incorrect {
+   margin-left: 0.5in;
+   width: 4in;
+   margin-top: 2ex;
+   padding: 2mm;
+   background: #faa;
+   border: 1px black solid;
+  }
  </style>
 </head>
 <body>
  <form action="index.pl" method="post">
+  <input type="hidden" name="SEED" value="$answers{SEED}" />
   <table class="ident">
    <tr>
     <td>First name:</td>
@@ -417,21 +447,32 @@ Content-type: text/html
   </table>
 EOT
 
-for my $problem (keys %problems) {
+for my $problem (shuffle(keys %problems)) {
     print <<"EOT";
   <div class="problem">
 $problems{$problem}{text}
 EOT
 
     if (exists $answers{$problem}) {
-        print "<div class=\"answer\">\n" 
-            . $problems{$problem}{evaluate}->($answers{$problem})
-            . "</div>\n";
+        my $ans = $problems{$problem}{evaluate}->($answers{$problem});
+        if ($ans eq 'Correct' || $ans =~ /^Almost correct/) {
+            print "<div class=\"correct\">\n$ans\n</div>\n";
+        }
+        else {
+            print "<div class=\"incorrect\">\n";
+            if (!ref $answers{$problem}) {
+                print "Your answer was <b>$answers{$problem}</b>.<br/>\n";
+            }
+            print "$ans\n</div>\n";
+        }
+
     }
     print "  </div>\n";
 }
 
 print <<'EOT';
- </body>
+ <input type="submit" />
+ </form>
+</body>
 </html>
 EOT

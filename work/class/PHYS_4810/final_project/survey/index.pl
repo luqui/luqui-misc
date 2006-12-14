@@ -454,6 +454,76 @@ EOT
                    "when you call it.";
         },
     },
+    
+    'con-divide' => {
+        text => <<'EOT',
+    The <tt>/</tt> operator represents two different operations: integer
+    division and floating-point division.  It represents floating-point
+    division when (choose all that apply):
+
+    <ul>
+     <li><input type="checkbox" name="con-divide:cast-result">
+        (A) The entire operation is cast to a <tt>float</tt> or <tt>double</tt>.</li>
+     <li><input type="checkbox" name="con-divide:cast-left">
+        (B) The left argument is cast to a <tt>float</tt> or <tt>double</tt>.</li>
+     <li><input type="checkbox" name="con-divide:declare">
+        (C) Either argument is a variable declared as a <tt>float</tt> or <tt>double</tt>.</li>
+     <li><input type="checkbox" name="con-divide:int-assign">
+        (D) <tt>/</tt> actually always represents floating-point division; it
+        is a subsequent assignment to an integer which truncates it.</li>
+    </ul>
+
+    Just for me, your humble researcher, try to characterize under exactly
+    what conditions <tt>/</tt> represents floating-point division.  (That is,
+    don't just repeat your answers above.  Instead, try to generalize your
+    answers)  Thanks:<br/>
+    <input type="text" name="con-divide:characterization" size="60" />
+EOT
+        evaluate => sub {
+            my ($ans) = @_;
+            my $resp;
+            $resp .= "A" if $ans->{'cast-result'};
+            $resp .= "B" if $ans->{'cast-left'};
+            $resp .= "C" if $ans->{'declare'};
+            $resp .= "D" if $ans->{'int-assign'};
+            if ($resp eq 'BC') {
+                return "Correct";
+            }
+            else {
+                return "You answered <b>$resp</b>.<br/>".
+                       "Incorrect.  The correct answer is <tt>BC</tt>.";
+            }
+        },
+    },
+
+    'app-divide' => {
+        text => <<'EOT',
+   <pre>
+    int main()
+    {
+        float total = 4;
+        cout << 5/total;
+        return 0;
+    }
+   </pre>
+   
+   What is the output of running this program (write "error" followed by a 
+   reason if there is a compile error)? <br/>
+   <input type="text" name="app-divide" size="60"/>
+EOT
+        evaluate => sub {
+            my ($ans) = @_;
+            if ($ans eq '1.25') {
+                return "Correct";
+            }
+            else {
+                return "Incorrect.  The correct answer is <tt>1.25</tt>.  Here, it "
+                     . "is not integer division, because <tt>total</tt> was declared "
+                     . "as a <tt>float</tt>.  If it had simply been literally <tt>5/4</tt> "
+                     . "<i>then</i> it would have been integer division.";
+            }
+        },
+    },
 );
 
 my $cgi = CGI->new;

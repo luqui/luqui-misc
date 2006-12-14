@@ -346,6 +346,7 @@ EOT
         int x = 0;
         x == 42;
         cout &lt;&lt; x;
+        return 0;
     }
    </pre>
    What is the output of running this program (write "error" followed by a 

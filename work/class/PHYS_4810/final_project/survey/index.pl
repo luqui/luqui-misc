@@ -44,9 +44,11 @@ EOT
         return 0;
     }
    </pre>
-   What is the output of running this program (write "error" followed by a 
-   reason if there is a compile error)? <br/>
-   <input type="text" name="app-shortcircuit" size="60"/>
+   What is the output of running this program (write "error" if there
+   is a compile error)? <br/>
+   <input type="text" name="app-shortcircuit" size="60"/><br/>
+   Explain your answer: <br/>
+   <input type="text" name="app-shortcircuit_explain" size="60"/>
 EOT
         evaluate => sub {
             my ($ans) = @_;
@@ -282,10 +284,11 @@ EOT
         return 0;
     }
    </pre>
-   What is the output of running this program (write "error" followed by a 
-   reason if there is a compile error, and write "infinite" if it is an
-   infinite loop)? <br/>
-   <input type="text" name="app-pretest" size="60"/>
+   What is the output of running this program (write "error" if there is a
+   compile error, and write "infinite" if it is an infinite loop)? <br/>
+   <input type="text" name="app-pretest" size="60"/><br/>
+   Explain your answer:<br/>
+   <input type="text" name="app-pretest_explain" size="60"/>
 EOT
         evaluate => sub {
             my ($ans) = @_;
@@ -349,9 +352,11 @@ EOT
         return 0;
     }
    </pre>
-   What is the output of running this program (write "error" followed by a 
-   reason if there is a compile error)? <br/>
-   <input type="text" name="app-equality" size="60"/>
+   What is the output of running this program (write "error" if there is a
+   compile error)? <br/>
+   <input type="text" name="app-equality" size="60"/><br/>
+   Explain your answer:<br/>
+   <input type="text" name="app-equality_explain" size="60"/><br/>
 EOT
         evaluate => sub {
             my ($ans) = @_;
@@ -511,9 +516,11 @@ EOT
     }
    </pre>
    
-   What is the output of running this program (write "error" followed by a 
-   reason if there is a compile error)? <br/>
-   <input type="text" name="app-divide" size="60"/>
+   What is the output of running this program (write "error" if there is a
+   compile error)? <br/>
+   <input type="text" name="app-divide" size="60"/><br/>
+   Explain your answer:<br/>
+   <input type="text" name="app-divide_explain" size="60"/>
 EOT
         evaluate => sub {
             my ($ans) = @_;
@@ -576,9 +583,11 @@ EOT
          return 0;
      }
     </pre>
-   What is the output of running this program (write "error" followed by a 
-   reason if there is a compile error)? <br/>
-   <input type="text" name="app-overload" size="60"/>
+   What is the output of running this program (write "error" if there is 
+     a compile error)? <br/>
+   <input type="text" name="app-overload" size="60"/><br/>
+   Explain your answer: <br/>
+   <input type="text" name="app-overload_explain" size="60"/>
 EOT
         evaluate => sub {
             my ($ans) = @_;

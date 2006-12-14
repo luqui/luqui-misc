@@ -528,6 +528,73 @@ EOT
             }
         },
     },
+
+###################
+    'con-overload' => {
+        text => <<'EOT',
+    An overloaded funtion is a function...
+    <ul>
+     <li><input type="radio" name="con-overload" value="same-name-different-param" /> with the same name as another function but a different parameter lists.</li>
+     <li><input type="radio" name="con-overload" value="too-much" /> that attempts to do too much in a single function.</li>
+     <li><input type="radio" name="con-overload" value="too-many-params" /> with too many parameters.</li>
+     <li><input type="radio" name="con-overload" value="same-thing-different-name" /> that does the same thing as another function but with a different name.</li>
+     <li><input type="radio" name="con-overload" value="none" /> None of the above </li>
+    </ul>
+EOT
+        evaluate => sub {
+            my ($ans) = @_;
+            if ($ans eq 'same-name-different-param') {
+                return "Correct";
+            }
+            else {
+                return "Incorrect.  The correct answer was '... with the same name as another function but a different parameter list'."
+            }
+        },
+    },
+
+###################
+    'app-overload' => {
+        text => <<'EOT',
+    <pre>
+     void foo(int x)
+     {
+         cout << "A";
+     }
+     void foo(double y)
+     {
+         cout << "B";
+     }
+     int foo(char z[12])
+     {
+         cout << "C";
+     }
+     
+     int main()
+     {
+         int y = 6;
+         foo(y);
+         return 0;
+     }
+    </pre>
+   What is the output of running this program (write "error" followed by a 
+   reason if there is a compile error)? <br/>
+   <input type="text" name="app-overload" size="60"/>
+EOT
+        evaluate => sub {
+            my ($ans) = @_;
+            if ($ans eq 'A') {
+                return "Correct";
+            }
+            if ($ans eq 'B') {
+                return "Incorrect.  The correct answer is <tt>A</tt>.  Even " .
+                       "though the name of the variable you called <tt>foo</tt> " .
+                       "with is <tt>y</tt>, which matches B, the name doesn't matter. " .
+                       "What matters is the type: main's <i>int</i> y matches the A " .
+                       "case's <i>int</i> x.";
+            }
+            return "Incorrect.  The correct answer is <tt>A</tt>.";
+        },
+    },
 );
 
 my $cgi = CGI->new;
@@ -643,16 +710,16 @@ EOT
     if (exists $answers{$problem}) {
         my $ans = $problems{$problem}{evaluate}->($answers{$problem});
         if ($ans eq 'Correct' || $ans =~ /^Almost correct/) {
-            print "<div class=\"correct\">\n$ans\n</div>\n";
+            print "<div class=\"correct\">\n";
         }
         else {
             print "<div class=\"incorrect\">\n";
-            if (!ref $answers{$problem}) {
-                print "Your answer was <b>$answers{$problem}</b>.<br/>\n";
-            }
-            print "$ans\n</div>\n";
         }
-
+        
+        if (!ref $answers{$problem}) {
+            print "Your answer was <b>$answers{$problem}</b>.<br/>\n";
+        }
+        print "$ans\n</div>\n";
     }
     print "  </div>\n";
 }

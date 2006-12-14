@@ -372,6 +372,7 @@ EOT
         },
     },
 
+#################
     'con-signature' => {
         text => <<'EOT',
     Consider this function prototype:
@@ -413,6 +414,7 @@ EOT
         },
     },
 
+#########################
     'app-signature' => {
         text => <<'EOT',
     <pre>
@@ -455,6 +457,7 @@ EOT
         },
     },
     
+###################
     'con-divide' => {
         text => <<'EOT',
     The <tt>/</tt> operator represents two different operations: integer
@@ -496,6 +499,7 @@ EOT
         },
     },
 
+###################
     'app-divide' => {
         text => <<'EOT',
    <pre>

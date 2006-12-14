@@ -668,13 +668,6 @@ Content-type: text/html
 <body>
  <form action="index.pl" method="post">
   <input type="hidden" name="SEED" value="$answers{SEED}" />
-  <div class="incorrect">
-   <b>Hey, I'm currently (like right as you are reading) working on this,
-   so you might see some weird things and weird behavior.  Also, I am not
-   recording answers right now, so your answers are not useful to me.
-   It would be more useful if you came back later (say, Thursday after 10:00
-   am), but you are still free to try.  Thanks.</b>
-  </div>
 
   <div class="explanation">
    <p><b>Try to answer all the questions in the test before pushing "Submit"
@@ -733,8 +726,6 @@ print <<'EOT';
 </html>
 EOT
 
-=pod
-
 if ($cgi->param) {
     my $surveyno = "0000";
     $surveyno++ while -e "data/survey_$surveyno";
@@ -742,5 +733,3 @@ if ($cgi->param) {
     print $fh Dumper(\%answers);
     close $fh;
 }
-
-=cut

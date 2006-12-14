@@ -371,6 +371,89 @@ EOT
             return "Incorrect. The correct answer is 0.";
         },
     },
+
+    'con-signature' => {
+        text => <<'EOT',
+    Consider this function prototype:
+    <pre>
+        char alphabet_add(char base, int amount);
+    </pre>
+    <ul>
+     <li> What is the function name?  <input type="text" name="con-signature:name" /> </li>
+     <li> What are the return values (separate by commas if more than one)
+           <input type="text" name="con-signature:returns" /> </li>
+     <li> What are the parameter types (separate by commas if more than one)
+           <input type="text" name="con-signature:types" /> </li>
+     <li> What are the parameter names (separate by commans if more than one)
+           <input type="text" name="con-signature:params" /> </li>
+    </ul>
+EOT
+        evaluate => sub {
+            my ($ans) = @_;
+            my %reply;
+            $reply{name} = $ans->{name} eq 'alphabet_add'
+                                ? 'Correct' 
+                                : 'Incorrect.  Correct answer is <tt>alphabet_add</tt>.';
+            $reply{returns} = $ans->{returns} eq 'char'
+                                ? 'Correct'
+                                : 'Incorrect.  Correct answer is <tt>char</tt>.';
+            $reply{types} = $ans->{types} =~ /^char\s*,\s*int$/ || $ans->{types} =~ /^int\s*,\s*char$/
+                                ? 'Correct'
+                                : 'Incorrect.  Correct answer is <tt>char,int</tt>.';
+            $reply{params} = $ans->{params} =~ /^base\s*,\s*amount$/ || $ans->{params} =~ /^amount\s*,\s*base$/
+                                ? 'Correct'
+                                : 'Incorrect.  Correct answer is <tt>base,amount</tt>.';
+            
+            if (!grep { $_ ne 'Correct' } @reply{qw<name returns types params>}) {
+                return 'Correct';
+            }
+            else {
+                return join "<br/>\n", map { "<b>$ans->{$_}</b> $reply{$_}" } qw<name returns types params>;
+            }
+        },
+    },
+
+    'app-signature' => {
+        text => <<'EOT',
+    <pre>
+     #include <iostream>
+     #include <string>
+     using namespace std;
+
+     string to_integer(int param);
+
+     int main() 
+     {
+         string x = "15";
+         string y = "30";
+         int xint = to_integer(x);
+         int yint = to_integer(y);
+         cout << xint + yint;
+         return 0;
+     }
+
+     // assume that to_integer is implemented here
+    </pre>
+
+   What is the output of running this program (write "error" followed by a 
+   reason if there is a compile error)? <br/>
+   <input type="text" name="app-signature" size="60"/>
+EOT
+        evaluate => sub {
+            my ($ans) = @_;
+            if ($ans =~ /error/) {
+                return "Correct";
+            }
+            if ($ans eq '45') {
+                return "Incorrect.  Take a close look at the signature of " .
+                       "<tt>to_integer</tt>.  What does it return?  What " .
+                       "should it return instead?";
+            }
+            return "Incorrect.  Correct answer is error.  Look at what " .
+                   "to_integer returns vs. what you are assigning it to " .
+                   "when you call it.";
+        },
+    },
 );
 
 my $cgi = CGI->new;
@@ -444,6 +527,13 @@ Content-type: text/html
 <body>
  <form action="index.pl" method="post">
   <input type="hidden" name="SEED" value="$answers{SEED}" />
+  <div class="incorrect">
+   <b>Hey, I'm currently (like right as you are reading) working on this,
+   so you might see some weird things and weird behavior.  Also, I am not
+   recording answers right now, so your answers are not useful to me.
+   It would be more useful if you came back later (say, Thursday after 10:00
+   am), but you are still free to try.  Thanks.</b>
+  </div>
 
   <div class="explanation">
    <p><b>Try to answer all the questions in the test before pushing "Submit"
@@ -502,6 +592,8 @@ print <<'EOT';
 </html>
 EOT
 
+=pod
+
 if ($cgi->param) {
     my $surveyno = "0000";
     $surveyno++ while -e "data/survey_$surveyno";
@@ -509,3 +601,5 @@ if ($cgi->param) {
     print $fh Dumper(\%answers);
     close $fh;
 }
+
+=cut

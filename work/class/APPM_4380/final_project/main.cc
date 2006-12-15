@@ -25,6 +25,8 @@ roads_t ROADS;
 typedef std::list<Light*> lights_t;
 lights_t LIGHTS;
 
+void quit();
+
 void init()
 {
 	INIT.init();
@@ -76,6 +78,7 @@ double CARPROB = 1;
 int CARCOUNT = 0;
 double CARTIME = 0;
 double TIME = 0;
+double MAXTIME = HUGE_VAL;
 
 void step() 
 {
@@ -105,6 +108,10 @@ void step()
 		car->set_max_accel(1);
 		CARS.push_back(car);
 		lastcar = TIME;
+	}
+
+	if (TIME > MAXTIME) {
+		quit();
 	}
 }
 
@@ -155,8 +162,8 @@ void events()
 
 int main(int argc, char** argv)
 {	
-	if (argc != 8) {
-		std::cout << "Usage: main prob on1 off1 phase1 on2 off2 phase2\n";
+	if (argc != 9) {
+		std::cout << "Usage: main prob on1 off1 phase1 on2 off2 phase2 time\n";
 		return 2;
 	}
 	CARPROB = atof(argv[1]);
@@ -166,6 +173,8 @@ int main(int argc, char** argv)
 	params[1].ontime  = atof(argv[5]);
 	params[1].offtime = atof(argv[6]);
 	params[1].phase   = atof(argv[7]);
+	MAXTIME           = atof(argv[8]);
+	if (MAXTIME == 0) MAXTIME = HUGE_VAL;
 	
 	
 	FrameRateLockTimer timer(DT);

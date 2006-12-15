@@ -34,7 +34,8 @@ inline Direction opposite_dir(Direction d) {
 class Light {
 public:
 	Light(vec2 pos, double ontime, double offtime, double phase) 
-		: roads_(), pos_(pos), time_(phase), ontime_(ontime), offtime_(offtime), phase_(phase), green_(false)
+		: roads_(), pos_(pos), time_(phase), ontime_(ontime), offtime_(offtime), phase_(phase), green_(false),
+		  passes_(0), cycles_(0)
 	{ }
 
 	vec2 get_position() const {
@@ -52,12 +53,25 @@ public:
 	bool green(Direction from, Direction to) const {
 		return green_;
 	}
+
+	void pass_under() {
+		passes_++;
+	}
+
+	int get_passes() const { 
+		return passes_;
+	}
+
+	int get_cycles() const {
+		return cycles_;
+	}
 	
 	void step() {
 		time_ += DT;
 		while (true) {
 			if (green_) {
 				if (time_ >= ontime_) {
+					cycles_++;
 					time_ -= ontime_;
 					green_ = false;
 					continue;
@@ -98,6 +112,7 @@ private:
 	vec2 pos_;
 	double time_, ontime_, offtime_, phase_;
 	bool green_;
+	int passes_, cycles_;
 };
 
 class Road {

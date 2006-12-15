@@ -8,7 +8,7 @@ class Car {
 public:
 	Car(Road* road, vec2 pos) 
 		: road_(road), pos_(pos), comfort_(0), max_accel_(0),
-		  dead_(false)
+		  dead_(false), time_(0)
 	{
 		road_->insert_car(this);
 	}
@@ -21,6 +21,10 @@ public:
 
 	vec2 get_position() const {
 		return pos_;
+	}
+
+	double get_time() const {
+		return time_;
 	}
 
 	void set_comfort_distance(double comfort) {
@@ -37,6 +41,7 @@ public:
 
 	void step() {
 		if (dead_) return;
+		time_ += DT;
 		
 		const Car* next = road_->get_next_car(this);
 		if (!next || (pos_ - next->get_position()).norm() - 1 >= comfort_ * vel_.norm()) {
@@ -52,6 +57,7 @@ public:
 		}
 
 		if ((road_->get_dest()->get_position() - pos_) * road_->get_direction() < 0) {
+			road_->get_dest()->pass_under();
 			road_->delete_car(this);
 			road_ = road_->get_dest()->get_road(road_->get_direction_id());
 			if (road_) {
@@ -112,6 +118,7 @@ private:
 	double comfort_;    // units: s
 	double max_accel_;  // units: m/s^2
 	bool dead_;
+	double time_;
 };
 
 #endif

@@ -73,12 +73,17 @@ void init_scene()
 }
 
 double CARPROB = 1;
+int CARCOUNT = 0;
+double CARTIME = 0;
+double TIME = 0;
 
 void step() 
 {
 	for (cars_t::iterator i = CARS.begin(); i != CARS.end(); ) {
 		(*i)->step();
 		if ((*i)->dead()) {
+			CARCOUNT++;
+			CARTIME += (*i)->get_time();
 			delete *i;
 			cars_t::iterator j = i++;
 			CARS.erase(j);
@@ -91,16 +96,15 @@ void step()
 		(*i)->step();
 	}
 
-	static double time = 0;
 	static double lastcar = 0;
-	time += DT;
-	if (time > lastcar + 1 && randrange(0,1) < CARPROB*DT) {
+	TIME += DT;
+	if (TIME > lastcar + 1 && randrange(0,1) < CARPROB*DT) {
 		Car* car;
 		car = new Car(LEFT, vec2(-44, 0));
 		car->set_comfort_distance(1);
 		car->set_max_accel(1);
 		CARS.push_back(car);
-		lastcar = time;
+		lastcar = TIME;
 	}
 }
 
@@ -117,13 +121,34 @@ void draw()
 	}
 }
 
+void quit()
+{
+	Light* left = LEFT->get_dest();
+	Light* right = LEFT->get_dest()->get_road(EAST)->get_dest();
+	std::cout << "Left light:\n";
+	std::cout << "  Passes: "      << left->get_passes() << "\n";
+	std::cout << "  Cycles: "      << left->get_cycles() << "\n";
+	std::cout << "  Cars/cycle: "  << double(left->get_passes()) / left->get_cycles() << "\n";
+	std::cout << "  Cars/s:     "  << left->get_passes() / TIME << "\n";
+	std::cout << "Right light:\n";
+	std::cout << "  Passes: "      << right->get_passes() << "\n";
+	std::cout << "  Cycles: "      << right->get_cycles() << "\n";
+	std::cout << "  Cars/cycle: "  << double(right->get_passes()) / right->get_cycles() << "\n";
+	std::cout << "  Cars/s:     "  << right->get_passes() / TIME << "\n";
+	std::cout << "Cars completing their trip: " << CARCOUNT << "\n";
+	std::cout << "Average time per car: " << CARTIME/CARCOUNT << "s\n";
+	std::cout << "Slowdown per car: " << CARTIME/CARCOUNT - 90.0/3 << "s\n";
+	
+	INIT.quit();
+	exit(0);
+}
+
 void events() 
 {
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
-			INIT.quit();
-			exit(0);
+			quit();
 		}
 	}
 }

@@ -7,13 +7,16 @@
 class Car {
 public:
 	Car(Road* road, vec2 pos) 
-		: road_(road), pos_(pos), comfort_(0), max_accel_(0) 
+		: road_(road), pos_(pos), comfort_(0), max_accel_(0),
+		  dead_(false)
 	{
 		road_->insert_car(this);
 	}
 
 	~Car() {
-		road_->delete_car(this);
+		if (road_) {
+			road_->delete_car(this);
+		}
 	}
 
 	vec2 get_position() const {
@@ -28,7 +31,13 @@ public:
 		max_accel_ = accel;
 	}
 
+	bool dead() const {
+		return dead_;
+	}
+
 	void step() {
+		if (dead_) return;
+		
 		const Car* next = road_->get_next_car(this);
 		if (!next || (pos_ - next->get_position()).norm() - 1 >= comfort_ * vel_.norm()) {
 			if ((vel_ + max_accel_ * DT * road_->get_direction()).norm() < road_->get_speed_limit()) {
@@ -42,9 +51,19 @@ public:
 			vel_ = ~road_->get_direction() * ((pos_ - next->get_position()).norm() - 1) / comfort_;
 		}
 
-		if (!road_->get_dest()->green(opposite_dir(road_->get_direction_id()), road_->get_direction_id())) {
+		if ((road_->get_dest()->get_position() - pos_) * road_->get_direction() < 0) {
+			road_->delete_car(this);
+			road_ = road_->get_dest()->get_road(road_->get_direction_id());
+			if (road_) {
+				road_->insert_car(this);
+			}
+			else {
+				dead_ = true;
+			}
+		}
+		else if (!road_->get_dest()->green(opposite_dir(road_->get_direction_id()), road_->get_direction_id())) {
 			// x = v^2/2a  (distance it takes to stop)
-			double lightdist = (road_->get_dest()->get_position() - pos_) * road_->get_direction();
+			double lightdist = (road_->get_dest()->get_position() - 1*road_->get_direction() - pos_) * road_->get_direction();
 			if (lightdist < vel_.norm2() / (2*max_accel_)) {
 				double target;
 				if (lightdist < 0) {
@@ -66,6 +85,8 @@ public:
 	}
 
 	void draw() const {
+		if (dead_) return;
+		
 		glPushMatrix();
 		glTranslatef(pos_.x, pos_.y, 0);
 		glColor3f(1,0,0);
@@ -90,6 +111,7 @@ private:
 	vec2 vel_;
 	double comfort_;    // units: s
 	double max_accel_;  // units: m/s^2
+	bool dead_;
 };
 
 #endif

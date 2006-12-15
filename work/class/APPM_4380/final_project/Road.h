@@ -33,7 +33,9 @@ inline Direction opposite_dir(Direction d) {
 
 class Light {
 public:
-	Light(vec2 pos) : roads_(), pos_(pos) { }
+	Light(vec2 pos, double ontime, double offtime, double phase) 
+		: roads_(), pos_(pos), time_(phase), ontime_(ontime), offtime_(offtime), phase_(phase), green_(false)
+	{ }
 
 	vec2 get_position() const {
 		return pos_;
@@ -47,23 +49,64 @@ public:
 		return roads_[d];
 	}
 
-	bool green(Direction from, Direction to) {
-		// XXX stub
-		return false;
+	bool green(Direction from, Direction to) const {
+		return green_;
 	}
 	
-	void step() { }
-	void draw() const { }
+	void step() {
+		time_ += DT;
+		while (true) {
+			if (green_) {
+				if (time_ >= ontime_) {
+					time_ -= ontime_;
+					green_ = false;
+					continue;
+				}
+			}
+			else {
+				if (time_ >= offtime_) {
+					time_ -= offtime_;
+					green_ = true;
+					continue;
+				}
+			}
+			break;
+		}
+	}
+	
+	void draw() const {
+		glPushMatrix();
+		glTranslatef(pos_.x, pos_.y + 0.75, 0);
+		if (green(WEST, EAST)) {
+			glColor3f(0,1,0);
+		}
+		else {
+			glColor3f(1,0,0);
+		}
+		glBegin(GL_TRIANGLE_FAN);
+		glVertex2f(0,0);
+		for (int i = 0; i <= 24; i++) {
+			double theta = 2*M_PI*i / 24;
+			glVertex2f(0.5 * cos(theta), 0.5 * sin(theta));
+		}
+		glEnd();
+		glPopMatrix();
+	}
 
 private:
 	Road* roads_[N_DIRECTIONS];
 	vec2 pos_;
+	double time_, ontime_, offtime_, phase_;
+	bool green_;
 };
 
 class Road {
 public:
 	Road(Light* src, Light* dest, Direction dir, double speed_limit) 
-		: src_(src), dest_(dest), dir_(dir), speed_limit_(speed_limit) { }
+		: src_(src), dest_(dest), dir_(dir), speed_limit_(speed_limit) {
+			src_->set_road(dir, this);
+			dest_->set_road(opposite_dir(dir), this);
+	}
 
 	Light* get_src()  const { return src_; }
 	Light* get_dest() const { return dest_; }
@@ -77,6 +120,10 @@ public:
 	}
 	
 	const Car* get_next_car(Car* in) const {
+		if (in == 0 && cars_.size()) {
+			return cars_.front();
+		}
+		
 		carmap_t::const_iterator m = carmap_.find(in);
 		if (m != carmap_.end()) {
 			cars_t::const_iterator i = m->second;
@@ -84,17 +131,27 @@ public:
 			if (i != cars_.end()) {
 				return *i;
 			}
+			else if (dest_->get_road(dir_)) {
+				return dest_->get_road(dir_)->get_next_car(0);
+			}
 		}
 		return 0;
 	}
 
 	const Car* get_prev_car(Car* in) const {
+		if (in == 0 && cars_.size()) {
+			return cars_.back();
+		}
+		
 		carmap_t::const_iterator m = carmap_.find(in);
 		if (m != carmap_.end()) {
 			cars_t::const_iterator i = m->second;
 			if (i != cars_.begin()) {
 				--i;
 				return *i;
+			}
+			else if (src_->get_road(opposite_dir(dir_))) {
+				return src_->get_road(opposite_dir(dir_))->get_prev_car(0);
 			}
 		}
 		return 0;

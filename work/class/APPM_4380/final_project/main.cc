@@ -1,15 +1,22 @@
+#include <iostream>
+#include <cstdlib>
+#include <list>
 #include <soy/init.h>
 #include <soy/Viewport.h>
 #include <soy/Timer.h>
-#include <list>
+#include <soy/util.h>
 
 const double DT = 1/45.0;  // This should be put in a proper place
 
 #include "Car.h"
 #include "Road.h"
 
+struct LightParams {
+	double ontime, offtime, phase;
+};
+
 SoyInit INIT;
-Viewport VIEW(vec2(0,0), vec2(48, 36));
+Viewport VIEW(vec2(0,0), vec2(60, 45));
 
 typedef std::list<Car*> cars_t;
 cars_t CARS;
@@ -32,35 +39,68 @@ void clear_list(T& list) {
 	list.clear();
 }
 
+Road* make_road(vec2 start, Light* slight, vec2 end, Light* elight, Direction dir) 
+{
+	if (!slight) LIGHTS.push_back(slight = new Light(start, 1, 0, 0));
+	if (!elight) LIGHTS.push_back(elight = new Light(end, 1, 0, 0));
+	Road* road;
+	ROADS.push_back(road = new Road(slight, elight, dir, 3));
+	return road;
+}
+
+Light* make_light(vec2 pos, const LightParams& param) {
+	Light* light = new Light(pos, param.ontime, param.offtime, param.phase);
+	LIGHTS.push_back(light);
+	return light;
+}
+
+Road* LEFT = 0;
+
+LightParams params[2];
+
 void init_scene() 
 {
 	clear_list(CARS);
 	clear_list(ROADS);
 	clear_list(LIGHTS);
 
-	Light* light1, * light2;
-	Road* road;
-
-	LIGHTS.push_back(light1 = new Light(vec2(-15, 0)));
-	LIGHTS.push_back(light2 = new Light(vec2(15, 0)));
-	ROADS.push_back(road = new Road(light1, light2, EAST, 3));
-
-	for (int i = 0; i < 5; i++) {
-		Car* car;
-		car = new Car(road, vec2(-9 - i, 0));
-		car->set_comfort_distance(1);
-		car->set_max_accel(1);
-		CARS.push_back(car);
-	}
+	Road* left   = make_road(vec2(-45, 0), 0, vec2(-15, 0), 
+			make_light(vec2(-15, 0), params[0]), EAST);
+	Road* center = make_road(vec2(-15, 0), left->get_dest(), vec2(15, 0), 
+			make_light(vec2(15, 0), params[1]), EAST);
+	Road* right  = make_road(vec2(15, 0), center->get_dest(), vec2(45, 0), 0, EAST);
+	LEFT = left;
 }
+
+double CARPROB = 1;
 
 void step() 
 {
-	for (cars_t::iterator i = CARS.begin(); i != CARS.end(); ++i) {
+	for (cars_t::iterator i = CARS.begin(); i != CARS.end(); ) {
 		(*i)->step();
+		if ((*i)->dead()) {
+			delete *i;
+			cars_t::iterator j = i++;
+			CARS.erase(j);
+		}
+		else {
+			++i;
+		}
 	}
 	for (lights_t::iterator i = LIGHTS.begin(); i != LIGHTS.end(); ++i) {
 		(*i)->step();
+	}
+
+	static double time = 0;
+	static double lastcar = 0;
+	time += DT;
+	if (time > lastcar + 1 && randrange(0,1) < CARPROB*DT) {
+		Car* car;
+		car = new Car(LEFT, vec2(-44, 0));
+		car->set_comfort_distance(1);
+		car->set_max_accel(1);
+		CARS.push_back(car);
+		lastcar = time;
 	}
 }
 
@@ -88,8 +128,21 @@ void events()
 	}
 }
 
-int main()
-{
+int main(int argc, char** argv)
+{	
+	if (argc != 8) {
+		std::cout << "Usage: main prob on1 off1 phase1 on2 off2 phase2\n";
+		return 2;
+	}
+	CARPROB = atof(argv[1]);
+	params[0].ontime  = atof(argv[2]);
+	params[0].offtime = atof(argv[3]);
+	params[0].phase   = atof(argv[4]);
+	params[1].ontime  = atof(argv[5]);
+	params[1].offtime = atof(argv[6]);
+	params[1].phase   = atof(argv[7]);
+	
+	
 	FrameRateLockTimer timer(DT);
 	
 	init();
@@ -103,6 +156,6 @@ int main()
 		draw();
 		SDL_GL_SwapBuffers();
 
-		timer.lock();
+		//timer.lock();
 	}
 }

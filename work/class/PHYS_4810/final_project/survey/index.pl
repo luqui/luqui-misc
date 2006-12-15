@@ -423,8 +423,8 @@ EOT
     'app-signature' => {
         text => <<'EOT',
     <pre>
-     #include <iostream>
-     #include <string>
+     #include &lt;iostream&gt;
+     #include &lt;string&gt;
      using namespace std;
 
      string to_integer(int param);

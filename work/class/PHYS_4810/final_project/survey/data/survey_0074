@@ -1,0 +1,27 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-switch_default' => 'default',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char, int',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 86215,
+          'app-switch' => {
+                            'case3' => 'Case \'3\';',
+                            'case2' => 'Case \'2\';',
+                            'case1' => 'Case \'1\';'
+                          },
+          'app-overload' => 'B',
+          'con-divide' => {
+                            'declare' => 'on'
+                          },
+          'app-signature' => 'no output, the cout statment has no quotes and is not set equal to anything to output',
+          'app-equality' => '0',
+          'app-break' => '1 2',
+          'con-overload' => 'same-name-different-param',
+          'app-shortcircuit' => 'Good 0 9',
+          'app-divide' => '1'
+        };

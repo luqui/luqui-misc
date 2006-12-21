@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'post-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'x == 42 is not an assignment statement.',
+          'app-overload' => 'error',
+          'con-overload' => 'same-name-different-param',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'The last foo function doesn’t return a value of type integer.',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'character,  integer',
+                               'returns' => 'character',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 72672,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on',
+                            'characterization' => 'One of the vaues have to be a float type.'
+                          },
+          'app-break' => 'infinite',
+          'app-equality' => '0',
+          'app-signature' => 'error. The parameter of the function call are not of type integer.',
+          'app-shortcircuit_explain' => 'x is not  incremented since y > 5 is true.',
+          'app-shortcircuit' => 'Good 09',
+          'app-pretest_explain' => 'Never enters the loop since 5 < 0 is False.',
+          'fullname' => 'Jeries',
+          'app-divide' => '1.25',
+          'app-divide_explain' => 'Floating point division'
+        };

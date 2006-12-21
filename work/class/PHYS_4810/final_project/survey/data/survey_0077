@@ -1,0 +1,35 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '803-05-7117',
+          'app-pretest' => '0',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 54483,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case :',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1 :'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on'
+                          },
+          'app-break' => '1 2 4 8 16',
+          'app-signature' => 'error',
+          'app-equality' => '0',
+          'app-shortcircuit' => 'Good 09',
+          'app-divide' => '1.25',
+          'fullname' => 'colby brown',
+          'app-pretest_explain' => 'the loop never runs'
+        };

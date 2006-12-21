@@ -1,0 +1,33 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'last',
+          'app-overload' => 'B',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810649760',
+          'app-pretest' => '0',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char, int',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 98597,
+          'app-switch' => {
+                            'case3' => 'case \'3\':',
+                            'case2' => 'case \'2\':',
+                            'default' => 'case \'4\':',
+                            'case1' => 'case \'1\':'
+                          },
+          'con-divide' => {
+                            'declare' => 'on'
+                          },
+          'app-equality' => 'error',
+          'app-break' => 'infinite',
+          'app-signature' => 'error',
+          'app-shortcircuit' => 'Good 09',
+          'fullname' => 'Jordan Reeves',
+          'app-divide' => '1.25'
+        };

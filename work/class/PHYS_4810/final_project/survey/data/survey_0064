@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'app-equality_explain' => '0 doesn\'t equal 42',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '830036127',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'y is an int, so it goes to the void function with int input',
+          'con-signature' => {
+                               'params' => 'base , amount',
+                               'types' => 'char, int',
+                               'returns' => 'int amount',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 76384,
+          'app-switch' => {
+                            'case3' => 'case C:',
+                            'case2' => 'case B:',
+                            'default' => 'case D:',
+                            'case1' => 'case A:'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'cast-result' => 'on',
+                            'characterization' => 'i dont know.?'
+                          },
+          'app-shortcircuit_explain' => 'no semi colon at end of loops',
+          'app-equality' => 'error',
+          'app-signature' => '4',
+          'app-break' => '5 spaces',
+          'app-shortcircuit' => 'error',
+          'app-pretest_explain' => '"i" never starts less than zero.',
+          'app-divide' => 'error',
+          'fullname' => 'quang than',
+          'app-divide_explain' => 'cout type is unknown'
+        };

@@ -1,0 +1,34 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => '== is equality, while = is assignment',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810510578',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'overloaded',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 97534,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'app-equality' => '0',
+          'app-break' => '1 2 4 8 16',
+          'app-signature' => '1530',
+          'app-shortcircuit' => 'Good 09',
+          'app-divide' => '1.25',
+          'app-pretest_explain' => 'would never enter the for loop',
+          'fullname' => 'Sharad Desai',
+          'app-divide_explain' => 'integer math'
+        };

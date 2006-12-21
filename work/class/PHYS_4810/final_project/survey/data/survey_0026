@@ -1,0 +1,20 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'the "==',
+          'SEED' => 83087,
+          'con-divide' => {
+                            'int-assign' => 'on',
+                            'characterization' => 'Whenever it\'s used to divide two numbers or variables that are not contained in quotes.  It doesn\'t matter if they are ints or doubles'
+                          },
+          'app-equality' => '0',
+          'app-signature' => 'I don\'t know what "to_integer(int param)" is....so, error?',
+          'app-shortcircuit_explain' => 'Short Ciruit evaluation skips the x++.',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810149185',
+          'app-shortcircuit' => 'Good 09',
+          'fullname' => 'David Hover',
+          'app-divide' => '1.25',
+          'app-divide_explain' => 'int/float = double?  I know int/double or double/int = double.  Is it the same for float?'
+        };

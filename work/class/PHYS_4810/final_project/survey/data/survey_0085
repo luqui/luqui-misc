@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'x==42 will return false, which is not a statement',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810665902',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'overloaded function - y is an integer',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 93464,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => 'when one or both variables are floating point types'
+                          },
+          'app-signature' => 'error - parameter is not an int',
+          'app-break' => '1 2 4 8 16',
+          'app-shortcircuit_explain' => 'y > 9, then short circuits, so never x++',
+          'app-equality' => 'error',
+          'app-shortcircuit' => 'Good 09',
+          'app-divide' => '1.25',
+          'fullname' => 'Damian Manda',
+          'app-pretest_explain' => 'The for loop never executes',
+          'app-divide_explain' => 'The float makes the int convert for the division'
+        };

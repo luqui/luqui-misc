@@ -1,0 +1,24 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'd',
+          'con-signature' => {
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 75954,
+          'app-switch' => {
+                            'case3' => 'case 3',
+                            'case2' => 'case 2',
+                            'default' => 'default',
+                            'case1' => 'case 1'
+                          },
+          'con-divide' => {
+                            'int-assign' => 'on',
+                            'characterization' => 'wienner'
+                          },
+          'con-overload' => 'same-name-different-param',
+          'app-pretest_explain' => ';',
+          'app-pretest' => 'error'
+        };

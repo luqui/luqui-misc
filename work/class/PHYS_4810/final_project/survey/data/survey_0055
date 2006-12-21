@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'none',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => '== doesn\'t change the value of x',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810484505',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'the function is overloaded so will take int y and use it as the argument in the correct function',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 5261,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-result' => 'on',
+                            'characterization' => 'it\'s like purity to me... an int is pure but as soon as you mix a decimal in there anywhere, it\'s polluted and therefore equals the pollutant'
+                          },
+          'app-equality' => '0',
+          'app-shortcircuit_explain' => 'y>5 and therefore x will not be increased b/c the RHS will not be affected',
+          'app-signature' => 'error because you entered an argument of type string into a parameter of type string',
+          'app-break' => 'infinite',
+          'app-shortcircuit' => 'Good 09',
+          'app-pretest_explain' => 'it will never enter the loop because 5 is already greater than 0',
+          'fullname' => 'Lora Northcutt',
+          'app-divide' => '1.0',
+          'app-divide_explain' => '4 was not entered as 4.0 so the value is truncated'
+        };

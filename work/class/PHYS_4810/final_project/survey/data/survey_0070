@@ -1,0 +1,11 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'app-equality_explain' => 'x is assigned 0, then there is a comparison to 42, which does nothing, then x is outputt',
+          'con-shortcircuit' => 'true',
+          'SEED' => 39484,
+          'app-equality' => '0',
+          'app-pretest_explain' => 'i is set to five, then i is compared to 0, which is false, so the loop quits, x still =0',
+          'app-pretest' => '0'
+        };

@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-pretest' => 'sentinel-controlled',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'The x==42; is just a boolean statement which does nothing to the value of x.',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '830058400',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'foo(y) calls the foo function which uses an int parameter',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 89402,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => 'I think that / is floating point division when one of the types being used is a float or higher (double, etc.)'
+                          },
+          'app-shortcircuit_explain' => 'y is greater than 5 so it enters the loop',
+          'app-equality' => '0',
+          'app-signature' => '45',
+          'app-break' => '1 2 4 8 16',
+          'app-shortcircuit' => 'Good 09',
+          'app-divide' => '1.25',
+          'fullname' => 'Robert Pomeroy',
+          'app-pretest_explain' => 'The compiler never gets inside the for loop because i is bigger than 0',
+          'app-divide_explain' => 'Since total is a float, it will output a number with a float type'
+        };

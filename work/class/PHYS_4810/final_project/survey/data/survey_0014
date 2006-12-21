@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'compares x to 42 doesn\'t assign it that value',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810683768',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'calls void foo (int x)',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'base, amount',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 8995,
+          'app-switch' => {
+                            'case3' => 'Case 3:',
+                            'case2' => 'Case 2:',
+                            'default' => 'Default:',
+                            'case1' => 'Case 1:'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => 'Only one of the numbers needs to be a float or double.'
+                          },
+          'app-signature' => '45',
+          'app-break' => '1 2 4 8 16',
+          'app-shortcircuit_explain' => 'Outputs good because the first part of the if loop is true, and x++ is never implemented.',
+          'app-equality' => '0',
+          'app-shortcircuit' => 'Good 0 9',
+          'app-divide' => '1.25',
+          'fullname' => 'Justin Simmons',
+          'app-pretest_explain' => 'for loop never starts',
+          'app-divide_explain' => '4 is a double and only one needs to be a double for the output to be double'
+        };

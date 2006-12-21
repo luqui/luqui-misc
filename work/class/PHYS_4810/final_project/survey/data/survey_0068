@@ -1,0 +1,40 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'x == 42 does nothing. so output is the assigned value of x.',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'The foo function is called, so that is the output in the foo function.',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 15077,
+          'app-switch' => {
+                            'case3' => 'case 3 :',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on',
+                            'cast-result' => 'on',
+                            'characterization' => 'Any time one or more of the numbers involved is a float or a double.'
+                          },
+          'app-equality' => '0',
+          'app-break' => '1 2 4 8 16',
+          'app-shortcircuit_explain' => 'Y is > than 5, so its true and the x++ does not even get evaluated.',
+          'app-signature' => '45',
+          'app-shortcircuit' => 'Good',
+          'app-divide' => '1',
+          'fullname' => 'Robert Butler',
+          'app-pretest_explain' => 'The for loop never executes.',
+          'app-divide_explain' => 'It does integer division.'
+        };

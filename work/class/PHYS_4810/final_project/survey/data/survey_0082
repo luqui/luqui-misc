@@ -1,0 +1,40 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => '== does not set x equal to 42.',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810068978',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'an integer is passed to the function, so the first function definition is used.',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 69845,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on',
+                            'characterization' => 'the numerator &/or denominator is a float or double, or cast to a float or double.'
+                          },
+          'app-signature' => '45',
+          'app-break' => '1 2 4 8 16',
+          'app-shortcircuit_explain' => 'y is > 5, therefore the if loop runs, and the program never looks at the x++ bit.',
+          'app-equality' => '0',
+          'app-shortcircuit' => 'Good 0 9',
+          'app-divide' => '1.25',
+          'fullname' => 'Kaiti Trimble',
+          'app-pretest_explain' => 'i is initialized > 0, therefore the loop never executes.',
+          'app-divide_explain' => 'since total is a float, the program does proper division rather than integer division'
+        };

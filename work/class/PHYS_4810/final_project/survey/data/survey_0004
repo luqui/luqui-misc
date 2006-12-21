@@ -1,0 +1,10 @@
+$VAR1 = {
+          'con-pretest' => 'post-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'con-shortcircuit' => 'true',
+          'SEED' => 37534,
+          'app-equality' => '42',
+          'fullname' => 'steve'
+        };

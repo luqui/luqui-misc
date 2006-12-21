@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'The == is a comparison operator, not an assignment operator.',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810686921',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'The input is an integer, so the integer foo is used.',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 6053,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => 'When there is a float or double involved.'
+                          },
+          'app-equality' => '0',
+          'app-break' => 'infinite loop',
+          'app-shortcircuit_explain' => 'Short circuit evaluation',
+          'app-signature' => '45',
+          'app-shortcircuit' => 'Good',
+          'app-pretest_explain' => 'The condition in the for loop is not satisfied, so it is skipped.',
+          'fullname' => 'Daniel Charles Heffron',
+          'app-divide' => '1.25',
+          'app-divide_explain' => '5/4.0 will result in a float answer.'
+        };

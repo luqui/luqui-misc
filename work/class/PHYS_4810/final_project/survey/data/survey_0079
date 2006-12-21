@@ -1,0 +1,32 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'app-pretest' => 'error',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 74163,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on'
+                          },
+          'app-break' => '1 2 4 8 16',
+          'app-equality' => '0',
+          'app-signature' => 'error',
+          'app-shortcircuit' => 'Good 09',
+          'app-divide' => '1.25',
+          'app-pretest_explain' => 'i is always > 0'
+        };

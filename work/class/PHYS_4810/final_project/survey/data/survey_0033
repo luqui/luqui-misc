@@ -1,0 +1,38 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810648754',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'the parameter on the overloades function is an int',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, amount',
+                               'returns' => 'char',
+                               'name' => 'alphabet'
+                             },
+          'SEED' => 31015,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => 'one of the arguments has a decimal in it.'
+                          },
+          'app-signature' => '45',
+          'app-equality' => '0',
+          'app-break' => '1',
+          'app-shortcircuit_explain' => 'there is no space in the output between x and y',
+          'app-shortcircuit' => 'Good 19',
+          'app-divide' => '1.25',
+          'app-pretest_explain' => 'for loop never runs',
+          'fullname' => 'Greg Juarez',
+          'app-divide_explain' => '4 is a float variable'
+        };

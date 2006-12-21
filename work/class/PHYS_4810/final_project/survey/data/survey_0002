@@ -1,0 +1,19 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'con-shortcircuit' => 'true',
+          'SEED' => 19287,
+          'app-switch' => {
+                            'case3' => '3',
+                            'case2' => '2',
+                            'default' => 'default',
+                            'case1' => '1'
+                          },
+          'app-equality' => 'error x==42',
+          'app-break' => '1 2 4 8',
+          'app-shortcircuit' => 'Good 0 9',
+          'fullname' => 'Robert Butler',
+          'app-pretest' => '0'
+        };

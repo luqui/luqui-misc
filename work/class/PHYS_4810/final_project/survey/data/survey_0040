@@ -1,0 +1,36 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => '12',
+          'app-equality_explain' => '12',
+          'app-overload' => '12',
+          'con-overload' => 'same-name-different-param',
+          'app-pretest' => '12',
+          'con-signature' => {
+                               'params' => '12',
+                               'types' => '12',
+                               'returns' => '12',
+                               'name' => '12'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 53543,
+          'app-switch' => {
+                            'case3' => '12',
+                            'case2' => '12',
+                            'default' => '12',
+                            'case1' => '12'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => '12'
+                          },
+          'app-shortcircuit_explain' => '12',
+          'app-signature' => '12',
+          'app-break' => '12',
+          'app-equality' => '12',
+          'app-shortcircuit' => '12',
+          'app-divide' => '12',
+          'app-pretest_explain' => '12',
+          'app-divide_explain' => '12'
+        };

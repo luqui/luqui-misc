@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => '== does not reasign x to 42',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810649701',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'parameter is int',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 11669,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-result' => 'on',
+                            'characterization' => 'no idea'
+                          },
+          'app-signature' => 'error " " need to be \' \'',
+          'app-equality' => '0',
+          'app-break' => '1 2 4 8 16',
+          'app-shortcircuit_explain' => '|| allows it to only be one of them and x is incramented to 1',
+          'app-shortcircuit' => 'Good 19',
+          'app-divide' => '1',
+          'fullname' => 'Justin Price',
+          'app-pretest_explain' => 'never enters loop',
+          'app-divide_explain' => 'intiger division'
+        };

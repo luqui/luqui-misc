@@ -1,0 +1,20 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'con-shortcircuit' => 'true',
+          'SEED' => 45756,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'case 4:',
+                            'case1' => 'case 1:'
+                          },
+          'app-equality' => 'error == only works in boolean expressions (equality statments/checking)',
+          'app-break' => '0 2 4 8 16',
+          'app-shortcircuit' => 'good 1 9',
+          'studentid' => '810577852',
+          'fullname' => 'Alexander Fosdick',
+          'app-pretest' => '0'
+        };

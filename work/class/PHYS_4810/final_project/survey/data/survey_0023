@@ -1,0 +1,34 @@
+$VAR1 = {
+          'con-pretest' => 'post-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => '== is equality, while = is assignment',
+          'app-overload' => 'error',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810510578',
+          'app-pretest' => 'infinite loop',
+          'app-overload_explain' => 'y is supposed to be double, not int',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 97534,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case(3):',
+                            'case2' => 'case(2):',
+                            'default' => 'default:',
+                            'case1' => 'case(1):'
+                          },
+          'app-equality' => '0',
+          'app-break' => '1 2 4 8 16',
+          'app-signature' => '45',
+          'app-shortcircuit' => 'Good 19',
+          'app-divide' => '1',
+          'app-pretest_explain' => 'you increment i, so i will never be less than 0',
+          'fullname' => 'Sharad Desai',
+          'app-divide_explain' => 'integer math'
+        };

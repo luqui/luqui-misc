@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'x == 42 evaluates to false, but this action is just as useless as me running around yelling false...  The cout outputs the value of x, which is 0.',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '830249224',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'void foo(int x) is called since y is an int.',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 66870,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => 'The returned data type is that of the most precise operand.  Thus, if both are ints, an int is returned. If an int is divided by a double, a double is returned...'
+                          },
+          'app-break' => '1 2 4 8 16',
+          'app-signature' => 'error two #includes are followed by nothing',
+          'app-equality' => '0',
+          'app-shortcircuit_explain' => 'x++ is never executed since y > 5 evaluates to true',
+          'app-shortcircuit' => 'Good 0',
+          'fullname' => 'Chad Harrington',
+          'app-divide' => '1.25',
+          'app-pretest_explain' => 'loop is never executed since i is never less than 0',
+          'app-divide_explain' => 'total is a float, so 5/total is a float.'
+        };

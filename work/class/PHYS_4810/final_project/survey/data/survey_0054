@@ -1,0 +1,40 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'Since x == 42 is a question of whether or not x is equal to 42, it doesn\'t do anything.  X remains 0.',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '830209144',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'Since y is of type int, the first void function will run since it wants an int.  The rest do not run since the paramater does match type int.',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 34808,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on',
+                            'characterization' => 'At least the numerator or denomonator need to be float or double.'
+                          },
+          'app-equality' => '0',
+          'app-shortcircuit_explain' => 'It\'s not bad since the if statement is true, since y is in fact > 5.',
+          'app-signature' => 'error, since to_integer() does not necessarily return an interger.',
+          'app-break' => '1 2 4 8 16',
+          'app-shortcircuit' => 'Good 09',
+          'app-divide' => '1.25',
+          'app-pretest_explain' => 'The for loop tells x to grow by one each time the loop conditions are satisfied, but if i=5 it can\'t be less than 0 so the loop never does anything.',
+          'fullname' => 'Jeff Severson',
+          'app-divide_explain' => 'Since total is of type float, the result will also be a non-interger.'
+        };

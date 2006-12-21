@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'post-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => '== is and is equal to? (question) not a declaretor',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810-62-5213',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'parameters must match, not the name',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'alphabet_add',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 27083,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => 'It only represents floating-point division when a type is float and its value is in float format.'
+                          },
+          'app-equality' => '0',
+          'app-shortcircuit_explain' => 'second loop runs, x and y don\'t change',
+          'app-break' => '1 2 4 8 16',
+          'app-signature' => 'error tries to take a string as an int',
+          'app-shortcircuit' => 'Bad 09',
+          'app-pretest_explain' => 'loop never runs',
+          'fullname' => 'Luke Haberkern',
+          'app-divide' => '1',
+          'app-divide_explain' => 'Even though total is a float, its value is an int so it rounds to an integer.'
+        };

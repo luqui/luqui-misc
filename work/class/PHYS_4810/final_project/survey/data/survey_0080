@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'the == does not assign the int x a value',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810077786',
+          'app-pretest' => '"infinite"',
+          'app-overload_explain' => 'the function of foo that has an int for the parameter type will output "A"',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 56838,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-result' => 'on',
+                            'characterization' => 'that if it is a double it will be under floating point division and round the answer down'
+                          },
+          'app-signature' => 'error not the right type for your parameter',
+          'app-equality' => '0',
+          'app-shortcircuit_explain' => 'y is greater than 5 so it would run "good" the x is incremented by one so it prints 1 for x and 9 for y',
+          'app-break' => '123816',
+          'app-shortcircuit' => 'good 19',
+          'app-divide' => '1',
+          'fullname' => 'Nicholas Davis Embree',
+          'app-pretest_explain' => 'the i is incremented by one each time so the parameters never become true and keep getting incremented',
+          'app-divide_explain' => 'the 5/4 only takes the whole number'
+        };

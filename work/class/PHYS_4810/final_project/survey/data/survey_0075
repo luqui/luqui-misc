@@ -1,0 +1,6 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'SEED' => 86215,
+          'app-pretest' => 'infinite'
+        };

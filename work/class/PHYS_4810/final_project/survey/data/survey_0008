@@ -1,0 +1,20 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'con-shortcircuit' => 'true',
+          'SEED' => 15354,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'app-break' => '1 2 4 8 16',
+          'app-equality' => '0',
+          'studentid' => '810010585',
+          'app-shortcircuit' => 'Good 09',
+          'fullname' => 'Luke Palmer',
+          'app-pretest' => '0'
+        };

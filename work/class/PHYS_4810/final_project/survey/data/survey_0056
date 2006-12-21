@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'x is not assigned the value of 42 because == is not the assignment operator.',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '830-00-7705',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'this function has an int as the parameter and the only other function that has int as the parameter will cout A',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 70219,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => 'As long as one variable is a float or a double, then the division has been changed to report a number with a decimal point'
+                          },
+          'app-signature' => '45',
+          'app-shortcircuit_explain' => 'y (9) is larger than 5 so good is the output.  by short circuit evaluation, x is never incremented, so the values of x and y are 0 and9 respectively.',
+          'app-equality' => '0',
+          'app-break' => '1 2 4 8 16',
+          'app-shortcircuit' => 'Good 09',
+          'app-divide' => '1.25',
+          'app-pretest_explain' => 'for loop never executes because i is never less than zero',
+          'fullname' => 'Kelly Anne Kochevar Shuster',
+          'app-divide_explain' => 'because 4 is a float, then floating point division will occur, reporting a decimal'
+        };

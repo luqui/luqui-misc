@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-pretest' => 'sentinel-controlled',
+          'con-break' => 'break',
+          'con-equality' => '=',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'This is because you can\'t just say x == 42.',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810132105',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'because the function doesn\'t look at the name rather what it is as a parameter...',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 1458,
+          'con-shortcircuit' => 'false',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'characterization' => 'Only when the important argument is casted as a float.'
+                          },
+          'app-equality' => 'error',
+          'app-break' => '1 2 4 8',
+          'app-shortcircuit_explain' => 'This boolean expression is OR and since one is true the expression is TRUE thus cout<< Good',
+          'app-signature' => '45',
+          'app-shortcircuit' => 'Good 29',
+          'fullname' => 'Jeffrey Thomas Mack',
+          'app-pretest_explain' => 'This for loop does nothing because i has to be less than 0...',
+          'app-divide' => '1.25',
+          'app-divide_explain' => 'The precision is to 7 digits'
+        };

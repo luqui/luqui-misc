@@ -1,0 +1,40 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'single = is the assignment operator,  == used in bools',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '8110678791',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'overloaded function called, uses the version needing int.',
+          'con-signature' => {
+                               'params' => 'base,',
+                               'types' => 'char, int',
+                               'returns' => 'alphabet_add',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 59363,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on',
+                            'characterization' => 'any time either or both arguments are a float or double'
+                          },
+          'app-break' => '1 2 4 8 10 20',
+          'app-signature' => 'error function requires integer argument',
+          'app-equality' => '0',
+          'app-shortcircuit_explain' => 'or statements only checked until proven true, x is not incremented',
+          'app-shortcircuit' => 'Good 09',
+          'app-pretest_explain' => 'loop never runs, i = 5 , and only runs if i is less than 0',
+          'fullname' => 'William Tupa',
+          'app-divide' => '0.8',
+          'app-divide_explain' => 'if either variable in the division is a float or double, the / symbol does "float division"'
+        };

@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => '== means equal to',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810020251',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'y is an int value so C++ knows to go to void foo(int x) which returns A',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 28916,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => '3',
+                            'case2' => '2',
+                            'default' => '4,5,6...',
+                            'case1' => '1'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => 'you must declare either one as float or you will get 0 returned'
+                          },
+          'app-signature' => '45',
+          'app-break' => '1 2 4 8',
+          'app-equality' => '42',
+          'app-shortcircuit_explain' => '0 > 5 so the bool is true and x is raised 1 by the X++',
+          'app-shortcircuit' => '"Good" 1 9',
+          'app-pretest_explain' => 'x and i are different so x is never changed',
+          'fullname' => 'Travis Hart',
+          'app-divide' => '5/4.00000',
+          'app-divide_explain' => 'float is percise to 7 digits'
+        };

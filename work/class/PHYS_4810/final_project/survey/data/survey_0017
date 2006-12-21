@@ -1,0 +1,40 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'x == 41 returns zero but is not in any expression',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810657313',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'the int value will be passed to the function with a parameter of type int',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 2120,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on',
+                            'characterization' => 'If either of the operands contains a decimal point, even \'.0\', it will perform floating point division.'
+                          },
+          'app-shortcircuit_explain' => 'x++ increments x in the conditional statement',
+          'app-equality' => 'error',
+          'app-break' => '124816',
+          'app-signature' => 'error <string> is missing from include statement',
+          'app-shortcircuit' => 'Good 19',
+          'app-pretest_explain' => 'the for loop never executes, i is always greater than 0',
+          'fullname' => 'Thomas Rutkowski',
+          'app-divide' => '1.25',
+          'app-divide_explain' => '4 is float, so it is actually 4.0'
+        };

@@ -1,0 +1,8 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'app-shortcircuit_explain' => 'C++ only evaluates or statements until they are proven true, so x is never incremented',
+          'app-overload_explain' => 'the function is overloaded, but the version called is the one with the "int", so output is A.',
+          'app-shortcircuit' => 'Good 09',
+          'SEED' => 3348,
+          'app-overload' => 'A'
+        };

@@ -1,0 +1,9 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'post-test',
+          'con-equality' => '==',
+          'con-overload' => 'same-name-different-param',
+          'con-switch_default' => 'default',
+          'con-shortcircuit' => 'true',
+          'SEED' => 59994
+        };

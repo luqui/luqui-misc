@@ -1,0 +1,41 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'x was set equal to 0, x==42 would be used to test for equality',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '995092060',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'foo is an overloaded function,  x, y and z[12] are function parameters and putting their name into the function call within main will not determine which function foo is used, instead it is the type of variable that determines which function is called',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 59779,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case  1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on',
+                            'cast-result' => 'on',
+                            'characterization' => 'at least one variable in the division operation must be a float or a double'
+                          },
+          'app-signature' => 'error, the parameters that are put into the function to_integer must be int, then a string is what is returned by the function. In this program a string is the variable type put into the function, I dont think that would work',
+          'app-equality' => '0',
+          'app-break' => '1 2 4 8 16',
+          'app-shortcircuit_explain' => 'y stays the same, y>5 so good is output, x++ will add 1 to x regardless of the fact that the \'or\' statement is checking for equality',
+          'app-shortcircuit' => 'Good 1 9',
+          'app-pretest_explain' => 'the precondition for this loop to iterate is that \'i\' be less than 0, \'i\' is initially defined as a number greater than 0',
+          'app-divide' => '1.25e0',
+          'fullname' => 'katrina bossert',
+          'app-divide_explain' => 'the output will still be of the type float, which will output floating point notation'
+        };

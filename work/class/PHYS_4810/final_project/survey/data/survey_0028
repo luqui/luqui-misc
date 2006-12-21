@@ -1,0 +1,41 @@
+$VAR1 = {
+          'con-pretest' => 'pre-test',
+          'con-break' => 'break',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'The output is 0 because == refers to a Boolean expression.',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '830048980',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'A is the output because y is an int, so it goes into the function with one int as a parameter. This function outputs A.',
+          'con-signature' => {
+                               'params' => 'base,amount',
+                               'types' => 'char,int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 44259,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on',
+                            'cast-result' => 'on',
+                            'characterization' => '/ represents floating- point division when either argument is a float or a double, both arguments are a float or a double, or when one or both of the arguments are cast to float or double.'
+                          },
+          'app-signature' => 'Error.  There is an error as to_integer accecpts an int as a parameter, but the program is trying to send x, which is a string, to the function.  So, the function will not accept a string as a parameter and causes a compiler error.',
+          'app-shortcircuit_explain' => 'The program enters the if statement as y is 9 and it doesn\'t matter that x is 0 because of the "or" operator.  So, the output is "Good" and the values of x and y are still 0 and 9.',
+          'app-break' => '1 2 4 8 16',
+          'app-equality' => '0',
+          'app-shortcircuit' => 'Good, 0, 9',
+          'fullname' => 'Tiana Stastny',
+          'app-divide' => '1.25',
+          'app-pretest_explain' => 'The output is 0, as the program never enters the for loop, as i is already greater than 0.',
+          'app-divide_explain' => 'As 4 is declared as a float, 5/4 returns 1.25.'
+        };

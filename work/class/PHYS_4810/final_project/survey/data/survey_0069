@@ -1,0 +1,26 @@
+$VAR1 = {
+          'app-overload_explain' => 'one foo funtion has a return type, int, but there is no return statement in the function',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'con-switch_default' => 'default',
+          'SEED' => 39484,
+          'app-switch' => {
+                            'case2' => 'case 2:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'declare' => 'on',
+                            'characterization' => '/ does floating point division when either number has a floating point'
+                          },
+          'app-overload' => 'error',
+          'app-signature' => 'compiler error, you send an string to an int parameter and return a string type and try to assign it to a int type',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810685981',
+          'fullname' => 'Ryan Delgizzi',
+          'app-divide' => '1.25',
+          'app-divide_explain' => 'no problem with int division because 4 total is a float'
+        };

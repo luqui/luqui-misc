@@ -1,0 +1,36 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810660775',
+          'con-signature' => {
+                               'params' => 'base,amount',
+                               'types' => 'char,int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 33089,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'else if (num==3)',
+                            'case2' => 'else if (num==2)',
+                            'default' => 'else',
+                            'case1' => 'if (num==1)'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on',
+                            'cast-result' => 'on'
+                          },
+          'app-shortcircuit_explain' => 'infinite',
+          'app-break' => 'infinite',
+          'app-equality' => '42',
+          'app-signature' => '45',
+          'app-shortcircuit' => 'error',
+          'fullname' => 'Stephanie Pitts',
+          'app-divide' => 'error',
+          'app-divide_explain' => '4 not declared as a float'
+        };

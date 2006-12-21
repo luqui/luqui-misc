@@ -1,0 +1,35 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'none',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-overload' => 'A',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810028667',
+          'app-pretest' => '0',
+          'con-signature' => {
+                               'params' => 'base,amount',
+                               'types' => 'char,int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'SEED' => 80751,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'case ((num<=3)&&(num>0));',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'int-assign' => 'on',
+                            'characterization' => 'when dividing two ints only an int value can be returned, so while / represents floating_point division, the return type int from the division must be truncated.'
+                          },
+          'app-break' => 'outputs 5 consecutive x\'s',
+          'app-shortcircuit_explain' => 'infinite loop',
+          'app-equality' => 'the error "x ==42" is not picked up by the compliler but this is still a syntax error and the program will output 0',
+          'app-signature' => '45',
+          'app-shortcircuit' => 'error',
+          'fullname' => 'Gregory L. Smith',
+          'app-divide' => '1.25'
+        };

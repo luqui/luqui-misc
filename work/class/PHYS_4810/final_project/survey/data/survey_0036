@@ -1,0 +1,40 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => 'The "==" affects neither the program\'s ability to run nor the value of "x"; it just makes a statement that equates to false but does nothing.',
+          'app-overload' => 'error',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810660758',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'the function "int foo()" does not return a value',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char \' \'',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 41684,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'cast-result' => 'on',
+                            'characterization' => 'Either argument is cast as float or double.'
+                          },
+          'app-break' => '1 2 4 8 16',
+          'app-signature' => 'error',
+          'app-shortcircuit_explain' => 'The if\'s boolean statement has a true statemet (9>5), so it outputs "Good " b/c the "or" statement logically short circuits after the first test. "x" increments to 1; "y" remains unchanged, so it then outputs "19"',
+          'app-equality' => '0',
+          'app-shortcircuit' => 'Good 19',
+          'app-pretest_explain' => 'since i is initialized to 5, it is already greater than zero, making the check statement false and terminating the for loop without changing the value of x.',
+          'app-divide' => '1',
+          'fullname' => 'Geoffrey Peterson',
+          'app-divide_explain' => 'total, though a float variable, is an integer in this division, making it an integer division'
+        };

@@ -1,0 +1,29 @@
+$VAR1 = {
+          'con-equality' => '=',
+          'con-switch_default' => 'default',
+          'con-overload' => 'same-name-different-param',
+          'studentid' => '810073412',
+          'app-pretest' => '0',
+          'con-signature' => {
+                               'params' => 'base, amount',
+                               'types' => 'char, int',
+                               'returns' => 'char base',
+                               'name' => 'alphabet'
+                             },
+          'SEED' => 8786,
+          'con-shortcircuit' => 'true',
+          'app-switch' => {
+                            'case1' => 'case 1'
+                          },
+          'con-divide' => {
+                            'cast-result' => 'on'
+                          },
+          'app-signature' => '1530',
+          'app-break' => '1 2 4 8',
+          'app-shortcircuit_explain' => 'first if statement executes and couts good then couts x and y',
+          'app-shortcircuit' => 'good 09',
+          'app-pretest_explain' => 'for loop will never execute',
+          'app-divide' => 'error',
+          'fullname' => 'Derek Kania',
+          'app-divide_explain' => 'you can\'t perform that math'
+        };

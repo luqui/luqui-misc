@@ -1,0 +1,39 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'post-test',
+          'con-equality' => '==',
+          'con-switch_default' => 'default',
+          'app-equality_explain' => '== instead of =',
+          'app-overload' => 'A',
+          'studentid' => '810646653',
+          'app-pretest' => '0',
+          'app-overload_explain' => 'Since y is an int, the first overloaded version of foo takes in 6',
+          'con-signature' => {
+                               'params' => 'base,amount',
+                               'types' => 'char,int',
+                               'returns' => 'char',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'true',
+          'SEED' => 237,
+          'app-switch' => {
+                            'case3' => 'case 3:',
+                            'case2' => 'case 2:',
+                            'default' => 'default:',
+                            'case1' => 'case 1:'
+                          },
+          'con-divide' => {
+                            'cast-left' => 'on',
+                            'declare' => 'on',
+                            'characterization' => 'No answer. My apologies.'
+                          },
+          'app-break' => '1 2 4 8 16',
+          'app-signature' => '45',
+          'app-equality' => 'error',
+          'app-shortcircuit_explain' => 'Since y >5, the if statement is entered.',
+          'app-shortcircuit' => 'Good',
+          'fullname' => 'Katherine Ann Corner',
+          'app-divide' => '1.25',
+          'app-pretest_explain' => 'Never enters for loop since 5 is not less than 0',
+          'app-divide_explain' => 'a float casts the number so it is float division instead of integers division'
+        };

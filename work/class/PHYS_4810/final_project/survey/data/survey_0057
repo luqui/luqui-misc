@@ -1,0 +1,19 @@
+$VAR1 = {
+          'con-break' => 'break',
+          'con-pretest' => 'pre-test',
+          'con-equality' => '==',
+          'con-signature' => {
+                               'returns' => 'base',
+                               'name' => 'alphabet_add'
+                             },
+          'con-shortcircuit' => 'false',
+          'SEED' => 93106,
+          'con-divide' => {
+                            'int-assign' => 'on'
+                          },
+          'app-equality' => '42',
+          'con-overload' => 'same-name-different-param',
+          'app-shortcircuit' => 'Good',
+          'app-divide' => '1',
+          'app-pretest' => 'infinite'
+        };

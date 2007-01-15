@@ -105,23 +105,23 @@ void plot(const Complex& c, int count)
     if (0 <= x && x < 640 && 0 <= y && y < 480) {
         if (count < 20) {
              if (counter[x][y].r) {
-                counter[x][y].r += 1;
+                counter[x][y].r += 63;
                 if (counter[x][y].r >= 512)
-                    counter[x][y].r = 0;
+                    counter[x][y].r -= 512;
              }
         }
         else if (count < 50) {
              if (counter[x][y].g) {
-                counter[x][y].g += 1;
+                counter[x][y].g += 63;
                 if (counter[x][y].g >= 512)
-                    counter[x][y].g = 0;
+                    counter[x][y].g -= 512;
              }
         }
         else {
             if (counter[x][y].b) {
-                counter[x][y].b += 1;
+                counter[x][y].b += 63;
                 if (counter[x][y].b >= 512)
-                    counter[x][y].b = 0;
+                    counter[x][y].b -= 512;
             }
         }
     }

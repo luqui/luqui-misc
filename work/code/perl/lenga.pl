@@ -27,6 +27,7 @@ PRELUDE
 
 	my $outs = join '', <$out>;
 	close $out;
+	print $outs;
 	waitpid($pid, 0);
 	
 	return 1 if $? >> 8 == 103;   # inconsistent (proved)

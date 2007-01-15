@@ -189,7 +189,7 @@ int main(int argc, char** argv)
 		glClear(GL_COLOR_BUFFER_BIT);
 		draw();
 		SDL_GL_SwapBuffers();
-
-		//timer.lock();
+		
+		timer.lock();
 	}
 }

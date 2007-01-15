@@ -44,23 +44,23 @@ sub runsim {
 sub write_data {
 	my ($file, $data) = @_;
 	open my $fh, '>', $file or die "Couldn't open file: $!";
-	print $file join("\n", @$data);
+	print $fh join("\n", @$data);
 }
 
 sub measure_right_slowdown {
 	my @slowdown;
 	my @cps;
 	my @cpc;
-	for (my $i = 1; $i < 20; $i++) {
+	for (my $i = 1; $i < 100; $i++) {
 		my $ans = runsim(
-			prob => 1,
+			prob => 0.4,
 			lefton => 1,
 			leftoff => 0,
 			leftphase => 0,
 			righton => $i,
 			rightoff => $i,
 			rightphase => 0,
-			time => 150,
+			time => 1000,
 		);
 		push @slowdown, $ans->{slowdown};
 		push @cps, $ans->{right_cps};
@@ -71,4 +71,56 @@ sub measure_right_slowdown {
 	write_data('data/right_cpc', \@cpc);
 }
 
-measure_right_slowdown();
+sub measure_phase_slowdown {
+	my @slowdown;
+	for (my $i = 0; $i <= 60; $i += 0.1) {
+		my $ans = runsim(
+			prob => 1,
+			lefton => 15,
+			leftoff => 15,
+			leftphase => 0,
+			righton => 15,
+			rightoff => 15,
+			rightphase => $i,
+			time => 300,
+		);
+		push @slowdown, $ans->{slowdown};
+	}
+	write_data('data/phase_slowdown_fulltraffic_0-60', \@slowdown);
+}
+
+sub measure_freq_diff {
+	my @slowdown;
+	for (my $i = 1; $i <= 100; $i++) {
+		my $ans = runsim(
+			prob => 0.4,
+			lefton => 15,
+			leftoff => 15,
+			leftphase => 0,
+			righton => $i,
+			rightoff => $i,
+			time => 500,
+		);
+		push @slowdown, $ans->{slowdown};
+	}
+	write_data('data/freq_diff_slowdown_1-100', \@slowdown);
+}
+
+sub measure_traffic {
+	my @slowdown;
+	for (my $i = 0; $i <= 1; $i += 0.01) {
+		my $ans = runsim(
+			prob => $i,
+			lefton => 1,
+			leftoff => 0,
+			leftphase => 0,
+			righton => 1,
+			rightoff => 0,
+			time => 500,
+		);
+		push @slowdown, $ans->{slowdown};
+	}
+	write_data('data/slowdown_traffic_green_0-1', \@slowdown);
+}
+
+measure_phase_slowdown();

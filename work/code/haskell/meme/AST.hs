@@ -29,10 +29,12 @@ data Lit where
     LInt   :: Integer -> Lit
     LFloat :: Double  -> Lit
     LStr   :: String  -> Lit
+    LBool  :: Bool    -> Lit
     deriving Show
 
 -- we have builtins so that they can be polymorphically typed
 data Builtin where
     BTuple :: [AST]        -> Builtin
-    BTag   :: Tag   -> AST -> Builtin
+    BTag   :: Tag -> AST   -> Builtin
+    BIf    :: AST -> AST -> AST -> Builtin
     deriving Show

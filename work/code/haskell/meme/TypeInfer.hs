@@ -48,6 +48,7 @@ annotate (Var var) = do
 annotate ast@(Lit (LInt _))   = return $ Type (TAtom "Int")   ast
 annotate ast@(Lit (LFloat _)) = return $ Type (TAtom "Float") ast
 annotate ast@(Lit (LStr _))   = return $ Type (TAtom "Str")   ast
+annotate ast@(Lit (LBool _))  = return $ Type (TAtom "Bool")  ast
 
 annotate (Type t ast) = do
     ann <- annotate ast
@@ -64,6 +65,13 @@ annotate (Builtin (BTuple xs))  = do
 annotate (Builtin (BTag t x))   = do
     ast <- annotate x
     return $ Type (TUnion [(t, getType ast)]) ast
+annotate (Builtin (BIf cond true false)) = do   
+    condast  <- annotate cond
+    trueast  <- annotate true
+    falseast <- annotate false
+    tell [(getType condast, TAtom "Bool")]
+    return $ Type (typeSup (getType trueast) (getType falseast)) 
+                  (Builtin (BIf condast trueast falseast))
 
 type Solver a = State (Set.Set Equation) a
 

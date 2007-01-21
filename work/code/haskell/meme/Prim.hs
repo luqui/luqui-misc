@@ -6,6 +6,7 @@ module Prim
     )
     where
 
+import Type
 import AST
 import Val
 import qualified Data.Map as Map
@@ -24,6 +25,9 @@ op1Show :: Val -> Eval Val
 op1Show (VLit (LInt x))   = return . VLit . LStr $ show x
 op1Show (VLit (LFloat x)) = return . VLit . LStr $ show x
 op1Show (VLit (LStr x))   = return . VLit . LStr $ show x
+op1Show (VLit (LBool x))  = return . VLit . LStr $ show x
+op1Show (VTuple xs)       = return . VLit . LStr $ show xs  -- XXX this will be ugly
+op1Show (VTag tag x)      = return . VLit . LStr $ tag ++ ":" ++ show x -- XXX this too
 op1Show (VFunc {})        = return . VLit . LStr $ "*func*"
 op1Show (VMagic {})       = return . VLit . LStr $ "*func*"
 
@@ -46,4 +50,4 @@ builtins = [ ("print", TArrow (TAtom "Str") (TTuple []),   op1 op1Print)
            ]
 
 builtinPad :: Pad
-builtinPad = Map.fromList builtins
+builtinPad = Map.fromList $ map (\(var,_,val) -> (var,val)) builtins

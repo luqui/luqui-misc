@@ -36,6 +36,11 @@ eval Hole         = fail "Failed to infer hole"
 eval (Lit lit)    = return $ VLit lit
 
 eval (Builtin (BTuple vs)) = do
-    fmap VTuple =<< mapM eval vs
+    fmap VTuple $ mapM eval vs
 eval (Builtin (BTag tag val)) = do
-    fmap (VTag tag) =<< eval val
+    fmap (VTag tag) $ eval val
+eval (Builtin (BIf cond true false)) = do
+    yn <- eval cond
+    case yn of
+        VLit (LBool True)  -> eval true
+        VLit (LBool False) -> eval false

@@ -11,6 +11,7 @@ import Type
 import AST
 import qualified Data.Map as Map
 import Control.Monad.Reader
+import qualified Data.List as List
 
 type Pad = Map.Map Var Val
 type Eval a = ReaderT Pad IO a  -- just try to put this into Eval.hs
@@ -27,4 +28,6 @@ instance Show Val where
     show (VLit l)  = "VLit (" ++ show l ++ ")"
     show (VFunc p v ast) = "VFunc (" ++ show p ++ ") " ++ show v ++ " (" ++ show ast ++ ")"
     show (VMagic _) = "VMagic ..."
+    show (VTuple xs) = "VTuple [" ++ concat (List.intersperse ", " $ map show xs) ++ "]"
+    show (VTag t x) = "VTag " ++ show t ++ " (" ++ show x ++ ")"
 

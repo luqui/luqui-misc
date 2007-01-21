@@ -92,8 +92,7 @@ lowerBoundType eqs (TTuple as) = TTuple $ map (lowerBoundType eqs) as
 lowerBoundType eqs (TUnion as) = TUnion $ map (\(v,t) -> (v, lowerBoundType eqs t)) as  -- not sure about this one
 lowerBoundType eqs (TVar var) = foldr typeSup (TAtom "Bot") 
                               . map fst 
-                              . filter (\eq -> snd eq == TVar var && isConcrete (fst eq)
-                                        && trace ("Considering " ++ show (fst eq) ++ " for lower bound of " ++ show (TVar var)) True)
+                              . filter (\eq -> snd eq == TVar var && isConcrete (fst eq))
                               $ eqs
 
 upperBoundType :: [Equation] -> Type -> Type
@@ -103,8 +102,7 @@ upperBoundType eqs (TTuple as) = TTuple $ map (upperBoundType eqs) as
 upperBoundType eqs (TUnion as) = TUnion $ map (\(v,t) -> (v, upperBoundType eqs t)) as  -- not sure about this one
 upperBoundType eqs (TVar var) = foldr typeInf (TAtom "Top") 
                               . map snd 
-                              . filter (\eq -> fst eq == TVar var && isConcrete (snd eq)
-                                        && trace ("Considering " ++ show (snd eq) ++ " for upper bound of " ++ show (TVar var)) True)
+                              . filter (\eq -> fst eq == TVar var && isConcrete (snd eq))
                               $ eqs
 
 boundType :: [Equation] -> Type -> (Type,Type)

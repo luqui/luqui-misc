@@ -34,3 +34,8 @@ eval (Var var) = do
 eval (Type _ ast) = eval ast
 eval Hole         = fail "Failed to infer hole"
 eval (Lit lit)    = return $ VLit lit
+
+eval (Builtin (BTuple vs)) = do
+    fmap VTuple =<< mapM eval vs
+eval (Builtin (BTag tag val)) = do
+    fmap (VTag tag) =<< eval val

@@ -2,6 +2,7 @@
 
 module Type
     ( Type(..)
+    , Tag
     , typeSup
     , typeInf
     )

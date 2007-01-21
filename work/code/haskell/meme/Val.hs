@@ -7,6 +7,7 @@ module Val
     )
     where
 
+import Type
 import AST
 import qualified Data.Map as Map
 import Control.Monad.Reader
@@ -19,6 +20,8 @@ data Val where
     VLit   :: Lit               -> Val
     VFunc  :: Pad -> Var -> AST -> Val
     VMagic :: (Val -> Eval Val) -> Val
+    VTuple :: [Val]             -> Val
+    VTag   :: Tag -> Val        -> Val
 
 instance Show Val where
     show (VLit l)  = "VLit (" ++ show l ++ ")"

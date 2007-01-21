@@ -4,6 +4,7 @@ module AST
     ( Var
     , AST(..)
     , Lit(..)
+    , Builtin(..)
     )
 where
 
@@ -18,6 +19,7 @@ data AST where
     Var   :: Var         -> AST
     -- literals
     Lit   :: Lit         -> AST
+    Builtin :: Builtin   -> AST  
     -- extensions
     Type  :: Type -> AST -> AST
     Hole  ::                AST
@@ -27,4 +29,10 @@ data Lit where
     LInt   :: Integer -> Lit
     LFloat :: Double  -> Lit
     LStr   :: String  -> Lit
+    deriving Show
+
+-- we have builtins so that they can be polymorphically typed
+data Builtin where
+    BTuple :: [AST]        -> Builtin
+    BTag   :: Tag   -> AST -> Builtin
     deriving Show

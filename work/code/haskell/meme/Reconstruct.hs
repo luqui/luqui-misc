@@ -43,6 +43,10 @@ typeVarOf (Lit (LFloat _)) = return $ TAtom "Float"
 typeVarOf (Lit (LStr _))   = return $ TAtom "Str"
 typeVarOf (Type t _)       = return t
 typeVarOf Hole             = makeVar
+typeVarOf (Builtin (BTuple xs))  = fmap TTuple $ mapM typeVarOf xs
+typeVarOf (Builtin (BTag t x))   = do
+    typ <- typeVarOf x
+    return $ TUnion [(t,typ)]
 
 type Solver a = State (Set.Set Equation) a
 

@@ -18,13 +18,12 @@ op2 :: (Val -> Val -> Eval Val) -> Val
 op2 f = VMagic $ \x -> return . VMagic $ \y -> f x y
 
 unitVal :: Val
-unitVal = VFunc Map.empty "x" (Var "x")
+unitVal = VTuple []
 
 op1Show :: Val -> Eval Val
 op1Show (VLit (LInt x))   = return . VLit . LStr $ show x
 op1Show (VLit (LFloat x)) = return . VLit . LStr $ show x
 op1Show (VLit (LStr x))   = return . VLit . LStr $ show x
-op1Show (VLit (LType x))  = return . VLit . LStr $ x
 op1Show (VFunc {})        = return . VLit . LStr $ "*func*"
 op1Show (VMagic {})       = return . VLit . LStr $ "*func*"
 
@@ -40,10 +39,10 @@ op1Say v = do
     return unitVal
 
 -- Name, type, impl
-builtins :: [(Var, AST, Val)]
-builtins = [ ("print", op1 op1Print)
-           , ("say",   op1 op1Say)
-           , ("show",  op1 op1Show)
+builtins :: [(Var, Type, Val)]
+builtins = [ ("print", TArrow (TAtom "Str") (TTuple []),   op1 op1Print)
+           , ("say",   TArrow (TAtom "Str") (TTuple []),   op1 op1Say)
+           , ("show",  TArrow (TAtom "Top") (TAtom "Str"), op1 op1Show)
            ]
 
 builtinPad :: Pad

@@ -1,4 +1,4 @@
-module Reconstruct
+module TypeInfer
     (
     )
 where

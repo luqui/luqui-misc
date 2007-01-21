@@ -23,30 +23,47 @@ makeVar = do
     put (ret+1)
     return (TVar ret)
 
-typeVarOf :: AST -> Reconstruct Type
-typeVarOf (App f arg) = do
-    ftype   <- typeVarOf f
-    argtype <- typeVarOf arg
+getType :: AST -> Type
+getType (Type t _) = t
+getType _ = error "getType on a type-unannotated node"
+
+annotate :: AST -> Reconstruct AST
+annotate (App f arg) = do
+    fast   <- annotate f
+    argast <- annotate arg
     fta <- makeVar
     ftb <- makeVar
-    tell [(ftype, TArrow fta ftb)]
-    tell [(argtype, fta)]
-    return ftb
-typeVarOf (Lam var body) = do
+    tell [(getType fast, TArrow fta ftb)]
+    tell [(getType argast, fta)]
+    return $ Type ftb (App fast argast)
+    
+annotate (Lam var body) = do
     vartype <- makeVar
-    bodytype <- local (Map.insert var vartype) $ typeVarOf body
-    return $ TArrow vartype bodytype
-typeVarOf (Var var) = do
-    Map.lookup var =<< ask
-typeVarOf (Lit (LInt _))   = return $ TAtom "Int"
-typeVarOf (Lit (LFloat _)) = return $ TAtom "Float"
-typeVarOf (Lit (LStr _))   = return $ TAtom "Str"
-typeVarOf (Type t _)       = return t
-typeVarOf Hole             = makeVar
-typeVarOf (Builtin (BTuple xs))  = fmap TTuple $ mapM typeVarOf xs
-typeVarOf (Builtin (BTag t x))   = do
-    typ <- typeVarOf x
-    return $ TUnion [(t,typ)]
+    bodyast <- local (Map.insert var vartype) $ annotate body
+    return $ Type (TArrow vartype (getType bodyast)) (Lam var bodyast)
+
+annotate (Var var) = do
+    t <- Map.lookup var =<< ask
+    return $ Type t (Var var)
+annotate ast@(Lit (LInt _))   = return $ Type (TAtom "Int")   ast
+annotate ast@(Lit (LFloat _)) = return $ Type (TAtom "Float") ast
+annotate ast@(Lit (LStr _))   = return $ Type (TAtom "Str")   ast
+
+annotate (Type t ast) = do
+    ann <- annotate ast
+    tell [(getType ann, t), (t, getType ann)]
+    return ann
+    
+annotate Hole             = do
+    t <- makeVar
+    return $ Type t Hole
+
+annotate (Builtin (BTuple xs))  = do
+    asts <- mapM annotate xs
+    return $ Type (TTuple (map getType asts)) (Builtin (BTuple asts))
+annotate (Builtin (BTag t x))   = do
+    ast <- annotate x
+    return $ Type (TUnion [(t, getType ast)]) ast
 
 type Solver a = State (Set.Set Equation) a
 

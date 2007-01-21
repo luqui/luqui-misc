@@ -1,13 +1,13 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
-import Type
-
 module AST 
     ( Var
     , AST(..)
     , Lit(..)
     )
 where
+
+import Type
 
 type Var = String
 

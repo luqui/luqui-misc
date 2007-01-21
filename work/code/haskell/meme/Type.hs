@@ -14,7 +14,8 @@ data Type where
     TArrow :: Type -> Type    -> Type
     TTuple :: [Type]          -> Type
     TUnion :: [(Tag,Type)]    -> Type
-    deriving Show
+    TVar   :: Integer         -> Type  -- only for use inside reconstructor!
+    deriving (Show,Eq,Ord)
 
 
 unionInsert :: (Type -> Type -> Type) -> (Tag,Type) -> [(Tag,Type)] -> [(Tag,Type)]
@@ -33,6 +34,10 @@ makeUnion xs = TUnion xs
 
 
 typeInf :: Type -> Type -> Type
+typeInf (TAtom "Top") x = x
+typeInf (TAtom "Bot") x = TAtom "Bot"
+typeInf x (TAtom "Top") = x
+typeInf x (TAtom "Bot") = TAtom "Bot"
 typeInf (TAtom a) (TAtom b)
     | a == b    = TAtom a
     | otherwise = TAtom "Bot"
@@ -43,14 +48,14 @@ typeInf (TTuple as) (TTuple bs)
     | otherwise = TAtom "Bot"
 typeInf (TUnion as) (TUnion bs)
     = makeUnion $ foldr (unionInsert typeInf) as bs
-typeInf (TAtom "Top") x = x
-typeInf (TAtom "Bot") x = TAtom "Bot"
-typeInf x (TAtom "Top") = x
-typeInf x (TAtom "Bot") = TAtom "Bot"
 typeInf _ _ = TAtom "Bot"
 
 
 typeSup :: Type -> Type -> Type
+typeSup (TAtom "Top") x = TAtom "Top"
+typeSup (TAtom "Bot") x = x
+typeSup x (TAtom "Top") = TAtom "Top"
+typeSup x (TAtom "Bot") = x
 typeSup (TAtom a) (TAtom b)
     | a == b    = TAtom a
     | otherwise = TAtom "Top"
@@ -61,8 +66,4 @@ typeSup (TTuple as) (TTuple bs)
     | otherwise = TAtom "Top"
 typeSup (TUnion as) (TUnion bs)
     = makeUnion $ foldr (unionInsert typeSup) as bs
-typeSup (TAtom "Top") x = TAtom "Top"
-typeSup (TAtom "Bot") x = x
-typeSup x (TAtom "Top") = TAtom "Top"
-typeSup x (TAtom "Bot") = x
 typeSup _ _ = TAtom "Top"

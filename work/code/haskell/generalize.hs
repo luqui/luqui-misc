@@ -167,7 +167,7 @@ transformEquation (Equation subst sub sup) = do
         TVar a' -> forEach (seenSet st) $ \eq -> 
                         case eq of
                             Equation subst' x (TVar y') | y' == a'
-                                -> addEquation "left-elim" (Equation (substCombine subst subst') x sup)
+                                -> addEquation ("left-elim  " ++ show sub) (Equation (substCombine subst subst') x sup)
                             _   -> return ()
         _ -> return ()
     
@@ -175,7 +175,7 @@ transformEquation (Equation subst sub sup) = do
         TVar b' -> forEach (seenSet st) $ \eq ->
                         case eq of
                             Equation subst' (TVar x') y | x' == b'
-                                -> addEquation "right-elim" (Equation (substCombine subst subst') sub y)
+                                -> addEquation ("right-elim " ++ show sup) (Equation (substCombine subst subst') sub y)
                             _   -> return ()
         _ -> return ()
 

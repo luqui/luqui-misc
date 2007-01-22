@@ -3,6 +3,7 @@
 module Prim 
     ( builtins
     , builtinPad
+    , builtinTypeEnv
     )
     where
 
@@ -51,3 +52,6 @@ builtins = [ ("print", TArrow (TAtom "Str") (TTuple []),   op1 op1Print)
 
 builtinPad :: Pad
 builtinPad = Map.fromList $ map (\(var,_,val) -> (var,val)) builtins
+
+builtinTypeEnv :: Map.Map Var Type
+builtinTypeEnv = Map.fromList $ map (\(var,typ,_) -> (var,typ)) builtins

@@ -33,8 +33,8 @@ getType :: AST -> Type
 getType (Type t _) = t
 getType _ = error "getType on a type-unannotated node"
 
-typeAST :: AST -> (AST, [Equation])
-typeAST ast = (\(a,s,w) -> (a,w)) $ runRWS (annotate ast) Map.empty 0
+typeAST :: TypeEnv -> AST -> (AST, [Equation])
+typeAST env ast = (\(a,s,w) -> (a,w)) $ runRWS (annotate ast) env 0
 
 annotate :: AST -> Reconstruct AST
 annotate (App f arg) = do

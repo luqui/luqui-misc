@@ -1,6 +1,5 @@
 module Parser
-    (
-    memeParse
+    ( memeParse
     )
 where
 
@@ -39,7 +38,7 @@ parseExpr = choice [ parseLambda
 
 parseLambda :: MParser AST
 parseLambda = parseAST $ do
-    char '\\'
+    tok symbol "\\"
     parseParam
   where
     parseParam :: MParser AST
@@ -49,11 +48,7 @@ parseLambda = parseAST $ do
         return (Lam name body)
 
     parseBlock :: MParser AST
-    parseBlock = do
-        char '{'
-        expr <- parseExpr
-        char '}'
-        return expr
+    parseBlock = tok braces parseExpr
 
 parseApp :: MParser AST
 parseApp = parseAST $ do
@@ -74,8 +69,4 @@ parseVar = parseAST $ do
     fmap Var (tok identifier)
 
 parseParens :: MParser AST
-parseParens = parseAST $ do
-    char '('
-    expr <- parseExpr
-    char ')'
-    return expr
+parseParens = parseAST $ tok parens parseExpr

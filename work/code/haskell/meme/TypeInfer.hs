@@ -1,5 +1,11 @@
 module TypeInfer
-    (
+    ( upperBoundType
+    , lowerBoundType
+    , boundType
+    , annotate
+    , reduceEquations
+    , typeAST
+    , getType
     )
 where
 
@@ -26,6 +32,9 @@ makeVar = do
 getType :: AST -> Type
 getType (Type t _) = t
 getType _ = error "getType on a type-unannotated node"
+
+typeAST :: AST -> (AST, [Equation])
+typeAST ast = (\(a,s,w) -> (a,w)) $ runRWS (annotate ast) Map.empty 0
 
 annotate :: AST -> Reconstruct AST
 annotate (App f arg) = do
@@ -55,7 +64,7 @@ annotate (Type t ast) = do
     tell [(getType ann, t), (t, getType ann)]
     return ann
     
-annotate Hole             = do
+annotate Hole = do
     t <- makeVar
     return $ Type t Hole
 

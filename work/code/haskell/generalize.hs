@@ -188,6 +188,22 @@ reduce start eqs = fmap (Set.toList . seenSet)
                                 , seenSet       = Set.empty
                                 }
 
+-- Okay, in order for this algorithm to work (empirically -- the code
+-- is hacked up in order to ensure termination of *this* example, and
+-- is certainly far from proof of decidability), you need to mark 
+-- your types as singular, infimum, or supremum.  Mark too few,
+-- the algorithm will happily generalize too much; mark too many,
+-- the algorithm will not be able to discover anything.
+
+-- When creating functions \x { ... } :: a -> b, a may be marked
+-- an infimum type and b a supremum type without loss of expression.
+-- That is because an argument to the function of type c will come
+-- in via the equation c <: a, which is universal for any infimum
+-- type a (c <: every member of a's defining set).  Similar reasoning
+-- works for the return type.
+
+-- 
+
 main :: IO ()
 main = do
     reduced <- reduce 100 eqs
@@ -202,15 +218,15 @@ main = do
           --    \a (a -> a)   <:  a
           , Equation (TLam 0 (TArrow (tVar 0) (tVar 0))) (TInf 0)
           -- .1 c             <:  d -> e
-          , Equation (TInf 2) (TArrow (tVar 3) (tVar 4))
+          , Equation (TInf 2) (TArrow (TInf 3) (TSup 4))
           --    Int           <:  d
-          , Equation (TAtom "Int") (tVar 3)
+          , Equation (TAtom "Int") (TInf 3)
           -- .2 c             <:  f -> g
-          , Equation (TInf 2) (TArrow (tVar 5) (tVar 6))
+          , Equation (TInf 2) (TArrow (TInf 5) (TSup 6))
           --    Str           <:  f
-          , Equation (TAtom "Str") (tVar 5)
+          , Equation (TAtom "Str") (TInf 5)
           -- *? c -> (e,g)    <:  h -> i
-          , Equation (TArrow (TInf 2) (TTuple (tVar 4) (tVar 6))) (TArrow (TInf 7) (tVar 8))
+          , Equation (TArrow (TInf 2) (TTuple (TSup 4) (TSup 6))) (TArrow (TInf 7) (TSup 8))
           --    a             <:  h
           , Equation (TInf 0) (TInf 7)
           ]

@@ -103,9 +103,11 @@ generatedVar :: Type -> Bool
 generatedVar (TVar _ True) = True
 generatedVar _ = False
     
-isInf :: Type -> Bool
-isInf (TInf _) = True
-isInf _ = False
+isLim :: Type -> Bool
+isLim (TInf _) = True
+isLim (TSup _) = True
+isLim (TLam _ _) = True
+isLim _ = False
 
 transformEquation :: Equation -> Compute ()
 transformEquation (Equation (TArrow a b) (TArrow a' b')) = do
@@ -116,11 +118,11 @@ transformEquation (Equation (TTuple a b) (TTuple a' b')) = do
     addEquation "tuple" (Equation a a')
     addEquation "tuple" (Equation b b')
 
-transformEquation (Equation sub@(TLam v t) sup) | not (isInf sup) = do
+transformEquation (Equation sub@(TLam v t) sup) | not (isLim sup) = do
     sub' <- instantiateLam sub
     addEquation "instantiate" (Equation sub' sup)
 
-transformEquation (Equation (TInf a) b) | not (generatedVar b) && not (isInf b) = do
+transformEquation (Equation (TInf a) b) | not (generatedVar b) && not (isLim b) = do
     newvar <- allocateVar
     addEquation "infiumum" (Equation (TInf a) (TVar newvar True))
     addEquation "infiumum" (Equation (TVar newvar True) b)
@@ -139,7 +141,7 @@ transformEquation (Equation a (TInf b)) = do
                         -> addEquation ("infimum carry") (Equation a y)
                     _   -> return ()
 
-transformEquation (Equation a (TSup b)) | not (generatedVar a) = do
+transformEquation (Equation a (TSup b)) | not (generatedVar a) && not (isLim a) = do
     newvar <- allocateVar
     addEquation "supremum" (Equation (TVar newvar True) (TSup b))
     addEquation "supremum" (Equation a (TVar newvar True))

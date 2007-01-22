@@ -16,6 +16,22 @@ data Type where
     TLam   :: Integer -> Type    -> Type  -- universal types
     deriving (Eq,Ord)
 
+-- The Bool on TVar is a hack that tries to avert the program getting
+-- into an infinite loop.  It is True when the variable was created
+-- by instantiating a TSup or TInf type (but not a TLam... I'm not
+-- sure why), to make sure that we don't instantiate a new variable 
+-- when comparing to one that has already been instantiated.  It
+-- doesn't seem like it would work, but so far it has been working.
+
+-- Note that a TLam is just an infimum type.  For example, \x (x -> x)
+-- (the type of the identity) is a subtype of Int -> Int, Str -> Str,
+-- and every other type that looks like a -> a.  So it's just the
+-- greatest lower bound of all those types.  We need it so we can
+-- specify universal types by their defining sets (keep in mind
+-- that the defining sets we can specify are very limited--certainly
+-- much less than those of first-order logic--which is why we have
+-- a hope of this algorithm still being decidable).
+
 instance Show Type where
     show (TAtom  a)   = a
     show (TArrow a b) = "(" ++ show a ++ " -> " ++ show b ++ ")"
@@ -98,6 +114,20 @@ addEquation reason eq@(Equation a b) = do
 -- inf a <: x  inst
 -- sup a <: x  ok
 -- x <: sup a  inst
+
+-- a <: b may not be instantiated if both a and b are limit variables.
+-- For example, if they were both infima then to instantiate would mean
+-- to add the equations:
+--   a <: a1
+--   a1 <: b
+-- That is, "there is some type a1 in a's defining set that is a subtype
+-- of b".  But if a and b turned out to be the same, this would not be
+-- true!  (The only supertype of a which is a subtype of b is a itself,
+-- which is not singular!) 
+--
+-- This phenomenon of course happens when they are both suprema, but it
+-- can even happen when one is a supremum and the other is an infimum.
+-- Proof is left as an exercise for the reader. :-)
 
 generatedVar :: Type -> Bool
 generatedVar (TVar _ True) = True

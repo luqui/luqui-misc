@@ -107,7 +107,7 @@ addEquation reason eq@(Equation a b) = do
             liftIO $ putStrLn (twoColumn 50 (concat (replicate depth "  ") ++ show eq) ("(" ++ reason ++ ")"))
             st <- get
             put (st { seenSet = Set.insert eq (seenSet st) })
-            local (+1) $ transformEquation eq
+            local (+1) $ (transformEquation eq >> performElimination eq)
     
 
 -- x <: inf a  ok
@@ -156,58 +156,29 @@ transformEquation (Equation (TInf a) b) | not (generatedVar b) && not (isLim b) 
     newvar <- allocateVar
     addEquation "infiumum" (Equation (TInf a) (TVar newvar True))
     addEquation "infiumum" (Equation (TVar newvar True) b)
-    st <- get
-    forEach (seenSet st) $ \eq ->
-                case eq of
-                    Equation x (TInf y') | y' == a
-                        -> addEquation ("infiumum carry") (Equation x (TVar newvar True))
-                    _   -> return ()
-
-transformEquation (Equation a (TInf b)) = do
-    st <- get
-    forEach (seenSet st) $ \eq ->
-                case eq of
-                    Equation (TInf x') y | x' == b
-                        -> addEquation ("infimum carry") (Equation a y)
-                    _   -> return ()
 
 transformEquation (Equation a (TSup b)) | not (generatedVar a) && not (isLim a) = do
     newvar <- allocateVar
     addEquation "supremum" (Equation (TVar newvar True) (TSup b))
     addEquation "supremum" (Equation a (TVar newvar True))
-    st <- get
-    forEach (seenSet st) $ \eq ->
-                case eq of
-                    Equation (TSup x') y | x' == b
-                        -> addEquation ("supremum carry") (Equation (TVar newvar True) y)
-                    _   -> return ()
 
-transformEquation (Equation (TSup a) b) = do
-    st <- get
-    forEach (seenSet st) $ \eq ->
-                case eq of
-                    Equation x (TSup y') | y' == a
-                        -> addEquation ("supremum carry") (Equation x b)
-                    _   -> return ()
+transformEquation _ = return ()
 
-transformEquation (Equation sub sup) = do
+performElimination :: Equation -> Compute ()
+performElimination (Equation sub sup) = do
     st <- get
     
-    case sub of
-        TVar a' _ -> forEach (seenSet st) $ \eq -> 
-                        case eq of
-                            Equation x (TVar y' _) | y' == a'
-                                -> addEquation ("left-elim  " ++ show sub) (Equation x sup)
-                            _   -> return ()
-        _ -> return ()
+    forEach (seenSet st) $ \eq -> 
+                case eq of
+                    Equation x y | y == sub
+                        -> addEquation ("left-elim  " ++ show sub) (Equation x sup)
+                    _   -> return ()
     
-    case sup of
-        TVar b' _ -> forEach (seenSet st) $ \eq ->
-                        case eq of
-                            Equation (TVar x' _) y | x' == b'
-                                -> addEquation ("right-elim " ++ show sup) (Equation sub y)
-                            _   -> return ()
-        _ -> return ()
+    forEach (seenSet st) $ \eq ->
+                case eq of
+                    Equation x y | x == sup
+                        -> addEquation ("right-elim " ++ show sup) (Equation sub y)
+                    _   -> return ()
 
 
 reduce :: Integer -> [Equation] -> IO [Equation]
@@ -241,6 +212,9 @@ reduce start eqs = fmap (Set.toList . seenSet)
 -- self, it works as a sup type, too).  What can the compiler do to 
 -- determine this?
 
+(<:) :: Type -> Type -> Equation
+(<:) = Equation
+
 main :: IO ()
 main = do
     reduced <- reduce 100 eqs
@@ -267,3 +241,4 @@ main = do
           --    a             <:  h
           , Equation (TSup 0) (TInf 7)
           ]
+

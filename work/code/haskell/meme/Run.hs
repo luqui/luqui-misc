@@ -15,7 +15,7 @@ memeRun = memeRunProg "."
 memeRunProg :: String -> String -> IO Val
 memeRunProg name = runEval . eval . memeParse name
 
-memeType :: String -> Type
+memeType :: String -> (Type,Type)
 memeType prog = 
     let (ast,eqs) = typeAST builtinTypeEnv $ memeParse "." prog in
-    lowerBoundType (reduceEquations eqs) (getType ast)
+    boundType (reduceEquations eqs) (getType ast)

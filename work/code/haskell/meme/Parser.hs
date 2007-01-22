@@ -31,9 +31,21 @@ parseAST :: MParser AST -> MParser AST
 parseAST = id
 
 parseExpr :: MParser AST
-parseExpr = choice [ parseLambda
-                   , parseApp
-                   , parseTerm 
+parseExpr = parseApp
+
+parseApp :: MParser AST
+parseApp = parseAST $ do
+    parseLeftApp id
+  where
+    parseLeftApp :: (AST -> AST) -> MParser AST
+    parseLeftApp f = do
+        term <- parseTerm
+        option (f term) $ parseLeftApp (App (f term))
+
+parseTerm :: MParser AST
+parseTerm = choice [ parseLambda
+                   , parseVar
+                   , parseParens
                    ]
 
 parseLambda :: MParser AST
@@ -49,20 +61,6 @@ parseLambda = parseAST $ do
 
     parseBlock :: MParser AST
     parseBlock = tok braces parseExpr
-
-parseApp :: MParser AST
-parseApp = parseAST $ do
-    parseLeftApp id
-  where
-    parseLeftApp :: (AST -> AST) -> MParser AST
-    parseLeftApp f = do
-        term <- parseTerm
-        option (f term) $ parseLeftApp (App (f term))
-
-parseTerm :: MParser AST
-parseTerm = choice [ parseVar
-                   , parseParens
-                   ]
 
 parseVar :: MParser AST
 parseVar = parseAST $ do

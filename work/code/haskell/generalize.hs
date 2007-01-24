@@ -11,8 +11,7 @@ data Type where
     TAtom  :: String             -> Type  -- Int, Top, etc.
     TArrow :: Type -> Type       -> Type  -- functions
     TTuple :: Type -> Type       -> Type  -- tuples
-    TVar   :: Integer            -> Type  -- singular type
-    TLim   :: Integer            -> Type  -- limit type
+    TVar   :: Integer            -> Type  -- type variable
     TLam   :: Integer -> Type -> [Equation] -> Type  -- universal type
     deriving (Eq,Ord)
 
@@ -30,7 +29,6 @@ instance Show Type where
     show (TArrow a b) = "(" ++ show a ++ " -> " ++ show b ++ ")"
     show (TTuple a b) = "(" ++ show a ++ ", " ++ show b ++ ")"
     show (TVar v)     = show v
-    show (TLim v)     = "L" ++ show v
     show (TLam i t cons)   = "\\" ++ show i ++ " " ++ show t ++ " " ++ show cons
 
 type Subst = Map.Map Type Type
@@ -109,7 +107,7 @@ addEquation reason eq@(a :< b) = do
             local (+1) $ (transformEquation eq >> performElimination eq)
     
 isLim :: Type -> Bool
-isLim (TLim {}) = True
+isLim (TVar {}) = True
 isLim (TLam {}) = True
 isLim _ = False
 
@@ -151,9 +149,6 @@ freeVars env (TTuple a b) = freeVars env a `Set.union` freeVars env b
 freeVars env (TVar a) = if TVar a `Set.member` env 
                             then Set.empty 
                             else Set.singleton (TVar a)
-freeVars env (TLim a) = if TLim a `Set.member` env
-                            then Set.empty
-                            else Set.singleton (TLim a)
 freeVars env (TLam v t cons) 
     = freeVars xenv t `Set.union` foldr (Set.union . eqFreeVars) Set.empty cons
     where 
@@ -188,7 +183,6 @@ generalizeInf eqs env (TArrow a b) =
                            $ prune (env `Set.union` freeVars env t) eqs)
     subst v = Map.singleton v (rename v)
     name (TVar v) = v
-    name (TLim v) = v
     name _ = error "complex types have no names"
     rename = TVar . name
 generalizeInf eqs env (TTuple {}) = error "fuck that"
@@ -197,12 +191,6 @@ generalizeInf eqs env var@(TVar {}) =
         then var
         else fromMaybe var $ same (TAtom "Top") 
                            $ map (generalizeInf eqs env) 
-                           $ lowerBounds eqs env var
-generalizeInf eqs env var@(TLim {}) = 
-    if var `Set.member` env
-        then var
-        else fromMaybe var $ same (TAtom "Top") 
-                           $ map (generalizeInf eqs env)
                            $ lowerBounds eqs env var
 generalizeInf eqs env l@(TLam {}) = l  -- ahh, simple
 
@@ -215,12 +203,6 @@ generalizeSup eqs env (TArrow a b) =
     arr = TArrow (generalizeInf eqs shared a) (generalizeSup eqs shared b)
 generalizeSup eqs env (TTuple {}) = error "not handling tuples"
 generalizeSup eqs env var@(TVar {}) =
-    if var `Set.member` env
-        then var
-        else fromMaybe var $ same (TAtom "Top") 
-                           $ map (generalizeSup eqs env)
-                           $ upperBounds eqs env var
-generalizeSup eqs env var@(TLim {}) = 
     if var `Set.member` env
         then var
         else fromMaybe var $ same (TAtom "Top") 
@@ -254,26 +236,26 @@ main = do
     putStrLn ""
     putStrLn "-- CONCLUSIONS --"
     putStrLn ""
-    mapM_ print $ prune (Set.fromList [TLim 1, TLim 2]) reduced
+    mapM_ print $ prune (Set.fromList [TVar 1, TVar 2]) reduced
     putStrLn ""
-    print (generalizeInf reduced Set.empty (TLim 0))
+    print (generalizeInf reduced Set.empty (TVar 0))
     where
-    eqs = [ TLim 4                            :< TArrow (TLim 0) (TLim 3)
-          , TArrow (TLim 7) (TLim 7)          :< TLim 0
-          , TTuple (TLim 1) (TLim 2)          :< TLim 3
-          , TLim 0                            :< TArrow (TLim 5) (TLim 1)
-          , TAtom "Int"                       :< TLim 5
-          , TLim 0                            :< TArrow (TLim 6) (TLim 2)
-          , TAtom "Str"                       :< TLim 6
+    eqs = [ TVar 4                            :< TArrow (TVar 0) (TVar 3)
+          , TArrow (TVar 7) (TVar 7)          :< TVar 0
+          , TTuple (TVar 1) (TVar 2)          :< TVar 3
+          , TVar 0                            :< TArrow (TVar 5) (TVar 1)
+          , TAtom "Int"                       :< TVar 5
+          , TVar 0                            :< TArrow (TVar 6) (TVar 2)
+          , TAtom "Str"                       :< TVar 6
           ]
-
+    
     {-
-    eqs = [ TLim 4                            :< TArrow (TLim 0) (TLim 3)
-          , TLam 0 (TArrow (TVar 0) (TVar 0)) :< TLim 0
-          , TTuple (TLim 1) (TLim 2)          :< TLim 3
-          , TLim 0                            :< TArrow (TLim 5) (TLim 1)
-          , TAtom "Int"                       :< TLim 5
-          , TLim 0                            :< TArrow (TLim 6) (TLim 2)
-          , TAtom "Str"                       :< TLim 6
+    eqs = [ TVar 4                            :< TArrow (TVar 0) (TVar 3)
+          , TLam 0 (TArrow (TVar 0) (TVar 0)) [] :< TVar 0
+          , TTuple (TVar 1) (TVar 2)          :< TVar 3
+          , TVar 0                            :< TArrow (TVar 5) (TVar 1)
+          , TAtom "Int"                       :< TVar 5
+          , TVar 0                            :< TArrow (TVar 6) (TVar 2)
+          , TAtom "Str"                       :< TVar 6
           ]
     -}

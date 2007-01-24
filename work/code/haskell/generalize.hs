@@ -183,21 +183,28 @@ upperBounds :: [Equation] -> Set.Set Type -> Type -> [Type]
 upperBounds eqs env t = mapMaybe (\(a :< b) -> assert (a == t) b)
                       $ eqs
 
+gen2Helper :: (Type -> Type -> Type)
+           -> (Type, Type)
+           -> ([Equation] -> Set.Set Type -> Type -> Type)
+           -> ([Equation] -> Set.Set Type -> Type -> Type)
+           -> (Integer -> Type -> [Equation] -> Type)
+           -> [Equation] -> Set.Set Type
+           -> Type
+gen2Helper tcons (a,b) genArg1 genArg2 genCons eqs env = 
+    Set.fold eliminate base (freeVars env base)
+    where
+    shared = freeVars env a `Set.intersection` freeVars env b
+    base = tcons (genArg1 eqs shared a) (genArg2 eqs shared b)
+    eliminate v t = genCons (name v) t
+                            (prune (env `Set.union` freeVars env t) eqs)
+    name (TVar v) = v
+
 generalizeInf :: [Equation] -> Set.Set Type -> Type -> Type
 generalizeInf eqs env (TAtom x) = TAtom x
 generalizeInf eqs env (TArrow a b) = 
-    Set.fold eliminate arr (freeVars env arr)
-    where
-    shared = freeVars env a `Set.intersection` freeVars env b
-    arr = TArrow (generalizeSup eqs shared a) (generalizeInf eqs shared b)
-    eliminate v t = TInf (name v) (substituteType (subst v) t) 
-                         (map (substituteEquation (subst v))
-                           $ prune (env `Set.union` freeVars env t) eqs)
-    subst v = Map.singleton v (rename v)
-    name (TVar v) = v
-    name _ = error "complex types have no names"
-    rename = TVar . name
-generalizeInf eqs env (TTuple {}) = error "fuck that"
+    gen2Helper TArrow (a,b) generalizeSup generalizeInf TInf eqs env
+generalizeInf eqs env (TTuple a b) = 
+    gen2Helper TTuple (a,b) generalizeInf generalizeInf TInf eqs env
 generalizeInf eqs env var@(TVar {}) = 
     if var `Set.member` env
         then var
@@ -210,11 +217,9 @@ generalizeInf eqs env l@(TSup {}) = l
 generalizeSup :: [Equation] -> Set.Set Type -> Type -> Type
 generalizeSup eqs env (TAtom x) = TAtom x
 generalizeSup eqs env (TArrow a b) = 
-    if Set.null (freeVars env arr) then arr else TAtom "Top" -- loss of info!
-    where
-    shared = freeVars env a `Set.intersection` freeVars env b
-    arr = TArrow (generalizeInf eqs shared a) (generalizeSup eqs shared b)
-generalizeSup eqs env (TTuple {}) = error "not handling tuples"
+    gen2Helper TArrow (a,b) generalizeInf generalizeSup TSup eqs env
+generalizeSup eqs env (TTuple a b) =
+    gen2Helper TTuple (a,b) generalizeSup generalizeSup TSup eqs env
 generalizeSup eqs env var@(TVar {}) =
     if var `Set.member` env
         then var

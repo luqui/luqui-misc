@@ -10,7 +10,7 @@ data Type where
     TAtom  :: String             -> Type  -- Int, Top, etc.
     TArrow :: Type -> Type       -> Type  -- functions
     TTuple :: Type -> Type       -> Type  -- tuples
-    TVar   :: Integer -> Bool    -> Type  -- singular types
+    TVar   :: Integer            -> Type  -- singular types
     TSup   :: Integer            -> Type  -- supremum type (base, inst)
     TInf   :: Integer            -> Type  -- infimum type  (base, inst)
     TLam   :: Integer -> Type    -> Type  -- universal types
@@ -36,7 +36,7 @@ instance Show Type where
     show (TAtom  a)   = a
     show (TArrow a b) = "(" ++ show a ++ " -> " ++ show b ++ ")"
     show (TTuple a b) = "(" ++ show a ++ ", " ++ show b ++ ")"
-    show (TVar v _)   = show v
+    show (TVar v)     = show v
     show (TSup   v)   = "v" ++ show v
     show (TInf   v)   = "^" ++ show v
     show (TLam i t)   = "\\" ++ show i ++ " " ++ show t
@@ -60,7 +60,7 @@ substituteType sub (TArrow a b)
 substituteType sub (TTuple a b) 
     = TTuple (substituteType sub a) (substituteType sub b)
 substituteType sub (TLam v t) 
-    = TLam v (substituteType (Map.delete (TVar v False) sub) t)
+    = TLam v (substituteType (Map.delete (TVar v) sub) t)
 substituteType _ x = x
 
 
@@ -86,7 +86,7 @@ allocateVar = do
 instantiateLam :: Type -> Compute Type
 instantiateLam (TLam v t) = do
     newvar <- allocateVar
-    return $ substituteType (Map.singleton (TVar v False) (TVar newvar False)) t
+    return $ substituteType (Map.singleton (TVar v) (TVar newvar)) t
 instantiateLam _ = error "Tried to lambda-instantiate a non-lambda"
 
 twoColumn :: Int -> String -> String -> String
@@ -128,10 +128,6 @@ addEquation reason eq@(Equation a b) = do
 -- This phenomenon of course happens when they are both suprema, but it
 -- can even happen when one is a supremum and the other is an infimum.
 -- Proof is left as an exercise for the reader. :-)
-
-generatedVar :: Type -> Bool
-generatedVar (TVar _ True) = True
-generatedVar _ = False
     
 isLim :: Type -> Bool
 isLim (TInf _) = True
@@ -151,16 +147,6 @@ transformEquation (Equation (TTuple a b) (TTuple a' b')) = do
 transformEquation (Equation sub@(TLam v t) sup) | not (isLim sup) = do
     sub' <- instantiateLam sub
     addEquation "instantiate" (Equation sub' sup)
-
-transformEquation (Equation (TInf a) b) | not (generatedVar b) && not (isLim b) = do
-    newvar <- allocateVar
-    addEquation "infiumum" (Equation (TInf a) (TVar newvar True))
-    addEquation "infiumum" (Equation (TVar newvar True) b)
-
-transformEquation (Equation a (TSup b)) | not (generatedVar a) && not (isLim a) = do
-    newvar <- allocateVar
-    addEquation "supremum" (Equation (TVar newvar True) (TSup b))
-    addEquation "supremum" (Equation a (TVar newvar True))
 
 transformEquation _ = return ()
 
@@ -221,13 +207,10 @@ main = do
     putStrLn ""
     mapM_ print reduced
     where
-    tVar :: Integer -> Type
-    tVar i = TVar i False
-
           --    a             <:  \a (a -> a)
-    eqs = [ Equation (TSup 0) (TLam 0 (TArrow (tVar 0) (tVar 0)))
+    eqs = [ Equation (TSup 0) (TLam 0 (TArrow (TVar 0) (TVar 0)))
           --    \a (a -> a)   <:  a
-          , Equation (TLam 0 (TArrow (tVar 0) (tVar 0))) (TSup 0)
+          , Equation (TLam 0 (TArrow (TVar 0) (TVar 0))) (TSup 0)
           -- .1 c             <:  d -> e
           , Equation (TInf 2) (TArrow (TInf 3) (TSup 4))
           --    Int           <:  d

@@ -12,24 +12,17 @@ data Type where
     TArrow :: Type -> Type       -> Type  -- functions
     TTuple :: Type -> Type       -> Type  -- tuples
     TVar   :: Integer            -> Type  -- type variable
-    TLam   :: Integer -> Type -> [Equation] -> Type  -- universal type
+    TInf   :: Integer -> Type -> [Equation] -> Type  -- universal type
+    TSup   :: Integer -> Type -> [Equation] -> Type  -- existential type
     deriving (Eq,Ord)
-
--- Note that a TLam is just an infimum type.  For example, \x (x -> x)
--- (the type of the identity) is a subtype of Int -> Int, Str -> Str,
--- and every other type that looks like a -> a.  So it's just the
--- greatest lower bound of all those types.  We need it so we can
--- specify universal types by their defining sets (keep in mind
--- that the defining sets we can specify are very limited--certainly
--- much less than those of first-order logic--which is why we have
--- a hope of this algorithm still being decidable).
 
 instance Show Type where
     show (TAtom  a)   = a
     show (TArrow a b) = "(" ++ show a ++ " -> " ++ show b ++ ")"
     show (TTuple a b) = "(" ++ show a ++ ", " ++ show b ++ ")"
     show (TVar v)     = show v
-    show (TLam i t cons)   = "\\" ++ show i ++ " " ++ show t ++ " " ++ show cons
+    show (TInf i t cons)   = "^" ++ show i ++ " " ++ show t ++ " " ++ show cons
+    show (TSup i t cons)   = "v" ++ show i ++ " " ++ show t ++ " " ++ show cons
 
 type Subst = Map.Map Type Type
 type SubstID = Integer
@@ -49,8 +42,12 @@ substituteType sub (TArrow a b)
     = TArrow (substituteType sub a) (substituteType sub b)
 substituteType sub (TTuple a b) 
     = TTuple (substituteType sub a) (substituteType sub b)
-substituteType sub (TLam v t cons) 
-    = TLam v (substituteType subst t) (map (substituteEquation subst) cons)
+substituteType sub (TInf v t cons) 
+    = TInf v (substituteType subst t) (map (substituteEquation subst) cons)
+    where
+    subst = Map.delete (TVar v) sub
+substituteType sub (TSup v t cons) 
+    = TSup v (substituteType subst t) (map (substituteEquation subst) cons)
     where
     subst = Map.delete (TVar v) sub
 substituteType _ x = x
@@ -79,10 +76,15 @@ allocateVar = do
 
 
 instantiateLam :: Type -> Compute Type
-instantiateLam (TLam v t cons) = do
+instantiateLam (TInf v t cons) = do
     newvar <- allocateVar
     let subst = Map.singleton (TVar v) (TVar newvar)
-    mapM_ (addEquation "inst constr" . substituteEquation subst) cons
+    mapM_ (addEquation "inf constr" . substituteEquation subst) cons
+    return $ substituteType subst t
+instantiateLam (TSup v t cons) = do
+    newvar <- allocateVar
+    let subst = Map.singleton (TVar v) (TVar newvar)
+    mapM_ (addEquation "sup constr" . substituteEquation subst) cons
     return $ substituteType subst t
 instantiateLam _ = error "Tried to lambda-instantiate a non-lambda"
 
@@ -108,7 +110,8 @@ addEquation reason eq@(a :< b) = do
     
 isLim :: Type -> Bool
 isLim (TVar {}) = True
-isLim (TLam {}) = True
+isLim (TInf {}) = True
+isLim (TSup {}) = True
 isLim _ = False
 
 transformEquation :: Equation -> Compute ()
@@ -120,9 +123,13 @@ transformEquation (TTuple a b :< TTuple a' b') = do
     addEquation "tuple" (a :< a')
     addEquation "tuple" (b :< b')
 
-transformEquation (sub@(TLam {}) :< sup) | not (isLim sup) = do
+transformEquation (sub@(TInf {}) :< sup) | not (isLim sup) = do
     sub' <- instantiateLam sub
     addEquation "instantiate" (sub' :< sup)
+
+transformEquation (sub :< sup@(TSup {})) | not (isLim sub) = do
+    sup' <- instantiateLam sup
+    addEquation "instantiate" (sub :< sup')
 
 transformEquation _ = return ()
 
@@ -149,7 +156,12 @@ freeVars env (TTuple a b) = freeVars env a `Set.union` freeVars env b
 freeVars env (TVar a) = if TVar a `Set.member` env 
                             then Set.empty 
                             else Set.singleton (TVar a)
-freeVars env (TLam v t cons) 
+freeVars env (TInf v t cons) 
+    = freeVars xenv t `Set.union` foldr (Set.union . eqFreeVars) Set.empty cons
+    where 
+    xenv = Set.insert (TVar v) env
+    eqFreeVars (a :< b) = freeVars xenv a `Set.union` freeVars xenv b
+freeVars env (TSup v t cons) 
     = freeVars xenv t `Set.union` foldr (Set.union . eqFreeVars) Set.empty cons
     where 
     xenv = Set.insert (TVar v) env
@@ -178,7 +190,7 @@ generalizeInf eqs env (TArrow a b) =
     where
     shared = freeVars env a `Set.intersection` freeVars env b
     arr = TArrow (generalizeSup eqs shared a) (generalizeInf eqs shared b)
-    eliminate v t = TLam (name v) (substituteType (subst v) t) 
+    eliminate v t = TInf (name v) (substituteType (subst v) t) 
                          (map (substituteEquation (subst v))
                            $ prune (env `Set.union` freeVars env t) eqs)
     subst v = Map.singleton v (rename v)
@@ -192,7 +204,8 @@ generalizeInf eqs env var@(TVar {}) =
         else fromMaybe var $ same (TAtom "Top") 
                            $ map (generalizeInf eqs env) 
                            $ lowerBounds eqs env var
-generalizeInf eqs env l@(TLam {}) = l  -- ahh, simple
+generalizeInf eqs env l@(TInf {}) = l  -- ahh, simple
+generalizeInf eqs env l@(TSup {}) = l
 
 generalizeSup :: [Equation] -> Set.Set Type -> Type -> Type
 generalizeSup eqs env (TAtom x) = TAtom x
@@ -208,7 +221,8 @@ generalizeSup eqs env var@(TVar {}) =
         else fromMaybe var $ same (TAtom "Top") 
                            $ map (generalizeSup eqs env)
                            $ upperBounds eqs env var
-generalizeSup eqs env l@(TLam {}) = l
+generalizeSup eqs env l@(TInf {}) = l
+generalizeSup eqs env l@(TSup {}) = l
 
 
 compute :: [Equation] -> Compute ()

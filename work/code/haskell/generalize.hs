@@ -145,11 +145,20 @@ reduce start eqs = fmap (Set.toList . seenSet)
                                 , seenSet       = Set.empty
                                 }
 
+prune :: [Type] -> [Equation] -> [Equation]
+prune ts = filter $ \ (a :< b) -> all isInteresting [a,b]
+    where
+    isInteresting :: Type -> Bool
+    isInteresting (TAtom _) = True
+    isInteresting x = x `elem` ts
+
 main :: IO ()
 main = do
     reduced <- reduce 100 eqs
     putStrLn ""
-    mapM_ print reduced
+    putStrLn "-- CONCLUSIONS --"
+    putStrLn ""
+    mapM_ print $ prune [TLim 1, TLim 2] reduced
     where
     eqs = [ TLim 4                            :< TArrow (TLim 0) (TLim 3)
           , TLam 0 (TArrow (TVar 0) (TVar 0)) :< TLim 0

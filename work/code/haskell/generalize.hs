@@ -175,6 +175,30 @@ same def [x] = return x
 same def (x:xs) = same def xs >>= \s -> assert (s == x) s
 same def []  = return def  -- not recursive, only special case
 
+subtype :: [Equation] -> Type -> Type -> Bool
+subtype eqs (TAtom "Bot") _ = True
+subtype eqs _ (TAtom "Top") = True
+subtype eqs (TArrow a b) (TArrow a' b') = subtype eqs a' a && subtype eqs b b'
+subtype eqs (TTuple a b) (TTuple a' b') = subtype eqs a a' && subtype eqs b b'
+subtype eqs a b = a == b || (a :< b) `elem` eqs
+-- XXX what about universal unification?
+
+maximal :: [Equation] -> Type -> Type -> Maybe Type
+maximal eqs a b = 
+    case () of
+        () | a == b          -> Just a
+           | subtype eqs a b -> Just b
+           | subtype eqs b a -> Just a
+           | otherwise       -> Nothing
+
+minimal :: [Equation] -> Type -> Type -> Maybe Type
+minimal eqs a b = 
+    case () of
+        () | a == b          -> Just a
+           | subtype eqs a b -> Just a
+           | subtype eqs b a -> Just b
+           | otherwise       -> Nothing
+
 lowerBounds :: [Equation] -> Set.Set Type -> Type -> [Type]
 lowerBounds eqs env t = mapMaybe (\(a :< b) -> assert (b == t) a)
                       $ eqs
@@ -193,10 +217,11 @@ gen2Helper :: (Type -> Type -> Type)
 gen2Helper tcons (a,b) genArg1 genArg2 genCons eqs env = 
     Set.fold eliminate base (freeVars env base)
     where
-    shared = freeVars env a `Set.intersection` freeVars env b
+    env' = Set.insert (tcons a b) env
+    shared = freeVars env' a `Set.intersection` freeVars env' b
     base = tcons (genArg1 eqs shared a) (genArg2 eqs shared b)
     eliminate v t = genCons (name v) t
-                            (prune (env `Set.union` freeVars env t) eqs)
+                            (prune (env' `Set.union` freeVars env' t) eqs)
     name (TVar v) = v
 
 generalizeInf :: [Equation] -> Set.Set Type -> Type -> Type
@@ -208,7 +233,7 @@ generalizeInf eqs env (TTuple a b) =
 generalizeInf eqs env var@(TVar {}) = 
     if var `Set.member` env
         then var
-        else fromMaybe var $ same (TAtom "Top") 
+        else fromMaybe var $ foldr (\a -> (>>= maximal eqs a)) (Just (TAtom "Bot"))
                            $ map (generalizeInf eqs env) 
                            $ lowerBounds eqs env var
 generalizeInf eqs env l@(TInf {}) = l  -- ahh, simple
@@ -223,7 +248,7 @@ generalizeSup eqs env (TTuple a b) =
 generalizeSup eqs env var@(TVar {}) =
     if var `Set.member` env
         then var
-        else fromMaybe var $ same (TAtom "Top") 
+        else fromMaybe var $ foldr (\a -> (>>= minimal eqs a)) (Just (TAtom "Top"))
                            $ map (generalizeSup eqs env)
                            $ upperBounds eqs env var
 generalizeSup eqs env l@(TInf {}) = l
@@ -259,22 +284,11 @@ main = do
     putStrLn ""
     print (generalizeInf reduced Set.empty (TVar 0))
     where
-    eqs = [ TVar 4                            :< TArrow (TVar 0) (TVar 3)
-          , TArrow (TVar 7) (TVar 7)          :< TVar 0
+    eqs = [ TArrow (TVar 0) (TVar 3)          :< TVar 4
+          , TInf 0 (TArrow (TVar 0) (TVar 0)) [] :< TVar 0
           , TTuple (TVar 1) (TVar 2)          :< TVar 3
           , TVar 0                            :< TArrow (TVar 5) (TVar 1)
           , TAtom "Int"                       :< TVar 5
           , TVar 0                            :< TArrow (TVar 6) (TVar 2)
           , TAtom "Str"                       :< TVar 6
           ]
-    
-    {-
-    eqs = [ TVar 4                            :< TArrow (TVar 0) (TVar 3)
-          , TLam 0 (TArrow (TVar 0) (TVar 0)) [] :< TVar 0
-          , TTuple (TVar 1) (TVar 2)          :< TVar 3
-          , TVar 0                            :< TArrow (TVar 5) (TVar 1)
-          , TAtom "Int"                       :< TVar 5
-          , TVar 0                            :< TArrow (TVar 6) (TVar 2)
-          , TAtom "Str"                       :< TVar 6
-          ]
-    -}

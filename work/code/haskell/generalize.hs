@@ -5,6 +5,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Control.Monad.State
 import Control.Monad.Reader
+import Debug.Trace
 
 data Type where
     TAtom  :: String             -> Type  -- Int, Top, etc.
@@ -12,7 +13,7 @@ data Type where
     TTuple :: Type -> Type       -> Type  -- tuples
     TVar   :: Integer            -> Type  -- singular type
     TLim   :: Integer            -> Type  -- limit type
-    TLam   :: Integer -> Type    -> Type  -- universal type
+    TLam   :: Integer -> Type -> [Equation] -> Type  -- universal type
     deriving (Eq,Ord)
 
 -- Note that a TLam is just an infimum type.  For example, \x (x -> x)
@@ -30,7 +31,7 @@ instance Show Type where
     show (TTuple a b) = "(" ++ show a ++ ", " ++ show b ++ ")"
     show (TVar v)     = show v
     show (TLim v)     = "L" ++ show v
-    show (TLam i t)   = "\\" ++ show i ++ " " ++ show t
+    show (TLam i t cons)   = "\\" ++ show i ++ " " ++ show t ++ " " ++ show cons
 
 type Subst = Map.Map Type Type
 type SubstID = Integer
@@ -50,9 +51,14 @@ substituteType sub (TArrow a b)
     = TArrow (substituteType sub a) (substituteType sub b)
 substituteType sub (TTuple a b) 
     = TTuple (substituteType sub a) (substituteType sub b)
-substituteType sub (TLam v t) 
-    = TLam v (substituteType (Map.delete (TVar v) sub) t)
+substituteType sub (TLam v t cons) 
+    = TLam v (substituteType subst t) (map (substituteEquation subst) cons)
+    where
+    subst = Map.delete (TVar v) sub
 substituteType _ x = x
+
+substituteEquation :: Subst -> Equation -> Equation
+substituteEquation sub (a :< b) = substituteType sub a :< substituteType sub b
 
 
 forEach :: (Monad m, Ord a) => Set.Set a -> (a -> m ()) -> m ()
@@ -75,9 +81,11 @@ allocateVar = do
 
 
 instantiateLam :: Type -> Compute Type
-instantiateLam (TLam v t) = do
+instantiateLam (TLam v t cons) = do
     newvar <- allocateVar
-    return $ substituteType (Map.singleton (TVar v) (TVar newvar)) t
+    let subst = Map.singleton (TVar v) (TVar newvar)
+    mapM_ (addEquation "inst constr" . substituteEquation subst) cons
+    return $ substituteType subst t
 instantiateLam _ = error "Tried to lambda-instantiate a non-lambda"
 
 twoColumn :: Int -> String -> String -> String
@@ -101,8 +109,8 @@ addEquation reason eq@(a :< b) = do
             local (+1) $ (transformEquation eq >> performElimination eq)
     
 isLim :: Type -> Bool
-isLim (TLim _) = True
-isLim (TLam _ _) = True
+isLim (TLim {}) = True
+isLim (TLam {}) = True
 isLim _ = False
 
 transformEquation :: Equation -> Compute ()
@@ -114,7 +122,7 @@ transformEquation (TTuple a b :< TTuple a' b') = do
     addEquation "tuple" (a :< a')
     addEquation "tuple" (b :< b')
 
-transformEquation (sub@(TLam v t) :< sup) | not (isLim sup) = do
+transformEquation (sub@(TLam {}) :< sup) | not (isLim sup) = do
     sub' <- instantiateLam sub
     addEquation "instantiate" (sub' :< sup)
 
@@ -136,21 +144,109 @@ performElimination (sub :< sup) = do
                         -> addEquation ("right-elim " ++ show sup) (sub :< y)
                     _   -> return ()
 
+freeVars :: Set.Set Type -> Type -> Set.Set Type
+freeVars env (TAtom x) = Set.empty
+freeVars env (TArrow a b) = freeVars env a `Set.union` freeVars env b
+freeVars env (TTuple a b) = freeVars env a `Set.union` freeVars env b
+freeVars env (TVar a) = if TVar a `Set.member` env 
+                            then Set.empty 
+                            else Set.singleton (TVar a)
+freeVars env (TLim a) = if TLim a `Set.member` env
+                            then Set.empty
+                            else Set.singleton (TLim a)
+freeVars env (TLam v t cons) 
+    = freeVars xenv t `Set.union` foldr (Set.union . eqFreeVars) Set.empty cons
+    where 
+    xenv = Set.insert (TVar v) env
+    eqFreeVars (a :< b) = freeVars xenv a `Set.union` freeVars xenv b
+
+assert :: (MonadPlus m) => Bool -> a -> m a
+assert cond val = if cond then return val else mzero
+
+same :: (Eq a, MonadPlus m) => a -> [a] -> m a
+same def [x] = return x
+same def (x:xs) = same def xs >>= \s -> assert (s == x) s
+same def []  = return def  -- not recursive, only special case
+
+lowerBounds :: [Equation] -> Set.Set Type -> Type -> [Type]
+lowerBounds eqs env t = mapMaybe (\(a :< b) -> assert (b == t) a)
+                      $ eqs
+
+upperBounds :: [Equation] -> Set.Set Type -> Type -> [Type]
+upperBounds eqs env t = mapMaybe (\(a :< b) -> assert (a == t) b)
+                      $ eqs
+
+generalizeInf :: [Equation] -> Set.Set Type -> Type -> Type
+generalizeInf eqs env (TAtom x) = TAtom x
+generalizeInf eqs env (TArrow a b) = 
+    Set.fold eliminate arr (freeVars env arr)
+    where
+    shared = freeVars env a `Set.intersection` freeVars env b
+    arr = TArrow (generalizeSup eqs shared a) (generalizeInf eqs shared b)
+    eliminate v t = TLam (name v) (substituteType (subst v) t) 
+                         (map (substituteEquation (subst v))
+                           $ prune (env `Set.union` freeVars env t) eqs)
+    subst v = Map.singleton v (rename v)
+    name (TVar v) = v
+    name (TLim v) = v
+    name _ = error "complex types have no names"
+    rename = TVar . name
+generalizeInf eqs env (TTuple {}) = error "fuck that"
+generalizeInf eqs env var@(TVar {}) = 
+    if var `Set.member` env
+        then var
+        else fromMaybe var $ same (TAtom "Top") 
+                           $ map (generalizeInf eqs env) 
+                           $ lowerBounds eqs env var
+generalizeInf eqs env var@(TLim {}) = 
+    if var `Set.member` env
+        then var
+        else fromMaybe var $ same (TAtom "Top") 
+                           $ map (generalizeInf eqs env)
+                           $ lowerBounds eqs env var
+generalizeInf eqs env l@(TLam {}) = l  -- ahh, simple
+
+generalizeSup :: [Equation] -> Set.Set Type -> Type -> Type
+generalizeSup eqs env (TAtom x) = TAtom x
+generalizeSup eqs env (TArrow a b) = 
+    if Set.null (freeVars env arr) then arr else TAtom "Top" -- loss of info!
+    where
+    shared = freeVars env a `Set.intersection` freeVars env b
+    arr = TArrow (generalizeInf eqs shared a) (generalizeSup eqs shared b)
+generalizeSup eqs env (TTuple {}) = error "not handling tuples"
+generalizeSup eqs env var@(TVar {}) =
+    if var `Set.member` env
+        then var
+        else fromMaybe var $ same (TAtom "Top") 
+                           $ map (generalizeSup eqs env)
+                           $ upperBounds eqs env var
+generalizeSup eqs env var@(TLim {}) = 
+    if var `Set.member` env
+        then var
+        else fromMaybe var $ same (TAtom "Top") 
+                           $ map (generalizeSup eqs env)
+                           $ upperBounds eqs env var
+generalizeSup eqs env l@(TLam {}) = l
+
+
+compute :: [Equation] -> Compute ()
+compute eqs = do
+    mapM_ (addEquation "init") eqs
 
 reduce :: Integer -> [Equation] -> IO [Equation]
 reduce start eqs = fmap (Set.toList . seenSet) 
                  $ flip runReaderT 0
-                 $ execStateT (mapM_ (addEquation "init") eqs)
+                 $ execStateT (compute eqs)
                  $ ComputeState { varCounter    = start
                                 , seenSet       = Set.empty
                                 }
 
-prune :: [Type] -> [Equation] -> [Equation]
+prune :: Set.Set Type -> [Equation] -> [Equation]
 prune ts = filter $ \ (a :< b) -> all isInteresting [a,b]
     where
     isInteresting :: Type -> Bool
     isInteresting (TAtom _) = True
-    isInteresting x = x `elem` ts
+    isInteresting x = x `Set.member` ts
 
 main :: IO ()
 main = do
@@ -158,8 +254,20 @@ main = do
     putStrLn ""
     putStrLn "-- CONCLUSIONS --"
     putStrLn ""
-    mapM_ print $ prune [TLim 1, TLim 2] reduced
+    mapM_ print $ prune (Set.fromList [TLim 1, TLim 2]) reduced
+    putStrLn ""
+    print (generalizeInf reduced Set.empty (TLim 0))
     where
+    eqs = [ TLim 4                            :< TArrow (TLim 0) (TLim 3)
+          , TArrow (TLim 7) (TLim 7)          :< TLim 0
+          , TTuple (TLim 1) (TLim 2)          :< TLim 3
+          , TLim 0                            :< TArrow (TLim 5) (TLim 1)
+          , TAtom "Int"                       :< TLim 5
+          , TLim 0                            :< TArrow (TLim 6) (TLim 2)
+          , TAtom "Str"                       :< TLim 6
+          ]
+
+    {-
     eqs = [ TLim 4                            :< TArrow (TLim 0) (TLim 3)
           , TLam 0 (TArrow (TVar 0) (TVar 0)) :< TLim 0
           , TTuple (TLim 1) (TLim 2)          :< TLim 3
@@ -168,3 +276,4 @@ main = do
           , TLim 0                            :< TArrow (TLim 6) (TLim 2)
           , TAtom "Str"                       :< TLim 6
           ]
+    -}

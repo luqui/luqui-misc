@@ -11,17 +11,10 @@ data Type where
     TArrow :: Type -> Type       -> Type  -- functions
     TTuple :: Type -> Type       -> Type  -- tuples
     TVar   :: Integer            -> Type  -- singular types
-    TSup   :: Integer            -> Type  -- supremum type (base, inst)
-    TInf   :: Integer            -> Type  -- infimum type  (base, inst)
+    TSup   :: Integer            -> Type  -- supremum type
+    TInf   :: Integer            -> Type  -- infimum type
     TLam   :: Integer -> Type    -> Type  -- universal types
     deriving (Eq,Ord)
-
--- The Bool on TVar is a hack that tries to avert the program getting
--- into an infinite loop.  It is True when the variable was created
--- by instantiating a TSup or TInf type (but not a TLam... I'm not
--- sure why), to make sure that we don't instantiate a new variable 
--- when comparing to one that has already been instantiated.  It
--- doesn't seem like it would work, but so far it has been working.
 
 -- Note that a TLam is just an infimum type.  For example, \x (x -> x)
 -- (the type of the identity) is a subtype of Int -> Int, Str -> Str,

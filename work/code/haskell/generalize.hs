@@ -220,8 +220,9 @@ gen2Helper :: (Type -> Type -> Type)
 gen2Helper tcons (a,b) genArg1 genArg2 genCons eqs env = 
     Set.fold eliminate base (freeVars env base)
     where
+    env' = env `Set.union` shared
     shared = freeVars env a `Set.intersection` freeVars env b
-    base = tcons (genArg1 eqs shared a) (genArg2 eqs shared b)
+    base = tcons (genArg1 eqs env' a) (genArg2 eqs env' b)
     eliminate v t = genCons (name v) t
                             (filter (mentionsVar v)
                               (prune (env `Set.union` freeVars env t) eqs))
@@ -325,7 +326,7 @@ main = do
     putStrLn ""
     mapM_ print $ prune (Set.fromList [TVar 1, TVar 2]) reduced
     putStrLn ""
-    putStrLn $ "6 = " ++ show (generalizeInf reduced Set.empty (TVar 6))
+    putStrLn $ "0 = " ++ show (generalizeInf reduced Set.empty (TVar 3))
     where
     {-
     eqs = [ TArrow (TVar 0) (TVar 3)          :< TVar 4
@@ -338,6 +339,9 @@ main = do
           ]
     -}
 
+    eqs = [ TArrow (TVar 0) (TArrow (TVar 1) (TVar 0)) :< TVar 3
+          ]
+    {-
     -- \x { (+) x 1 }  given  (+) :: Int -> Int -> Int
     eqs = [ TVar 0 :< TArrow (TVar 1) (TVar 2)
           , TVar 3 :< TVar 1
@@ -347,3 +351,4 @@ main = do
           , TAtom "Int" :< TAtom "Num"
           , TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TVar 0))) [ TVar 0 :< TAtom "Num" ] :< TVar 0
           ]
+    -}

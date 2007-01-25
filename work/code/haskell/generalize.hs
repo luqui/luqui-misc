@@ -220,12 +220,38 @@ gen2Helper :: (Type -> Type -> Type)
 gen2Helper tcons (a,b) genArg1 genArg2 genCons eqs env = 
     Set.fold eliminate base (freeVars env base)
     where
-    env' = Set.insert (tcons a b) env
-    shared = freeVars env' a `Set.intersection` freeVars env' b
+    shared = freeVars env a `Set.intersection` freeVars env b
     base = tcons (genArg1 eqs shared a) (genArg2 eqs shared b)
     eliminate v t = genCons (name v) t
-                            (prune (env' `Set.union` freeVars env' t) eqs)
+                            (filter (mentionsVar v)
+                              (prune (env `Set.union` freeVars env t) eqs))
     name (TVar v) = v
+
+substExt :: Type -> (Type,Type) -> Equation -> Equation
+substExt (TVar v) (inf,sup) (a :< b) 
+    = minimize a :< maximize b
+    where
+    minimize (TAtom x) = TAtom x
+    minimize (TArrow a b) = TArrow (maximize a) (minimize b)
+    minimize (TTuple a b) = TTuple (minimize a) (minimize b)
+    minimize (TVar x) | x == v  =  inf
+    minimize (TInf v' t eqs) | v /= v' = TInf v' (minimize t) 
+                                              (map (substExt (TVar v) (inf,sup)) eqs)
+    minimize (TSup v' t eqs) | v /= v' = TSup v' (minimize t)
+                                              (map (substExt (TVar v) (inf,sup)) eqs)
+    minimize x = x
+
+    maximize (TAtom x) = TAtom x
+    maximize (TArrow a b) = TArrow (minimize a) (maximize b)
+    maximize (TTuple a b) = TTuple (maximize a) (maximize b)
+    maximize (TVar x) | x == v  =  inf
+    maximize (TInf v' t eqs) | v /= v' = TInf v' (maximize t) 
+                                              (map (substExt (TVar v) (inf,sup)) eqs)
+    maximize (TSup v' t eqs) | v /= v' = TSup v' (maximize t)
+                                              (map (substExt (TVar v) (inf,sup)) eqs)
+    maximize x = x
+
+
 
 generalizeInf :: [Equation] -> Set.Set Type -> Type -> Type
 generalizeInf eqs env (TAtom x) = TAtom x
@@ -236,7 +262,7 @@ generalizeInf eqs env (TTuple a b) =
 generalizeInf eqs env var@(TVar {}) = 
     if var `Set.member` env
         then var
-        else fromMaybe var $ fmap (generalizeInf eqs env)
+        else fromMaybe var $ fmap (\inf -> generalizeInf (map (substExt var (inf,var)) eqs) env inf)
                            $ foldr (\a -> (>>= maximal eqs a)) (Just (TAtom "Bot"))
                            $ filter (/= var)
                            $ lowerBounds eqs env var
@@ -252,7 +278,7 @@ generalizeSup eqs env (TTuple a b) =
 generalizeSup eqs env var@(TVar {}) =
     if var `Set.member` env
         then var
-        else fromMaybe var $ fmap (generalizeSup eqs env)
+        else fromMaybe var $ fmap (\sup -> generalizeSup (map (substExt var (var,sup)) eqs) env sup)
                            $ foldr (\a -> (>>= minimal eqs a)) (Just (TAtom "Top"))
                            $ filter (/= var)
                            $ upperBounds eqs env var
@@ -271,6 +297,18 @@ reduce start eqs = fmap (Set.toList . seenSet)
                  $ ComputeState { varCounter    = start
                                 , seenSet       = Set.empty
                                 }
+
+mentionsVar :: Type -> Equation -> Bool
+mentionsVar v (a :< b) = mentionsVar' a || mentionsVar' b
+    where
+    mentionsVar' (TArrow a b) = mentionsVar' a || mentionsVar' b
+    mentionsVar' (TTuple a b) = mentionsVar' a || mentionsVar' b
+    mentionsVar' (TVar x) = TVar x == v
+    mentionsVar' (TInf v' t eqs) | TVar v' /= v = 
+        mentionsVar' t || any (mentionsVar v) eqs
+    mentionsVar' (TSup v' t eqs) | TVar v' /= v = 
+        mentionsVar' t || any (mentionsVar v) eqs
+    mentionsVar' _ = False
 
 prune :: Set.Set Type -> [Equation] -> [Equation]
 prune ts = filter $ \ (a :< b) -> all isInteresting [a,b]
@@ -306,5 +344,6 @@ main = do
           , TVar 2 :< TArrow (TVar 4) (TVar 5)
           , TAtom "Int" :< TVar 4
           , TArrow (TVar 3) (TVar 5) :< TVar 6
-          , TArrow (TAtom "Int") (TArrow (TAtom "Int") (TAtom "Int")) :< TVar 0
+          , TAtom "Int" :< TAtom "Num"
+          , TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TVar 0))) [ TVar 0 :< TAtom "Num" ] :< TVar 0
           ]

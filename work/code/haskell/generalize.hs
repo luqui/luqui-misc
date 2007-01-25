@@ -7,6 +7,9 @@ import Control.Monad.State
 import Control.Monad.Reader
 import Debug.Trace
 
+peek :: (Show a) => a -> a
+peek x = trace (show x) x
+
 data Type where
     TAtom  :: String             -> Type  -- Int, Top, etc.
     TArrow :: Type -> Type       -> Type  -- functions
@@ -233,8 +236,9 @@ generalizeInf eqs env (TTuple a b) =
 generalizeInf eqs env var@(TVar {}) = 
     if var `Set.member` env
         then var
-        else fromMaybe var $ foldr (\a -> (>>= maximal eqs a)) (Just (TAtom "Bot"))
-                           $ map (generalizeInf eqs env) 
+        else fromMaybe var $ fmap (generalizeInf eqs env)
+                           $ foldr (\a -> (>>= maximal eqs a)) (Just (TAtom "Bot"))
+                           $ filter (/= var)
                            $ lowerBounds eqs env var
 generalizeInf eqs env l@(TInf {}) = l  -- ahh, simple
 generalizeInf eqs env l@(TSup {}) = l
@@ -248,8 +252,9 @@ generalizeSup eqs env (TTuple a b) =
 generalizeSup eqs env var@(TVar {}) =
     if var `Set.member` env
         then var
-        else fromMaybe var $ foldr (\a -> (>>= minimal eqs a)) (Just (TAtom "Top"))
-                           $ map (generalizeSup eqs env)
+        else fromMaybe var $ fmap (generalizeSup eqs env)
+                           $ foldr (\a -> (>>= minimal eqs a)) (Just (TAtom "Top"))
+                           $ filter (/= var)
                            $ upperBounds eqs env var
 generalizeSup eqs env l@(TInf {}) = l
 generalizeSup eqs env l@(TSup {}) = l
@@ -282,8 +287,9 @@ main = do
     putStrLn ""
     mapM_ print $ prune (Set.fromList [TVar 1, TVar 2]) reduced
     putStrLn ""
-    print (generalizeInf reduced Set.empty (TVar 0))
+    putStrLn $ "6 = " ++ show (generalizeInf reduced Set.empty (TVar 6))
     where
+    {-
     eqs = [ TArrow (TVar 0) (TVar 3)          :< TVar 4
           , TInf 0 (TArrow (TVar 0) (TVar 0)) [] :< TVar 0
           , TTuple (TVar 1) (TVar 2)          :< TVar 3
@@ -291,4 +297,14 @@ main = do
           , TAtom "Int"                       :< TVar 5
           , TVar 0                            :< TArrow (TVar 6) (TVar 2)
           , TAtom "Str"                       :< TVar 6
+          ]
+    -}
+
+    -- \x { (+) x 1 }  given  (+) :: Int -> Int -> Int
+    eqs = [ TVar 0 :< TArrow (TVar 1) (TVar 2)
+          , TVar 3 :< TVar 1
+          , TVar 2 :< TArrow (TVar 4) (TVar 5)
+          , TAtom "Int" :< TVar 4
+          , TArrow (TVar 3) (TVar 5) :< TVar 6
+          , TArrow (TAtom "Int") (TArrow (TAtom "Int") (TAtom "Int")) :< TVar 0
           ]

@@ -312,10 +312,14 @@ mentionsVar v (a :< b) = mentionsVar' a || mentionsVar' b
     mentionsVar' _ = False
 
 prune :: Set.Set Type -> [Equation] -> [Equation]
-prune ts = filter $ \ (a :< b) -> all isInteresting [a,b]
+prune ts = filter $ \ (a :< b) -> all isInteresting [a,b] && not (a == b)
     where
     isInteresting :: Type -> Bool
     isInteresting (TAtom _) = True
+    isInteresting (TArrow a b) = all isInteresting [a,b]
+    isInteresting (TTuple a b) = all isInteresting [a,b]
+    isInteresting (TInf {}) = True
+    isInteresting (TSup {}) = True
     isInteresting x = x `Set.member` ts
 
 main :: IO ()
@@ -326,7 +330,7 @@ main = do
     putStrLn ""
     mapM_ print $ prune (Set.fromList [TVar 1, TVar 2]) reduced
     putStrLn ""
-    putStrLn $ "0 = " ++ show (generalizeInf reduced Set.empty (TVar 3))
+    putStrLn $ "0 = " ++ show (generalizeInf reduced Set.empty (TVar 1))
     where
     {-
     eqs = [ TArrow (TVar 0) (TVar 3)          :< TVar 4
@@ -339,7 +343,7 @@ main = do
           ]
     -}
 
-    eqs = [ TArrow (TVar 0) (TArrow (TVar 1) (TVar 0)) :< TVar 3
+    eqs = [ TTuple (TVar 0) (TVar 0) :< TVar 1
           ]
     {-
     -- \x { (+) x 1 }  given  (+) :: Int -> Int -> Int

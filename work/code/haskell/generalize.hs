@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fglasgow-exts #-}
+{-# OPTIONS_GHC -fglasgow-exts -fimplicit-params #-}
 
 import Data.Maybe
 import qualified Data.Map as Map
@@ -210,37 +210,30 @@ reduce start eqs = fmap (Set.toList . seenSet)
  -------------------------}
 
 
-freeVarsEq :: Set.Set Type -> Equation -> Set.Set Type
-freeVarsEq env (a :< b) = freeVars env a `Set.union` freeVars env b
+freeVarsEq :: (?env :: Set.Set Type) => Equation -> Set.Set Type
+freeVarsEq (a :< b) = freeVars a `Set.union` freeVars b
 
 
-freeVars :: Set.Set Type -> Type -> Set.Set Type
-freeVars env (TAtom x) = Set.empty
-freeVars env (TArrow a b) = freeVars env a `Set.union` freeVars env b
-freeVars env (TTuple a b) = freeVars env a `Set.union` freeVars env b
-freeVars env (TVar a) = if TVar a `Set.member` env 
+freeVars :: (?env :: Set.Set Type) => Type -> Set.Set Type
+freeVars (TAtom x) = Set.empty
+freeVars (TArrow a b) = freeVars a `Set.union` freeVars b
+freeVars (TTuple a b) = freeVars a `Set.union` freeVars b
+freeVars (TVar a) = if TVar a `Set.member` ?env
                             then Set.empty 
                             else Set.singleton (TVar a)
-freeVars env (TInf v t cons) 
-    = freeVars xenv t `Set.union` foldr (Set.union . eqFreeVars) Set.empty cons
-    where 
-    xenv = Set.insert (TVar v) env
-    eqFreeVars (a :< b) = freeVars xenv a `Set.union` freeVars xenv b
-freeVars env (TSup v t cons) 
-    = freeVars xenv t `Set.union` foldr (Set.union . eqFreeVars) Set.empty cons
-    where 
-    xenv = Set.insert (TVar v) env
-    eqFreeVars (a :< b) = freeVars xenv a `Set.union` freeVars xenv b
+freeVars (TInf v t cons) 
+    = let ?env = Set.insert (TVar v) ?env in
+      freeVars t `Set.union` foldr (Set.union . freeVarsEq) Set.empty cons
+freeVars (TSup v t cons) 
+    = let ?env = Set.insert (TVar v) ?env in
+      freeVars t `Set.union` foldr (Set.union . freeVarsEq) Set.empty cons
 
 
+lowerBounds :: [Equation] -> Type -> [Type]
+lowerBounds eqs t = mapMaybe (\(a :< b) -> assert (b == t) a) eqs
 
-lowerBounds :: [Equation] -> Set.Set Type -> Type -> [Type]
-lowerBounds eqs env t = mapMaybe (\(a :< b) -> assert (b == t) a)
-                      $ eqs
-
-upperBounds :: [Equation] -> Set.Set Type -> Type -> [Type]
-upperBounds eqs env t = mapMaybe (\(a :< b) -> assert (a == t) b)
-                      $ eqs
+upperBounds :: [Equation] -> Type -> [Type]
+upperBounds eqs t = mapMaybe (\(a :< b) -> assert (a == t) b) eqs
 
 
 {--------------------------}

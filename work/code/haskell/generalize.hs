@@ -38,6 +38,14 @@ same def (x:xs) = same def xs >>= \s -> assert (s == x) s
 same def []  = return def  -- not recursive, only special case
 
 
+fixedPoint :: (a -> a -> Bool) -> (a -> a) -> a -> a
+fixedPoint cmp mod init = 
+    let next = mod init in
+        if cmp init next
+            then next
+            else fixedPoint cmp mod next
+
+
 {-------------------
  - DATA STRUCTURES -
  -------------------}
@@ -58,6 +66,10 @@ instance Show Type where
     show (TVar v)     = show v
     show (TInf i t cons)   = "^" ++ show i ++ " " ++ show t ++ " " ++ show (Set.toList cons)
     show (TSup i t cons)   = "v" ++ show i ++ " " ++ show t ++ " " ++ show (Set.toList cons)
+
+name :: Type -> Integer
+name (TVar x) = x
+name _ = error "That type has no name"
 
 type Subst = Map.Map Type Type
 type SubstID = Integer
@@ -237,13 +249,131 @@ lowerBounds eqs t = Set.fromList $ mapMaybe (\(a :< b) -> assert (b == t) a) $ S
 upperBounds :: Set.Set Equation -> Type -> Set.Set Type
 upperBounds eqs t = Set.fromList $ mapMaybe (\(a :< b) -> assert (a == t) b) $ Set.toList eqs
 
+
+subtype :: (?eqs :: Set.Set Equation) => Type -> Type -> Bool
+subtype (TArrow t u) (TArrow t' u') = subtype t' t && subtype u u'
+subtype (TTuple t u) (TTuple t' u') = subtype t t' && subtype u u'
+-- XXX should unify for sup and inf types?
+subtype  a b = a == b || (a :< b) `Set.member` ?eqs
+
+
+minimalAdd :: (?eqs :: Set.Set Equation) => Type -> Set.Set Type -> Set.Set Type
+minimalAdd t set = 
+    let filtered = Set.filter (not . (t `subtype`)) set in
+        if Set.fold (\a b -> b || a `subtype` t) False filtered
+            then filtered
+            else Set.insert t filtered
+
+maximalAdd :: (?eqs :: Set.Set Equation) => Type -> Set.Set Type -> Set.Set Type
+maximalAdd t set = 
+    let filtered = Set.filter (not . (`subtype` t)) set in
+        if Set.fold (\a b -> b || t `subtype` a) False filtered
+            then filtered
+            else Set.insert t filtered
+
+
+reduceConstraint :: (?eqs :: Set.Set Equation) => Constraint -> Constraint
+reduceConstraint (lower,upper) =
+    (Set.fold maximalAdd Set.empty lower, Set.fold minimalAdd Set.empty upper)
+
+getSingleton :: Set.Set a -> a
+getSingleton = Set.fold const undefined
+
+constraintToSubst :: Constraint -> Maybe Type
+constraintToSubst (lower,upper)
+    | Set.size lower == 0 && Set.size upper == 1  
+        = Just $ getSingleton upper
+    | Set.size lower == 1 && Set.size upper == 0
+        = Just $ getSingleton lower
+    | Set.size lower == 1 && Set.size upper == 1 && getSingleton lower == getSingleton upper
+        = Just $ getSingleton lower
+    | otherwise = Nothing
+
+substituteConstraint :: Subst -> Constraint -> Constraint
+substituteConstraint sub (lower,upper) = 
+    (Set.map (substituteType sub) lower, Set.map (substituteType sub) upper)
+
+constraintsToSubst1 :: (?eqs :: Set.Set Equation) 
+                    => (Map.Map Type Constraint, Subst) -> (Map.Map Type Constraint, Subst)
+constraintsToSubst1 (cons, sub) = 
+    let cons' = Map.mapWithKey (\k -> reduceConstraint . filterSelf k . substituteConstraint sub) cons
+        sub'  = Map.map fromJust . Map.filter isJust . Map.map constraintToSubst $ cons'
+    in
+    (cons' Map.\\ sub', mapSub (sub `Map.union` sub'))
+    where
+    mapSub s = Map.map (substituteType s) s
+    filterSelf x (a,b) = (Set.filter (/= x) a, Set.filter (/= x) b)
+
+constraintsToSubst :: (?eqs :: Set.Set Equation) 
+                   => Map.Map Type Constraint -> (Map.Map Type Constraint, Subst)
+constraintsToSubst cons = 
+    fixedPoint (==) constraintsToSubst1 (cons, Map.empty)
+
+findConstraints :: (?env :: Set.Set Type) => Set.Set Equation -> Map.Map Type Constraint
+findConstraints eqs =
+    Set.fold insertConstraint Map.empty eqs
+    where
+    insertConstraint t =
+        let insa = case t of 
+                       a@(TVar _) :< b 
+                         | not (a `Set.member` ?env) -> 
+                            -- add b as an upper bound to a
+                            Map.insertWith consUnion a (Set.empty, Set.singleton b)
+                       _ -> id
+            insb = case t of
+                       a :< b@(TVar _)
+                         | not (b `Set.member` ?env) -> 
+                            -- add a as a lower bound to b
+                            Map.insertWith consUnion b (Set.singleton a, Set.empty)
+                       _ -> id
+        in insb . insa
+    consUnion (lower,upper) (lower',upper') =
+        (lower `Set.union` lower', upper `Set.union` upper')
+
+generalizeInf :: (?env :: Set.Set Type) 
+              => (Map.Map Type Constraint, Subst) -> Type -> Type
+generalizeInf (cons,subst) t = 
+    snd $ fixedPoint (==) (genOverFree . peek) $ (Set.empty, substituteType subst t)
+    where
+    genOverFree :: (Set.Set Type, Type) -> (Set.Set Type, Type)
+    genOverFree (vs,t) = Set.fold genOver (vs,t) $ freeVars t
+   
+    genOver :: Type -> (Set.Set Type, Type) -> (Set.Set Type, Type)
+    genOver v (vs,t) = 
+        let (lower, upper) = Map.findWithDefault (Set.empty, Set.empty) v cons in
+        ( Set.insert v vs
+        , TInf (name v) t 
+            $ Set.filter (\(a :< b) -> not (a `Set.member` vs || b `Set.member` vs))
+            $ Set.map (:< v) lower `Set.union` Set.map (v :<) upper
+        )
+        
+
+
 {--------------------------}
 
 
 main :: IO ()
 main = do
-    reduce 100 eqs >> return ()
+    reduced <- reduce 100 eqs
+    let ?eqs = Set.fromList reduced
+        ?env = Set.empty
+    let (cons, subst) = constraintsToSubst $ findConstraints ?eqs
+    putStrLn "----------"
+    putStrLn ""
+    printMap subst
+    putStrLn ""
+    printMap cons
+    putStrLn ""
+    putStrLn "----------"
+    print $ generalizeInf (cons, subst) (TVar 6)
+
     where
+    
+    printMap :: (Ord k, Show k, Show v) => Map.Map k v -> IO ()
+    printMap = Map.foldWithKey (\k v m -> m >> showPair k v) (return ())
+    
+    showPair k v = putStrLn $ "  " ++ show k ++ " => " ++ show v
+
     eqs = [ TVar 0 :< TArrow (TVar 1) (TVar 2)
           , TVar 3 :< TVar 1
           , TVar 2 :< TArrow (TVar 4) (TVar 5)

@@ -400,7 +400,7 @@ main = do
     printMap cons
     putStrLn ""
     putStrLn "----------"
-    print $ generalizeInf (cons, subst) (TVar 0)
+    print $ generalizeInf (cons, subst) (TVar 6)
 
     where
     

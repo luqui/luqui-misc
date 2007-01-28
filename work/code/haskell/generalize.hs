@@ -354,9 +354,10 @@ findConstraints eqs =
     consUnion (lower,upper) (lower',upper') =
         (lower `Set.union` lower', upper `Set.union` upper')
 
-generalizeInf :: (?env :: Set.Set Type) 
-              => (Map.Map Type Constraint, Subst) -> Type -> Type
-generalizeInf (cons,subst) t = 
+generalize :: (?env :: Set.Set Type) 
+           => (Integer -> Type -> Set.Set Equation -> Type)
+              -> (Map.Map Type Constraint, Subst) -> Type -> Type
+generalize supinf (cons,subst) t = 
     snd $ fixedPoint (==) genOverFree $ (Set.empty, substituteType subst t)
     where
     genOverFree :: (Set.Set Type, Type) -> (Set.Set Type, Type)
@@ -366,14 +367,21 @@ generalizeInf (cons,subst) t =
     genOver v (vs,t) = 
         let (lower, upper) = Map.findWithDefault (Set.empty, Set.empty) v cons in
         ( Set.insert v vs
-        , TInf (name v) t 
+        , supinf (name v) t 
             -- of course this will infinite loop on more complex examples.
             -- we need to be more liberal about the Set.map line (eg. pick
             -- things involving v, not just with exactly v on one side)
             $ Set.filter (\(a :< b) -> not (a `Set.member` vs || b `Set.member` vs))
             $ Set.map (:< v) lower `Set.union` Set.map (v :<) upper
         )
-        
+
+generalizeInf :: (?env :: Set.Set Type) 
+              => (Map.Map Type Constraint, Subst) -> Type -> Type
+generalizeInf = generalize TInf
+
+generalizeSup :: (?env :: Set.Set Type) 
+              => (Map.Map Type Constraint, Subst) -> Type -> Type
+generalizeSup = generalize TSup
 
 
 {--------------------------}
@@ -392,7 +400,7 @@ main = do
     printMap cons
     putStrLn ""
     putStrLn "----------"
-    print $ generalizeInf (cons, subst) (TVar 6)
+    print $ generalizeInf (cons, subst) (TVar 0)
 
     where
     
@@ -401,6 +409,12 @@ main = do
     
     showPair k v = putStrLn $ "  " ++ show k ++ " => " ++ show v
 
+    eqs = [ TAtom "Int" :< TAtom "Num"
+          , TVar 0 :< TAtom "Str"
+          , TVar 0 :< TAtom "Num"
+          ]
+
+{-
     eqs = [ TVar 0 :< TArrow (TVar 1) (TVar 2)
           , TVar 3 :< TVar 1
           , TVar 2 :< TArrow (TVar 4) (TVar 5)
@@ -409,3 +423,4 @@ main = do
           , TAtom "Int" :< TAtom "Num"
           , TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TVar 0))) (Set.singleton (TVar 0 :< TAtom "Num")) :< TVar 0
           ]
+-}

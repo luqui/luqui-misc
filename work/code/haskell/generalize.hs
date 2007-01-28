@@ -70,9 +70,9 @@ instance Show Equation where
     show (a :< b) = show a ++ " <: " ++ show b
 
 
-data Context 
-    = InfContext
-    | SupContext
+data Context where
+    InfContext :: Context
+    SupContext :: Context
     deriving (Eq,Show)
 
 swapContext :: Context -> Context

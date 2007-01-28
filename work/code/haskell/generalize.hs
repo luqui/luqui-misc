@@ -333,7 +333,7 @@ findConstraints eqs =
 generalizeInf :: (?env :: Set.Set Type) 
               => (Map.Map Type Constraint, Subst) -> Type -> Type
 generalizeInf (cons,subst) t = 
-    snd $ fixedPoint (==) (genOverFree . peek) $ (Set.empty, substituteType subst t)
+    snd $ fixedPoint (==) genOverFree $ (Set.empty, substituteType subst t)
     where
     genOverFree :: (Set.Set Type, Type) -> (Set.Set Type, Type)
     genOverFree (vs,t) = Set.fold genOver (vs,t) $ freeVars t
@@ -343,6 +343,9 @@ generalizeInf (cons,subst) t =
         let (lower, upper) = Map.findWithDefault (Set.empty, Set.empty) v cons in
         ( Set.insert v vs
         , TInf (name v) t 
+            -- of course this will infinite loop on more complex examples.
+            -- we need to be more liberal about the Set.map line (eg. pick
+            -- things involving v, not just with exactly v on one side)
             $ Set.filter (\(a :< b) -> not (a `Set.member` vs || b `Set.member` vs))
             $ Set.map (:< v) lower `Set.union` Set.map (v :<) upper
         )

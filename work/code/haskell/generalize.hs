@@ -47,8 +47,8 @@ data Type where
     TArrow :: Type -> Type       -> Type  -- functions
     TTuple :: Type -> Type       -> Type  -- tuples
     TVar   :: Integer            -> Type  -- type variable
-    TInf   :: Integer -> Type -> [Equation] -> Type  -- universal type
-    TSup   :: Integer -> Type -> [Equation] -> Type  -- existential type
+    TInf   :: Integer -> Type -> Set.Set Equation -> Type  -- universal type
+    TSup   :: Integer -> Type -> Set.Set Equation -> Type  -- existential type
     deriving (Eq,Ord)
 
 instance Show Type where
@@ -56,11 +56,12 @@ instance Show Type where
     show (TArrow a b) = "(" ++ show a ++ " -> " ++ show b ++ ")"
     show (TTuple a b) = "(" ++ show a ++ ", " ++ show b ++ ")"
     show (TVar v)     = show v
-    show (TInf i t cons)   = "^" ++ show i ++ " " ++ show t ++ " " ++ show cons
-    show (TSup i t cons)   = "v" ++ show i ++ " " ++ show t ++ " " ++ show cons
+    show (TInf i t cons)   = "^" ++ show i ++ " " ++ show t ++ " " ++ show (Set.toList cons)
+    show (TSup i t cons)   = "v" ++ show i ++ " " ++ show t ++ " " ++ show (Set.toList cons)
 
 type Subst = Map.Map Type Type
 type SubstID = Integer
+type Constraint = (Set.Set Type, Set.Set Type)
 
 data Equation where
     (:<) :: Type -> Type -> Equation
@@ -89,11 +90,11 @@ substituteType sub (TArrow a b)
 substituteType sub (TTuple a b) 
     = TTuple (substituteType sub a) (substituteType sub b)
 substituteType sub (TInf v t cons) 
-    = TInf v (substituteType subst t) (map (substituteEquation subst) cons)
+    = TInf v (substituteType subst t) (Set.map (substituteEquation subst) cons)
     where
     subst = Map.delete (TVar v) sub
 substituteType sub (TSup v t cons) 
-    = TSup v (substituteType subst t) (map (substituteEquation subst) cons)
+    = TSup v (substituteType subst t) (Set.map (substituteEquation subst) cons)
     where
     subst = Map.delete (TVar v) sub
 substituteType _ x = x
@@ -129,12 +130,12 @@ instantiateLam :: Type -> Compute Type
 instantiateLam (TInf v t cons) = do
     newvar <- allocateVar
     let subst = Map.singleton (TVar v) (TVar newvar)
-    mapM_ (addEquation "inf constr" . substituteEquation subst) cons
+    forEach cons $ addEquation "inf constr" . substituteEquation subst
     return $ substituteType subst t
 instantiateLam (TSup v t cons) = do
     newvar <- allocateVar
     let subst = Map.singleton (TVar v) (TVar newvar)
-    mapM_ (addEquation "sup constr" . substituteEquation subst) cons
+    forEach cons $ addEquation "sup constr" . substituteEquation subst
     return $ substituteType subst t
 instantiateLam _ = error "Tried to lambda-instantiate a non-lambda"
 
@@ -223,18 +224,18 @@ freeVars (TVar a) = if TVar a `Set.member` ?env
                             else Set.singleton (TVar a)
 freeVars (TInf v t cons) 
     = let ?env = Set.insert (TVar v) ?env in
-      freeVars t `Set.union` foldr (Set.union . freeVarsEq) Set.empty cons
+      freeVars t `Set.union` Set.fold (Set.union . freeVarsEq) Set.empty cons
 freeVars (TSup v t cons) 
     = let ?env = Set.insert (TVar v) ?env in
-      freeVars t `Set.union` foldr (Set.union . freeVarsEq) Set.empty cons
+      freeVars t `Set.union` Set.fold (Set.union . freeVarsEq) Set.empty cons
 
 
-lowerBounds :: [Equation] -> Type -> [Type]
-lowerBounds eqs t = mapMaybe (\(a :< b) -> assert (b == t) a) eqs
+-- XXX badly implemented
+lowerBounds :: Set.Set Equation -> Type -> Set.Set Type
+lowerBounds eqs t = Set.fromList $ mapMaybe (\(a :< b) -> assert (b == t) a) $ Set.toList eqs
 
-upperBounds :: [Equation] -> Type -> [Type]
-upperBounds eqs t = mapMaybe (\(a :< b) -> assert (a == t) b) eqs
-
+upperBounds :: Set.Set Equation -> Type -> Set.Set Type
+upperBounds eqs t = Set.fromList $ mapMaybe (\(a :< b) -> assert (a == t) b) $ Set.toList eqs
 
 {--------------------------}
 
@@ -249,5 +250,5 @@ main = do
           , TAtom "Int" :< TVar 4
           , TArrow (TVar 3) (TVar 5) :< TVar 6
           , TAtom "Int" :< TAtom "Num"
-          , TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TVar 0))) [ TVar 0 :< TAtom "Num" ] :< TVar 0
+          , TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TVar 0))) (Set.singleton (TVar 0 :< TAtom "Num")) :< TVar 0
           ]

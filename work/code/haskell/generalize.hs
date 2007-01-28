@@ -67,6 +67,16 @@ instance Show Type where
     show (TInf i t cons)   = "^" ++ show i ++ " " ++ show t ++ " " ++ show (Set.toList cons)
     show (TSup i t cons)   = "v" ++ show i ++ " " ++ show t ++ " " ++ show (Set.toList cons)
 
+-- for occurs check
+exclusive :: Type -> Type -> Bool
+exclusive (TAtom {}) (TArrow {})  = True
+exclusive (TAtom {}) (TTuple {})  = True
+exclusive (TArrow {}) (TAtom {})  = True
+exclusive (TArrow {}) (TTuple {}) = True
+exclusive (TTuple {}) (TAtom {})  = True
+exclusive (TTuple {}) (TArrow {}) = True
+exclusive _           _           = False
+
 name :: Type -> Integer
 name (TVar x) = x
 name _ = error "That type has no name"
@@ -138,7 +148,7 @@ allocateVar = do
     return ret
 
 
-instantiateLam :: Type -> Compute Type
+instantiateLam :: (?env :: Set.Set Type) => Type -> Compute Type
 instantiateLam (TInf v t cons) = do
     newvar <- allocateVar
     let subst = Map.singleton (TVar v) (TVar newvar)
@@ -153,7 +163,7 @@ instantiateLam _ = error "Tried to lambda-instantiate a non-lambda"
 
 
 
-addEquation :: String -> Equation -> Compute ()
+addEquation :: (?env :: Set.Set Type) => String -> Equation -> Compute ()
 addEquation reason eq@(a :< b) = do
     st <- get
     if eq `Set.member` seenSet st
@@ -163,7 +173,7 @@ addEquation reason eq@(a :< b) = do
             liftIO $ putStrLn (twoColumn 50 (concat (replicate depth "  ") ++ show eq) ("(" ++ reason ++ ")"))
             st <- get
             put (st { seenSet = Set.insert eq (seenSet st) })
-            local (+1) $ (transformEquation eq >> performElimination eq)
+            local (+1) $ (checkEquation eq >> transformEquation eq >> performElimination eq)
 
     
 isLim :: Type -> Bool
@@ -173,7 +183,21 @@ isLim (TSup {}) = True
 isLim _ = False
 
 
-transformEquation :: Equation -> Compute ()
+checkEquation :: (?env :: Set.Set Type) => Equation -> Compute ()
+checkEquation (a :< b) = do
+    when (exclusive a b) ocheck
+    case (a,b) of
+        (TVar _, TVar _) -> return ()
+        (TVar t', u) 
+            | TVar t' `Set.member` freeVars u -> ocheck
+        (t, TVar u')
+            | TVar u' `Set.member` freeVars t -> ocheck
+        _ -> return ()
+    where
+    ocheck = fail $ "Occurs check: " ++ show (a :< b)
+
+
+transformEquation :: (?env :: Set.Set Type) => Equation -> Compute ()
 transformEquation (TArrow a b :< TArrow a' b') = do
     addEquation "arrow" (a' :< a)
     addEquation "arrow" (b :< b')
@@ -193,7 +217,7 @@ transformEquation (sub :< sup@(TSup {})) | not (isLim sub) = do
 transformEquation _ = return ()
 
 
-performElimination :: Equation -> Compute ()
+performElimination :: (?env :: Set.Set Type) => Equation -> Compute ()
 performElimination (sub :< sup) = do
     st <- get
     
@@ -210,7 +234,7 @@ performElimination (sub :< sup) = do
                     _   -> return ()
 
 
-reduce :: Integer -> [Equation] -> IO [Equation]
+reduce :: (?env :: Set.Set Type) => Integer -> [Equation] -> IO [Equation]
 reduce start eqs = fmap (Set.toList . seenSet) 
                  $ flip runReaderT 0
                  $ execStateT (mapM_ (addEquation "init") eqs)
@@ -357,9 +381,9 @@ generalizeInf (cons,subst) t =
 
 main :: IO ()
 main = do
+    let ?env = Set.empty
     reduced <- reduce 100 eqs
     let ?eqs = Set.fromList reduced
-        ?env = Set.empty
     let (cons, subst) = constraintsToSubst $ findConstraints ?eqs
     putStrLn "----------"
     putStrLn ""
@@ -368,7 +392,7 @@ main = do
     printMap cons
     putStrLn ""
     putStrLn "----------"
-    print $ generalizeInf (cons, subst) (TVar 6)
+    print $ generalizeInf (cons, subst) (TVar 1)
 
     where
     

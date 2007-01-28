@@ -409,12 +409,6 @@ main = do
     
     showPair k v = putStrLn $ "  " ++ show k ++ " => " ++ show v
 
-    eqs = [ TAtom "Int" :< TAtom "Num"
-          , TVar 0 :< TAtom "Str"
-          , TVar 0 :< TAtom "Num"
-          ]
-
-{-
     eqs = [ TVar 0 :< TArrow (TVar 1) (TVar 2)
           , TVar 3 :< TVar 1
           , TVar 2 :< TArrow (TVar 4) (TVar 5)
@@ -423,4 +417,3 @@ main = do
           , TAtom "Int" :< TAtom "Num"
           , TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TVar 0))) (Set.singleton (TVar 0 :< TAtom "Num")) :< TVar 0
           ]
--}

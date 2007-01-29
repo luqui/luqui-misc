@@ -1,9 +1,0 @@
-$VAR1 = {
-          'con-signature' => {
-                               'params' => 'base, amount',
-                               'types' => 'char, int',
-                               'returns' => 'char',
-                               'name' => 'alphabet_add'
-                             },
-          'SEED' => 63997
-        };

@@ -1,5 +1,0 @@
-$VAR1 = {
-          'app-break' => '1 2 4 8 16',
-          'app-shortcircuit' => 'Good 91',
-          'SEED' => 39484
-        };

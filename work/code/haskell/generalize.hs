@@ -102,6 +102,9 @@ swapContext :: Context -> Context
 swapContext InfContext = SupContext
 swapContext SupContext = InfContext
 
+contextToCons :: Context -> Integer -> Type -> Set.Set Equation -> Type
+contextToCons InfContext = TInf
+contextToCons SupContext = TSup
 
 
 substituteType :: Subst -> Type -> Type
@@ -354,34 +357,39 @@ findConstraints eqs =
     consUnion (lower,upper) (lower',upper') =
         (lower `Set.union` lower', upper `Set.union` upper')
 
-generalize :: (?env :: Set.Set Type) 
-           => (Integer -> Type -> Set.Set Equation -> Type)
-              -> (Map.Map Type Constraint, Subst) -> Type -> Type
-generalize supinf (cons,subst) t = 
+generalize :: (?env :: Set.Set Type, ?eqs :: Set.Set Equation)
+           => Context -> Subst -> Type -> Type
+generalize cxt subst t = 
     snd $ fixedPoint (==) genOverFree $ (Set.empty, substituteType subst t)
     where
-    genOverFree :: (Set.Set Type, Type) -> (Set.Set Type, Type)
-    genOverFree (vs,t) = Set.fold genOver (vs,t) $ freeVars t
+    genOverFree :: (Set.Set Equation, Type) -> (Set.Set Equation, Type)
+    genOverFree (seen,t) = Set.fold genOver (seen,t) $ freeVars t
    
-    genOver :: Type -> (Set.Set Type, Type) -> (Set.Set Type, Type)
-    genOver v (vs,t) = 
-        let (lower, upper) = Map.findWithDefault (Set.empty, Set.empty) v cons in
-        ( Set.insert v vs
-        , supinf (name v) t 
-            -- of course this will infinite loop on more complex examples.
-            -- we need to be more liberal about the Set.map line (eg. pick
-            -- things involving v, not just with exactly v on one side)
-            $ Set.filter (\(a :< b) -> not (a `Set.member` vs || b `Set.member` vs))
-            $ Set.map (:< v) lower `Set.union` Set.map (v :<) upper
+    genOver :: Type -> (Set.Set Equation, Type) -> (Set.Set Equation, Type)
+    genOver v (seen,t) = 
+        let interestingEqs =
+              Set.filter (\eq -> isInteresting v eq && not (eq `Set.member` seen)) ?eqs
+        in
+        ( seen `Set.union` interestingEqs
+        , contextToCons cxt (name v) t interestingEqs 
         )
 
-generalizeInf :: (?env :: Set.Set Type) 
-              => (Map.Map Type Constraint, Subst) -> Type -> Type
-generalizeInf = generalize TInf
-
-generalizeSup :: (?env :: Set.Set Type) 
-              => (Map.Map Type Constraint, Subst) -> Type -> Type
-generalizeSup = generalize TSup
+isInteresting :: (?env :: Set.Set Type)
+              => Type -> Equation -> Bool
+isInteresting t (a :< b) = 
+    let inter = interestingTypes a `Set.union` interestingTypes b in
+    t `Set.member` inter && Set.size inter > 1
+    where    
+    interestingTypes x | x == t = Set.singleton x
+    interestingTypes (TArrow x y) = 
+        interestingTypes x `Set.union` interestingTypes y
+    interestingTypes (TTuple x y) = 
+        interestingTypes x `Set.union` interestingTypes y
+    interestingTypes (TVar x) =
+        if TVar x `Set.member` ?env
+            then Set.singleton (TVar x)
+            else Set.empty
+    interestingTypes x = Set.singleton x
 
 
 {--------------------------}
@@ -400,7 +408,7 @@ main = do
     printMap cons
     putStrLn ""
     putStrLn "----------"
-    print $ generalizeInf (cons, subst) (TVar 6)
+    print $ generalize InfContext subst (TVar 6)
 
     where
     

@@ -6,6 +6,7 @@ import qualified Data.Set as Set
 import Control.Monad.State
 import Control.Monad.Reader
 import Debug.Trace
+import Data.List (intersperse)
 
 {---------------------
  - GENERAL UTILITIES -
@@ -51,7 +52,7 @@ fixedPoint cmp mod init =
  -------------------}
 
 data Type where
-    TAtom  :: String             -> Type  -- Int, Top, etc.
+    TAtom  :: String -> [Type]   -> Type  -- Int, Top, etc.
     TArrow :: Type -> Type       -> Type  -- functions
     TTuple :: Type -> Type       -> Type  -- tuples
     TVar   :: Integer            -> Type  -- type variable
@@ -60,7 +61,10 @@ data Type where
     deriving (Eq,Ord)
 
 instance Show Type where
-    show (TAtom  a)   = a
+    show (TAtom a ts) = 
+        if null ts 
+            then a 
+            else "(" ++ a ++ " " ++ concat (intersperse " " (map show ts)) ++ ")"
     show (TArrow a b) = "(" ++ show a ++ " -> " ++ show b ++ ")"
     show (TTuple a b) = "(" ++ show a ++ ", " ++ show b ++ ")"
     show (TVar v)     = show v
@@ -110,10 +114,12 @@ contextToCons SupContext = TSup
 substituteType :: Subst -> Type -> Type
 substituteType sub x
     | x `Map.member` sub = sub Map.! x
+substituteType sub (TAtom n ts) = TAtom n $ map (substituteType sub) ts
 substituteType sub (TArrow a b) 
     = TArrow (substituteType sub a) (substituteType sub b)
 substituteType sub (TTuple a b) 
     = TTuple (substituteType sub a) (substituteType sub b)
+substituteType sub (TVar a) = TVar a
 substituteType sub (TInf v t cons) 
     = TInf v (substituteType subst t) (Set.map (substituteEquation subst) cons)
     where
@@ -122,7 +128,6 @@ substituteType sub (TSup v t cons)
     = TSup v (substituteType subst t) (Set.map (substituteEquation subst) cons)
     where
     subst = Map.delete (TVar v) sub
-substituteType _ x = x
 
 
 substituteEquation :: Subst -> Equation -> Equation
@@ -192,12 +197,15 @@ checkEquation (a :< b) = do
     case (a,b) of
         (TVar _, TVar _) -> return ()
         (TVar t', u) 
-            | TVar t' `Set.member` freeVars u -> ocheck
+            | TVar t' `Set.member` nonAtomFree u -> ocheck
         (t, TVar u')
-            | TVar u' `Set.member` freeVars t -> ocheck
+            | TVar u' `Set.member` nonAtomFree t -> ocheck
         _ -> return ()
     where
     ocheck = fail $ "Occurs check: " ++ show (a :< b)
+    
+    nonAtomFree a@(TAtom {}) = Set.empty
+    nonAtomFree x = freeVars x
 
 
 transformEquation :: (?env :: Set.Set Type) => Equation -> Compute ()
@@ -255,7 +263,7 @@ freeVarsEq (a :< b) = freeVars a `Set.union` freeVars b
 
 
 freeVars :: (?env :: Set.Set Type) => Type -> Set.Set Type
-freeVars (TAtom x) = Set.empty
+freeVars (TAtom x ts) = Set.unions $ map freeVars ts
 freeVars (TArrow a b) = freeVars a `Set.union` freeVars b
 freeVars (TTuple a b) = freeVars a `Set.union` freeVars b
 freeVars (TVar a) = if TVar a `Set.member` ?env
@@ -408,7 +416,7 @@ main = do
     printMap cons
     putStrLn ""
     putStrLn "----------"
-    print $ generalize InfContext subst (TVar 6)
+    print $ generalize InfContext subst (TVar 20)
 
     where
     
@@ -417,11 +425,60 @@ main = do
     
     showPair k v = putStrLn $ "  " ++ show k ++ " => " ++ show v
 
+    o = Set.empty
+
+    {- fix \f x { x := !x + 1; if 10 < !x then x else f x } -}
+    eqs = [ TInf 0 (TArrow (TVar 0) (TAtom "Ref" [TVar 0])) o :< tMkRef
+          , TInf 0 (TArrow (TAtom "Ref" [TVar 0]) (TVar 0)) o :< tReadRef
+          , TInf 0 (TArrow (TVar 0) (TArrow (TAtom "Ref" [TVar 0]) (TAtom "Unit" []))) o :< tWriteRef
+          , TArrow (TAtom "Unit" []) (TInf 0 (TArrow (TVar 0) (TVar 0)) o) :< tSeq
+          , TInf 0 (TArrow (TArrow (TVar 0) (TVar 0)) (TVar 0)) o :< tFix
+          , TArrow (TAtom "Bool" []) (TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TVar 0))) o) :< tIf
+          , TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TVar 0))) (Set.singleton (TVar 0 :< TAtom "Num" [])) :< tPlus
+          , TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TAtom "Bool" []))) o :< tLess
+          , TAtom "Int" [] :< TAtom "Num" []
+          
+          -- f                     :: 16
+          -- x                     :: 10
+          -- !x                    :: 11
+          , tReadRef :< TArrow (TVar 10) (TVar 11)
+          -- !x + 1                :: 12
+          , tPlus :< TArrow (TVar 11) (TArrow (TAtom "Int" []) (TVar 12))
+          -- x := !x + 1           :: 13
+          , tWriteRef :< TArrow (TVar 12) (TArrow (TVar 10) (TVar 13))
+          
+          -- !x                    :: 14
+          , tReadRef :< TArrow (TVar 10) (TVar 14)
+          -- 10 < !x               :: 15
+          , tLess :< TArrow (TAtom "Int" []) (TArrow (TVar 14) (TVar 15))
+          -- f x                   :: 17
+          , TVar 16 :< TArrow (TVar 10) (TVar 17)
+          -- if 10 < !x then x else f x :: 18
+          , tIf :< TArrow (TVar 15) (TArrow (TVar 10) (TArrow (TVar 17) (TVar 18)))
+
+          -- x := !x + 1; if ...   :: 19
+          , tSeq :< TArrow (TVar 13) (TArrow (TVar 18) (TVar 19))
+
+          -- fix \f x {...}        :: 20
+          , tFix :< TArrow (TArrow (TVar 16) (TArrow (TVar 10) (TVar 19))) (TVar 20)
+          ]
+
+    tMkRef    = TVar 0
+    tReadRef  = TVar 1
+    tWriteRef = TVar 2
+    tSeq      = TVar 3
+    tIf       = TVar 4
+    tPlus     = TVar 5
+    tLess     = TVar 6
+    tFix      = TVar 7
+
+    {-
     eqs = [ TVar 0 :< TArrow (TVar 1) (TVar 2)
           , TVar 3 :< TVar 1
           , TVar 2 :< TArrow (TVar 4) (TVar 5)
-          , TAtom "Int" :< TVar 4
+          , TAtom "Int" [] :< TVar 4
           , TArrow (TVar 3) (TVar 5) :< TVar 6
-          , TAtom "Int" :< TAtom "Num"
-          , TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TVar 0))) (Set.singleton (TVar 0 :< TAtom "Num")) :< TVar 0
+          , TAtom "Int" [] :< TAtom "Num" []
+          , TInf 0 (TArrow (TVar 0) (TArrow (TVar 0) (TVar 0))) (Set.singleton (TVar 0 :< TAtom "Num" [])) :< TVar 0
           ]
+    -}

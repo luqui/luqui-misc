@@ -331,10 +331,12 @@ substituteConstraint sub (lower,upper) =
 constraintsToSubst1 :: (?eqs :: Set.Set Equation) 
                     => (Map.Map Type Constraint, Subst) -> (Map.Map Type Constraint, Subst)
 constraintsToSubst1 (cons, sub) = 
-    let cons' = Map.mapWithKey (\k -> reduceConstraint . filterSelf k . substituteConstraint sub) cons
-        sub'  = Map.map fromJust . Map.filter isJust . Map.map constraintToSubst $ cons'
-    in
-    (cons' Map.\\ sub', mapSub (sub `Map.union` sub'))
+    Map.foldWithKey (\k v (cons, sub) ->
+        case constraintToSubst . reduceConstraint . filterSelf k . substituteConstraint sub $ v of
+            Just t  -> let newmap = mapSub (Map.insert k t sub)
+                          in (Map.map (substituteConstraint newmap) (Map.delete k cons), newmap)
+            Nothing -> (cons, sub)
+    ) (cons,sub) cons
     where
     mapSub s = Map.map (substituteType s) s
     filterSelf x (a,b) = (Set.filter (/= x) a, Set.filter (/= x) b)

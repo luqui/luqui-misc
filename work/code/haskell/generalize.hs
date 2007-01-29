@@ -421,6 +421,9 @@ main = do
     -- This is pretty damn close, but unfortunately, 10 <: Ref Int is deadly.  The
     -- function below would work on Ref Num, but unfortunately the type would forbid this.
     -- (esp. noting the law that Ref x <: Ref y implies x = y)
+
+    -- The correct type of this expression is:
+    -- ^0 ^1 (1 -> 1) [ 1 <: Ref 0 ] [ Int <: 0, 0 <: Num ]
     
     {- fix \f x { x := !x + 1; if 10 < !x then x else f x } -}
     eqs = [ TInf 0 (TArrow (TVar 0) (TAtom "Ref" [TVar 0])) o :< tMkRef

@@ -416,6 +416,12 @@ main = do
 
     o = Set.empty
 
+    -- The type that is currently inferred for the following is not quite right:
+    -- It says ^101 ^10 (10 -> 10) [ 10 <: Ref Int, 10 <: Ref 101] [ Int <: 101, 101 <: Num].
+    -- This is pretty damn close, but unfortunately, 10 <: Ref Int is deadly.  The
+    -- function below would work on Ref Num, but unfortunately the type would forbid this.
+    -- (esp. noting the law that Ref x <: Ref y implies x = y)
+    
     {- fix \f x { x := !x + 1; if 10 < !x then x else f x } -}
     eqs = [ TInf 0 (TArrow (TVar 0) (TAtom "Ref" [TVar 0])) o :< tMkRef
           , TInf 0 (TArrow (TAtom "Ref" [TVar 0]) (TVar 0)) o :< tReadRef

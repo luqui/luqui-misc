@@ -309,7 +309,12 @@ maximalAdd t set =
 
 reduceConstraint :: (?eqs :: Set.Set Equation) => Constraint -> Constraint
 reduceConstraint (lower,upper) =
-    (Set.fold maximalAdd Set.empty lower, Set.fold minimalAdd Set.empty upper)
+    let (l', u') = (Set.fold maximalAdd Set.empty lower, Set.fold minimalAdd Set.empty upper)
+        inter    = l' `Set.intersection` u'
+    in
+    if Set.size inter > 0
+        then (inter,inter)
+        else (l', u')
 
 getSingleton :: Set.Set a -> a
 getSingleton = Set.fold const undefined
@@ -368,39 +373,21 @@ findConstraints eqs =
         (lower `Set.union` lower', upper `Set.union` upper')
 
 generalize :: (?env :: Set.Set Type, ?eqs :: Set.Set Equation)
-           => Context -> Subst -> Type -> Type
-generalize cxt subst t = 
-    snd $ fixedPoint (==) genOverFree $ (Set.empty, substituteType subst t)
+           => Context -> (Map.Map Type Constraint, Subst) -> Type -> Type
+generalize cxt (cons,subst) t = 
+    fixedPoint (==) genOverFree $ substituteType subst t
     where
-    genOverFree :: (Set.Set Equation, Type) -> (Set.Set Equation, Type)
-    genOverFree (seen,t) = Set.fold genOver (seen,t) $ freeVars t
+    genOverFree :: Type -> Type
+    genOverFree t = Set.fold genOver t $ freeVars t
    
-    genOver :: Type -> (Set.Set Equation, Type) -> (Set.Set Equation, Type)
-    genOver v (seen,t) = 
-        let interestingEqs =
-              Set.filter (\eq -> isInteresting v eq && not (eq `Set.member` seen)) ?eqs
+    genOver :: Type -> Type -> Type
+    genOver v t = 
+        let myCons = fromMaybe (Set.empty, Set.empty) $ Map.lookup v cons
+            lowerEqs = Set.map (:< v) . Set.filter (/= v) $ fst myCons
+            upperEqs = Set.map (v :<) . Set.filter (/= v) $ snd myCons
+            allEqs = lowerEqs `Set.union` upperEqs
         in
-        ( seen `Set.union` interestingEqs
-        , contextToCons cxt (name v) t interestingEqs 
-        )
-
-isInteresting :: (?env :: Set.Set Type)
-              => Type -> Equation -> Bool
-isInteresting t (a :< b) = 
-    let inter = interestingTypes a `Set.union` interestingTypes b in
-    t `Set.member` inter && Set.size inter > 1
-    where    
-    interestingTypes x | x == t = Set.singleton x
-    interestingTypes (TArrow x y) = 
-        interestingTypes x `Set.union` interestingTypes y
-    interestingTypes (TTuple x y) = 
-        interestingTypes x `Set.union` interestingTypes y
-    interestingTypes (TVar x) =
-        if TVar x `Set.member` ?env
-            then Set.singleton (TVar x)
-            else Set.empty
-    interestingTypes x = Set.singleton x
-
+        contextToCons cxt (name v) t allEqs
 
 {--------------------------}
 
@@ -418,7 +405,7 @@ main = do
     printMap cons
     putStrLn ""
     putStrLn "----------"
-    print $ generalize InfContext subst (TVar 20)
+    print $ generalize InfContext (cons,subst) (TVar 20)
 
     where
     

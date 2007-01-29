@@ -6,6 +6,10 @@ my %ans;
 
 for my $file (io('data/')->all) {
     my $survey = do $file;
+    if (exists $survey->{'con-divide'} && exists $survey->{'con-divide'}{'characterization'}) {
+        $survey->{'con-divide_explain'} = $survey->{'con-divide'}{'characterization'};
+        delete $survey->{'con-divide'}{'characterization'};
+    }
     for (keys %$survey) {
         next if /SEED|studentid|fullname/;
         unless (/explain/) {
@@ -23,7 +27,8 @@ for my $file (io('data/')->all) {
 
 for my $question (sort keys %ans) {
     print "$question:\n";
-    for my $answer (sort { $ans{$question}{$b}{count} <=> $ans{$question}{$a}{count} } keys %{$ans{$question}}) {
+    for my $answer (sort { $ans{$question}{$b}{count} <=> $ans{$question}{$a}{count} 
+                               ||  $a cmp $b} keys %{$ans{$question}}) {
         print "  $ans{$question}{$answer}{count} - $answer\n";
         for my $explain (@{$ans{$question}{$answer}{explain}}) {
             print "    $explain\n";

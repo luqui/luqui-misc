@@ -38,3 +38,6 @@ Revision history for Perl extension Class::Multimethods::Pure.
         - Fixed a major minor bug that surfaced itself in Symbol::Opaque where
           if you imported a multimethod before (in control flow sense) you
           defined it, the import wouldn't work.
+
+0.12  Set Feb 3 12:58:00 2007
+        - Added a fast DecisionTree core.  Fixed some documentation bugs.

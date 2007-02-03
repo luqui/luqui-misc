@@ -7,7 +7,7 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 our %MULTI;
 our %MULTIPARAM;
@@ -44,7 +44,8 @@ sub process_multi {
             if ($_[0] =~ /^-/) {
                 my ($k, $v) = splice @_, 0, 2;
                 $k =~ s/^-//;
-                $registry->{multiparam}{$k} = $v;
+
+                $registry->{multiparam}{$name}{$k} = $v;
             }
             else {
                 my $type = shift;
@@ -196,7 +197,7 @@ sub promote {
 
 # The subset multimethod is the most important multi used in the core.  It
 # determines whether the left class is a subset of the right class.
-our $SUBSET = Class::Multimethods::Pure::Method->new;
+our $SUBSET = Class::Multimethods::Pure::Method::DumbCache->new;
 
 sub subset {
     my ($self, $other) = @_;
@@ -795,6 +796,233 @@ sub find_variant {
     }
 }
 
+package Class::Multimethods::Pure::Method::DecisionTree;
+
+use base 'Class::Multimethods::Pure::Method';
+use Carp;
+
+sub new {
+    my ($class, %opt) = @_;
+    bless {
+        variants => [],
+        find_variant => undef,
+        Variant  => $opt{Variant} || 'Class::Multimethods::Pure::Variant',
+    } => ref $class || $class;
+}
+
+sub add_variant {
+    my ($self, $params, $code) = @_;
+
+    push @{$self->{variants}},
+        $self->{Variant}->new(params => $params,
+                              code   => $code);
+
+    undef $self->{find_variant};
+}
+
+sub variants {
+    my ($self) = @_;
+    @{$self->{variants}};
+}
+
+sub find_variant {
+    my ($self, $args) = @_;
+    $self->_compile->($args);
+}
+
+sub _compile {
+    my ($self) = @_;
+    return $self->{find_variant} if defined $self->{find_variant};
+    
+    my $tree = $self->_make_tree([$self->_all_conditions], [$self->_make_condmap]);
+    my $code = $self->_compile_tree($tree, 0);
+    
+    $self->{find_variant} = $code;
+}
+
+sub _compile_tree {
+    my ($self, $tree) = @_;
+    
+    if ($tree->{node_type} eq 'unique') {
+        my $variant = $self->{variants}[$tree->{variantno}];
+        return sub {
+            $variant;
+        };
+    }
+    if ($tree->{node_type} eq 'none_found') {
+        return sub {
+            my ($args) = @_; 
+            croak "No method found for args (@$args)";
+        };
+    }
+    if ($tree->{node_type} eq 'ambiguous') {
+        return sub {
+            my ($args) = @_;
+            my @variants = @{$self->{variants}}[@{$tree->{variants}}];
+            croak "Ambiguous method call for args (@$args):\n" .
+                join '', map { "    " . $_->string . "\n" } @variants;
+        }
+    }
+    if ($tree->{node_type} eq 'branch') {
+        my $position  = $tree->{cond}{position};
+        my $type      = $tree->{cond}{type};
+        my $good  = $self->_compile_tree($tree->{good});
+        my $bad   = $self->_compile_tree($tree->{bad});
+        return sub {
+            if (exists $_[0][$position] && $type->matches($_[0][$position])) {
+                goto &$good;
+            }
+            else {
+                goto &$bad;
+            }
+        };
+    }
+
+    die "Unknown node type $tree->{node_type}";
+}
+
+sub _reduce_condmap {
+    my ($self, $condmap) = @_;
+    
+    my @ret = @$condmap;
+    for (my $i = 0; $i < @ret; $i++) {
+        for (my $j = 0; $j < @ret; $j++) {
+            if ($self->{variants}[$ret[$j]{variantno}]
+                ->less($self->{variants}[$ret[$i]{variantno}])) {
+
+                splice @ret, $i, 1;
+                $i--;
+                last;
+            }
+        }
+    }
+
+    \@ret;
+}
+
+sub _make_tree {
+    my ($self, $conds, $condmap) = @_;
+
+    {
+        my $rcmap = $self->_reduce_condmap($condmap);
+        
+        if (@$rcmap == 0) {
+            return {
+                node_type => 'none_found',
+            };
+        }
+
+        if (@$conds == 0) {
+            if (@$rcmap == 1) {
+                return {
+                    node_type => 'unique',
+                    variantno => $rcmap->[0]{variantno},
+                };
+            }
+            if (@$rcmap > 1) {
+                return {
+                    node_type => 'ambiguous',
+                    variants => [ map { $_->{variantno} } @$rcmap ],
+                };
+            }
+        }
+    }
+    
+    my $bestbalance = 1e999;
+    my $bestcond;
+    for my $cond (0..$#$conds) {
+        my (@good, @bad);
+        for (@$condmap) {
+            my $bits = $_->{cond}->($conds->[$cond]);
+            if ($bits & 0b01) {
+                push @good, $_;
+            }
+            if ($bits & 0b10) {
+                push @bad, $_;
+            }
+        }
+
+        my $balance = abs(@good - @$conds/2) + abs(@bad - @$conds/2);
+        if ($balance < $bestbalance) {
+            $bestbalance = $balance;
+            $bestcond = [ $cond, \@good, \@bad ];
+        }
+    }
+
+    die "Couldn't find best condition for some reason" unless defined $bestcond;
+
+    my $newconds = [ @$conds ];
+    splice @$newconds, $bestcond->[0], 1;
+
+    return {
+        node_type => 'branch',
+        cond => $conds->[$bestcond->[0]],
+        good => $self->_make_tree($newconds, $bestcond->[1]),
+        bad  => $self->_make_tree($newconds, $bestcond->[2]),
+    };
+}
+
+sub _make_condmap {
+    my ($self) = @_;
+
+    map { 
+        { variantno => $_, cond => $self->_make_condition($self->{variants}[$_]) } 
+    } 0..@{$self->{variants}}-1;
+}
+
+sub _make_condition {
+    my ($self, $variant, $childrenq) = @_;
+
+    my @params = $variant->params;
+    my @conds;
+
+    # we return a bitfield:
+    #   bit 0 = consistent with cond
+    #   bit 1 = consistent with not cond
+    
+    for my $i (0..$#params) {
+        push @conds, sub { 
+            my ($cond) = @_;
+            return 0b11 if $cond->{position} != $i;
+            return 0b01 if $params[$i]->subset($cond->{type});
+            return 0b11;
+        }
+    }
+
+    # 'and' all of @conds together
+    return sub {
+        my ($cond) = @_;
+        my $ret = 0b11;
+        for (@conds) {
+            $ret &= $_->($cond);
+        }
+        return $ret;
+    };
+}
+
+sub _all_conditions {
+    my ($self) = @_;
+
+    my @conds;
+    for (@{$self->{variants}}) {
+        my @params = $_->params;
+        push @conds, map { { position => $_, type => $params[$_] } } 0..$#params;
+    }
+
+    for (my $i = 0; $i < @conds; $i++) {
+        for (my $j = $i+1; $j < @conds; $j++) {
+            if ($conds[$i]->{position} == $conds[$j]->{position}
+                && $conds[$i]->{type}->subset($conds[$j]->{type}) 
+                && $conds[$j]->{type}->subset($conds[$i]->{type})) {
+                splice @conds, $j, 1;
+                $j--;
+            }
+        }
+    }
+
+    return @conds;
+}
+
 1;
 
 =head1 NAME
@@ -1119,6 +1347,84 @@ Everything is more specific than C<Any>, except C<Any> itself.
 which does what you want more often, but does what you don't want
 sometimes without saying a word.
 
+=head2 Dispatch Straegties (and speed)
+
+Class::Multimethods::Pure currently has three different strategies
+it can use for dispatch, named I<Cores>.  If you're having issues
+with speed, you might want to play around with the different cores
+(or write a new one and send it to me C<:-)>.  The three cores are:
+
+=over
+
+=item Class::Multimethods::Pure::Method::Slow
+
+This is the default core.  It implements the algorithm described above in an
+obvious and straightforward way: it loops through all the defined variants and
+sees which ones are compatible with your argument list, eliminates dominated
+methods, and returns.  The performance of this core can be miserable,
+especially if you have many variants.  However, if you only have two or three
+variants, it's might the best one for your job.
+
+=item Class::Multimethods::Pure::Method::DumbCache
+
+This core implements the semantics above by asking the slow core what it would
+do, then caching the result based on the ref type of the arguments.  It can
+guzzle memory if you pass many different types into the multi.  For example,
+even if you only have one variant (A,A), but you subclass A I<n> times and pass
+instances of the subclass into the multi instead, the DumbCache core will use
+memory proportional to I<n> squared.  If all your variants have the same arity,
+they don't use junctions or subtypes, and you're sure that the number of
+subclasses of the classes defined in the variants is bounded (and small), then
+this will be the fastest core.
+
+=item Class::Multimethods::Pure::Method::DecisionTree
+
+This core implements the semantics above by building a decision tree of
+type membership checks.   That is, it does all its logic (like the Slow core)
+by asking whether arguments are of type X, without any magic caching or ref
+checking or anything.  It also minimizes the numbers of such checks necessary
+in the worst case.  It takes some time to compile the multimethod the first
+time you dispatch to it after a change.  If you don't meet the conditions for
+DumbCache to be efficient, and you are not making frequent changes to the
+dispatch table (almost nobody does), then this is going to be the fastest
+core.
+
+=back
+
+To enable a different core for all multimethods, set
+C<$Class::Multimethods::Pure::DEFAULT_CORE> to the desired core.  For example:
+
+    use Class::Multimethods::Pure;
+    $Class::Multimethods::Pure::DEFAULT_CORE = 'DecisionTree';
+
+(If the name given to core is not already a class, then the module will try
+prepending Class::Multimethods::Pure::Method.  I suppose you could get in
+trouble if you happened to have a package named Slow, DumbCache, 
+DecisionTree in your program.  When in doubt, fully qualify.)
+
+A more courteous and versatile approach is to specify the core as an
+option to the method definition; i.e.:
+
+    use Class::Multimethods::Pure foo => ('A', 'B'),
+                                 -core => 'DecisionTree',
+                                  sub {...}
+
+or:
+
+    multi foo => ('A', 'B'), -core => 'DecisionTree', sub {
+        ...
+    };
+
+You may also set options separately from definiton, like:
+
+    use Class::Multimethods::Pure 'foo', -core => 'DecisionTree';
+
+or:
+ 
+    multi 'foo', -core => 'DecisionTree';
+
+which sets the core but defines no variant.
+
 =head2 Combinator Factoring
 
 One of the things that I find myself wanting to do most when working
@@ -1127,16 +1433,16 @@ simply call the multimethod again for some list of aggregated objects
 and perform some operation on them (like a Junction). They're easy
 to make if they're by themselves.
 
-    multi foo ('Junction', 'Object') {...}
-    multi foo ('Object', 'Junction') {...}
-    multi foo ('Junction', 'Junction') {...}
+    multi foo => ('Junction', 'Object') => sub {...}
+    multi foo => ('Object', 'Junction') => sub {...}
+    multi foo => ('Junction', 'Junction') => sub {...}
 
 However, you find yourself in a major pickle if you want to have more of
 them.  For instance:
 
-    multi foo ('Kunction', 'Object') {...}
-    multi foo ('Object', 'Kunction') {...}
-    multi foo ('Kunction', 'Kunction') {...}
+    multi foo => ('Kunction', 'Object') => sub {...}
+    multi foo => ('Object', 'Kunction') => sub {...}
+    multi foo => ('Kunction', 'Kunction') => sub {...}
 
 Now they're both combinators, but the module yells at you if you pass
 (Kunction, Junction), because there are two methods that would satisfy
@@ -1165,12 +1471,12 @@ of your generics from a different one of those:
 
 Now define your multis using these:
 
-    multi foo ('Junction', 'JunctionObject') {...}
-    multi foo ('JunctionObject', 'Junction') {...}
-    multi foo ('Junction', 'Junction') {...}
-    multi foo ('Kunction', 'KunctionObject') {...}
-    multi foo ('KunctionObject', 'Kunction') {...}
-    multi foo ('Kunction', 'Kunction') {...}
+    multi foo => ('Junction', 'JunctionObject') => {...}
+    multi foo => ('JunctionObject', 'Junction') => {...}
+    multi foo => ('Junction', 'Junction') => {...}
+    multi foo => ('Kunction', 'KunctionObject') => {...}
+    multi foo => ('KunctionObject', 'Kunction') => {...}
+    multi foo => ('Kunction', 'Kunction') => {...}
 
 Then the upper one (Junction in this case) will get threaded first,
 because a Junction is not a KunctionObject, so it doesn't fit in the

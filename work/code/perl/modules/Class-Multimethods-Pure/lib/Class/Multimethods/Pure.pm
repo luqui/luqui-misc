@@ -7,7 +7,7 @@ no warnings 'uninitialized';
 
 use Carp;
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 our %MULTI;
 our %MULTIPARAM;
@@ -1307,7 +1307,7 @@ Each argument is an element of the corresponding parameter type.
 
 =item *
 
-For every variant B, if B matches then A < B.
+For every variant B, if B matches then A <= B.
 
 =back
 
@@ -1363,7 +1363,7 @@ obvious and straightforward way: it loops through all the defined variants and
 sees which ones are compatible with your argument list, eliminates dominated
 methods, and returns.  The performance of this core can be miserable,
 especially if you have many variants.  However, if you only have two or three
-variants, it's might the best one for your job.
+variants, it might the best one for your job.
 
 =item Class::Multimethods::Pure::Method::DumbCache
 
@@ -1406,22 +1406,22 @@ A more courteous and versatile approach is to specify the core as an
 option to the method definition; i.e.:
 
     use Class::Multimethods::Pure foo => ('A', 'B'),
-                                 -core => 'DecisionTree',
+                                 -Core => 'DecisionTree',
                                   sub {...}
 
 or:
 
-    multi foo => ('A', 'B'), -core => 'DecisionTree', sub {
+    multi foo => ('A', 'B'), -Core => 'DecisionTree', sub {
         ...
     };
 
 You may also set options separately from definiton, like:
 
-    use Class::Multimethods::Pure 'foo', -core => 'DecisionTree';
+    use Class::Multimethods::Pure 'foo', -Core => 'DecisionTree';
 
 or:
  
-    multi 'foo', -core => 'DecisionTree';
+    multi 'foo', -Core => 'DecisionTree';
 
 which sets the core but defines no variant.
 

@@ -41,3 +41,6 @@ Revision history for Perl extension Class::Multimethods::Pure.
 
 0.12  Set Feb 3 12:58:00 2007
         - Added a fast DecisionTree core.  Fixed some documentation bugs.
+
+0.13  Sun Feb 4 00:12:00 2007
+        - A few documentation fixes.

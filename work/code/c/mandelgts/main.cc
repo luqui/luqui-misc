@@ -7,10 +7,11 @@
 
 guint RESOLUTION = 100;
 guint BAILOUT = 500;
-guint EDGES = 1000;
+guint EDGES = 10000;
+bool REDUCE = false;
 
 gdouble EYEX = 0, EYEY = -4, EYEZ = 0;
-gdouble SLICEK = 0;
+gdouble SLICEK = 0.1;
 
 struct Quaternion
 {
@@ -27,6 +28,10 @@ struct Quaternion
     gdouble norm2() const {
         return r*r + i*i + j*j + k*k;
     }
+
+    gdouble norm() const {
+        return sqrt(norm2());
+    }
 };
 
 Quaternion operator * (const Quaternion& a, const Quaternion& b)
@@ -38,24 +43,31 @@ Quaternion operator * (const Quaternion& a, const Quaternion& b)
                 , a.r * b.k + a.i * b.j - a.j * b.i + a.k * b.r);
 }
 
+Quaternion operator * (gdouble s, const Quaternion& a) {
+    return Quaternion(s*a.r, s*a.i, s*a.j, s*a.k);
+}
+
 Quaternion operator + (const Quaternion& a, const Quaternion& b)
 {
     return Quaternion(a.r + b.r, a.i + b.i, a.j + b.j, a.k + b.k);
 }
 
-double quaternibrot(const Quaternion& c, int bailout) {
-    Quaternion z;
+double quaternibrot(Quaternion z, int bailout) {
+    //Quaternion c(-0.08,0.0,-0.83,-0.025);
+    Quaternion c(0.08,0,0.21,-0.57);
+    Quaternion zp(1,0,0,0);
     int iters = 0;
     while (true) {
+        zp = 2 * z * zp;
         z = z*z + c;
         gdouble norm = z.norm2();
         if (norm > 4) {
-            return 1;
-            //return 1.0/sqrt(iters);
+            return z.norm() / (2*zp.norm()) * log(z.norm());
         }
         if (iters++ > bailout) {
+            return -0.01;
             //return norm - 4;
-            return -1;
+            //return -z.norm() / (2*zp.norm()) * log(z.norm());
         }
     }
 }
@@ -72,18 +84,32 @@ void quaternibrotFunc(gdouble** a, GtsCartesianGrid g, guint i, gpointer data)
     std::cout << "\r" << gdouble(i)/g.nz << std::flush;
 }
 
+void drawVertex(GtsVertex* v)
+{
+    gdouble nx = 0, ny = 0, nz = 0;
+    GSList* list = gts_vertex_triangles(v, NULL);
+    GSList* cptr = list;
+    while (cptr) {
+        gdouble mnx, mny, mnz;
+        gts_triangle_normal((GtsTriangle*)cptr->data, &mnx, &mny, &mnz);
+        nx += mnx;  ny += mny;  nz += mnz;
+        cptr = cptr->next;
+    }
+    g_slist_free(list);
+
+    gdouble len = sqrt(nx*nx + ny*ny + nz*nz);
+    gdouble scale = 1/len;
+    glNormal3f(nx*scale, ny*scale, nz*scale);
+    glVertex3f(v->p.x, v->p.y, v->p.z);
+}
+
 void drawFace(GtsFace* face)
 {
-    gdouble nx, ny, nz;
-    gts_triangle_normal(&face->triangle, &nx, &ny, &nz);
-    gdouble nl = 1/sqrt(nx*nx + ny*ny + nz*nz);
-    glNormal3f(nx*nl, ny*nl, nz*nl);
-    
     GtsVertex* v1, * v2, * v3;
     gts_triangle_vertices(&face->triangle, &v1, &v2, &v3);
-    glVertex3f(v1->p.x, v1->p.y, v1->p.z);
-    glVertex3f(v2->p.x, v2->p.y, v2->p.z);
-    glVertex3f(v3->p.x, v3->p.y, v3->p.z);
+    drawVertex(v1);
+    drawVertex(v2);
+    drawVertex(v3);
 }
 
 int FACES = 0;
@@ -116,7 +142,7 @@ GtsSurface* makeSurface()
     grid.x = grid.y = grid.z = -2.0;
     grid.dx = grid.dy = grid.dz = 4.0/RESOLUTION;
     gts_isosurface_cartesian(surf, grid, &quaternibrotFunc, NULL, 0);
-    gts_surface_coarsen(surf, NULL, NULL, NULL, NULL, &stopFunc, NULL, 0);
+    if (REDUCE) gts_surface_coarsen(surf, NULL, NULL, NULL, NULL, &stopFunc, NULL, 0);
     std::cout << "\n";
     return surf;
 }
@@ -203,6 +229,7 @@ int main()
             case SDLK_q:      SLICEK -= 0.1; draw(true); break;
             case SDLK_m:      EDGES      *= 2; draw(true); break;
             case SDLK_n:      EDGES      /= 2; draw(true); break;
+            case SDLK_r:      REDUCE = !REDUCE; draw(true); break;
             }
         }
         if (e.type == SDL_QUIT) {

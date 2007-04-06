@@ -41,8 +41,8 @@ gint drawFace(gpointer item, gpointer data)
 
 void drawSurface(GtsSurface* surf)
 {
-    glColor3f(1,1,1);
-    glBegin(GL_LINES);
+    glColor3f(0.3,0.2,0.6);
+    glBegin(GL_TRIANGLES);
         gts_surface_foreach_face(surf, &drawFace, NULL);
     glEnd();
 }

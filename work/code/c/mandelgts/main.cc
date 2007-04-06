@@ -5,6 +5,12 @@
 #include <cmath>
 #include <iostream>
 
+guint RESOLUTION = 100;
+guint BAILOUT = 50;
+
+gdouble EYEX = 0, EYEY = -4, EYEZ = 0;
+gdouble SLICEK = 0;
+
 struct Quaternion
 {
     Quaternion()
@@ -43,13 +49,13 @@ double quaternibrot(const Quaternion& c, int bailout) {
         z = z*z + c;
         gdouble norm = z.norm2();
         if (norm > 4) {
-            return 1.0/iters - 1.0/bailout;
+            return 1.0/iters;
         }
         if (iters++ > bailout) {
-            return norm-4;
+            return -1;
+            //return norm-4;
         }
     }
-    
 }
 
 void quaternibrotFunc(gdouble** a, GtsCartesianGrid g, guint i, gpointer data)
@@ -58,7 +64,7 @@ void quaternibrotFunc(gdouble** a, GtsCartesianGrid g, guint i, gpointer data)
         gdouble fx = g.x + g.dx * x;
         for (int y = 0; y < g.ny; y++) {
             gdouble fy = g.y + g.dy * y;
-            a[x][y] = quaternibrot(Quaternion(fx, fy, g.z, 0), 50);
+            a[x][y] = quaternibrot(Quaternion(fx, fy, g.z, SLICEK), BAILOUT);
         }
     }
     std::cout << "\r" << gdouble(i)/g.nz << std::flush;
@@ -100,11 +106,25 @@ GtsSurface* makeSurface()
 {
     GtsSurface* surf = gts_surface_new(gts_surface_class(), gts_face_class(), gts_edge_class(), gts_vertex_class());
     GtsCartesianGrid grid;
-    grid.nx = grid.ny = grid.nz = 100;
+    grid.nx = grid.ny = grid.nz = RESOLUTION;
     grid.x = grid.y = grid.z = -2.0;
-    grid.dx = grid.dy = grid.dz = 4.0/100;
+    grid.dx = grid.dy = grid.dz = 4.0/RESOLUTION;
     gts_isosurface_cartesian(surf, grid, &quaternibrotFunc, NULL, 0);
+    std::cout << "\n";
     return surf;
+}
+
+gint pickFirstFace(gpointer item, gpointer data)
+{
+    *static_cast<gpointer*>(data) = item;
+    return 1;
+}
+
+void freeSurface(GtsSurface* surf)
+{
+    GtsFace* first;
+    gts_surface_foreach_face(surf, &pickFirstFace, static_cast<gpointer>(&first));
+    gts_surface_traverse_destroy(gts_surface_traverse_new(surf, first));
 }
 
 void init()
@@ -131,24 +151,52 @@ void init()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45.0, 4.0/3.0, 0.1, 100.0);
-    gluLookAt(0, -4, 0, 0, 0, 0, 0, 0, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+}
+
+void draw(bool recreate)
+{
+    static GtsSurface* surf = NULL;
+    if (recreate) {
+        if (surf) freeSurface(surf);
+        surf = makeSurface();
+    }
+    if (!surf) return;
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+    gluLookAt(EYEX, EYEY, EYEZ, 0, 0, 0, 0, 0, 1);
+    drawSurface(surf);
+    SDL_GL_SwapBuffers();
 }
 
 int main()
 {
     init();
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    GtsSurface* surf = makeSurface();
-    drawSurface(surf);
-    std::cout << "\nDrew " << FACES << " faces\n";
-    SDL_GL_SwapBuffers();
+    draw(true);
 
     SDL_Event e;
     while (SDL_WaitEvent(&e)) {
         if (e.type == SDL_KEYDOWN) {
+            switch (e.key.keysym.sym) {
+            case SDLK_ESCAPE: SDL_Quit(); exit(0); break;
+            case SDLK_UP:     EYEY += 0.3; draw(false); break;
+            case SDLK_DOWN:   EYEY -= 0.3; draw(false); break;
+            case SDLK_RIGHT:  EYEX += 0.3; draw(false); break;
+            case SDLK_LEFT:   EYEX -= 0.3; draw(false); break;
+            case SDLK_a:      EYEZ += 0.3; draw(false); break;
+            case SDLK_z:      EYEZ -= 0.3; draw(false); break;
+            case SDLK_p:      RESOLUTION *= 1.5; draw(true); break;
+            case SDLK_o:      RESOLUTION /= 1.5; draw(true); break;
+            case SDLK_l:      BAILOUT    *= 1.5; draw(true); break;
+            case SDLK_k:      BAILOUT    /= 1.5; draw(true); break;
+            case SDLK_w:      SLICEK += 0.1; draw(true); break;
+            case SDLK_q:      SLICEK -= 0.1; draw(true); break;
+            }
+        }
+        if (e.type == SDL_QUIT) {
             break;
         }
     }

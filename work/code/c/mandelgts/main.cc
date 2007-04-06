@@ -6,7 +6,8 @@
 #include <iostream>
 
 guint RESOLUTION = 100;
-guint BAILOUT = 50;
+guint BAILOUT = 500;
+guint EDGES = 1000;
 
 gdouble EYEX = 0, EYEY = -4, EYEZ = 0;
 gdouble SLICEK = 0;
@@ -49,11 +50,12 @@ double quaternibrot(const Quaternion& c, int bailout) {
         z = z*z + c;
         gdouble norm = z.norm2();
         if (norm > 4) {
-            return 1.0/iters;
+            return 1;
+            //return 1.0/sqrt(iters);
         }
         if (iters++ > bailout) {
+            //return norm - 4;
             return -1;
-            //return norm-4;
         }
     }
 }
@@ -101,6 +103,10 @@ void drawSurface(GtsSurface* surf)
     glEnd();
 }
 
+gboolean stopFunc(gdouble cost, guint nedge, gpointer data)
+{
+    return nedge < EDGES;
+}
 
 GtsSurface* makeSurface()
 {
@@ -110,6 +116,7 @@ GtsSurface* makeSurface()
     grid.x = grid.y = grid.z = -2.0;
     grid.dx = grid.dy = grid.dz = 4.0/RESOLUTION;
     gts_isosurface_cartesian(surf, grid, &quaternibrotFunc, NULL, 0);
+    gts_surface_coarsen(surf, NULL, NULL, NULL, NULL, &stopFunc, NULL, 0);
     std::cout << "\n";
     return surf;
 }
@@ -194,6 +201,8 @@ int main()
             case SDLK_k:      BAILOUT    /= 1.5; draw(true); break;
             case SDLK_w:      SLICEK += 0.1; draw(true); break;
             case SDLK_q:      SLICEK -= 0.1; draw(true); break;
+            case SDLK_m:      EDGES      *= 2; draw(true); break;
+            case SDLK_n:      EDGES      /= 2; draw(true); break;
             }
         }
         if (e.type == SDL_QUIT) {

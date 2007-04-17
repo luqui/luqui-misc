@@ -22,6 +22,8 @@ inline Color other_color(Color in) {
 
 class Move;
 
+void events_common(SDL_Event* e);
+
 class Board {
 public:
     Board() {
@@ -122,6 +124,8 @@ private:
     int advance_[N_COLORS];
     int justcapx_, justcapy_;
 };
+
+Board BOARD;
 
 class Move {
     friend class Board;
@@ -307,11 +311,7 @@ public:
     Move* move(const Board* b) {
         SDL_Event e;
         while (SDL_WaitEvent(&e)) {
-            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE
-                || e.type == SDL_QUIT) {
-                INIT.quit();
-                exit(0);
-            }
+            events_common(&e);
 
             if (e.type == SDL_MOUSEBUTTONDOWN) {
                 vec2 wp = coord_convert(INIT.pixel_view(), VIEW, vec2(e.button.x, e.button.y));
@@ -452,23 +452,24 @@ void draw(const Board* b) {
 void events() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_QUIT || e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
-            SDL_Quit();
-            exit(0);
-        }
+        events_common(&e);
+    }
+}
+
+void events_common(SDL_Event* e) {
+    if (e->type == SDL_QUIT || e->type == SDL_KEYDOWN && e->key.keysym.sym == SDLK_ESCAPE) {
+        SDL_Quit();
+        exit(0);
+    }
+    if (e->type == SDL_ACTIVEEVENT) {
+        draw(&BOARD);
     }
 }
 
 void waitevents() {
     SDL_Event e;
     while (SDL_WaitEvent(&e)) {
-        if (e.type == SDL_QUIT || e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
-            SDL_Quit();
-            exit(0);
-        }
-        if (e.type == SDL_KEYDOWN) {
-            break;
-        }
+        events_common(&e);
     }
 }
 
@@ -478,26 +479,24 @@ int main()
     HumanPlayer white(WHITE);
     AIPlayer black(BLACK, BLACKDEPTH);
 
-    Board board;
-    
     while (true) {
-        draw(&board);
+        draw(&BOARD);
 
         {
             std::cout << "Black move\n";
-            Move* m = black.move(&board);
+            Move* m = black.move(&BOARD);
             if (!m) break;
-            board.do_move(m);
+            BOARD.do_move(m);
             delete m;
         }
         
-        draw(&board);
+        draw(&BOARD);
 
         {
             std::cout << "White move\n";
-            Move* m = white.move(&board);
+            Move* m = white.move(&BOARD);
             if (!m) break;
-            board.do_move(m);
+            BOARD.do_move(m);
             delete m;
         }
     }

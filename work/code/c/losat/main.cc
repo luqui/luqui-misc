@@ -39,13 +39,15 @@ public:
         board_[10][7] = WHITE;
         board_[10][6] = WHITE;
 
-        board_[9 ][12] = BLACK;
-        board_[9 ][11] = BLACK;
+        board_[8 ][12] = BLACK;
+        board_[8 ][11] = BLACK;
+        board_[8 ][10] = BLACK;
         board_[9 ][10] = BLACK;
         board_[10][10] = BLACK;
-        board_[11][10] = BLACK;
-        board_[11][11] = BLACK;
-        board_[11][12] = BLACK;
+        board_[10][11] = BLACK;
+        board_[10][12] = BLACK;
+
+        justcapx_ = justcapy_ = -1;
 
         compute_extrema();
         advance_[NONE] = 0;
@@ -114,25 +116,30 @@ L_ENDBLACK:
     }
     
 private:
+    
     Color board_[SIZEX][SIZEY];
     int cap_[N_COLORS];
     int advance_[N_COLORS];
+    int justcapx_, justcapy_;
 };
 
 class Move {
     friend class Board;
-    Move(int x, int y, Color oldstate, Color newstate)
-        : x(x), y(y), newstate(newstate), oldstate(oldstate)
+    Move(bool capture, int x, int y, Color oldstate, Color newstate, int oldjustcapx, int oldjustcapy)
+        : capture(capture), x(x), y(y), newstate(newstate), oldstate(oldstate), oldjustcapx(oldjustcapx), oldjustcapy(oldjustcapy)
     {
         for (int i = 0; i < N_COLORS; i++) {
             deltacap[i] = dadvance[i] = 0;
         }
+        oldjustcapx = oldjustcapy = -1;
     }
     
 private:
+    bool capture;
     int x, y;
     Color newstate;
     Color oldstate;
+    int oldjustcapx, oldjustcapy;
     int deltacap[N_COLORS];
     int dadvance[N_COLORS];
 };
@@ -143,7 +150,7 @@ Move* Board::create_move(Color color, int x, int y) const
     int neigh = neighbors(color,x,y);
     if (get_color(x,y) == color) { // remove
         if (neigh <= 1 || neigh >= 4) {
-            return new Move(x, y, color, NONE);
+            return new Move(false,x, y, color, NONE, justcapx_, justcapy_);
         }
         else {
             return 0;
@@ -152,10 +159,11 @@ Move* Board::create_move(Color color, int x, int y) const
     else {
         if (neigh == 3) {
             if (get_color(x,y) == NONE) { // add
-                return new Move(x, y, NONE, color);
+                return new Move(false, x, y, NONE, color, justcapx_, justcapy_);
             }
             else {    // capture
-                Move* move = new Move(x, y, get_color(x,y), color);
+                if (x == justcapx_ && y == justcapy_) return 0; // ko rule
+                Move* move = new Move(true, x, y, get_color(x,y), color, justcapx_, justcapy_);
                 move->deltacap[color]++;
                 return move;
             }
@@ -168,6 +176,13 @@ Move* Board::create_move(Color color, int x, int y) const
 
 void Board::do_move(Move* move) {
     board_[move->x][move->y] = move->newstate;
+    if (move->capture) {
+        justcapx_ = move->x;
+        justcapy_ = move->y;
+    }
+    else {
+        justcapx_ = justcapy_ = -1;
+    }
     for (int i = 0; i < N_COLORS; i++) {
         cap_[i] += move->deltacap[i];
     }
@@ -186,6 +201,8 @@ void Board::do_move(Move* move) {
 
 void Board::undo_move(const Move* move) {
     board_[move->x][move->y] = move->oldstate;
+    justcapx_ = move->oldjustcapx;
+    justcapy_ = move->oldjustcapy;
     for (int i = 0; i < N_COLORS; i++) {
         cap_[i] -= move->deltacap[i];
         advance_[i] -= move->dadvance[i];

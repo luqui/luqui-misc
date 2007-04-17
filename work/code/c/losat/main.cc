@@ -9,8 +9,8 @@
 #include <queue>
 
 const int SIZEX = 19, SIZEY = 19;
-const int WHITEDEPTH = 5;
-const int BLACKDEPTH = 5;
+const int WHITEDEPTH = 4;
+const int BLACKDEPTH = 4;
 
 SoyInit INIT;
 Viewport VIEW(vec2(SIZEX/2.0-0.5, SIZEY/2.0-0.5), vec2(SIZEX+0.5, SIZEY));
@@ -69,7 +69,7 @@ public:
         return cap_[color];
     }
     bool win(Color color) const {
-        return captures(color) >= 5;
+        return captures(color) >= 5 || advance_score(color) == 0;
     }
     Color get_color(int x, int y) const {
         return board_[x][y];
@@ -274,6 +274,15 @@ private:
 
     float score_move(Board* board, Color color, Move* move, int depth) {
         board->do_move(move);
+        
+        if (board->win(color)) {
+            board->undo_move(move);
+            return HUGE_VAL;
+        }
+        if (board->win(other_color(color))) {
+            board->undo_move(move);
+            return -HUGE_VAL;
+        }
 
         if (depth == 0) {
             float ret = score_board(board, color);
@@ -481,6 +490,7 @@ int main()
 
     while (true) {
         draw(&BOARD);
+        if (BOARD.win(BLACK) || BOARD.win(WHITE)) break;
 
         {
             std::cout << "Black move\n";
@@ -491,6 +501,7 @@ int main()
         }
         
         draw(&BOARD);
+        if (BOARD.win(BLACK) || BOARD.win(WHITE)) break;
 
         {
             std::cout << "White move\n";

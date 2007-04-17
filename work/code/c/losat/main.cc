@@ -1,5 +1,6 @@
 #include <soy/init.h>
 #include <soy/ptr.h>
+#include <soy/Viewport.h>
 #include <list>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -8,10 +9,11 @@
 #include <queue>
 
 const int SIZEX = 19, SIZEY = 19;
-const int WHITEDEPTH = 5;
-const int BLACKDEPTH = 2;
+const int WHITEDEPTH = 4;
+const int BLACKDEPTH = 4;
 
 SoyInit INIT;
+Viewport VIEW(vec2(SIZEX/2.0-0.5, SIZEY/2.0-0.5), vec2(SIZEX, SIZEY));
 
 enum Color { NONE, WHITE, BLACK, N_COLORS };
 inline Color other_color(Color in) {
@@ -273,22 +275,49 @@ private:
     int depth_;
 };
 
+class HumanPlayer
+{
+public:
+    HumanPlayer(Color c) : color_(c) { }
+    
+    Move* move(const Board* b) {
+        SDL_Event e;
+        while (SDL_WaitEvent(&e)) {
+            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE
+                || e.type == SDL_QUIT) {
+                INIT.quit();
+                exit(0);
+            }
+
+            if (e.type == SDL_MOUSEBUTTONDOWN) {
+                vec2 wp = coord_convert(INIT.pixel_view(), VIEW, vec2(e.button.x, e.button.y));
+                int x = int(wp.x+0.5);
+                int y = int(wp.y+0.5);
+                Color c = e.button.button == SDL_BUTTON_LEFT ? WHITE : BLACK;
+
+                Move* m = b->create_move(c, x, y);
+                if (m) return m;
+            }
+        }
+    }
+private:
+    Color color_;
+};
+
 void init()
 {
     srand(time(NULL));
     INIT.init();
     
     glClearColor(0.5, 0.2, 0.05, 0);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(-0.5, 18.5, -0.5, 18.5);
-    glMatrixMode(GL_MODELVIEW);
+    VIEW.activate();
     glLoadIdentity();
 }
 
 void draw_grid()
 {
     glColor3f(0, 0, 0);
+    glLineWidth(1.0);
     glBegin(GL_LINES);
     for (int i = 0; i < SIZEX; i++) {
         glVertex2f(i, 0);
@@ -326,9 +355,44 @@ void draw_board(const Board* b)
     glEnd();
 }
 
+void draw_legal_moves(const Board* b)
+{
+    glLineWidth(2.0);
+    for (int i = 0; i < SIZEX; i++) {
+        for (int j = 0; j < SIZEY; j++) {
+            float rad = 0.43;
+            Move* m = b->create_move(WHITE, i,j);
+            if (m) {
+                delete m;
+                glColor3f(0.7,0.7,0.7);
+                glBegin(GL_LINE_LOOP);
+                glVertex2f(i - rad, j - rad);
+                glVertex2f(i - rad, j + rad);
+                glVertex2f(i + rad, j + rad);
+                glVertex2f(i + rad, j - rad);
+                glEnd();
+                rad += 0.06;
+            }
+
+            m = b->create_move(BLACK, i,j);
+            if (m) {
+                delete m;
+                glColor3f(0.3,0.3,0.3);
+                glBegin(GL_LINE_LOOP);
+                glVertex2f(i - rad, j - rad);
+                glVertex2f(i - rad, j + rad);
+                glVertex2f(i + rad, j + rad);
+                glVertex2f(i + rad, j - rad);
+                glEnd();
+            }
+        }
+    }
+}
+
 void draw(const Board* b) {
     glClear(GL_COLOR_BUFFER_BIT);
     draw_board(b);
+    draw_legal_moves(b);
     SDL_GL_SwapBuffers();
 }
 
@@ -358,34 +422,29 @@ void waitevents() {
 int main()
 {
     init();
-    AIPlayer white(WHITE, WHITEDEPTH), black(BLACK, BLACKDEPTH);
+    HumanPlayer white(WHITE);
+    AIPlayer black(BLACK, BLACKDEPTH);
 
     Board board;
     
     while (true) {
         draw(&board);
-        waitevents();
 
         {
             std::cout << "Black move\n";
             Move* m = black.move(&board);
             if (!m) break;
-            int old_score = black.score_board(&board, BLACK);
             board.do_move(m);
-            std::cout << "dScore = " << black.score_board(&board, BLACK) - old_score << "\n";
             delete m;
         }
         
         draw(&board);
-        waitevents();
 
         {
             std::cout << "White move\n";
             Move* m = white.move(&board);
             if (!m) break;
-            int old_score = white.score_board(&board, WHITE);
             board.do_move(m);
-            std::cout << "dScore = " << white.score_board(&board, WHITE) - old_score << "\n";
             delete m;
         }
     }

@@ -31,21 +31,21 @@ public:
             }
         }
 
+        board_[8 ][5] = WHITE;
         board_[8 ][6] = WHITE;
         board_[8 ][7] = WHITE;
-        board_[8 ][8] = WHITE;
-        board_[9 ][8] = WHITE;
-        board_[10][8] = WHITE;
+        board_[9 ][7] = WHITE;
         board_[10][7] = WHITE;
         board_[10][6] = WHITE;
+        board_[10][5] = WHITE;
 
+        board_[8 ][13] = BLACK;
         board_[8 ][12] = BLACK;
         board_[8 ][11] = BLACK;
-        board_[8 ][10] = BLACK;
-        board_[9 ][10] = BLACK;
-        board_[10][10] = BLACK;
+        board_[9 ][11] = BLACK;
         board_[10][11] = BLACK;
         board_[10][12] = BLACK;
+        board_[10][13] = BLACK;
 
         justcapx_ = justcapy_ = -1;
 
@@ -86,10 +86,10 @@ public:
 
     int advance_score(Color c) const {
         if (c == WHITE) {
-            return advance_[c];
+            return 12 - advance_[c];
         }
         else {
-            return SIZEY - advance_[c];
+            return advance_[c] - 6;
         }
     }
     
@@ -224,7 +224,7 @@ public:
     Move* move(const Board* board) {
         Board* b = const_cast<Board*>(board);  // I promise, it won't actually change
 
-        int max_score = INT_MIN;
+        float max_score = -HUGE_VAL;
         std::auto_ptr<Move> max_move;
 
         int randct = 0;
@@ -235,7 +235,7 @@ public:
                     std::auto_ptr<Move> m(board->create_move((Color)c, i,j));
                     if (!m.get()) continue;
                     
-                    int pscore = score_move(b, color_, m.get(), depth_);
+                    float pscore = score_move(b, color_, m.get(), depth_);
                     if (pscore > max_score) {
                         max_score = pscore;
                         max_move = m;
@@ -253,29 +253,42 @@ public:
         return max_move.release();
     }
     
-    int score_board(const Board* board, Color color) const {
+    static float advance_to_score(int ascore) {
+        if (ascore <= 0) return HUGE_VAL;
+        else return 1.0 / ascore;
+    }
+
+    static float captures_to_score(int cap) {
+        if (cap >= 5) return HUGE_VAL;
+        else return cap;
+    }
+    
+    float score_board(const Board* board, Color color) const {
         return board->captures(color) - board->captures(other_color(color))
-            + board->advance_score(color) - board->advance_score(other_color(color));
+            + advance_to_score(board->advance_score(color)) 
+            - advance_to_score(board->advance_score(other_color(color)));
     }
 private:
 
-    int score_move(Board* board, Color color, Move* move, int depth) {
+    float score_move(Board* board, Color color, Move* move, int depth) {
         board->do_move(move);
 
         if (depth == 0) {
-            int ret = score_board(board, color);
+            float ret = score_board(board, color);
             board->undo_move(move);
             return ret;
         }
 
-        int max_score = INT_MIN;
+        float max_score = -HUGE_VAL;
+        int moves[N_COLORS] = {};
         for (int i = 0; i < SIZEX; i++) {
             for (int j = 0; j < SIZEY; j++) {
                 for (int c = WHITE; c < N_COLORS; c++) {
                     Move* m = board->create_move((Color)c, i,j);
                     if (!m) continue;
+                    moves[c]++;
 
-                    int pscore = score_move(board, other_color(color), m, depth-1);
+                    float pscore = score_move(board, other_color(color), m, depth-1);
                     if (pscore > max_score) {
                         max_score = pscore;
                     }
@@ -285,6 +298,8 @@ private:
         }
         board->undo_move(move);
 
+        if (moves[color] == 0) return -HUGE_VAL;
+        if (moves[other_color(color)] == 0) return HUGE_VAL;
         return -max_score;
     }
     
@@ -350,6 +365,16 @@ void draw_grid()
 void draw_board(const Board* b)
 {
     draw_grid();
+
+    glLineWidth(2.0);
+    glColor3f(0.5,1,0.5);
+    glBegin(GL_LINES);
+        glVertex2f(0,6);
+        glVertex2f(SIZEX-1,6);
+        glVertex2f(0,12);
+        glVertex2f(SIZEY-1,12);
+    glEnd();
+
     glBegin(GL_QUADS);
     for (int i = 0; i < SIZEX; i++) {
         for (int j = 0; j < SIZEY; j++) {

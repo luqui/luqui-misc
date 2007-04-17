@@ -13,7 +13,7 @@ const int WHITEDEPTH = 4;
 const int BLACKDEPTH = 4;
 
 SoyInit INIT;
-Viewport VIEW(vec2(SIZEX/2.0-0.5, SIZEY/2.0-0.5), vec2(SIZEX, SIZEY));
+Viewport VIEW(vec2(SIZEX/2.0-0.5, SIZEY/2.0-0.5), vec2(SIZEX+0.5, SIZEY));
 
 enum Color { NONE, WHITE, BLACK, N_COLORS };
 inline Color other_color(Color in) {
@@ -255,7 +255,7 @@ public:
     
     static float advance_to_score(int ascore) {
         if (ascore <= 0) return HUGE_VAL;
-        else return 1.0 / ascore;
+        else return 2.0 / ascore;
     }
 
     static float captures_to_score(int cap) {
@@ -393,6 +393,26 @@ void draw_board(const Board* b)
                 glVertex2f(i-0.4, j+0.4);
             }
         }
+    }
+    glEnd();
+
+    glColor3f(0,0,0);
+    glBegin(GL_QUADS);
+    for (int i = 0; i < b->captures(WHITE); i++) {
+        glVertex2f(SIZEX+0.1, i + 0.1);
+        glVertex2f(SIZEX+0.9, i + 0.1);
+        glVertex2f(SIZEX+0.9, i + 0.9);
+        glVertex2f(SIZEX+0.1, i + 0.9);
+    }
+    glEnd();
+    
+    glColor3f(1,1,1);
+    glBegin(GL_QUADS);
+    for (int i = 0; i < b->captures(BLACK); i++) {
+        glVertex2f(-0.1, SIZEY - 2 - i + 0.1);
+        glVertex2f(-0.9, SIZEY - 2 - i + 0.1);
+        glVertex2f(-0.9, SIZEY - 2 - i + 0.9);
+        glVertex2f(-0.1, SIZEY - 2 - i + 0.9);
     }
     glEnd();
 }

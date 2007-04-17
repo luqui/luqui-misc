@@ -9,8 +9,8 @@
 #include <queue>
 
 const int SIZEX = 19, SIZEY = 19;
-const int WHITEDEPTH = 4;
-const int BLACKDEPTH = 4;
+const int WHITEDEPTH = 5;
+const int BLACKDEPTH = 5;
 
 SoyInit INIT;
 Viewport VIEW(vec2(SIZEX/2.0-0.5, SIZEY/2.0-0.5), vec2(SIZEX+0.5, SIZEY));
@@ -231,21 +231,19 @@ public:
         for (int i = 0; i < SIZEX; i++) {
             std::cout << i << " " << std::flush;
             for (int j = 0; j < SIZEY; j++) {
-                for (int c = WHITE; c < N_COLORS; c++) {
-                    std::auto_ptr<Move> m(board->create_move((Color)c, i,j));
-                    if (!m.get()) continue;
-                    
-                    float pscore = score_move(b, color_, m.get(), depth_);
-                    if (pscore > max_score) {
+                std::auto_ptr<Move> m(board->create_move(color_, i,j));
+                if (!m.get()) continue;
+                
+                float pscore = score_move(b, color_, m.get(), depth_);
+                if (pscore > max_score) {
+                    max_score = pscore;
+                    max_move = m;
+                    randct = 0;
+                }
+                else if (pscore == max_score) {
+                    if (rand() % ++randct == 0) {
                         max_score = pscore;
                         max_move = m;
-                        randct = 0;
-                    }
-                    else if (pscore == max_score) {
-                        if (rand() % ++randct == 0) {
-                            max_score = pscore;
-                            max_move = m;
-                        }
                     }
                 }
             }
@@ -280,26 +278,20 @@ private:
         }
 
         float max_score = -HUGE_VAL;
-        int moves[N_COLORS] = {};
         for (int i = 0; i < SIZEX; i++) {
             for (int j = 0; j < SIZEY; j++) {
-                for (int c = WHITE; c < N_COLORS; c++) {
-                    Move* m = board->create_move((Color)c, i,j);
-                    if (!m) continue;
-                    moves[c]++;
+                Move* m = board->create_move(other_color(color), i,j);
+                if (!m) continue;
 
-                    float pscore = score_move(board, other_color(color), m, depth-1);
-                    if (pscore > max_score) {
-                        max_score = pscore;
-                    }
-                    delete m;
+                float pscore = score_move(board, other_color(color), m, depth-1);
+                if (pscore > max_score) {
+                    max_score = pscore;
                 }
+                delete m;
             }
         }
         board->undo_move(move);
 
-        if (moves[color] == 0) return -HUGE_VAL;
-        if (moves[other_color(color)] == 0) return HUGE_VAL;
         return -max_score;
     }
     
@@ -325,9 +317,8 @@ public:
                 vec2 wp = coord_convert(INIT.pixel_view(), VIEW, vec2(e.button.x, e.button.y));
                 int x = int(wp.x+0.5);
                 int y = int(wp.y+0.5);
-                Color c = e.button.button == SDL_BUTTON_LEFT ? WHITE : BLACK;
 
-                Move* m = b->create_move(c, x, y);
+                Move* m = b->create_move(color_, x, y);
                 if (m) return m;
             }
         }
@@ -399,10 +390,10 @@ void draw_board(const Board* b)
     glColor3f(0,0,0);
     glBegin(GL_QUADS);
     for (int i = 0; i < b->captures(WHITE); i++) {
-        glVertex2f(SIZEX+0.1, i + 0.1);
-        glVertex2f(SIZEX+0.9, i + 0.1);
-        glVertex2f(SIZEX+0.9, i + 0.9);
-        glVertex2f(SIZEX+0.1, i + 0.9);
+        glVertex2f(SIZEX-1+0.1, i + 0.1);
+        glVertex2f(SIZEX-1+0.9, i + 0.1);
+        glVertex2f(SIZEX-1+0.9, i + 0.9);
+        glVertex2f(SIZEX-1+0.1, i + 0.9);
     }
     glEnd();
     

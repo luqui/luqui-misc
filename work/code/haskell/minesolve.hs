@@ -15,14 +15,6 @@ metric eqs xs =
     localMetric :: Equation -> Int
     localMetric (inp, outp) = abs (outp - sum (zipWith (*) inp xs))
 
-liftMA :: (Monad m) =>  ([a] -> b) -> [m a] -> m b
-liftMA f ms =
-    liftM f (liftJoin ms)
-    where
-    liftJoin :: (Monad m) => [m a] -> m [a]
-    liftJoin []     = return []
-    liftJoin (m:ms) = liftM2 (:) m (liftJoin ms)
-
 checkEqs :: [Equation] -> [Int] -> Bool
 checkEqs eqs pfx = 
     all checkEq eqs
@@ -68,7 +60,7 @@ main = do
     print (convolve sols)
     where
     readEq = do
-        let rx = mkRegex "(([0-9] *)+) *= *([0-9]+)"
+        let rx = mkRegex "(([01] *)+) *= *([0-9]+)"
         line <- getLine
         if line == "."
             then return []

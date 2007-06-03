@@ -1,4 +1,2 @@
-all: werepoker
-
-werepoker: 
+all: 
 	ghc --make Main -o werepoker

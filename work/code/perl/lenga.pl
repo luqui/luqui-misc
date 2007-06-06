@@ -21,6 +21,7 @@ sub prove {
       formula_list(usable).
 	    all x (x = x).
 PRELUDE
+    print $list;
 	print $in $list;
 	print $in "end_of_list.\n";
 	close $in;

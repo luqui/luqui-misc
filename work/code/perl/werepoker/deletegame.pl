@@ -46,13 +46,13 @@ my %playerinv;
 my @roles;
 my %roleinv;
 {
-    my $sth = $dbh->prepare('SELECT rolename FROM GameRoles WHERE gamename=? GROUP BY rolename');
+    my $sth = $dbh->prepare('SELECT rolename,count FROM GameRoles WHERE gamename=? GROUP BY rolename');
     $sth->execute($gamename);
     while (my $data = $sth->fetchrow_hashref) {
-        push @roles, $data->{rolename};
+        push @roles, ($data->{rolename}) x $data->{count};
     }
     for (0..$#roles) {
-        $roleinv{$players[$_]} = $_;
+        push @{$roleinv{$roles[$_]} ||= []}, $_;
     }
 }
 
@@ -66,7 +66,9 @@ for my $i (0..$#players) {
     my $sth = $dbh->prepare('SELECT playername,rolename,bid FROM GameBids WHERE gamename=?');
     $sth->execute($gamename);
     while (my $data = $sth->fetchrow_hashref) {
-        $matrix[$playerinv{$data->{playername}}][$roleinv{$data->{rolename}}] = -$data->{bid};
+        for (@{$roleinv{$data->{rolename}}}) {
+            $matrix[$playerinv{$data->{playername}}][$_] = -$data->{bid};
+        }
     }
 }
 

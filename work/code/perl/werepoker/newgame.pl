@@ -45,9 +45,15 @@ if ($status) {
     <html>
      <body>
       <h1>$gamename Created</h1>
-      <p>Click below when finished.</p>
+      <p>Click below when bidding has finished.</p>
       <form method="get" action="deletegame.pl">
        <input type="hidden" name="gamename" value="$gamename" />
+       Resolution Algorithm:
+       <select name="algorithm">
+        <option value="Algorithm::Munkres">Largest pot</option>
+        <option value="BidPicker">Highest bid</option>
+       </select>
+       <br />
        <input type="submit" />
       </form>
      </body>

@@ -3,7 +3,11 @@
 use strict;
 use CGI ();
 use DBI ();
-use Algorithm::Munkres ();
+
+my %algorithms = (
+    'Algorithm::Munkres' => 1,
+    'BidPicker' => 1,
+);
 
 my $dbh = DBI->connect('DBI:mysql:werepoker', 'fibonaci', 'sre-piz',
                         { RaiseError => 1, AutoCommit => 0 })
@@ -14,13 +18,16 @@ my $cgi = CGI->new;
 my $gamename = $cgi->param('gamename');
 die "Malformed game name" unless $gamename =~ /^[\w ]+$/;
 
+my $algorithm = $cgi->param('algorithm');
+die "Bad algorithm module" unless $algorithms{$algorithm};
+
 print <<EOHTML;
 Content-type: text/html
 
 <html>
  <body>
   <h1>Assignments:</h1>
-  <table>
+  <table border="1">
    <tr>
     <td><b>Player</b></td>
     <td><b>Role</b></td>
@@ -73,7 +80,11 @@ for my $i (0..$#players) {
 }
 
 my @result;
-Algorithm::Munkres::assign(\@matrix, \@result);
+eval "require $algorithm; 1" or die "Failed to use algorithm '$algorithm'";
+{
+    no strict 'refs';
+    &{"$algorithm\::assign"}(\@matrix, \@result);
+}
 
 for (0..$#players) {
     print <<EOHTML;
@@ -99,7 +110,7 @@ my $status = eval {
 
 if ($status) {
     $dbh->commit;
-    print "Game deleted.\n";
+    print "Game closed.\n";
 }
 else {
     $dbh->rollback;

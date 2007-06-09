@@ -20,7 +20,8 @@ die "Malformed player name" unless $playername =~ /^[\w ]+$/;
 my %bids;
 for my $param ($cgi->param) {
     if ($param =~ /^bid-(\w+)$/) {
-        $bids{$1} = 0 + $cgi->param($param);
+        $bids{$1} = int($cgi->param($param));
+        if ($bids{$1} < 0) { $bids{$1} = 0; }
     }
 }
 

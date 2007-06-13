@@ -12,7 +12,7 @@ Content-type: text/html
 
 <html>
  <head>
-  <title>Join Werepoker Game</title>
+  <title>Werepoker</title>
  </head>
  <body>
   <h1>Join Werepoker Game</h1>
@@ -28,7 +28,21 @@ while (my $data = $sth->fetchrow_hashref) {
 
 print <<EOHTML;
    </select>
-   <input type="submit" />
+   <input type="submit" value="Join Game" />
+  </form>
+  <h1>New Werepoker Game</h1>
+  <form method="post" action="newgame.pl">
+   <table border="0">
+    <tr>
+     <td>Game Name:</td>
+     <td><input type="text" name="gamename" /></td>
+    </tr>
+    <tr>
+     <td>Roles allowed (eg. <tt>villager*3, seer, werewolf*2</tt>):</td>
+     <td><input type="text" name="roles" /></td>
+    </tr>
+   </table>
+   <input type="submit" value="Create Game" />
   </form>
  </head>
 </html>

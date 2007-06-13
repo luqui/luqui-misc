@@ -26,8 +26,13 @@ for my $param ($cgi->param) {
 }
 
 my $status = eval {
+    # Delete the old bids so you can resubmit with the same name if you like.
+    $dbh->prepare('DELETE FROM GameBids WHERE gamename=? AND playername=?')
+        ->execute($gamename, $playername);
+        
     my $sth = $dbh->prepare('INSERT INTO GameBids VALUES (?,?,?,?)');
 
+    # Insert new bids into the database.
     for (keys %bids) {
         $sth->execute($gamename, $playername, $_, $bids{$_});
     }

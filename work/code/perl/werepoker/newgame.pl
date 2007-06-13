@@ -44,9 +44,9 @@ if ($status) {
     print <<EOHTML;
     <html>
      <body>
-      <h1>$gamename Created</h1>
+      <h1>$gamename</h1>
       <p>Click below when bidding has finished.</p>
-      <form method="get" action="deletegame.pl">
+      <form method="get" action="adjudicate.pl">
        <input type="hidden" name="gamename" value="$gamename" />
        Resolution Algorithm:
        <select name="algorithm">
@@ -54,7 +54,7 @@ if ($status) {
         <option value="BidPicker">Highest bid</option>
        </select>
        <br />
-       <input type="submit" />
+       <input type="submit" value="Adjudicate" />
       </form>
      </body>
     </html>

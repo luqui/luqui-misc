@@ -46,10 +46,9 @@ if ($status) {
     <html>
      <body>
       <h1>Got it!</h1>
-      <p>Submit to add another player.</p>
       <form method="get" action="joingame.pl">
        <input type="hidden" name="gamename" value="$gamename" />
-       <input type="submit" />
+       <input type="submit" value="Add Another Player" />
       </form>
      </body>
     </html>

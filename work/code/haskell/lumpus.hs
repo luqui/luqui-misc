@@ -3,8 +3,9 @@
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 import qualified Control.Monad.Reader as Reader
+import qualified Control.Monad.State as State
 import qualified Control.Monad as Monad
-import Text.ParserCombinators.Parsec
+import qualified System.Random as Random
 
 data Term
     = TVar String
@@ -19,16 +20,19 @@ data Formula
 
 data Function a
     = Function { fArity  :: Int
-               , fValues :: Map.Map [a] a }
+               , fValues :: Map.Map [a] a 
+               }
 
 data Relation a
      = Relation { rArity  :: Int
-                , rValues :: Set.Set [a] }
+                , rValues :: Set.Set [a] 
+                }
 
 data Model a
     = Model { mUniverse  :: Set.Set a
             , mFunctions :: Map.Map String (Function a)
-            , mRelations :: Map.Map String (Relation a) }
+            , mRelations :: Map.Map String (Relation a) 
+            }
 
 type Pad a = Map.Map String a
 type Interpret v a = Reader.Reader (Pad v) a
@@ -62,3 +66,6 @@ interpret (FForAll v p) = do
     let elems = Set.elems (mUniverse ?m)
     truths <- mapM (\e -> Reader.local (Map.insert v e) (interpret p)) elems
     return (and truths)
+
+interpretFormula :: (Ord v) => Model v -> Formula -> Bool
+interpretFormula m f = let ?m = m in Reader.runReader (interpret f) Map.empty

@@ -268,8 +268,8 @@
 #define INFLOW_RATE_VARIATION 8000
 
 /* Size of pond in X and Y dimensions. */
-#define POND_SIZE_X 640
-#define POND_SIZE_Y 480
+#define POND_SIZE_X 1440
+#define POND_SIZE_Y 900
 
 /* Depth of pond in four-bit codons -- this is the maximum
  * genome size. This *must* be a multiple of 16! */
@@ -887,9 +887,11 @@ int main(int argc,char **argv)
       /* SDL display is also refreshed every REPORT_FREQUENCY */
 #ifdef USE_SDL
       while (SDL_PollEvent(&sdlEvent)) {
-        if (sdlEvent.type == SDL_QUIT) {
+        if (sdlEvent.type == SDL_QUIT || sdlEvent.type == SDL_KEYDOWN && sdlEvent.key.keysym.sym == SDLK_ESCAPE) {
           fprintf(stderr,"[QUIT] Quit signal received!\n");
           exit(0);
+        } else if (sdlEvent.type == SDL_KEYDOWN && sdlEvent.key.keysym.sym == SDLK_f) {
+            SDL_WM_ToggleFullScreen(screen);
         } else if (sdlEvent.type == SDL_MOUSEBUTTONDOWN) {
           switch (sdlEvent.button.button) {
             case SDL_BUTTON_LEFT:

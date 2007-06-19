@@ -268,8 +268,8 @@
 #define INFLOW_RATE_VARIATION 8000
 
 /* Size of pond in X and Y dimensions. */
-#define POND_SIZE_X 1440
-#define POND_SIZE_Y 900
+#define POND_SIZE_X 640
+#define POND_SIZE_Y 480
 
 /* Depth of pond in four-bit codons -- this is the maximum
  * genome size. This *must* be a multiple of 16! */

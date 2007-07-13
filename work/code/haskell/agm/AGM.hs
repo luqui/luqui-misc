@@ -1,11 +1,18 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
 module AGM
-    ( )
+    ( GameM, RuleM
+    , Rule, Action
+    , when
+    , auto, manual
+    , action, action_, override
+    , gameStep, gameStart
+    , get, put, modify )
 where
 
 import qualified Data.Map as Map
 import qualified Control.Monad.Reader as Reader
+import Control.Monad.State (get, put, modify)
 import qualified Control.Monad.State as State
 import qualified AGM.Maybe as Maybe
 import qualified Data.Maybe as Maybe
@@ -31,6 +38,10 @@ data Action s
 type Rule s = RuleM s [Action s]
 
 -- INTERFACE --
+
+when :: Bool -> RuleM s ()
+when b =
+    if b then return () else fail "Rule precondition failed"
 
 auto :: ActionM s () -> ActionImpl s
 auto = Left

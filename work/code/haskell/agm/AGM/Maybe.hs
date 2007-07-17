@@ -10,6 +10,7 @@ where
 
 import Control.Monad
 import Control.Monad.Trans
+import Control.Monad.State
 
 newtype MaybeT m a = MaybeT {runMaybeT :: m (Maybe a)}
 
@@ -29,5 +30,6 @@ instance Monad m => MonadPlus (MaybeT m) where
 
 instance MonadTrans MaybeT where
   lift = MaybeT . liftM return
+
 
 -- (Add other MTL instances, and a MonadFix instance)

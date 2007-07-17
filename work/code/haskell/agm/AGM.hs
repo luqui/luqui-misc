@@ -7,10 +7,11 @@ module AGM
     , auto, manual
     , action, action_, override
     , gameStep, gameStart
-    , get, put, modify )
+    , get, put, modify, ask )
 where
 
 import qualified Data.Map as Map
+import Control.Monad.Reader (ask)
 import qualified Control.Monad.Reader as Reader
 import Control.Monad.State (get, put, modify)
 import qualified Control.Monad.State as State

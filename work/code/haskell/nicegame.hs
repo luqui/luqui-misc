@@ -11,9 +11,9 @@ data GameState
 
 type Game a = StateT GameState IO a
 
-p1bid = $(accessor "_p1bid")
-p2bid = $(accessor "_p2bid")
-score = $(accessor "_score")
+p1bid = $(accessor '_p1bid)
+p2bid = $(accessor '_p2bid)
+score = $(accessor '_score)
 
 (=:) :: (MonadState s m) => Accessor s a -> a -> m ()
 a =: x  = writeVal a x

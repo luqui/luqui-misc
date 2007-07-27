@@ -16,11 +16,11 @@ data Accessor s a
 wtfmap :: Monad m => (a -> b) -> m a -> m b
 wtfmap f m = m >>= (return . f)
 
-accessor :: String -> Q Exp
+accessor :: Name -> Q Exp
 accessor name = [|
-    Accessor { readVal  = wtfmap $( return $ VarE $ mkName name ) get
+    Accessor { readVal  = wtfmap $( return $ VarE name ) get
              , writeVal = \n -> 
                 get >>= \s -> 
-                    put $( return $ RecUpdE (VarE 's) [(mkName name, VarE 'n)] )
+                    put $( return $ RecUpdE (VarE 's) [(name, VarE 'n)] )
              }
     |]

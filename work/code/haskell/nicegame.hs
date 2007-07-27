@@ -1,5 +1,6 @@
-{-# OPTIONS_GHC -fglasgow-exts #-}
+{-# OPTIONS_GHC -fglasgow-exts -fth #-}
 
+import Accessor
 import Control.Monad.State
 
 data GameState
@@ -10,29 +11,19 @@ data GameState
 
 type Game a = StateT GameState IO a
 
-data Accessor a
-    = Accessor { readVal  :: Game a
-               , writeVal :: a -> Game ()
-               }
+p1bid = $(accessor "_p1bid")
+p2bid = $(accessor "_p2bid")
+score = $(accessor "_score")
 
-#define ACCESSOR(NAME) \
-NAME = Accessor { readVal = fmap _ ## NAME get \
-                , writeVal = \n -> get >>= \s -> put $ s { _ ## NAME = n } \
-                }
-
-ACCESSOR(p1bid)
-ACCESSOR(p2bid)
-ACCESSOR(score)
-
-(=:) :: (Num a) => Accessor a -> a -> Game ()
+(=:) :: (MonadState s m) => Accessor s a -> a -> m ()
 a =: x  = writeVal a x
 
-(+=) :: (Num a) => Accessor a -> a -> Game ()
+(+=) :: (Num a, MonadState s m) => Accessor s a -> a -> m ()
 a += x  = do
     a_ <- readVal a
     a =: (a_ + x)
 
-(-=) :: (Num a) => Accessor a -> a -> Game ()
+(-=) :: (Num a, MonadState s m) => Accessor s a -> a -> m ()
 a -= x  = do
     a += (-x)
 

@@ -4,7 +4,7 @@ module Accessor
     ( Accessor(..)
     , nameDeriveAccessors, deriveAccessors
     , getA, putA, modA
-    , (.>), (<.)
+    , (.>), (<.), (=:)
     )
 where
 
@@ -29,6 +29,10 @@ f .> g =
 infixr 9 <.
 (<.) :: Accessor b c -> Accessor a b -> Accessor a c
 (<.) = flip (.>)
+
+infix 1 =:
+(=:) :: MonadState s m => Accessor s a -> a -> m ()
+(=:) = putA
 
 getA :: MonadState s m => Accessor s a -> m a
 getA a = liftM (getVal a) get

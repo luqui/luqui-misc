@@ -38,7 +38,7 @@ getA :: MonadState s m => Accessor s a -> m a
 getA a = liftM (getVal a) get
 
 putA :: MonadState s m => Accessor s a -> a -> m ()
-putA a x = liftM (setVal a x) get >>= put
+putA a x = get >>= put . setVal a x
 
 modA :: MonadState s m => Accessor s a -> (a -> a) -> m ()
 modA a f = liftM f (getA a) >>= putA a

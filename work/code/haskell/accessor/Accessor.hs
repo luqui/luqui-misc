@@ -19,6 +19,10 @@ data Accessor s a
                , setVal :: a -> s -> s
                }
 
+-- must satisfy the following laws:
+-- getVal a (setVal a x s) == x
+-- setVal a (getVal a s) s == s
+
 infixl 9 .> 
 (.>) :: Accessor a b -> Accessor b c -> Accessor a c
 f .> g = 
@@ -42,10 +46,6 @@ putA a x = get >>= put . setVal a x
 
 modA :: MonadState s m => Accessor s a -> (a -> a) -> m ()
 modA a f = liftM f (getA a) >>= putA a
-
--- must satisfy the following laws:
--- getVal a (setVal a x s) == x
--- setVal a (getVal a s) s == s
 
 deriveAccessors :: Name -> Q [Dec]
 deriveAccessors n = nameDeriveAccessors n transformName

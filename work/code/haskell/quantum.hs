@@ -14,12 +14,12 @@ makeStates = proc () ->
 detangle :: Quantum () ()
 detangle = proc () -> do
     x <- makeStates -< ()
-    qPutStr -< show x ++ "\n"
+    qIO print -< x
 
 detangle2 :: Quantum () ()
 detangle2 = proc () -> do
     x <- makeStates -< ()
-    qPutStr -< show (x^2) ++ "\n"
+    qIO print -< x^2
 
 dett :: Quantum () () -> IO ()
 dett ar = do

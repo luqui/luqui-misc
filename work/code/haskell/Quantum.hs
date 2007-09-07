@@ -2,10 +2,11 @@
 
 module Quantum
     ( Quantum
-    , qPutStr
+    , entangle
+    , qIO
+    , qIO_
     , runQuantum
     , qCheatInspect
-    , entangle
     )
 where
 
@@ -35,7 +36,7 @@ instance Arrow Quantum where
 showState :: (Show b) => [(b,d,Amp)] -> String
 showState = show . map (\ (b,_,a) -> (b,a))
 
-sumSame :: (Eq b, Show b) => [(b,d,Amp)] -> [(b,[(d,Amp)],Amp)]
+sumSame :: (Eq b) => [(b,d,Amp)] -> [(b,[(d,Amp)],Amp)]
 sumSame = sumSame' []
     where
     sumSame' r [] = r
@@ -60,14 +61,17 @@ normalize xs =
     let norm = sqrt $ sum $ map (\ (_,_,p) -> magnitude p^2) xs in
     map (\ (b,d,p) -> (b,d,p/(norm :+ 0)) ) xs
 
-collapse :: (Eq b, Show b) => Quantum b b
+collapse :: (Eq b) => Quantum b b
 collapse = Q (fmap normalize . pick . probabilize . sumSame)
 
-qPutStr :: Quantum String ()
-qPutStr = Q $ \bds -> do
+qIO :: (Eq a) => (a -> IO b) -> Quantum a b
+qIO f = Q $ \bds -> do
     states@((b,_,_):_) <- getQM collapse bds
-    putStr b
-    return $ map (\ (b,d,p) -> ((),d,p)) states
+    result <- f b
+    return $ map (\ (b,d,p) -> (result,d,p)) states
+
+qIO_ :: IO b -> Quantum () b
+qIO_ f = qIO (const f)
 
 qCheatInspect :: (Show b) => Quantum b b
 qCheatInspect = Q $ \bds -> do

@@ -5,6 +5,7 @@ module Quantum
     , qPutStr
     , runQuantum
     , qCheatInspect
+    , entangle
     )
 where
 
@@ -73,7 +74,10 @@ qCheatInspect = Q $ \bds -> do
     putStrLn $ showState bds
     return bds
 
-runQuantum :: Quantum b c -> [(b,Amp)] -> IO [(c,Amp)]
-runQuantum (Q f) bs = 
-    return . map (\ (c,(),p) -> (c,p)) 
-    =<< f (map (\ (b,p) -> (b,(),p)) bs)
+runQuantum :: Quantum b c -> b -> IO [(c,Amp)]
+runQuantum (Q f) b = do
+    return . map (\ (b,d,p) -> (b,p)) =<< f [(b, (), 1 :+ 0)]
+
+entangle :: Quantum [(b,Amp)] b
+entangle = 
+    Q (return . concatMap (\ (b,d,p) -> map (\ (b',p') -> (b',d,p*p')) b))

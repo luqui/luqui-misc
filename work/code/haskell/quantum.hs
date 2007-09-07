@@ -4,19 +4,24 @@ import Quantum
 import Control.Arrow
 import Data.Complex
 
-detangle :: Quantum (String,String) ()
-detangle = proc (x,y) -> do
-    qCheatInspect -< (x,y)
-    qPutStr -< show (x,y) ++ "\n"
-    qCheatInspect -< (x,y)
-    qPutStr -< x ++ "\n"
-    qCheatInspect -< (x,y)
-    qPutStr -< y ++ "\n"
+makeStates :: Quantum () Int
+makeStates = proc () -> 
+    entangle -< [( 4,   1  :+ 0)
+                ,(-4, (-1) :+ 0)
+                ,( 3,   0  :+ 1)
+                ]
 
-dett :: IO ()
-dett = do
-    runQuantum detangle 
-        [(("hello","world"), 1 :+ 0), 
-         (("hello","dumbass"), 1 :+ 0), 
-         (("goodbye","cruel world"), 1 :+ 0)]
+detangle :: Quantum () ()
+detangle = proc () -> do
+    x <- makeStates -< ()
+    qPutStr -< show x ++ "\n"
+
+detangle2 :: Quantum () ()
+detangle2 = proc () -> do
+    x <- makeStates -< ()
+    qPutStr -< show (x^2) ++ "\n"
+
+dett :: Quantum () () -> IO ()
+dett ar = do
+    runQuantum ar ()
     return ()

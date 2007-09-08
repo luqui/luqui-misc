@@ -5,8 +5,11 @@ module Quantum
     , entangle
     , qIO
     , qIO_
-    , qCheatInspect
+    , cheatInspect
+    , observeWith
+    , observe
     , runQuantum
+    , execQuantum
     )
 where
 
@@ -108,17 +111,27 @@ observeBranch = Q (opObserveWith sameSide)
 entangle :: Quantum [(a,Amp)] a
 entangle = Q (left opEntangle)
 
-qIO :: (Eq a, Show a) => (a -> IO b) -> Quantum a b
+qIO :: (Eq a) => (a -> IO b) -> Quantum a b
 qIO f = observeBranch >>> Q (left (opIO f))
 
 qIO_ :: IO b -> Quantum () b
 qIO_ = qIO . const
 
+observeWith :: (a -> a -> Bool) -> Quantum a a
+observeWith f = Q (left (opObserveWith f))
+
+observe :: (Eq a) => Quantum a a
+observe = observeWith (==)
+
 runQuantum :: Quantum a b -> [(a,Amp)] -> IO [(b,Amp)]
 runQuantum (Q q) = runOperator (Left ^>> q >>^ either id undefined)
 
-qCheatInspect :: (Eq b, Show b) => Quantum b ()
-qCheatInspect = Q (left opCheatInspect)
+execQuantum :: (Eq b) => Quantum a b -> a -> IO b
+execQuantum q a = 
+    fmap (fst . head) $ runQuantum (q >>> observeWith (==)) [(a, 1 :+ 0)]
+
+cheatInspect :: (Eq b, Show b) => Quantum b ()
+cheatInspect = Q (left opCheatInspect)
 
 
 sameSide :: Either a b -> Either c d -> Bool

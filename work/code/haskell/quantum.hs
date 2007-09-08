@@ -4,12 +4,15 @@ import Quantum
 import Control.Arrow
 import Data.Complex
 
+
 makeStates :: Quantum () Int
 makeStates = proc () -> 
     entangle -< [( 4,   1  :+ 0)
                 ,(-4, (-1) :+ 0)
                 ,( 3,   0  :+ 1)
                 ]
+
+-- run these like: execQuantum detangle ()
 
 detangle :: Quantum () ()
 detangle = proc () -> do
@@ -31,8 +34,8 @@ perlExample = proc () -> do
         else qIO_ (putStrLn "e = 0") -< ()
     qIO putStrLn -< "(c,d) = " ++ show (c,d)
     
-
-dett :: Quantum () () -> IO ()
-dett ar = do
-    runQuantum ar [((), 1 :+ 0)]
-    return ()
+nonCollapsingConditional :: Quantum () ()
+nonCollapsingConditional = proc () -> do
+    x <- entangle -< [(1, 1 :+ 0), (2, (-1) :+ 0), (3, 0 :+ 1)]
+    let y = if x == 2 then 1 else x
+    qIO print -< y

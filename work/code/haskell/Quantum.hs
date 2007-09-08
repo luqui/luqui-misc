@@ -5,8 +5,8 @@ module Quantum
     , entangle
     , qIO
     , qIO_
-    , runQuantum
     , qCheatInspect
+    , runQuantum
     )
 where
 
@@ -16,72 +16,128 @@ import System.Random
 import Debug.Trace
 
 type Amp = Complex Double
+type StateVec a = [(a,Amp)]
+
+data Operator b c 
+    = Op (forall d. StateVec (b,d) -> IO (StateVec (c,d)))
+
+instance Arrow Operator where
+    arr f             = 
+        Op (return . map (\ ((st,d),p) -> ((f st,d),p)))
+    (Op f) >>> (Op g) = 
+        Op (\sts -> f sts >>= g)
+    first (Op f)      = Op (\sts ->
+        return . map (\ ((c,(k,d)),p) -> (((c,k),d),p))
+        =<< f (map (\ (((b,k),d),p) -> ((b,(k,d)),p)) sts))
+
+instance ArrowChoice Operator where
+    left (Op f) = Op (\sts -> do
+        let lefts  = [ ((st,d),p) | ((Left  st,d),p) <- sts ]
+        let rights = [ ((st,d),p) | ((Right st,d),p) <- sts ]
+        lefts' <- f lefts
+        return $ [ ((Left  st,d),p) | ((st,d),p) <- lefts' ]
+              ++ [ ((Right st,d),p) | ((st,d),p) <- rights ])
+
+opObserveWith :: forall a. (a -> a -> Bool) -> Operator a a
+opObserveWith eq = Op $ \sts -> do
+    pick $ classify eq sts
+
+classify :: (a -> a -> Bool) -> StateVec (a,b) -> StateVec (a, StateVec (a,b))
+classify eq = classify' []
+    where
+    classify' accum [] = accum
+    classify' accum (((a,b),p):xs) = 
+        case break (\ ((a',_),_) -> eq a a') accum of
+            (pre,[]) -> 
+                classify' (((a,[((a,b),p)]),p):pre) xs
+            (pre,(((_,bs),p'):posts)) ->
+                classify' (pre ++ ((a,((a,b),p):bs),p+p'):posts) xs
+
+pick :: StateVec (a, StateVec (a,b)) -> IO (StateVec (a,b))
+pick []  = return []
+pick sts = pick' 0 undefined sts
+
+pick' accum cur [] = return (snd cur)
+pick' accum cur (((a,bs),p):xs) = do
+    let prob = magnitude p^2
+    rand <- randomRIO (0, accum + prob)
+    pick' (accum + prob) 
+          (if rand <= prob then (a,bs) else cur)
+          xs
+
+    
+
+opEntangle :: Operator [(a,Amp)] a
+opEntangle = 
+    Op (\sts -> return [ ((a,d),p*p') | ((st,d),p) <- sts, (a,p') <- st ])
+    
+opIO :: (Eq a) => (a -> IO b) -> Operator a b
+opIO f = opObserveWith (==) >>> Op (\sts -> do
+    case sts of
+        (((b,_),_):_) -> do
+            result <- f b
+            return [ ((result,d),p) | ((_,d),p) <- sts ]
+        [] -> return [])
+
+opCheatInspect :: (Eq b, Show b) => Operator b ()
+opCheatInspect = Op $ \sts -> do
+    print [ (st,p) | ((st,_),p) <- classify (==) sts ]
+    return [ (((),d),p) | ((st,d),p) <- sts ]
+    
+runOperator :: Operator a b -> [(a,Amp)] -> IO [(b,Amp)]
+runOperator (Op f) sts = do
+    ret <- f [ ((st,()),p) | (st,p) <- sts ]
+    return [ (st,p) | ((st,_),p) <- ret ]
+
+
 
 data Quantum b c
-    = Q (forall d. [(b,d,Amp)] -> IO [(c,d,Amp)])
-
-getQM :: forall b c. Quantum b c -> forall d. [(b,d,Amp)] -> IO [(c,d,Amp)]
-getQM (Q f) = f
+    = Q (forall d. Operator (Either b d) (Either c d))
 
 instance Arrow Quantum where
-    arr f = 
-        Q (return . map (\ (b,d,p) -> (f b, d, p)))
-    (Q f) >>> (Q g) = 
-        Q $ \bds -> f bds >>= g
-    first (Q f) = 
-        Q $ \bds -> 
-            return . map (\ (c,(d,e),p) -> ((c,d),e,p)) 
-            =<< f (map (\ ((b,d),e,p) -> (b,(d,e),p)) bds)
+    arr f           = Q (left (arr f))
+    (Q f) >>> (Q g) = Q (f >>> g)
+    first (Q f)     = Q (eitherToTuple ^>> first f >>^ tupleToEither)
 
-showState :: (Show b) => [(b,d,Amp)] -> String
-showState = show . map (\ (b,_,a) -> (b,a))
+instance ArrowChoice Quantum where
+    left (Q f) = Q (shuffleRightEither ^>> f >>^ shuffleLeftEither)
 
-sumSame :: (Eq b) => [(b,d,Amp)] -> [(b,[(d,Amp)],Amp)]
-sumSame = sumSame' []
-    where
-    sumSame' r [] = r
-    sumSame' r ((b,d,p):xs) = 
-        case break (\ (b',_,_) -> b == b') r of
-            (pre,[])                -> sumSame' ((b,[(d,p)],p):pre) xs
-            (pre,((_,ds,p'):posts)) -> sumSame' (pre ++ (b,(d,p):ds,p+p'):posts) xs
+observeBranch :: Quantum a a
+observeBranch = Q (opObserveWith sameSide)
 
-probabilize :: [(b,d,Amp)] -> [(b,d,Double)]
-probabilize = map (\ (b,d,p) -> (b,d,magnitude p^2))
+entangle :: Quantum [(a,Amp)] a
+entangle = Q (left opEntangle)
 
-pick :: [(b,[(d,Amp)],Double)] -> IO [(b,d,Amp)]
-pick = pick' 0 undefined
-    where
-    pick' accum cur [] = return $ map (\d -> (fst cur, fst d, snd d)) $ snd cur
-    pick' accum cur ((b,ds,p):xs) = do
-        rand <- randomRIO (0,accum+p)
-        pick' (accum+p) (if rand <= p then (b,ds) else cur) xs
-
-normalize :: [(b,d,Amp)] -> [(b,d,Amp)]
-normalize xs = 
-    let norm = sqrt $ sum $ map (\ (_,_,p) -> magnitude p^2) xs in
-    map (\ (b,d,p) -> (b,d,p/(norm :+ 0)) ) xs
-
-collapse :: (Eq b) => Quantum b b
-collapse = Q (fmap normalize . pick . probabilize . sumSame)
-
-qIO :: (Eq a) => (a -> IO b) -> Quantum a b
-qIO f = Q $ \bds -> do
-    states@((b,_,_):_) <- getQM collapse bds
-    result <- f b
-    return $ map (\ (b,d,p) -> (result,d,p)) states
+qIO :: (Eq a, Show a) => (a -> IO b) -> Quantum a b
+qIO f = observeBranch >>> Q (left (opIO f))
 
 qIO_ :: IO b -> Quantum () b
-qIO_ f = qIO (const f)
+qIO_ = qIO . const
 
-qCheatInspect :: (Show b) => Quantum b b
-qCheatInspect = Q $ \bds -> do
-    putStrLn $ showState bds
-    return bds
+runQuantum :: Quantum a b -> [(a,Amp)] -> IO [(b,Amp)]
+runQuantum (Q q) = runOperator (Left ^>> q >>^ either id undefined)
 
-runQuantum :: Quantum b c -> b -> IO [(c,Amp)]
-runQuantum (Q f) b = do
-    return . map (\ (b,d,p) -> (b,p)) =<< f [(b, (), 1 :+ 0)]
+qCheatInspect :: (Eq b, Show b) => Quantum b ()
+qCheatInspect = Q (left opCheatInspect)
 
-entangle :: Quantum [(b,Amp)] b
-entangle = 
-    Q (return . concatMap (\ (b,d,p) -> map (\ (b',p') -> (b',d,p*p')) b))
+
+sameSide :: Either a b -> Either c d -> Bool
+sameSide (Left _)  (Left _)  = True
+sameSide (Right _) (Right _) = True
+sameSide _          _        = False
+
+shuffleRightEither :: Either (Either a b) c -> Either a (Either b c)
+shuffleRightEither = either (either Left (Right . Left)) (Right . Right)
+
+shuffleLeftEither :: Either a (Either b c) -> Either (Either a b) c
+shuffleLeftEither = either (Left . Left) (either (Left . Right) Right)
+
+tupleToEither :: (Either a b, Either c ()) -> Either (a,c) b
+tupleToEither (Left x, Left y)    = Left (x,y)
+tupleToEither (Right x, Right ()) = Right x
+tupleToEither _                   = error "Non-homogeneous pair"
+
+eitherToTuple :: Either (a,b) c -> (Either a c, Either b ())
+eitherToTuple (Left  (x,y)) = (Left x, Left y)
+eitherToTuple (Right x)     = (Right x, Right ())
+

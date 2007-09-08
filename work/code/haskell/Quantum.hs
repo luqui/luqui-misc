@@ -16,81 +16,92 @@ where
 import Control.Arrow
 import Data.Complex
 import System.Random
-import Debug.Trace
+import Control.Monad.State
 
 type Amp = Complex Double
-type StateVec a = [(a,Amp)]
+data QState a = QState { qsValue :: a, qsAmp :: Amp }
+type QStateVec a = [QState a]
+
+instance Functor QState where
+    fmap f (QState x p) = QState (f x) p
 
 data Operator b c 
-    = Op (forall d. StateVec (b,d) -> IO (StateVec (c,d)))
+    = Op (forall d. QStateVec (b,d) -> IO (QStateVec (c,d)))
 
 instance Arrow Operator where
     arr f             = 
-        Op (return . map (\ ((st,d),p) -> ((f st,d),p)))
+        Op (return . mapStateVec f)
     (Op f) >>> (Op g) = 
         Op (\sts -> f sts >>= g)
-    first (Op f)      = Op (\sts ->
-        return . map (\ ((c,(k,d)),p) -> (((c,k),d),p))
-        =<< f (map (\ (((b,k),d),p) -> ((b,(k,d)),p)) sts))
+    first (Op f)      = 
+        Op (fmap (map (fmap shuffleLeftPair)) 
+          . f 
+          . map (fmap shuffleRightPair))
 
 instance ArrowChoice Operator where
-    left (Op f) = Op (\sts -> do
-        let lefts  = [ ((st,d),p) | ((Left  st,d),p) <- sts ]
-        let rights = [ ((st,d),p) | ((Right st,d),p) <- sts ]
+    left (Op f) = Op $ \sts -> do
+        let lefts  = [ QState (st,d) p | QState (Left  st,d) p <- sts ]
+        let rights = [ QState (st,d) p | QState (Right st,d) p <- sts ]
         lefts' <- f lefts
-        return $ [ ((Left  st,d),p) | ((st,d),p) <- lefts' ]
-              ++ [ ((Right st,d),p) | ((st,d),p) <- rights ])
+        return $ mapStateVec Left lefts'
+              ++ mapStateVec Right rights
 
-opObserveWith :: forall a. (a -> a -> Bool) -> Operator a a
+opObserveWith :: (a -> a -> Bool) -> Operator a a
 opObserveWith eq = Op $ \sts -> do
-    pick $ classify eq sts
+    let cls = classify eq sts
+    if null cls
+        then return []
+        else fmap snd $ pick (classify eq sts)
 
-classify :: (a -> a -> Bool) -> StateVec (a,b) -> StateVec (a, StateVec (a,b))
-classify eq = classify' []
+classify :: (a -> a -> Bool) -> QStateVec (a,b) -> QStateVec (a, QStateVec (a,b))
+classify eq xs = execState (classify' xs) []
     where
-    classify' accum [] = accum
-    classify' accum (((a,b),p):xs) = 
-        case break (\ ((a',_),_) -> eq a a') accum of
-            (pre,[]) -> 
-                classify' (((a,[((a,b),p)]),p):pre) xs
-            (pre,(((_,bs),p'):posts)) ->
-                classify' (pre ++ ((a,((a,b),p):bs),p+p'):posts) xs
+    classify' [] = return ()
+    classify' (QState (a,b) p:sts) = do
+        accum <- get
+        case break (\(QState (a',_) _) -> eq a a') accum of
+            (pre, []) -> do
+                put $ QState (a, [QState (a,b) p]) p : pre
+            (pre, QState (_,bs) p' : posts) ->
+                put $ pre ++ QState (a, QState (a,b) p : bs) (p+p') : posts
+        classify' xs
 
-pick :: StateVec (a, StateVec (a,b)) -> IO (StateVec (a,b))
-pick []  = return []
-pick sts = pick' 0 undefined sts
-
-pick' accum cur [] = return (snd cur)
-pick' accum cur (((a,bs),p):xs) = do
-    let prob = magnitude p^2
-    rand <- randomRIO (0, accum + prob)
-    pick' (accum + prob) 
-          (if rand <= prob then (a,bs) else cur)
-          xs
+pick :: QStateVec a -> IO a
+pick sts = pick' 0 (error "empty state") sts
+    where
+    pick' accum cur [] = return cur
+    pick' accum cur (QState x p : xs) = do
+        let prob = magnitude p^2
+        rand <- randomRIO (0, accum + prob)
+        pick' (accum + prob)
+              (if rand <= prob then x else cur)
+              xs
 
     
 
 opEntangle :: Operator [(a,Amp)] a
 opEntangle = 
-    Op (\sts -> return [ ((a,d),p*p') | ((st,d),p) <- sts, (a,p') <- st ])
+    Op (\sts -> return [ QState (a,d) (p*p') 
+                         | QState (st,d) p <- sts
+                         , (a,p') <- st ])
     
 opIO :: (Eq a) => (a -> IO b) -> Operator a b
 opIO f = opObserveWith (==) >>> Op (\sts -> do
     case sts of
-        (((b,_),_):_) -> do
-            result <- f b
-            return [ ((result,d),p) | ((_,d),p) <- sts ]
+        (s:_) -> do
+            result <- f $ fst $ qsValue s
+            return [ QState (result,d) p | QState (_,d) p <- sts ]
         [] -> return [])
 
 opCheatInspect :: (Eq b, Show b) => Operator b ()
 opCheatInspect = Op $ \sts -> do
-    print [ (st,p) | ((st,_),p) <- classify (==) sts ]
-    return [ (((),d),p) | ((st,d),p) <- sts ]
+    print [ (st,p) | QState (st,_) p <- classify (==) sts ]
+    return [ QState ((),d) p | QState (_,d) p <- sts ]
     
 runOperator :: Operator a b -> [(a,Amp)] -> IO [(b,Amp)]
 runOperator (Op f) sts = do
-    ret <- f [ ((st,()),p) | (st,p) <- sts ]
-    return [ (st,p) | ((st,_),p) <- ret ]
+    ret <- f [ QState (st,()) p | (st,p) <- sts ]
+    return [ (st,p) | QState (st,()) p <- ret ]
 
 
 
@@ -134,10 +145,19 @@ cheatInspect :: (Eq b, Show b) => Quantum b ()
 cheatInspect = Q (left opCheatInspect)
 
 
+mapStateVec :: (a -> b) -> QStateVec (a,d) -> QStateVec (b,d)
+mapStateVec = map . fmap . first
+
 sameSide :: Either a b -> Either c d -> Bool
 sameSide (Left _)  (Left _)  = True
 sameSide (Right _) (Right _) = True
 sameSide _          _        = False
+
+shuffleRightPair :: ((a,b),c) -> (a,(b,c))
+shuffleRightPair ((a,b),c) = (a,(b,c))
+
+shuffleLeftPair :: (a,(b,c)) -> ((a,b),c)
+shuffleLeftPair (a,(b,c)) = ((a,b),c)
 
 shuffleRightEither :: Either (Either a b) c -> Either a (Either b c)
 shuffleRightEither = either (either Left (Right . Left)) (Right . Right)

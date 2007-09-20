@@ -107,7 +107,7 @@ classify eq xs = execState (classify' xs) []
                 put $ QState (a, [QState (a,b) p]) p : pre
             (pre, QState (_,bs) p' : posts) ->
                 put $ pre ++ QState (a, QState (a,b) p : bs) (p+p') : posts
-        classify' xs
+        classify' sts
 
 -- |pick is a helper function for opObserveWith which takes a state vector and
 -- chooses an element from it at random based on the argument squared of the 

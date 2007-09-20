@@ -9,19 +9,32 @@ closeButtonHandler xml = do
         widgetDestroy window
     return ()
 
+applyAction :: GladeXML -> IO (IO ())
+applyAction xml = do
+    label <- xmlGetWidget xml castToLabel "label1"
+    entry <- xmlGetWidget xml castToEntry "entry1"
+    return $ do
+        name <- get entry entryText
+        set label [ labelText := "Hello, " ++ name ]
 
 applyButtonHandler :: GladeXML -> IO ()
 applyButtonHandler xml = do
     applyButton <- xmlGetWidget xml castToButton "button1"
-    label <- xmlGetWidget xml castToLabel "label1"
-    entry <- xmlGetWidget xml castToEntry "entry1"
-    onClicked applyButton $ do
-        name <- get entry entryText
-        set label [ labelText := "Hello, " ++ name ]
+    action <- applyAction xml
+    onClicked applyButton action
     return ()
 
+entryHandler :: GladeXML -> IO ()
+entryHandler xml = do
+    entry <- xmlGetWidget xml castToEntry "entry1"
+    action <- applyAction xml
+    onEntryActivate entry action
+    return ()
+
+
+
 initializers :: [GladeXML -> IO ()]
-initializers = [ closeButtonHandler, applyButtonHandler ]
+initializers = [ closeButtonHandler, applyButtonHandler, entryHandler ]
 
 main :: IO ()
 main = do

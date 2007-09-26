@@ -7,7 +7,7 @@ public class RhythmGame	extends MovieClip {
 	protected var m_metronome:Metronome;
 	
 	public function begin():void {
-		stage.addEventListener('keyDown', keyDown);
+		addEventListener('keyDown', keyDown);
 		addEventListener('enterFrame', step);
 		m_metronome = makeMetronome();
 		m_metronome.begin();
@@ -16,7 +16,7 @@ public class RhythmGame	extends MovieClip {
 	public function end():void {
 		m_metronome.end();
 		removeEventListener('enterFrame', step);
-		stage.removeEventListener('keyDown', keyDown);
+		removeEventListener('keyDown', keyDown);
 	}
 	
 	protected function makeMetronome():Metronome {

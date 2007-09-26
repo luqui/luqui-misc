@@ -12,6 +12,7 @@ package com.learningrx
 	import com.learningrx.AttentionArrows.AttentionArrows;
 	import com.learningrx.ComprehensionFigures.ComprehensionFigures;
 	import com.learningrx.FixationNumbers.FixationNumbers;
+	import com.learningrx.MotorTapBeat.MotorTapBeat;
 
 	public class Framework extends Sprite
 	{
@@ -39,6 +40,7 @@ package com.learningrx
 		private var _AttentionArrows:Game;
 		private var _ComprehensionFigures:Game;
 		private var _FixationNumbers:Game;
+		private var _MotorTapBeat:Game;
       private var _KeysDown:Object = new Object();
 		
 		public function Framework()
@@ -205,6 +207,7 @@ package com.learningrx
 			_AttentionArrows = new com.learningrx.AttentionArrows.AttentionArrows(this);
 			_ComprehensionFigures = new com.learningrx.ComprehensionFigures.ComprehensionFigures(this);
 			_FixationNumbers = new com.learningrx.FixationNumbers.FixationNumbers(this);
+			_MotorTapBeat = new com.learningrx.MotorTapBeat.MotorTapBeat(this);
 			_ResultsText = new ResultsText(this);
 			_ResultsText.x = (FRAMEWORK_WIDTH - _ResultsText.width) / 2;
 			_ResultsText.y = (FRAMEWORK_HEIGHT - _ResultsText.height) / 2 - 4;
@@ -289,6 +292,11 @@ package com.learningrx
 		public function get FixationNumbers():Game
 		{
 			return _FixationNumbers;
+		}
+
+		public function get MotorTapBeat():Game
+		{
+			return _MotorTapBeat;
 		}
 	}
 }

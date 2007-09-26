@@ -69,7 +69,12 @@ package com.learningrx
 			Body: '<p>Using the number keypad on the screen or the number keys on your computer, enter the numbers that correspond to the instructions.</p>'
 		};
 		
-		
+		public const MTB_BASIC_INSTRUCTIONS:Object =
+		{
+			Head: 'Motor Tap Beat',
+			Subhead: 'Basic Level',
+			Body: '<p>I will eventually get around to explaining how this should work.  Oh, um, XXXXXXXXXXXXXXXXXXXX NONONONO DESTROY ELIMINATE!!1</p>'
+		};
 		
 	}
 }

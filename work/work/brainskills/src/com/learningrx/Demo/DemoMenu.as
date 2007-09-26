@@ -1,4 +1,4 @@
-package com.learningrx.Demo
+﻿package com.learningrx.Demo
 {
 	import flash.display.Sprite;
 	import flash.display.SimpleButton; 
@@ -36,6 +36,8 @@ package com.learningrx.Demo
 		private var _FNHeader:FNHeader;
 		private var _FNBasicButton:BasicLevelButton;
 		private var _FNAdvancedButton:AdvancedButton;
+		private var _MTBHeader:MTBHeader;
+		private var _MTBBasicButton:BasicLevelButton;
 		private var _InstructionsText:InstructionsText;
 		private var _Levels:Object;
 		private var _IntroText:TextField;
@@ -45,7 +47,7 @@ package com.learningrx.Demo
 		{
 			_Parent = pParent;
 			_Width = _Parent.GAME_WIDTH * .6;
-			_Height = _Parent.GAME_HEIGHT * .7;
+			_Height = _Parent.GAME_HEIGHT * .8;
 			DrawBorder();
 			InitializeDropShadow();
 			CreateBevelLine(30);
@@ -107,9 +109,20 @@ package com.learningrx.Demo
 			_FNBasicButton.addEventListener(MouseEvent.CLICK, OnFNBasicButtonClicked);
 			_FNIntermediateButton.addEventListener(MouseEvent.CLICK, OnFNIntermediateButtonClicked);
 			_FNAdvancedButton.addEventListener(MouseEvent.CLICK, OnFNAdvancedButtonClicked);
+
+			_MTBHeader = new MTBHeader();
+			_MTBHeader.x = (_Width - _MTBHeader.width) / 2;
+			_MTBHeader.y = _FNAdvancedButton.y + _FNAdvancedButton.height + _Leading * 1.5;
+			_MTBBasicButton = new BasicLevelButton();
+			_MTBBasicButton.scaleX = _MTBBasicButton.scaleY = .7;
+			_MTBBasicButton.x = (_Width - _MTBBasicButton.width) / 2;
+			_MTBBasicButton.y = _MTBHeader.y + _MTBHeader.height + _Leading;
+			_MTBBasicButton.addEventListener(MouseEvent.CLICK, OnMTBBasicButtonClicked);
+
 			Show(_SelectAnExercise, _AAHeader, _AABasicButton, _AAIntermediateButton, _AAAdvancedButton);
 			Show(_CFHeader, _CFBasicButton, _CFAdvancedButton);
 			Show(_FNHeader, _FNBasicButton, _FNIntermediateButton, _FNAdvancedButton);
+			Show(_MTBHeader, _MTBBasicButton);
 		}
 	
 		private function DrawBorder():void
@@ -197,6 +210,11 @@ package com.learningrx.Demo
 			Clicked(ShowFNAdvanced);			
 		}
 
+		private function OnMTBBasicButtonClicked(pEvent:MouseEvent):void
+		{
+			Clicked(ShowMTBBasic);
+		}
+
 		public function ShowAABasic():void
 		{
 			_Parent.ShowGame(_Levels.AABasic);
@@ -235,6 +253,11 @@ package com.learningrx.Demo
 		public function ShowFNAdvanced():void
 		{
 			_Parent.ShowGame(_Levels.FNAdvanced);
+		}
+
+		public function ShowMTBBasic():void
+		{
+			_Parent.ShowGame(_Levels.MTBBasic);
 		}
 		
 		public function InitLevels():void
@@ -304,6 +327,14 @@ package com.learningrx.Demo
 					Sublevel: 3, 
 					Speed: 1, 
 					Instructions: _InstructionsText.FN_ADVANCED_INSTRUCTIONS
+				},
+				MTBBasic:
+				{
+					Game: _Parent.MotorTapBeat,
+					Level: 1,
+					Sublevel: 1,
+					Speed: 1,
+					Instructions: _InstructionsText.MTB_BASIC_INSTRUCTIONS
 				}
 			};
 		}

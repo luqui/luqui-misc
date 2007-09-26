@@ -1,0 +1,5 @@
+
+ExpiresActive on
+ExpiresDefault M
+#Header Set Cache-Control "max-age=0, no-store"
+

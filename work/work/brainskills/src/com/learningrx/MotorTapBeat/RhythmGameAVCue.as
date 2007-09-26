@@ -1,4 +1,4 @@
-﻿package {
+﻿package com.learningrx.MotorTapBeat {
 	
 import flash.ui.Keyboard;
 import flash.media.Sound;

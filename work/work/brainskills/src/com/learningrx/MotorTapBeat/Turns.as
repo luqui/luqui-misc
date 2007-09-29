@@ -1,4 +1,4 @@
-package com.learningrx.MotorTapBeat
+﻿package com.learningrx.MotorTapBeat
 {
 
 import com.learningrx.*;
@@ -10,7 +10,7 @@ public class Turns
 	{
 		_Game = pGame;
 	}
-
+	
 	public static function GetLevelsAndSublevels():Object
 	{
 		var sublevels:Object = new Object();
@@ -22,6 +22,11 @@ public class Turns
 	public static function get NumberOfLevels():Number
 	{
 		return 1;
+	}
+	
+	public static function GetRound(pLevel:Number, pSubLevel:Number, pSpeed:Number) 
+	{
+		return { };
 	}
 }
 

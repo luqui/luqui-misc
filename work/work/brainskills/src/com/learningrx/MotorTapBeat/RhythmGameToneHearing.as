@@ -34,9 +34,8 @@ public class RhythmGameToneHearing extends RhythmGame {
 			do {
 				// pick a tone, make sure it is not the same as the previous one
 				toneIdx = int(self.m_tones.length * Math.random());
-			} while (self.m_toneQueue.length > 0 && self.m_toneQueue[m_tones.length-2] != toneIdx);
+			} while (self.m_toneQueue.length > 0 && self.m_toneQueue[self.m_toneQueue.length-1] == toneIdx);
 			// play that tone
-			trace("Tone index: " + toneIdx);
 			m_tones[toneIdx].norm.play();
 			// and record it in the list
 			m_toneQueue.push(toneIdx);
@@ -45,17 +44,25 @@ public class RhythmGameToneHearing extends RhythmGame {
 	}
 	
 	protected override function beatCounts(beatIdx:int):Boolean {
-		return true;
+		return beatIdx > 2;
 	}
 	
 	protected override function onHit(beatIndex:int, dir:String):void {
-		trace("Hit '" + dir + "'");
+		if (m_toneQueue[1] > m_toneQueue[0] && dir == "up" ||
+			m_toneQueue[1] < m_toneQueue[0] && dir == "down") {
+				m_game.ScoreRight();
+		}
+		m_toneQueue.shift();
 	}
 	
 	protected override function onMissHit(beatIndex:int, dir:String):void {
+		m_game.ScoreWrong();
+		m_toneQueue.shift();
 	}
 	
 	protected override function onMiss(beatIndex:int):void {
+		m_game.ScoreWrong();
+		m_toneQueue.shift();
 	}
 }
 

@@ -38,7 +38,7 @@ public class MotorTapBeat extends Game {
 			],
 		];
 		
-		if (pLevel <= 3 && false) {
+		if (pLevel <= 3) {
 			var rule = rules[pLevel-1][pSubLevel-1];
 			
 			m_onStart = function ():void {
@@ -54,7 +54,7 @@ public class MotorTapBeat extends Game {
 		}
 		else {
 			m_onStart = function ():void {
-				var game = new RhythmGameToneHearing(this, bpmToDelay(120));;
+				var game = new RhythmGameToneHearing(this, bpmToDelay(60));;
 				game.x = BackgroundWidth/2;
 				game.y = BackgroundHeight/2;
 				addChild(game);

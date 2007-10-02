@@ -38,7 +38,7 @@ public class MotorTapBeat extends Game {
 			],
 		];
 		
-		if (pLevel <= 3) {
+		if (pLevel <= 3 && false) {
 			var rule = rules[pLevel-1][pSubLevel-1];
 			
 			m_onStart = function ():void {

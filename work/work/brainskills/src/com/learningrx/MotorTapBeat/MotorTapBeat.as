@@ -54,7 +54,7 @@ public class MotorTapBeat extends Game {
 		}
 		else {
 			m_onStart = function ():void {
-				var game = new RhythmGameVolumeHearing(this, bpmToDelay(60));;
+				var game = new RhythmGameToneVolumeAlt(this, bpmToDelay(60));;
 				game.x = BackgroundWidth/2;
 				game.y = BackgroundHeight/2;
 				addChild(game);

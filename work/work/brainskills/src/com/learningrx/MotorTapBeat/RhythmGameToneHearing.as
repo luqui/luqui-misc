@@ -18,7 +18,7 @@ public class RhythmGameToneHearing extends RhythmGameQueue {
 		}
 	}
 
-	protected override function subOnHit(prev2:Object, prev1:Object, dir:String):Boolean {
+	protected override function subOnHit(beat:int, prev2:Object, prev1:Object, dir:String):Boolean {
 		return prev1 > prev2 && dir == "up" || prev1 < prev2 && dir == "down";
 	}
 	

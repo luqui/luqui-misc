@@ -34,12 +34,12 @@ public class RhythmGameQueue extends RhythmGame
 		return beat >= 2;
 	}
 	
-	protected function subOnHit(prev2:Object, prev1:Object, dir:String):Boolean {
+	protected function subOnHit(beat:int, prev2:Object, prev1:Object, dir:String):Boolean {
 		throw new Error("Call abstract method subOnHit()");
 	}
 	
 	protected override function onHit(beatIndex:int, dir:String):void {
-		if (subOnHit(m_queue[0], m_queue[1], dir)) {
+		if (subOnHit(beatIndex, m_queue[0], m_queue[1], dir)) {
 			m_game.ScoreRight();
 		}
 		else {

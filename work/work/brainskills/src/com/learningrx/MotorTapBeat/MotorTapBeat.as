@@ -5,7 +5,7 @@ import com.learningrx.Screens.*;
 
 public class MotorTapBeat extends Game {
 	
-	private var m_avcue:RhythmGameAVCue;
+	private var m_level:RhythmGame;
 	private var m_arrowKeyHandler:ArrowKeyHandler;
 	
 	private var m_onStart:Function;
@@ -38,17 +38,30 @@ public class MotorTapBeat extends Game {
 			],
 		];
 		
-		var rule = rules[pLevel-1][pSubLevel-1];
-		
-		m_onStart = function ():void {
-			m_avcue = new RhythmGameAVCue(this, bpmToDelay(rule.bpm), rule.modulus);
-			m_avcue.x = BackgroundWidth/2;
-			m_avcue.y = BackgroundHeight/2;
-			m_avcue.setAudioCue(rule.audioCue);
-			m_avcue.setVisualCue(rule.visualCue);
-			addChild(m_avcue);
-			m_avcue.begin();
-		};
+		if (pLevel <= 3 && false) {
+			var rule = rules[pLevel-1][pSubLevel-1];
+			
+			m_onStart = function ():void {
+				var avcue:RhythmGameAVCue = new RhythmGameAVCue(this, bpmToDelay(rule.bpm), rule.modulus);
+				avcue.x = BackgroundWidth/2;
+				avcue.y = BackgroundHeight/2;
+				avcue.setAudioCue(rule.audioCue);
+				avcue.setVisualCue(rule.visualCue);
+				addChild(avcue);
+				avcue.begin();
+				m_level = avcue;
+			};
+		}
+		else {
+			m_onStart = function ():void {
+				var game = new RhythmGameToneHearing(this, bpmToDelay(120));;
+				game.x = BackgroundWidth/2;
+				game.y = BackgroundHeight/2;
+				addChild(game);
+				game.begin();
+				m_level = game;
+			};
+		}
 	}
 	
 	public override function OnStartRoundButtonClicked():void {
@@ -58,22 +71,22 @@ public class MotorTapBeat extends Game {
 	
 	public override function ResetEverything():void {
 		super.ResetEverything();
-		if (m_avcue != null) {
-			removeChild(m_avcue);
-			m_avcue.end();
-			m_avcue = null;
+		if (m_level != null) {
+			removeChild(m_level);
+			m_level.end();
+			m_level = null;
 		}
 	}
 	
 	public override function EndRound():void {
 		super.EndRound();
-		removeChild(m_avcue);
-		m_avcue.end();
-		m_avcue = null;
+		removeChild(m_level);
+		m_level.end();
+		m_level = null;
 	}
 	
 	public function OnArrowKeyPressed(dir:String):void {
-		m_avcue.OnArrowKeyPressed(dir);
+		m_level.OnArrowKeyPressed(dir);
 	}
 	
 	private static function bpmToDelay(bpm:Number):Number {

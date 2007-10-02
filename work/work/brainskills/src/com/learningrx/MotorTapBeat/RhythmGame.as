@@ -7,7 +7,7 @@ public class RhythmGame	extends MovieClip {
 	protected var m_metronome:Metronome;
 	protected var m_game:MotorTapBeat;
 	
-	private var m_tried:Boolean = false;
+	private var m_tried:Boolean = true;
 	private var m_tryOffset:Number = 0;
 	
 	function RhythmGame(game:MotorTapBeat) {
@@ -49,14 +49,15 @@ public class RhythmGame	extends MovieClip {
 	protected function step(e = null):void {
 		var beat:Object = m_metronome.nearestBeat();
 		
-		// missed the mark
+		// XXX issue: if you are slightly more than 100ms late, then you will
+		// get two points counted against you: the miss of the current one and
+		// the mispress of the next one.
 
 		if (beatCounts(beat.index) && m_tryOffset < 100 && beat.offset >= 100) {
 			if (!m_tried) {
 				onMiss(beat.index);
 			}
 			m_tried = false;
-			m_tryOffset = beat.offset;
 		}
 		m_tryOffset = beat.offset;
 	}

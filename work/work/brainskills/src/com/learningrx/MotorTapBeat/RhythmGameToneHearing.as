@@ -44,13 +44,16 @@ public class RhythmGameToneHearing extends RhythmGame {
 	}
 	
 	protected override function beatCounts(beatIdx:int):Boolean {
-		return beatIdx > 2;
+		return beatIdx >= 2;
 	}
 	
 	protected override function onHit(beatIndex:int, dir:String):void {
 		if (m_toneQueue[1] > m_toneQueue[0] && dir == "up" ||
 			m_toneQueue[1] < m_toneQueue[0] && dir == "down") {
 				m_game.ScoreRight();
+		}
+		else {
+			m_game.ScoreWrong();
 		}
 		m_toneQueue.shift();
 	}

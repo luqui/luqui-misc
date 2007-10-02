@@ -1,4 +1,4 @@
-package com.learningrx
+﻿package com.learningrx
 {
    import flash.display.*;
    import flash.utils.Timer;

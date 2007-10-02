@@ -11,10 +11,10 @@ public class RhythmGameAVCue extends RhythmGame {
 	private var m_toneOff:Sound = new ToneC4Short();
 	private var m_interval:Number;
 	private var m_modulus:int;
-	
 	private var m_audioCue:Boolean = true;
 	
-	function RhythmGameAVCue(interval:Number, modulus:int) {
+	function RhythmGameAVCue(game:MotorTapBeat, interval:Number, modulus:int) {
+		super(game);
 		m_interval = interval;
 		m_modulus = modulus;
 		addChild(m_blinker);
@@ -45,24 +45,24 @@ public class RhythmGameAVCue extends RhythmGame {
 		return met;
 	}
 	
-	protected override function onHit(beatIndex:int, keyCode:int):void {
-		if (keyCode == Keyboard.DOWN) {
-			if (beatIndex % m_modulus == 0) {
-				trace("Hit!");
-			}
-			else {
-				trace("Miss!");
-			}
-		}
+	protected override function beatCounts(beatIndex:int):Boolean {
+		return beatIndex % m_modulus == 0;
 	}
 	
-	protected override function onMiss(beatIndex:int, keyCode:int):void {
-		if (keyCode == Keyboard.DOWN) {
-			trace("Miss!");
-		}
+	protected override function onHit(beatIndex:int, dir:String):void {
+		m_game.ScoreRight();
+	}
+	
+	protected override function onMissHit(beatIndex:int, dir:String):void {
+		m_game.ScoreWrong();
+	}
+	
+	protected override function onMiss(beatIndex:int):void {
+		m_game.ScoreWrong();
 	}
 	
 	protected override function step(e = null):void {
+		super.step(e);
 		if (m_blinkerOn) {
 			m_blinkerOn = false;
 		}

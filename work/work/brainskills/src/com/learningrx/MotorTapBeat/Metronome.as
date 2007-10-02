@@ -36,7 +36,7 @@ public class Metronome {
 			return { index: m_timer.currentCount, offset: now - lastFire };
 		}
 		else {
-			return { index: m_timer.currentCount+1, offset: m_interval - (now - lastFire) };
+			return { index: m_timer.currentCount+1, offset: now - lastFire - m_interval };
 		}
 	}
 	

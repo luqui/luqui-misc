@@ -38,6 +38,8 @@
 		private var _FNAdvancedButton:AdvancedButton;
 		private var _MTBHeader:MTBHeader;
 		private var _MTBBasicButton:BasicLevelButton;
+		private var _MTBIntermediateButton:IntermediateButton;
+		private var _MTBAdvancedButton:AdvancedButton;
 		private var _InstructionsText:InstructionsText;
 		private var _Levels:Object;
 		private var _IntroText:TextField;
@@ -58,6 +60,7 @@
 			_SelectAnExercise.x = (_Width - _SelectAnExercise.width) / 2;
 			_SelectAnExercise.y = 40;
 			
+			/*
 			_AAHeader = new AAHeader();
 			_AAHeader.x = (_Width - _AAHeader.width) / 2;
 			_AAHeader.y = _SelectAnExercise.y + _SelectAnExercise.height + _Leading * 2;
@@ -109,20 +112,36 @@
 			_FNBasicButton.addEventListener(MouseEvent.CLICK, OnFNBasicButtonClicked);
 			_FNIntermediateButton.addEventListener(MouseEvent.CLICK, OnFNIntermediateButtonClicked);
 			_FNAdvancedButton.addEventListener(MouseEvent.CLICK, OnFNAdvancedButtonClicked);
+			*/
 
 			_MTBHeader = new MTBHeader();
 			_MTBHeader.x = (_Width - _MTBHeader.width) / 2;
-			_MTBHeader.y = _FNAdvancedButton.y + _FNAdvancedButton.height + _Leading * 1.5;
+			_MTBHeader.y = _SelectAnExercise.y + _SelectAnExercise.height + _Leading * 1.5;
+			
 			_MTBBasicButton = new BasicLevelButton();
 			_MTBBasicButton.scaleX = _MTBBasicButton.scaleY = .7;
 			_MTBBasicButton.x = (_Width - _MTBBasicButton.width) / 2;
 			_MTBBasicButton.y = _MTBHeader.y + _MTBHeader.height + _Leading;
 			_MTBBasicButton.addEventListener(MouseEvent.CLICK, OnMTBBasicButtonClicked);
+			
+			_MTBIntermediateButton = new IntermediateButton();
+			_MTBIntermediateButton.scaleX = _MTBIntermediateButton.scaleY = .7;
+			_MTBIntermediateButton.x = (_Width - _MTBIntermediateButton.width) / 2;
+			_MTBIntermediateButton.y = _MTBBasicButton.y + _MTBBasicButton.height + _Leading;
+			_MTBIntermediateButton.addEventListener(MouseEvent.CLICK, OnMTBIntermediateButtonClicked);
+			
+			_MTBAdvancedButton = new AdvancedButton();
+			_MTBAdvancedButton.scaleX = _MTBAdvancedButton.scaleY = .7;
+			_MTBAdvancedButton.x = (_Width - _MTBAdvancedButton.width) / 2;
+			_MTBAdvancedButton.y = _MTBIntermediateButton.y + _MTBIntermediateButton.height + _Leading;
+			_MTBAdvancedButton.addEventListener(MouseEvent.CLICK, OnMTBAdvancedButtonClicked);
+		
 
-			Show(_SelectAnExercise, _AAHeader, _AABasicButton, _AAIntermediateButton, _AAAdvancedButton);
-			Show(_CFHeader, _CFBasicButton, _CFAdvancedButton);
-			Show(_FNHeader, _FNBasicButton, _FNIntermediateButton, _FNAdvancedButton);
-			Show(_MTBHeader, _MTBBasicButton);
+			Show(_SelectAnExercise);
+			//Show(_AAHeader, _AABasicButton, _AAIntermediateButton, _AAAdvancedButton);
+			//Show(_CFHeader, _CFBasicButton, _CFAdvancedButton);
+			//Show(_FNHeader, _FNBasicButton, _FNIntermediateButton, _FNAdvancedButton);
+			Show(_MTBHeader, _MTBBasicButton, _MTBIntermediateButton, _MTBAdvancedButton);
 		}
 	
 		private function DrawBorder():void
@@ -214,6 +233,16 @@
 		{
 			Clicked(ShowMTBBasic);
 		}
+		
+		private function OnMTBIntermediateButtonClicked(pEvent:MouseEvent):void
+		{
+			Clicked(ShowMTBIntermediate);
+		}
+		
+		private function OnMTBAdvancedButtonClicked(pEvent:MouseEvent):void
+		{
+			Clicked(ShowMTBAdvanced);
+		}
 
 		public function ShowAABasic():void
 		{
@@ -258,6 +287,16 @@
 		public function ShowMTBBasic():void
 		{
 			_Parent.ShowGame(_Levels.MTBBasic);
+		}
+		
+		public function ShowMTBIntermediate():void
+		{
+			_Parent.ShowGame(_Levels.MTBIntermediate);
+		}
+		
+		public function ShowMTBAdvanced():void
+		{
+			_Parent.ShowGame(_Levels.MTBAdvanced);
 		}
 		
 		public function InitLevels():void
@@ -335,6 +374,22 @@
 					Sublevel: 1,
 					Speed: 1,
 					Instructions: _InstructionsText.MTB_BASIC_INSTRUCTIONS
+				},
+				MTBIntermediate:
+				{
+					Game: _Parent.MotorTapBeat,
+					Level: 4,
+					Sublevel: 1,
+					Speed: 1,
+					Instructions: _InstructionsText.MTB_PITCH_INSTRUCTIONS
+				},
+				MTBAdvanced:
+				{
+					Game: _Parent.MotorTapBeat,
+					Level: 5,
+					Sublevel: 1,
+					Speed: 1,
+					Instructions: _InstructionsText.MTB_VOLUME_INSTRUCTIONS
 				}
 			};
 		}

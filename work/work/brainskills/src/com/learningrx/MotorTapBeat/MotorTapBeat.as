@@ -38,7 +38,7 @@ public class MotorTapBeat extends Game {
 			],
 		];
 		
-		if (pLevel <= 3 && false) {
+		if (pLevel <= 3) {
 			var rule = rules[pLevel-1][pSubLevel-1];
 			
 			m_onStart = function ():void {
@@ -52,9 +52,19 @@ public class MotorTapBeat extends Game {
 				m_level = avcue;
 			};
 		}
-		else {
+		else if (pLevel == 4) {
 			m_onStart = function ():void {
-				var game = new RhythmGameToneVolumeAlt(this, bpmToDelay(60));;
+				var game = new RhythmGameToneHearing(this, bpmToDelay(60));;
+				game.x = BackgroundWidth/2;
+				game.y = BackgroundHeight/2;
+				addChild(game);
+				game.begin();
+				m_level = game;
+			};
+		}
+		else if (pLevel == 5) {
+			m_onStart = function ():void {
+				var game = new RhythmGameVolumeHearing(this, bpmToDelay(60));;
 				game.x = BackgroundWidth/2;
 				game.y = BackgroundHeight/2;
 				addChild(game);

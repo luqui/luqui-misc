@@ -1,4 +1,4 @@
-package com.learningrx
+﻿package com.learningrx
 {
 	public class InstructionsText
 	{
@@ -73,8 +73,21 @@ package com.learningrx
 		{
 			Head: 'Motor Tap Beat',
 			Subhead: 'Basic Level',
-			Body: '<p>I will eventually get around to explaining how this should work.  Oh, um, XXXXXXXXXXXXXXXXXXXX NONONONO DESTROY ELIMINATE!!1</p>'
+			Body: '<p>Press the down arrow on your keyboard every <i>other</i> beat, <i>on the beat</i>. The correct beat will be indicated by the higher tone, and by the indicator flashing green (when the indicator is present).</p>'
 		};
 		
+		public const MTB_PITCH_INSTRUCTIONS:Object =
+		{
+			Head: 'Motor Tap Beat',
+			Subhead: 'Pitch Level',
+			Body: '<p><i>On the beat</i>, press the arrow on your keyboard corresponding to whether the <i>previous</i> beat was lower or higher in pitch than the one before <i>that</i>.  If the pitch rose, then press the up arrrow; if the pitch fell, press the down arrow.  You don\'t have to press anything for the first two beats, while the first two pitches are being established.</p>'
+		};
+		
+		public const MTB_VOLUME_INSTRUCTIONS:Object =
+		{
+			Head: 'Motor Tap Beat',
+			Subhead: 'Volume Level',
+			Body: '<p><o>On the beat</i>, press the arrow on your keyboard corresponding to whether the <i>previous</i> beat was louder or softer than the one before <i>that</i>.  If the volume increased, press the up arrow; if it decreased, press the down arrow.   You don\'t have to press anything for the first two beats, while the first two volumes are being established.</p>'
+		};
 	}
 }

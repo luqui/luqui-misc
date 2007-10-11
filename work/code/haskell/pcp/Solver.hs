@@ -1,8 +1,13 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
+module Solver (
+    Pcp, 
+    allPcps,
+    findProblems
+    )
+where
+
 import Data.List (partition)
-import Control.Monad.State
-import System.IO
 
 type Piece = Int
 
@@ -64,25 +69,6 @@ allCfgs pieces topn botn = do
 allPcps :: [Piece] -> Int -> Int -> Int -> [Pcp]
 allPcps pieces topn botn cfgs =
     sequencer (replicate cfgs $ allCfgs pieces topn botn)
-
-ask :: (Read a, Show a) => String -> a -> IO a
-ask q def = do
-    putStr $ q ++ " (" ++ show def ++ ")? "
-    ln <- getLine
-    if null ln 
-        then return def 
-        else return (read ln)
-
-main :: IO ()
-main = do
-    hSetBuffering stdout NoBuffering
-    topn    <- ask "Max pieces on top" 3
-    botn    <- ask "Max pieces on bottom" 3
-    npanels <- ask "How many panels" 4
-    steps   <- ask "How many steps for a good solution" 5
-    
-    let pcps = allPcps [0,1] topn botn npanels
-    mapM_ print $ findProblems pcps !! steps
 
 
 sequencer :: (Monad m) => [m a]-> m [a]

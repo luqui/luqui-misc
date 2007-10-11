@@ -1,5 +1,8 @@
+{-# OPTIONS_GHC -fglasgow-exts #-}
+
 import Data.List (partition)
-import System (getArgs)
+import Control.Monad.State
+import System.IO
 
 type Piece = Int
 
@@ -39,27 +42,12 @@ haltingFilter = beaverFilter hasHalted
             map (any cfgGood) steps 
 ---------------------------------------
 
-------- Iterative solution ------------
-haltsInNSteps :: Int -> Pcp -> Bool
-haltsInNSteps n pcp = haltsInNSteps' n [emptyCfg]
-    where
-    haltsInNSteps' 0 []   = True
-    haltsInNSteps' 0 cfgs = any cfgGood cfgs
-    haltsInNSteps' n []   = False
-    haltsInNSteps' n cfgs =
-        not (any cfgGood cfgs) &&
-        (haltsInNSteps' (n-1) $ concatMap (dijkstep pcp) cfgs)
----------------------------------------
+findProblems :: [Pcp] -> [[Pcp]]
+findProblems pcps = haltingFilter pcps
 
-data SolType = Iterative | Simultaneous | Test
-    deriving Read
-
-findProblems :: SolType -> [Pcp] -> [[Pcp]]
-findProblems Iterative pcps    = map (\n -> filter (haltsInNSteps n) pcps) [0..]
-findProblems Simultaneous pcps = haltingFilter pcps
 
 allStrings :: [Piece] -> Int -> [[Piece]]
-allStrings pieces 0 = [[]]
+allStrings pieces 0 = return []
 allStrings pieces n = do
     p <- pieces
     s <- allStrings pieces (n-1)
@@ -77,24 +65,29 @@ allPcps :: [Piece] -> Int -> Int -> Int -> [Pcp]
 allPcps pieces topn botn cfgs =
     sequencer (replicate cfgs $ allCfgs pieces topn botn)
 
+ask :: (Read a, Show a) => String -> a -> IO a
+ask q def = do
+    putStr $ q ++ " (" ++ show def ++ ")? "
+    ln <- getLine
+    if null ln 
+        then return def 
+        else return (read ln)
+
 main :: IO ()
 main = do
-    args <- getArgs
-    let topn    = read $ args !! 0
-        botn    = read $ args !! 1
-        npanels = read $ args !! 2
-        steps   = read $ args !! 3
-        soltype = read $ args !! 4
-
+    hSetBuffering stdout NoBuffering
+    topn    <- ask "Max pieces on top" 3
+    botn    <- ask "Max pieces on bottom" 3
+    npanels <- ask "How many panels" 4
+    steps   <- ask "How many steps for a good solution" 5
+    
     let pcps = allPcps [0,1] topn botn npanels
-    mapM_ print $ findProblems soltype pcps !! steps
+    mapM_ print $ findProblems pcps !! steps
 
 
-sequencer :: [[a]] -> [[a]]
-sequencer = map reverse . sequencer' . reverse
-    where
-    sequencer' [] = return []
-    sequencer' (x:xs) = do
-        ts <- sequencer' xs
-        t <- x
-        return (t:ts)
+sequencer :: (Monad m) => [m a]-> m [a]
+sequencer [] = return []
+sequencer (x:xs) = do
+    ts <- sequencer xs
+    t <- x
+    return (t:ts)

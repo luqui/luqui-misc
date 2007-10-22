@@ -1,5 +1,8 @@
 module SequenceReader 
-    ( )
+    ( SequenceReader
+    , readIdx
+    , search
+    )
 where
 
 import Control.Monad.RWS
@@ -41,7 +44,3 @@ search rdr = search' []
             (True, _)  -> Just (xs ++ [False,False ..])
             (False, d) ->
                 msum (map (\r -> search' (xs ++ r)) $ tail $ allSeqs (d + 1 - length xs))
-
-elem16 :: SequenceReader Bool
-elem16 = do
-    return False

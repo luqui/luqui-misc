@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -fglasgow-exts #-}
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 -- Turing machine simulator.
 
@@ -63,20 +64,19 @@ traceMachine machine = do
     World mstate tape <- get
     liftIO $ showTape True tape
     liftIO $ threadDelay 100000
-    when (mstate /= 'H') $ runMachine machine
+    when (mstate /= 'H') $ traceMachine machine
 
 runMachine :: (MonadState World m, MonadIO m) => Machine -> m ()
 runMachine machine = run' 0
     where 
-    run' n = do
+    run' !n = do
         stepMachine machine
         World mstate tape <- get
-        when (n `mod` 100000 == 0) $ status n tape
         if mstate == 'H'
             then status n tape
             else run' (n+1)
     status n tape = liftIO $ do
-        print n
+        putStrLn $ show n ++ " steps"
         showTape False tape
 
 

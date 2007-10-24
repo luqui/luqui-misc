@@ -43,4 +43,4 @@ printList xs = mapM_ print xs
 main :: IO ()
 main = do
 	hSetBuffering stdout NoBuffering
-	print $ filter isPrime $ map sum $ inits primes
+	mapM_ print primes

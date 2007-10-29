@@ -19,11 +19,10 @@ diagonal = diagonal' 0
 	where
 	-- We need diagonal' to ensure that the function terminates
 	-- when given a finite matrix.
+	diagonal' _ [] = []
 	diagonal' n xss = 
 		let (str,xss') = stripe n xss in
-		str ++ if null xss' 
-				then []
-				else diagonal' (n+1) xss'
+		str ++ diagonal' (n+1) xss'
 	
 	stripe 0 xss = ([],xss)
 	stripe n []  = ([],[])

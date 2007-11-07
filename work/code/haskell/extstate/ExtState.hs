@@ -16,17 +16,25 @@ newtype UnsafeWeak = UnsafeWeak { fromUnsafeWeak :: forall a. Weak a }
 data ExtMap = ExtMap (IntMap.IntMap [(Unique, UnsafeWeak)])
 
 mkExtPtr :: a -> ExtMap -> IO (ExtPtr a, ExtMap)
-mkExtPtr v (ExtMap emap) = do
+mkExtPtr v emap = do
     k' <- newUnique
-    let !k = ExtPtr k'
-    val <- mkWeak k v Nothing
-    return (k, ExtMap (IntMap.insertWith (++) 
-                              (hashUnique k') 
-                              [(k', UnsafeWeak (unsafeCoerce val))] 
-                              emap))
+    let k = ExtPtr k'
+    emap' <- setExtPtr k v emap
+    return (k,emap')
 
 
 setExtPtr :: ExtPtr a -> a -> ExtMap -> IO ExtMap
+setExtPtr k@(ExtPtr k') v (ExtMap emap) = do
+    val <- mkWeak k v Nothing
+    return $ ExtMap $ IntMap.insertWith update
+                              (hashUnique k')
+                              [(k', UnsafeWeak (unsafeCoerce val))]
+                              emap
+    where
+    update a [] = a
+    update [a@(k,v)] (o@(k',v'):xs) 
+        | k == k'   = a:xs
+        | otherwise = o:update [a] xs
 
 
 lookupExtPtr :: ExtMap -> ExtPtr a -> IO (Maybe a)
@@ -53,20 +61,22 @@ class MonadExtState p m | m -> p where
     writeExtPtr :: p a -> a -> m ()
 
 
-newtype ExtState m a = ExtState (StateT ExtMap m a)
+newtype ExtStateT m a = ExtStateT (StateT ExtMap m a)
                 deriving (Monad)
 
+runExtStateT :: (Monad m) => ExtStateT m a -> m a
+runExtStateT (ExtStateT s) = evalStateT s (ExtMap IntMap.empty)
 
-instance MonadExtState ExtPtr ExtState where
-    newExtPtr v = ExtState $ do
+instance (Monad m) => MonadExtState ExtPtr (ExtStateT m) where
+    newExtPtr v = ExtStateT $ do
         emap <- get
         let (ptr,emap') = unsafePerformIO (mkExtPtr v emap)
         put emap'
         return ptr
-    readExtPtr p = ExtState $ do
+    readExtPtr p = ExtStateT $ do
         emap <- get
-        case unsafePerformIO (lookupExtPtr p emap) of
+        case unsafePerformIO (lookupExtPtr emap p) of
              Just a  -> return a
              Nothing -> error "ExtState module messed up!"
-    writeExtPtr p v = ExtState $ do
-        modify (setExtPtr p v)
+    writeExtPtr p v = ExtStateT $ do
+        modify (unsafePerformIO . setExtPtr p v)

@@ -67,6 +67,12 @@ newtype ExtStateT m a = ExtStateT (StateT ExtMap m a)
 runExtStateT :: (Monad m) => ExtStateT m a -> m a
 runExtStateT (ExtStateT s) = evalStateT s (ExtMap IntMap.empty)
 
+instance MonadTrans ExtStateT where
+    lift = ExtStateT . lift
+
+instance (MonadIO m) => MonadIO (ExtStateT m) where
+    liftIO = ExtStateT . liftIO
+
 instance (Monad m) => MonadExtState ExtPtr (ExtStateT m) where
     newExtPtr v = ExtStateT $ do
         emap <- get

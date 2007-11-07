@@ -1,4 +1,9 @@
-module ExtState where
+module ExtState 
+    ( MonadExtState(..)
+    , ExtStateT
+    , runExtStateT
+    )
+where
 
 import Data.Unique
 import System.Mem.Weak
@@ -12,8 +17,7 @@ import System.IO.Unsafe
 data ExtPtr a = ExtPtr Unique
 
 newtype UnsafeWeak = UnsafeWeak { fromUnsafeWeak :: forall a. Weak a }
-
-data ExtMap = ExtMap (IntMap.IntMap [(Unique, UnsafeWeak)])
+newtype ExtMap = ExtMap (IntMap.IntMap [(Unique, UnsafeWeak)])
 
 mkExtPtr :: a -> ExtMap -> IO (ExtPtr a, ExtMap)
 mkExtPtr v emap = do
@@ -75,6 +79,7 @@ instance (MonadIO m) => MonadIO (ExtStateT m) where
 
 instance (Monad m) => MonadExtState ExtPtr (ExtStateT m) where
     newExtPtr v = ExtStateT $ do
+        -- XXX need pruning
         emap <- get
         let (ptr,emap') = unsafePerformIO (mkExtPtr v emap)
         put emap'

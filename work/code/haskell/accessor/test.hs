@@ -8,6 +8,7 @@ data Foo =
         , bar_ :: Int }
     deriving Show
 
+-- make accessors for records ending in an underscore
 $(deriveAccessors ''Foo)
 
 main :: IO ()

@@ -1,4 +1,4 @@
-module FRP 
+module FRP.Core
     ( Comonad
     , Time
     , Behavior

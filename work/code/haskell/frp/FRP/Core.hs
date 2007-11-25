@@ -13,19 +13,12 @@ module FRP.Core
     )
 where
 
+import FRP.Comonad
 import FRP.Draw as Draw
 import qualified Graphics.UI.SDL as SDL
 import qualified Graphics.Rendering.OpenGL as GL
 import Data.List (foldl')
 import Control.Monad (when)
-
-class (Functor w) => Comonad w where
-    pull   :: w a -> a
-    cojoin :: w a -> w (w a)
-    (=>>)  :: w a -> (w a -> b) -> w b
-
-    w =>> f  = fmap f (cojoin w)
-    cojoin w = w =>> id
 
 type Time = Double
 type ExtEvent = SDL.Event

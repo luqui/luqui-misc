@@ -1,3 +1,13 @@
+module FRP 
+    ( Comonad
+    , Time
+    , Behavior
+    , time
+    , Event
+    , untilB
+    )
+where
+
 class (Functor w) => Comonad w where
     pull   :: w a -> a
     cojoin :: w a -> w (w a)

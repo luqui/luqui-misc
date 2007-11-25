@@ -4,11 +4,13 @@ module FRP.Core
     , ExtEvent
     , Behavior(..)
     , Event(..)
+    , integral
     , zipB
     , constB
     , untilB
     , time
     , delay
+    , mousePos
     , runFRP
     )
 where
@@ -56,6 +58,14 @@ zipB b b' = tup (b, b')
     tup (t,t') = Behavior { bEval = (bEval t, bEval t')
                           , bTrans = \e -> tup (bTrans t e, bTrans t' e)
                           }
+
+integral :: Behavior Double -> Behavior Double
+integral b = int 0 b
+    where
+    int s b = Behavior { bEval = s
+                       , bTrans = \e@(dt,_) -> 
+                            int (s + dt * pull b) (bTrans b e)
+                       }
 
 data Event :: * -> * where
     EVNever    :: Event a
@@ -105,7 +115,18 @@ delay offs b = EVDriver $
            else Nothing
 
 
-
+mousePos :: Behavior (Double,Double)
+mousePos = genB (0,0)
+    where
+    genB (x,y) = let self = Behavior { bEval = (x,y)
+                                     , bTrans = \(t,e) -> transFun e self
+                                     }
+                 in self
+    transFun (ExtEvent (SDL.MouseMotion x' y' _ _)) _
+        = genB ( 32 * fromIntegral x' / 640 - 16,
+                -24 * fromIntegral y' / 480 + 12)
+    transFun _ self
+        = self
 
 
 runFRP :: Behavior (Draw.Draw ()) -> IO ()

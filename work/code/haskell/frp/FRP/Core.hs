@@ -4,6 +4,7 @@ module FRP.Core
     , ExtEvent
     , Behavior(..)
     , Event(..)
+    , zipB
     , constB
     , untilB
     , time

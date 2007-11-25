@@ -122,11 +122,16 @@ runFRP b = do
 
     where
     mainLoop b = do
+        preTicks <- SDL.getTicks 
         events <- whileM (/= SDL.NoEvent) SDL.pollEvent
         let b' = foldl' (flip ($)) (step 0.05 b) (map (stepEvent 0) events)
         GL.clear [GL.ColorBuffer]
         Draw.runDraw (pull b')
         SDL.glSwapBuffers
+        postTicks <- SDL.getTicks
+        let timeTaken = fromIntegral (postTicks - preTicks) * 0.001
+        when (timeTaken < 0.05) $ 
+            SDL.delay (floor $ (0.05 - timeTaken) * 1000)
         when (not $ SDL.Quit `elem` events) $ do
             mainLoop b'
 

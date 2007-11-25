@@ -1,5 +1,5 @@
 module FRP.Draw
-    ( Draw
+    ( Draw, runDraw
     , regularUnitNGon, unitCircle
     , translate, scale, rotate
     )

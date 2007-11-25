@@ -4,9 +4,19 @@ module FRP.Core
     , ExtEvent
     , Behavior(..)
     , Event(..)
+    , constB
     , untilB
+    , time
+    , delay
+    , runFRP
     )
 where
+
+import FRP.Draw as Draw
+import qualified Graphics.UI.SDL as SDL
+import qualified Graphics.Rendering.OpenGL as GL
+import Data.List (foldl')
+import Control.Monad (when)
 
 class (Functor w) => Comonad w where
     pull   :: w a -> a
@@ -17,7 +27,7 @@ class (Functor w) => Comonad w where
     cojoin w = w =>> id
 
 type Time = Double
-type ExtEvent = ()
+type ExtEvent = SDL.Event
 
 data DriveEvent 
     = TimeStepEvent
@@ -88,7 +98,10 @@ time = genB 0
                       }
 
 step :: Double -> Behavior a -> Behavior a
-step size b = bTrans b (size,TimeStepEvent)
+step size b = bTrans b (size, TimeStepEvent)
+
+stepEvent :: Double -> ExtEvent -> Behavior a -> Behavior a
+stepEvent size ev b = bTrans b (size, ExtEvent ev)
 
 delay :: Double -> Behavior a -> Event a
 delay offs b = EVDriver $ 
@@ -96,3 +109,38 @@ delay offs b = EVDriver $
         if fst (pull w) >= offs
            then Just (snd (pull w))
            else Nothing
+
+
+
+
+
+runFRP :: Behavior (Draw.Draw ()) -> IO ()
+runFRP b = do
+    SDL.init [SDL.InitVideo]
+    SDL.setVideoMode 640 480 32 [SDL.OpenGL]
+    GL.matrixMode GL.$= GL.Projection
+    GL.loadIdentity
+    GL.ortho2D (-16) 16 (-12) 12
+    GL.matrixMode GL.$= GL.Modelview 0
+    GL.loadIdentity
+    mainLoop b
+    SDL.quit
+
+    where
+    mainLoop b = do
+        events <- whileM (/= SDL.NoEvent) SDL.pollEvent
+        let b' = foldl' (flip ($)) (step 0.05 b) (map (stepEvent 0) events)
+        GL.clear [GL.ColorBuffer]
+        Draw.runDraw (pull b')
+        SDL.glSwapBuffers
+        when (not $ SDL.Quit `elem` events) $ do
+            mainLoop b'
+
+    whileM p m = do
+        r <- m
+        if p r
+           then fmap (r:) $ whileM p m
+           else return []
+
+
+

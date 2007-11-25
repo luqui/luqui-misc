@@ -21,6 +21,7 @@ instance (Comonad w) => Arrow (Cokleisli w) where
     first (Cokleisli f) = Cokleisli (\w -> 
         (f (fmap fst w), snd (pull w)))
 
+-- Is this valid?
 instance (Comonad w) => ArrowApply (Cokleisli w) where
     app = Cokleisli $ \w ->
         runCokleisli (fst (pull w)) $ fmap snd w

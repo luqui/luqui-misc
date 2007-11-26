@@ -98,7 +98,7 @@ runFRP b = do
     SDL.quit
 
     where
-    timeStep = 0.05
+    timeStep = 0.02
     mainLoop b = do
         preTicks <- SDL.getTicks
 

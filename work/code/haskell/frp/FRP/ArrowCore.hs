@@ -5,9 +5,15 @@ module FRP.ArrowCore
     , SF, (:>)
     , integral
     , time
+    , holdSignal
     , constSF
     , mousePos
+    , keyDown
     , runFRP
+    , isJust
+    , eventFold
+    , mouseButtonDown
+    , joinA
     )
 where
 
@@ -17,6 +23,7 @@ import qualified Graphics.Rendering.OpenGL as GL
 import Control.Arrow
 import Data.List (foldl')
 import Control.Monad (when)
+import Data.Maybe (isJust)
 
 type Time = Double
 type ExtEvent = SDL.Event
@@ -53,6 +60,23 @@ instance ArrowChoice SF where
                         Left b  -> let (c,trans) = f b in (Left c, left . trans)
                         Right d -> (Right d, const r)
 
+
+joinA :: SF (Maybe (SF () a)) [a]
+joinA = downState []
+    where
+    downState as = SF $ \msua ->
+        let arrows = maybe id (:) msua $ as
+            runs = map (\a -> runSF a ()) arrows
+            newState = maybe downState (const upState) msua
+        in
+            (map fst runs, \dri -> newState (map (($ dri) . snd) runs))
+
+    upState as = SF $ \msua ->
+        let runs = map (\a -> runSF a ()) as
+            newState = maybe downState (const upState) msua
+        in
+            (map fst runs, \dri -> newState (map (($ dri) . snd) runs))
+
 integral :: Double -> SF Double Double
 integral q = SF $ \x ->
     (q, \d -> case d of
@@ -69,11 +93,63 @@ mousePos = helper (0,0)
     helper (x,y) = self
         where self = SF $ \() -> 
                 ((x,y), \d -> case d of
-                           ExtEvent (SDL.MouseMotion x' y' _ _) -> helper $ transform (x',y')
+                           ExtEvent (SDL.MouseMotion x' y' _ _) -> helper $ stupidTransform (x',y')
                            _                                    -> self)
-    transform (x,y) = (32 * fromIntegral x / 640 - 16, 12 - 24 * fromIntegral y / 480)
 
-constSF :: a -> SF () a
+stupidTransform (x,y) = (32 * fromIntegral x / 640 - 16, 12 - 24 * fromIntegral y / 480)
+
+eventFold :: (b -> a -> b) -> b -> SF (Maybe a) b
+eventFold f = downState
+    where
+    downState b0 = SF $ \maybea ->
+        (b0, const (maybe (downState b0) (upState . f b0) maybea))
+    upState b0 = SF $ \maybea ->
+        (b0, const (maybe (downState b0) (const (upState b0)) maybea))
+
+mouseButtonDown :: SDL.MouseButton -> SF () (Maybe (Double,Double))
+mouseButtonDown but = downState
+    where
+    downState = SF $ \() ->
+        (Nothing, \ev -> case ev of
+                              ExtEvent (SDL.MouseButtonDown x y but') ->
+                                if but == but'
+                                   then upState (stupidTransform (x,y))
+                                   else downState
+                              _ -> downState)
+    upState pos = SF $ \() -> 
+        (Just pos, \ev -> case ev of
+                               ExtEvent (SDL.MouseButtonUp x y but') ->
+                                 if but == but'
+                                    then downState
+                                    else upState pos
+                               _ -> downState)
+
+keyDown :: SDL.SDLKey -> SF () (Maybe ())
+keyDown ch = downState
+    where
+    downState = SF $ \() ->
+        (Nothing, \ev -> case ev of
+                              ExtEvent (SDL.KeyDown sym) -> 
+                                if SDL.symKey sym == ch 
+                                   then upState
+                                   else downState
+                              _ -> downState)
+    upState = SF $ \() ->
+        (Just (), \ev -> case ev of
+                              ExtEvent (SDL.KeyUp sym) ->
+                                if SDL.symKey sym == ch
+                                   then downState
+                                   else upState
+                              _ -> upState)
+
+holdSignal :: SF (Maybe a) (Maybe a)
+holdSignal = SF $ \ev ->
+    case ev of
+         Nothing -> (Nothing, const holdSignal)
+         Just x  -> (Just x, const $ constSF $ Just x)
+
+
+constSF :: a -> SF b a
 constSF x = arr (const x)
 
 stepDriver :: Driver -> SF () b -> SF () b

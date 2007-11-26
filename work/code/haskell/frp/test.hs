@@ -3,14 +3,24 @@
 import Control.Arrow
 import FRP
 import Debug.Trace
+import qualified Graphics.UI.SDL as SDL
 
-main = runFRP whee
+main = runFRP circlePlacer
 
-whee :: () :> Draw ()
-whee = proc () -> do
+
+circlePlacer :: () :> Draw ()
+circlePlacer = 
+    mouseButtonDown SDL.ButtonLeft >>> arr (fmap newCircle) >>> joinA >>^ sequence_
+
+newCircle :: (Double, Double) -> () :> Draw ()
+newCircle (initx,inity) = proc () -> do
     (mousex,mousey) <- mousePos -< ()
     rec let x' = mousex - x
         let y' = mousey - y
-        x  <- integral 0 -< x'
-        y  <- integral 0 -< y'
-    returnA -< translate (x,y) $ unitCircle
+        x  <- integral initx -< x'
+        y  <- integral inity -< y'
+
+    big <- keyDown SDL.SDLK_SPACE -< ()
+    let scaler = if isJust big then scale 2 2 else id
+    returnA -< translate (x,y) $ scaler $ unitCircle
+

@@ -1,6 +1,15 @@
 {-# OPTIONS_GHC -fglasgow-exts -fbang-patterns -farrows #-}
 
-module FRP.ArrowCore where
+module FRP.ArrowCore 
+    ( Time
+    , SF, (:>)
+    , integral
+    , time
+    , constSF
+    , mousePos
+    , runFRP
+    )
+where
 
 import qualified FRP.Draw as Draw
 import qualified Graphics.UI.SDL as SDL
@@ -53,6 +62,16 @@ integral q = SF $ \x ->
 
 time :: SF () Double
 time = constSF 1 >>> integral 0
+
+mousePos :: SF () (Double,Double)
+mousePos = helper (0,0)
+    where
+    helper (x,y) = self
+        where self = SF $ \() -> 
+                ((x,y), \d -> case d of
+                           ExtEvent (SDL.MouseMotion x' y' _ _) -> helper $ transform (x',y')
+                           _                                    -> self)
+    transform (x,y) = (32 * fromIntegral x / 640 - 16, 12 - 24 * fromIntegral y / 480)
 
 constSF :: a -> SF () a
 constSF x = arr (const x)

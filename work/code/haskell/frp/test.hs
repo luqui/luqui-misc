@@ -10,7 +10,7 @@ main = runFRP circlePlacer
 
 circlePlacer :: () :> Draw ()
 circlePlacer = 
-    mouseButtonDown SDL.ButtonLeft >>> arr (fmap newCircle) >>> joinA >>^ sequence_
+    mouseButtonDown SDL.ButtonLeft >>> edgeToPulse >>> arr (fmap newCircle) >>> joinSF >>^ sequence_
 
 newCircle :: (Double, Double) -> () :> Draw ()
 newCircle (initx,inity) = proc () -> do

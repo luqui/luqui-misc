@@ -11,9 +11,9 @@ module FRP.ArrowCore
     , keyDown
     , runFRP
     , isJust
-    , eventFold
     , mouseButtonDown
-    , joinA
+    , joinSF
+    , edgeToPulse
     )
 where
 
@@ -61,21 +61,16 @@ instance ArrowChoice SF where
                         Right d -> (Right d, const r)
 
 
-joinA :: SF (Maybe (SF () a)) [a]
-joinA = downState []
+-- Accepts pulse events containing signals; aggregates into a list of 
+-- signals, newest first (for no good reason).
+joinSF :: SF (Maybe (SF () a)) [a]
+joinSF = self []
     where
-    downState as = SF $ \msua ->
+    self as = SF $ \msua ->
         let arrows = maybe id (:) msua $ as
             runs = map (\a -> runSF a ()) arrows
-            newState = maybe downState (const upState) msua
         in
-            (map fst runs, \dri -> newState (map (($ dri) . snd) runs))
-
-    upState as = SF $ \msua ->
-        let runs = map (\a -> runSF a ()) as
-            newState = maybe downState (const upState) msua
-        in
-            (map fst runs, \dri -> newState (map (($ dri) . snd) runs))
+            (map fst runs, \dri -> self (map (($ dri) . snd) runs))
 
 integral :: Double -> SF Double Double
 integral q = SF $ \x ->
@@ -98,14 +93,20 @@ mousePos = helper (0,0)
 
 stupidTransform (x,y) = (32 * fromIntegral x / 640 - 16, 12 - 24 * fromIntegral y / 480)
 
-eventFold :: (b -> a -> b) -> b -> SF (Maybe a) b
-eventFold f = downState
+-- for converting from edge to pulse events
+edgeToPulse :: SF (Maybe a) (Maybe a)
+edgeToPulse = downState
     where
-    downState b0 = SF $ \maybea ->
-        (b0, const (maybe (downState b0) (upState . f b0) maybea))
-    upState b0 = SF $ \maybea ->
-        (b0, const (maybe (downState b0) (const (upState b0)) maybea))
+    downState = SF $ \ma ->
+        case ma of
+             Nothing -> (Nothing, const downState)
+             Just x  -> (Just x, const upState)
+    upState = SF $ \ma ->
+        case ma of
+             Nothing -> (Nothing, const downState)
+             Just x  -> (Nothing, const upState)
 
+-- An edge event stating whether the mouse is down and where it last clicked
 mouseButtonDown :: SDL.MouseButton -> SF () (Maybe (Double,Double))
 mouseButtonDown but = downState
     where
@@ -124,6 +125,7 @@ mouseButtonDown but = downState
                                     else upState pos
                                _ -> downState)
 
+-- An edge event stating whether a particular key is down
 keyDown :: SDL.SDLKey -> SF () (Maybe ())
 keyDown ch = downState
     where

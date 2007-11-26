@@ -8,9 +8,9 @@ main = runFRP whee
 
 whee :: () :> Draw ()
 whee = proc () -> do
-    mousepos <- mousePos -< ()
-    rec let x' = fst mousepos - x
-        let y' = snd mousepos - y
+    (mousex,mousey) <- mousePos -< ()
+    rec let x' = mousex - x
+        let y' = mousey - y
         x  <- integral 0 -< x'
         y  <- integral 0 -< y'
     returnA -< translate (x,y) $ unitCircle

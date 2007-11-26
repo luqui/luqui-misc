@@ -6,5 +6,4 @@ import Debug.Trace
 main :: IO ()
 main = runFRP $ fmap (\x' -> translate (x',0) unitCircle) xpos
     where
-    xpos = integral xvel
-    xvel = fmap (trace "Ding!") xpos
+    xpos = integral 0 (fmap (trace "waah" . (+1)) xpos)

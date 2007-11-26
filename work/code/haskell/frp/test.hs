@@ -1,4 +1,10 @@
+{-# OPTIONS_GHC -fglasgow-exts -fbang-patterns #-}
+
 import FRP
+import Debug.Trace
 
 main :: IO ()
-main = runFRP $ fmap (\x' -> translate x' $ unitCircle) mousePos
+main = runFRP $ fmap (\x' -> translate (x',0) unitCircle) xpos
+    where
+    xpos = integral xvel
+    xvel = fmap (trace "Ding!") xpos

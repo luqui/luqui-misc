@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fglasgow-exts -fbang-patterns #-}
+
 module FRP.Core 
     ( Comonad(..)
     , Time
@@ -6,6 +8,7 @@ module FRP.Core
     , Event(..)
     , integral
     , zipB
+    , withB, withB2, withB3
     , constB
     , untilB
     , time
@@ -21,15 +24,16 @@ import qualified Graphics.UI.SDL as SDL
 import qualified Graphics.Rendering.OpenGL as GL
 import Data.List (foldl')
 import Control.Monad (when)
+import Debug.Trace
 
 type Time = Double
 type ExtEvent = SDL.Event
 
 data DriveEvent 
-    = TimeStepEvent
+    = TimeStepEvent Time
     | ExtEvent ExtEvent
 
-type Driver = (Time,DriveEvent)
+type Driver = DriveEvent
 
 data Behavior a
     = Behavior { bEval  :: a
@@ -59,13 +63,27 @@ zipB b b' = tup (b, b')
                           , bTrans = \e -> tup (bTrans t e, bTrans t' e)
                           }
 
+withB :: Behavior a -> (a -> b) -> Behavior b
+withB = flip fmap
+
+withB2 :: Behavior a -> Behavior b -> (a -> b -> c) -> Behavior c
+withB2 a b f = fmap (uncurry f) $ zipB a b
+
+withB3 :: Behavior a -> Behavior b -> Behavior c -> (a -> b -> c -> d) -> Behavior d
+withB3 a b c f = fmap (uncurry (uncurry f)) $ zipB (zipB a b) c
+
 integral :: Behavior Double -> Behavior Double
 integral b = int 0 b
     where
-    int s b = Behavior { bEval = s
-                       , bTrans = \e@(dt,_) -> 
-                            int (s + dt * pull b) (bTrans b e)
-                       }
+    int s b =
+        Behavior { bEval = s
+                 , bTrans = \e -> 
+                        case e of
+                           TimeStepEvent dt -> 
+                               let nextVal = s + dt * pull b
+                               in int nextVal (bTrans b e)
+                           _ -> int s (bTrans b e)
+                 }
 
 data Event :: * -> * where
     EVNever    :: Event a
@@ -95,17 +113,13 @@ untilB b (EVJoin e)     = untilB b (fmap (untilB b) e)
 -- EVSnapshot impossible, (a,b) /~ Behavior c
 
 time :: Behavior Double
-time = genB 0
-    where
-    genB t = Behavior { bEval = t
-                      , bTrans = \(t',_) -> genB (t+t')
-                      }
+time = integral (constB 1)
 
 step :: Double -> Behavior a -> Behavior a
-step size b = bTrans b (size, TimeStepEvent)
+step size b = bTrans b (TimeStepEvent size)
 
-stepEvent :: Double -> ExtEvent -> Behavior a -> Behavior a
-stepEvent size ev b = bTrans b (size, ExtEvent ev)
+stepEvent :: ExtEvent -> Behavior a -> Behavior a
+stepEvent ev b = bTrans b (ExtEvent ev)
 
 delay :: Double -> Behavior a -> Event a
 delay offs b = EVDriver $ 
@@ -119,7 +133,7 @@ mousePos :: Behavior (Double,Double)
 mousePos = genB (0,0)
     where
     genB (x,y) = let self = Behavior { bEval = (x,y)
-                                     , bTrans = \(t,e) -> transFun e self
+                                     , bTrans = \e -> transFun e self
                                      }
                  in self
     transFun (ExtEvent (SDL.MouseMotion x' y' _ _)) _
@@ -143,16 +157,17 @@ runFRP b = do
 
     where
     mainLoop b = do
+        putStrLn "-------------------"
         preTicks <- SDL.getTicks 
         events <- whileM (/= SDL.NoEvent) SDL.pollEvent
-        let b' = foldl' (flip ($)) (step 0.05 b) (map (stepEvent 0) events)
+        let b' = foldl' (flip ($)) (step 0.05 b) (map stepEvent events)
         GL.clear [GL.ColorBuffer]
         Draw.runDraw (pull b')
         SDL.glSwapBuffers
         postTicks <- SDL.getTicks
         let timeTaken = fromIntegral (postTicks - preTicks) * 0.001
-        when (timeTaken < 0.05) $ 
-            SDL.delay (floor $ (0.05 - timeTaken) * 1000)
+        when (timeTaken < 1) $ 
+            SDL.delay (floor $ (1 - timeTaken) * 1000)
         when (not $ SDL.Quit `elem` events) $ do
             mainLoop b'
 

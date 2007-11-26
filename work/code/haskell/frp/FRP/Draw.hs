@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fglasgow-exts #-}
+
 module FRP.Draw
     ( Draw, runDraw
     , regularUnitNGon, unitCircle

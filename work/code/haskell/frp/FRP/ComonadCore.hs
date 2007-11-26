@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fglasgow-exts -fbang-patterns #-}
 
-module FRP.Core 
+module FRP.ComonadCore 
     ( Comonad(..)
     , Time
     , ExtEvent

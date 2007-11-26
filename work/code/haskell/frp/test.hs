@@ -1,9 +1,13 @@
-{-# OPTIONS_GHC -fglasgow-exts -fbang-patterns #-}
+{-# OPTIONS_GHC -fglasgow-exts -fbang-patterns -farrows #-}
 
+import Control.Arrow
 import FRP
 import Debug.Trace
 
-main :: IO ()
-main = runFRP $ fmap (\x' -> translate (x',0) unitCircle) xpos
-    where
-    xpos = integral 0 (fmap (trace "waah" . (+1)) xpos)
+main = runFRP whee
+
+whee :: () :> Draw ()
+whee = proc () -> do
+    x <- pure cos <<< time -< ()
+    y <- pure sin <<< time -< ()
+    returnA -< translate (x,y) $ unitCircle

@@ -1,8 +1,8 @@
 module FRP 
-    ( module FRP.ComonadCore
+    ( module FRP.ArrowCore
     , module FRP.Draw
     )
 where
 
-import FRP.ComonadCore
+import FRP.ArrowCore
 import FRP.Draw

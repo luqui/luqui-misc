@@ -18,6 +18,7 @@ module FRP.ArrowCore
 where
 
 import qualified FRP.Draw as Draw
+import qualified FRP.Vector as Vec
 import qualified Graphics.UI.SDL as SDL
 import qualified Graphics.Rendering.OpenGL as GL
 import Control.Arrow
@@ -72,15 +73,20 @@ joinSF = self []
         in
             (map fst runs, \dri -> self (map (($ dri) . snd) runs))
 
-integral :: Double -> SF Double Double
-integral q = SF $ \x ->
-    (q, \d -> case d of
-                   TimeStepEvent dt -> integral (q + x*dt)
-                   _                -> integral q)
+integral :: (Vec.Vector v, Fractional (Vec.Field v)) => SF v v
+integral = integral' Vec.zero
+    where
+    integral' q = SF $ \x ->
+        (q, \d -> case d of
+                       TimeStepEvent dt -> integral' (q Vec.^+^ fromDouble dt Vec.*^ x)
+                       _                -> integral' q)
+    fromDouble = fromRational . toRational
 
+integralD :: SF Double Double
+integralD = Vec.Scalar ^>> integral >>^ Vec.fromScalar
 
 time :: SF () Double
-time = constSF 1 >>> integral 0
+time = constSF 1 >>> integralD
 
 mousePos :: SF () (Double,Double)
 mousePos = helper (0,0)

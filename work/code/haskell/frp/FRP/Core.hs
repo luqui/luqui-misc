@@ -15,6 +15,7 @@ module FRP.Core
     , delay
     , mousePos
     , runFRP
+    , step
     )
 where
 
@@ -41,10 +42,7 @@ data Behavior a
                }
 
 instance Functor Behavior where
-    fmap f (Behavior eval trans) = 
-        Behavior { bEval  = f eval
-                 , bTrans = fmap f . trans
-                 }
+    fmap f b = b =>> (f . pull)
 
 instance Comonad Behavior where
     pull = bEval
@@ -72,18 +70,14 @@ withB2 a b f = fmap (uncurry f) $ zipB a b
 withB3 :: Behavior a -> Behavior b -> Behavior c -> (a -> b -> c -> d) -> Behavior d
 withB3 a b c f = fmap (uncurry (uncurry f)) $ zipB (zipB a b) c
 
-integral :: Behavior Double -> Behavior Double
-integral b = int 0 b
-    where
-    int s b =
-        Behavior { bEval = s
-                 , bTrans = \e -> 
-                        case e of
-                           TimeStepEvent dt -> 
-                               let nextVal = s + dt * pull b
-                               in int nextVal (bTrans b e)
-                           _ -> int s (bTrans b e)
-                 }
+integral :: Double -> Behavior Double -> Behavior Double
+integral q b = Behavior { bEval = q
+                        , bTrans = \e -> 
+                            case e of
+                                 TimeStepEvent dt ->
+                                     integral (dt*pull b + q) (bTrans b e)
+                                 _ -> integral q (bTrans b e)
+                        }
 
 data Event :: * -> * where
     EVNever    :: Event a
@@ -113,7 +107,7 @@ untilB b (EVJoin e)     = untilB b (fmap (untilB b) e)
 -- EVSnapshot impossible, (a,b) /~ Behavior c
 
 time :: Behavior Double
-time = integral (constB 1)
+time = integral 0 (constB 1)
 
 step :: Double -> Behavior a -> Behavior a
 step size b = bTrans b (TimeStepEvent size)
@@ -157,10 +151,10 @@ runFRP b = do
 
     where
     mainLoop b = do
-        putStrLn "-------------------"
+        putStrLn "-------START-------"
         preTicks <- SDL.getTicks 
         events <- whileM (/= SDL.NoEvent) SDL.pollEvent
-        let b' = foldl' (flip ($)) (step 0.05 b) (map stepEvent events)
+        let b' = foldl' (flip ($)) b (map stepEvent events)
         GL.clear [GL.ColorBuffer]
         Draw.runDraw (pull b')
         SDL.glSwapBuffers
@@ -168,8 +162,9 @@ runFRP b = do
         let timeTaken = fromIntegral (postTicks - preTicks) * 0.001
         when (timeTaken < 1) $ 
             SDL.delay (floor $ (1 - timeTaken) * 1000)
+        putStrLn "-------END-------"
         when (not $ SDL.Quit `elem` events) $ do
-            mainLoop b'
+            mainLoop (step 0.05 b')
 
     whileM p m = do
         r <- m

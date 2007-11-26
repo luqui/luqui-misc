@@ -4,6 +4,7 @@ module FRP.ArrowCore
     ( Time
     , SF, (:>)
     , integral
+    , integralD
     , time
     , holdSignal
     , constSF
@@ -14,6 +15,7 @@ module FRP.ArrowCore
     , mouseButtonDown
     , joinSF
     , edgeToPulse
+    , foldPulse
     )
 where
 
@@ -98,6 +100,12 @@ mousePos = helper (0,0)
                            _                                    -> self)
 
 stupidTransform (x,y) = (32 * fromIntegral x / 640 - 16, 12 - 24 * fromIntegral y / 480)
+
+foldPulse :: (a -> b -> b) -> b -> SF (Maybe a) b
+foldPulse f b0 = SF $ \ma ->
+    case ma of
+         Nothing -> (b0, const (foldPulse f b0))
+         Just x  -> let next = f x b0 in (b0, const (foldPulse f next))
 
 -- for converting from edge to pulse events
 edgeToPulse :: SF (Maybe a) (Maybe a)

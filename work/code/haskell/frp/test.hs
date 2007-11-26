@@ -10,7 +10,11 @@ main = runFRP circlePlacer
 
 circlePlacer :: () :> Draw ()
 circlePlacer = 
-    mouseButtonDown SDL.ButtonLeft >>> edgeToPulse >>> arr (fmap newCircle) >>> joinSF >>^ sequence_
+    mouseButtonDown SDL.ButtonLeft     -- the state of the left mouse button
+           >>> edgeToPulse             -- convert to clicks
+           >>> pure (fmap newCircle)   -- make a new circle at the clicked position
+           >>> joinSF                  -- make a list of all created circles
+           >>> pure sequence_          -- combine them into one drawing
 
 newCircle :: (Double, Double) -> () :> Draw ()
 newCircle init = proc () -> do

@@ -11,23 +11,23 @@ data PhysIn =
            }
 data PhysOut =
     PhysOut { position :: Vec
-            , velocity :: Vec
+            , momentum :: Vec
             }
 
 type Ball = PhysIn :=> PhysOut
 
-newBall :: Vec -> Vec -> Ball
-newBall ipos ivel = proc inp -> do
-    avel <- (^+^ ivel) ^<< integral -< force inp
-    imvel <- foldPulse (^+^) zero -< impulse inp
+newBall :: Vec -> Vec -> Double -> Ball
+newBall ipos ivel mass = proc inp -> do
+    avel <- (^+^ ivel) ^<< integral -< force inp ^/ mass
+    imvel <- foldPulse (^+^) zero -< fmap (^/ mass) $ impulse inp
     let vel = avel ^+^ imvel
     pos  <- (^+^ ipos) ^<< integral -< vel
-    returnA -< PhysOut { position = pos, velocity = vel }
+    returnA -< PhysOut { position = pos, momentum = mass *^ vel }
 
 collide :: (PhysOut,PhysOut) :=> Maybe (PhysIn,PhysIn)
 collide = proc ~(a,b) -> do
     let pdiff = position b ^-^ position a
-    let vdiff = velocity b ^-^ velocity a
+    let vdiff = momentum b ^-^ momentum a
     lastvdiff <- delayStep zero -< vdiff
 
     let collision = guard $ norm pdiff < 2
@@ -43,8 +43,8 @@ collide = proc ~(a,b) -> do
 main = runGame defaultInit game
 
 game = proc () -> do
-    rec balla <- newBall (-5,0) (5,0) -< fst collision'
-        ballb <- newBall (5,1) (-1,0) -< snd collision'
+    rec balla <- newBall (-5,0) (5,0) 1 -< fst collision'
+        ballb <- newBall (5,1) (-1,0) 1 -< snd collision'
         collision <- collide -< (balla,ballb)
         let collision' = fromMaybe (dup $ PhysIn zero Nothing) collision
     returnA -< translate (position balla) unitCircle

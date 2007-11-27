@@ -210,7 +210,7 @@ runGame b = do
         when (timeTaken < timeStep) $
             SDL.delay (floor $ (timeStep - timeTaken) * 1000)
 
-        when (not $ SDL.Quit `elem` events) $ do
+        when (not $ any isQuitEvent events) $ do
             mainLoop (stepTime timeStep b')
 
     whileM p m = do
@@ -233,3 +233,7 @@ runGame b = do
         cmm' cur (x:xs) = maybe id (:) cur $ x : cmm' Nothing xs
 
     compressEvents = compressMouseMotion
+
+    isQuitEvent SDL.Quit = True
+    isQuitEvent (SDL.KeyDown (SDL.Keysym { SDL.symKey = SDL.SDLK_ESCAPE })) = True
+    isQuitEvent _ = False

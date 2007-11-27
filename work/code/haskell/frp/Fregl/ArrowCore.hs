@@ -195,7 +195,7 @@ runGame b = do
     mainLoop b = do
         preTicks <- SDL.getTicks
 
-        events <- whileM (/= SDL.NoEvent) SDL.pollEvent
+        events <- fmap compressEvents $ whileM (/= SDL.NoEvent) SDL.pollEvent
         let b' = foldl' (flip ($)) b (map stepExtEvent events)
         
         GL.clear [GL.ColorBuffer]
@@ -215,3 +215,18 @@ runGame b = do
         if p r
            then fmap (r:) $ whileM p m
            else return []
+
+    -- Compresses consecutive series of mousemotion events
+    -- this is very conservative, we might even do something like
+    -- smash all mousemotions per frame into exactly one
+    -- but then we lose their ordering wrt other events.
+    -- This way we're sure that if you grab the position from
+    -- something that's tracking the mousemotion when a click
+    -- happens, the value will be consistent.
+    compressMouseMotion = cmm' Nothing
+        where
+        cmm' cur []     = maybe [] (:[]) cur
+        cmm' cur (x@(SDL.MouseMotion {}):xs) = cmm' (Just x) xs
+        cmm' cur (x:xs) = maybe id (:) cur $ x : cmm' Nothing xs
+
+    compressEvents = compressMouseMotion

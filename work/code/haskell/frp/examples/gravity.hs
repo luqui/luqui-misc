@@ -17,14 +17,12 @@ balls = mouseButtonDown SDL.ButtonLeft
 
 ball :: (Double,Double) -> [(Double,Double)] :> (Double,Double)
 ball initpos = proc ballpos -> do
-    rec pos <- (^+^ initpos) ^<< integral -< (velx,vely)
-        let velx = fst velFromAccel + impulsex
-        let vely = snd velFromAccel + impulsey
+    rec pos <- (^+^ initpos) ^<< integral -< vel
+        vel <- returnA -< impulse ^+^ velBound 50 velFromAccel
         velFromAccel <- integral -< accel
         
         let accel = 10 *^ (foldl' (^+^) zero $ map (forceFrom pos) ballpos)
-        impulsex <- foldPulse (+) 0 <<< bounce1d (-16,16) 1 -< (fst pos,velx)
-        impulsey <- foldPulse (+) 0 <<< bounce1d (-12,12) 1 -< (snd pos,vely)
+        impulse <- foldPulse (^+^) zero <<< bounce -< (pos,vel)
     returnA -< pos
 
     where
@@ -32,6 +30,12 @@ ball initpos = proc ballpos -> do
         if self == pos 
            then zero
            else unitize (pos ^-^ self) ^* (1 / norm2 (pos ^-^ self))
+
+velBound :: Double ->(Double,Double) -> (Double,Double)
+velBound max v = 
+    if norm v > max
+       then max *^ unitize v
+       else v
 
 bounce1d :: (Double,Double) -> Double -> (Double,Double) :> Maybe Double
 bounce1d (minBound, maxBound) radius = proc (pos,vel) -> do
@@ -42,7 +46,7 @@ bounce1d (minBound, maxBound) radius = proc (pos,vel) -> do
     returnA -< leftBounce `mplus` rightBounce
 
 bounce :: ((Double,Double),(Double,Double)) :> Maybe (Double,Double)
-bounce = proc ((posx,posy),(velx,vely)) -> do
+bounce = proc (~(posx,posy),~(velx,vely)) -> do
     xb <- bounce1d (-16,16) 1 -< (posx,velx)
     yb <- bounce1d (-12,12) 1 -< (posy,vely)
     returnA -< case (xb,yb) of

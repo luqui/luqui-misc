@@ -6,16 +6,20 @@ import Data.List (foldl')
 import Debug.Trace
 import Control.Monad
 
-main = runGame $ balls >>> arr (map (\p -> translate p unitCircle))
-                       >>> arr (foldr (>>) (return ()))
+type Vec = Vec2 Double
 
-balls :: () :> [(Double,Double)]
+main = runGame defaultInit
+          $ balls
+        >>> arr (map (\p -> translate p unitCircle))
+        >>> arr (foldr (>>) (return ()))
+
+balls :: () :> [Vec]
 balls = mouseButtonDown SDL.ButtonLeft
         >>> edgeToPulse
         >>> arr (fmap ball)
         >>> joinSF
 
-ball :: (Double,Double) -> [(Double,Double)] :> (Double,Double)
+ball :: Vec -> [Vec] :> Vec
 ball initpos = proc ballpos -> do
     rec pos <- (^+^ initpos) ^<< integral -< vel
         vel <- returnA -< impulse ^+^ velBound 50 velFromAccel
@@ -31,7 +35,7 @@ ball initpos = proc ballpos -> do
            then zero
            else unitize (pos ^-^ self) ^* (1 / norm2 (pos ^-^ self))
 
-velBound :: Double ->(Double,Double) -> (Double,Double)
+velBound :: Double -> Vec -> Vec
 velBound max v = 
     if norm v > max
        then max *^ unitize v
@@ -45,7 +49,7 @@ bounce1d (minBound, maxBound) radius = proc (pos,vel) -> do
     let rightBounce = fmap (const (-2*abs vel)) rightHit
     returnA -< leftBounce `mplus` rightBounce
 
-bounce :: ((Double,Double),(Double,Double)) :> Maybe (Double,Double)
+bounce :: (Vec,Vec) :> Maybe Vec
 bounce = proc (~(posx,posy),~(velx,vely)) -> do
     xb <- bounce1d (-16,16) 1 -< (posx,velx)
     yb <- bounce1d (-12,12) 1 -< (posy,vely)

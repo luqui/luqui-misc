@@ -27,14 +27,12 @@ norm v = sqrt (norm2 v)
 unitize :: (Vector v, Floating (Field v)) => v -> v
 unitize v = v ^* recip (norm v)
 
-newtype Scalar a = Scalar { fromScalar :: a }
-
-instance (Num a) => Vector (Scalar a) where
-    type Field (Scalar a) = a
-    zero = Scalar 0
-    Scalar x ^+^ Scalar y = Scalar (x+y)
-    x *^ Scalar y = Scalar (x*y)
-    Scalar x ^*^ Scalar y = x*y
+instance Vector Double where
+    type Field Double = Double
+    zero = 0
+    (^+^) = (+)
+    (*^)  = (*)
+    (^*^) = (*)
 
 type Vec2 a = (a,a)
 

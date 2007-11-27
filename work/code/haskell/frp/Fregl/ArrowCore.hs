@@ -4,7 +4,6 @@ module Fregl.ArrowCore
     ( Time
     , SF, (:>)
     , integral
-    , integralD
     , time
     , holdSignal
     , constSF
@@ -18,6 +17,9 @@ module Fregl.ArrowCore
     , foldPulse
     , delayLoop
     , delayStep
+    , untilSF
+    , Init(..)
+    , defaultInit
     )
 where
 
@@ -29,13 +31,18 @@ import Control.Arrow
 import Data.List (foldl')
 import Control.Monad (when)
 import Data.Maybe (isJust)
+import Control.Concurrent (threadDelay)
 
 type Time = Double
 type ExtEvent = SDL.Event
 
 data DriveEvent
-    = TimeStepEvent Time
-    | ExtEvent ExtEvent
+    = TimeStepEvent !Time
+    | ExtEvent !ExtEvent
+    -- encode these because we want them in our local coordinate system
+    | MouseMotionEvent     !(Double,Double) 
+    | MouseButtonDownEvent !SDL.MouseButton !(Double,Double)
+    | MouseButtonUpEvent   !SDL.MouseButton !(Double,Double)
 
 type Driver = DriveEvent
 
@@ -78,6 +85,14 @@ joinSF = self []
         in
             (vals, \dri -> self (map (($ dri) . snd) runs))
 
+untilSF :: SF (a, Maybe (SF a a)) a
+untilSF = SF $ \(a,msfa) ->
+    case msfa of
+         Nothing -> (a, const untilSF)
+         Just sf -> 
+            let (a', trans) = runSF sf a
+            in (a', \dri -> arr fst >>> trans dri)
+
 integral :: (Vec.Vector v, Fractional (Vec.Field v)) => SF v v
 integral = integral' Vec.zero
     where
@@ -87,11 +102,8 @@ integral = integral' Vec.zero
                        _                -> integral' q)
     fromDouble = fromRational . toRational
 
-integralD :: SF Double Double
-integralD = Vec.Scalar ^>> integral >>^ Vec.fromScalar
-
 time :: SF () Double
-time = constSF 1 >>> integralD
+time = constSF 1 >>> integral
 
 mousePos :: SF () (Double,Double)
 mousePos = helper (0,0)
@@ -130,14 +142,14 @@ mouseButtonDown but = downState
     where
     downState = SF $ \() ->
         (Nothing, \ev -> case ev of
-                              ExtEvent (SDL.MouseButtonDown x y but') ->
+                              MouseButtonDownEvent but' p ->
                                 if but == but'
-                                   then upState (stupidTransform (x,y))
+                                   then upState p
                                    else downState
                               _ -> downState)
     upState pos = SF $ \() -> 
         (Just pos, \ev -> case ev of
-                               ExtEvent (SDL.MouseButtonUp x y but') ->
+                               MouseButtonUpEvent but' p ->
                                  if but == but'
                                     then downState
                                     else upState pos
@@ -178,16 +190,35 @@ stepDriver dri ~(SF f) = snd (f ()) dri
 stepTime :: Double -> SF () b -> SF () b
 stepTime size = stepDriver (TimeStepEvent size)
 
-stepExtEvent :: ExtEvent -> SF () b -> SF () b
-stepExtEvent ext = stepDriver (ExtEvent ext)
 
-runGame :: SF () (Draw.Draw ()) -> IO ()
-runGame b = do
+
+data Init
+    = Init { initResolution :: (Int,Int)
+           , initColorDepth :: Int
+           , initFullScreen :: Bool
+           , initViewport   :: ((Double,Double), (Double,Double))
+           }
+
+defaultInit :: Init
+defaultInit = 
+    Init { initResolution = (640,480)
+         , initColorDepth = 32
+         , initFullScreen = False
+         , initViewport   = ((-16,-12), (16,12))
+         }
+
+runGame :: Init -> SF () (Draw.Draw ()) -> IO ()
+runGame init b = do
     SDL.init [SDL.InitVideo]
-    SDL.setVideoMode 640 480 32 [SDL.OpenGL]
+    let Init { initResolution = (resx,resy)
+             , initColorDepth = depth
+             , initFullScreen = full
+             , initViewport   = ((minx, miny), (maxx, maxy))
+             } = init 
+    SDL.setVideoMode resx resy depth ([SDL.OpenGL] ++ [SDL.Fullscreen | full])
     GL.matrixMode GL.$= GL.Projection
     GL.loadIdentity
-    GL.ortho2D (-16) 16 (-12) 12
+    GL.ortho2D minx maxx miny maxy
     GL.matrixMode GL.$= GL.Modelview 0
     GL.loadIdentity
     mainLoop b
@@ -199,7 +230,7 @@ runGame b = do
         preTicks <- SDL.getTicks
 
         events <- fmap compressEvents $ whileM (/= SDL.NoEvent) SDL.pollEvent
-        let b' = foldl' (flip ($)) b (map stepExtEvent events)
+        let b' = foldl' (flip ($)) b (map (stepDriver . translateEvent . ExtEvent) events)
         
         GL.clear [GL.ColorBuffer]
         Draw.runDraw (fst (runSF b' ()))
@@ -208,7 +239,8 @@ runGame b = do
         postTicks <- SDL.getTicks
         let timeTaken = fromIntegral (postTicks - preTicks) * 0.001
         when (timeTaken < timeStep) $
-            SDL.delay (floor $ (timeStep - timeTaken) * 1000)
+            threadDelay (floor $ (timeStep - timeTaken) * 1000000)
+            --SDL.delay (floor $ (timeStep - timeTaken) * 1000)
 
         when (not $ any isQuitEvent events) $ do
             mainLoop (stepTime timeStep b')
@@ -233,6 +265,22 @@ runGame b = do
         cmm' cur (x:xs) = maybe id (:) cur $ x : cmm' Nothing xs
 
     compressEvents = compressMouseMotion
+
+    translateEvent = translate 
+        where
+        translate (ExtEvent (SDL.MouseMotion x y _ _)) =
+            MouseMotionEvent (transCoord (x,y))
+        translate (ExtEvent (SDL.MouseButtonDown x y b)) =
+            MouseButtonDownEvent b (transCoord (x,y))
+        translate (ExtEvent (SDL.MouseButtonUp x y b)) =
+            MouseButtonUpEvent b (transCoord (x,y))
+        translate x = x
+        transCoord (x,y) = 
+            let (xres,yres)               = initResolution init
+                ((xmin,ymin),(xmax,ymax)) = initViewport init
+            in
+            ((xmax - xmin) * fromIntegral x / fromIntegral xres + xmin
+            ,(ymax - ymin) * fromIntegral (yres - fromIntegral y) / fromIntegral yres + ymin)
 
     isQuitEvent SDL.Quit = True
     isQuitEvent (SDL.KeyDown (SDL.Keysym { SDL.symKey = SDL.SDLK_ESCAPE })) = True

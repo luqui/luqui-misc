@@ -16,6 +16,8 @@ module Fregl.ArrowCore
     , joinSF
     , edgeToPulse
     , foldPulse
+    , delayLoop
+    , delayStep
     )
 where
 
@@ -108,18 +110,19 @@ foldPulse f b0 = SF $ \ma ->
          Nothing -> (b0, const (foldPulse f b0))
          Just x  -> let next = f x b0 in (b0, const (foldPulse f next))
 
--- for converting from edge to pulse events
+delayStep :: a -> SF a a
+delayStep a0 = SF $ \a -> (a0, const (delayStep a))
+
+delayLoop :: a -> SF a a -> SF a a
+delayLoop a0 ar = SF $ \a -> 
+    let (a',trans) = runSF ar a0
+    in (a', \dri -> delayLoop a' (trans dri))
+
 edgeToPulse :: SF (Maybe a) (Maybe a)
-edgeToPulse = downState
+edgeToPulse = delayStep Nothing &&& arr id >>> arr posTrans
     where
-    downState = SF $ \ma ->
-        case ma of
-             Nothing -> (Nothing, const downState)
-             Just x  -> (Just x, const upState)
-    upState = SF $ \ma ->
-        case ma of
-             Nothing -> (Nothing, const downState)
-             Just x  -> (Nothing, const upState)
+    posTrans (Nothing, Just x) = Just x
+    posTrans _                 = Nothing
 
 -- An edge event stating whether the mouse is down and where it last clicked
 mouseButtonDown :: SDL.MouseButton -> SF () (Maybe (Double,Double))

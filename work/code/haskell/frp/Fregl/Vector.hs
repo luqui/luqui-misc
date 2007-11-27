@@ -3,7 +3,7 @@
 module Fregl.Vector where
 
 infixl 6 ^+^, ^-^
-infixl 7 *^, ^*, ^*^
+infixl 7 *^, ^*, ^*^, ^/
 
 class (Num (Field v)) => Vector v where
     type Field v :: *
@@ -18,6 +18,9 @@ class (Num (Field v)) => Vector v where
 (^-^) :: (Vector v) => v -> v -> v
 x ^-^ y = x ^+^ (-1) *^ y
 
+(^/) :: (Vector v, Fractional (Field v)) => v -> Field v -> v
+x ^/ a = x ^* (1 / a)
+
 norm2 :: (Vector v) => v -> Field v
 norm2 v = v ^*^ v
 
@@ -26,6 +29,9 @@ norm v = sqrt (norm2 v)
 
 unitize :: (Vector v, Floating (Field v)) => v -> v
 unitize v = v ^* recip (norm v)
+
+projectTo :: (Vector v, Floating (Field v)) => v -> v -> v
+projectTo to v = ((v ^*^ to) *^ to) ^/ norm2 to
 
 instance Vector Double where
     type Field Double = Double

@@ -26,15 +26,19 @@ newBall ipos ivel = proc inp -> do
 
 collide :: (PhysOut,PhysOut) :=> Maybe (PhysIn,PhysIn)
 collide = proc ~(a,b) -> do
-    let pamb = position b ^-^ position a
-    lastvd <- delayStep zero -< velocity b ^-^ velocity a
-    let collision = guard $ norm (position a ^-^ position b) < 2
-                         && fst pamb * fst lastvd + snd pamb * snd lastvd < 0
-    collision' <- edgeToPulse -< collision
-    let cnorm = unitize (position b ^-^ position a)
-    let imp = ((velocity b ^-^ velocity a) ^*^ cnorm) *^ cnorm
-    returnA -< fmap (const $ (PhysIn zero (Just $ imp)
-                             ,PhysIn zero (Just $ (-1) *^ imp))) collision'
+    let pdiff = position b ^-^ position a
+    let vdiff = velocity b ^-^ velocity a
+    lastvdiff <- delayStep zero -< vdiff
+
+    let collision = guard $ norm pdiff < 2
+                         && fst pdiff * fst lastvdiff + snd pdiff * snd lastvdiff < 0
+    collisionSpark <- edgeToPulse -< collision
+
+    -- if the spark happened, we compute these
+    let impulse = projectTo pdiff vdiff
+    returnA -< fmap (const $ (PhysIn zero (Just $ impulse)
+                             ,PhysIn zero (Just $ (-1) *^ impulse))) 
+                    collisionSpark
 
 main = runGame defaultInit game
 

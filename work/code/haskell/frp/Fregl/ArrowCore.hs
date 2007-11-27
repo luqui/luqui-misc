@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fglasgow-exts -fbang-patterns -farrows #-}
 
-module FRP.ArrowCore 
+module Fregl.ArrowCore 
     ( Time
     , SF, (:>)
     , integral
@@ -10,7 +10,7 @@ module FRP.ArrowCore
     , constSF
     , mousePos
     , keyDown
-    , runFRP
+    , runGame
     , isJust
     , mouseButtonDown
     , joinSF
@@ -19,8 +19,8 @@ module FRP.ArrowCore
     )
 where
 
-import qualified FRP.Draw as Draw
-import qualified FRP.Vector as Vec
+import qualified Fregl.Draw as Draw
+import qualified Fregl.Vector as Vec
 import qualified Graphics.UI.SDL as SDL
 import qualified Graphics.Rendering.OpenGL as GL
 import Control.Arrow
@@ -177,8 +177,8 @@ stepTime size = stepDriver (TimeStepEvent size)
 stepExtEvent :: ExtEvent -> SF () b -> SF () b
 stepExtEvent ext = stepDriver (ExtEvent ext)
 
-runFRP :: SF () (Draw.Draw ()) -> IO ()
-runFRP b = do
+runGame :: SF () (Draw.Draw ()) -> IO ()
+runGame b = do
     SDL.init [SDL.InitVideo]
     SDL.setVideoMode 640 480 32 [SDL.OpenGL]
     GL.matrixMode GL.$= GL.Projection

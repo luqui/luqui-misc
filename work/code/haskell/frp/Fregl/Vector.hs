@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
-module FRP.Vector where
+module Fregl.Vector where
 
 infixl 6 ^+^, ^-^
 infixl 7 *^, ^*, ^*^

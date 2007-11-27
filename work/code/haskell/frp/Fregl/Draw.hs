@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
-module FRP.Draw
+module Fregl.Draw
     ( Draw, runDraw
     , regularUnitNGon, unitCircle
     , translate, scale, rotate

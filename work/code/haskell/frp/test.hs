@@ -1,11 +1,11 @@
 {-# OPTIONS_GHC -fglasgow-exts -fbang-patterns -farrows #-}
 
 import Control.Arrow
-import FRP
+import Fregl
 import Debug.Trace
 import qualified Graphics.UI.SDL as SDL
 
-main = runFRP circlePlacer
+main = runGame circlePlacer
 
 
 circlePlacer :: () :> Draw ()

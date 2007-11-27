@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fglasgow-exts -farrows #-}
 
-import FRP
+import Fregl
 import Control.Arrow
 import Control.Monad
 
@@ -27,4 +27,4 @@ ball = proc () -> do
         impulsex <- foldPulse (+) 0 <<< bounce (-16,16) 1 -< (x,x')
     returnA -< translate (x,y) unitCircle
 
-main = runFRP ball
+main = runGame ball

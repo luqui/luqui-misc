@@ -44,19 +44,19 @@ type (:>) = SF
 
 instance Arrow SF where
     arr f = let r = SF $ \a -> (f a, const r) in r
-    first (SF f)  = SF $ \(b,d) -> 
+    first ~(SF f)  = SF $ \(b,d) -> 
         let (c,trans) = f b in ((c,d), first . trans)
-    SF f >>> SF g = SF $ \b ->
+    ~(SF f) >>> ~(SF g) = SF $ \b ->
         let (c,trans)  = f b
             (d,trans') = g c
         in (d, \dri -> trans dri >>> trans' dri)
 
 instance ArrowLoop SF where
-    loop (SF f) = SF $ \b ->
+    loop ~(SF f) = SF $ \b ->
         let ((c,d), trans) = f (b,d) in (c, loop . trans)
 
 instance ArrowChoice SF where
-    left (SF f) = r
+    left ~(SF f) = r
         where
         r = SF $ \bord ->
                     case bord of
@@ -66,14 +66,15 @@ instance ArrowChoice SF where
 
 -- Accepts pulse events containing signals; aggregates into a list of 
 -- signals, newest first (for no good reason).
-joinSF :: SF (Maybe (SF () a)) [a]
+joinSF :: SF (Maybe (SF [a] a)) [a]
 joinSF = self []
     where
     self as = SF $ \msua ->
         let arrows = maybe id (:) msua $ as
-            runs = map (\a -> runSF a ()) arrows
+            runs = map (\a -> runSF a vals) arrows
+            vals = map fst runs
         in
-            (map fst runs, \dri -> self (map (($ dri) . snd) runs))
+            (vals, \dri -> self (map (($ dri) . snd) runs))
 
 integral :: (Vec.Vector v, Fractional (Vec.Field v)) => SF v v
 integral = integral' Vec.zero
@@ -169,7 +170,7 @@ constSF :: a -> SF b a
 constSF x = arr (const x)
 
 stepDriver :: Driver -> SF () b -> SF () b
-stepDriver dri (SF f) = snd (f ()) dri
+stepDriver dri ~(SF f) = snd (f ()) dri
 
 stepTime :: Double -> SF () b -> SF () b
 stepTime size = stepDriver (TimeStepEvent size)
@@ -190,7 +191,7 @@ runGame b = do
     SDL.quit
 
     where
-    timeStep = 0.02
+    timeStep = 1/30.0
     mainLoop b = do
         preTicks <- SDL.getTicks
 

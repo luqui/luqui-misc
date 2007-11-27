@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fglasgow-exts #-}
+{-# OPTIONS_GHC -fglasgow-exts -fbang-patterns #-}
 
 module Fregl.Vector where
 
@@ -41,15 +41,15 @@ type Vec2 a = (a,a)
 instance (Num a) => Vector (Vec2 a) where
     type Field (Vec2 a) = a
     zero = (0,0)
-    (x,y) ^+^ (x',y') = (x+x',y+y')
-    a *^ (x,y) = (a*x, a*y)
-    (x,y) ^*^ (x',y') = x*x' + y*y'
+    (!x,!y) ^+^ (!x',!y') = (x+x',y+y')
+    a *^ (!x,!y) = (a*x, a*y)
+    (!x,!y) ^*^ (!x',!y') = x*x' + y*y'
 
 type Vec3 a = (a,a,a)
 
 instance (Num a) => Vector (Vec3 a) where
     type Field (Vec3 a) = a
     zero = (0,0,0)
-    (x,y,z) ^+^ (x',y',z') = (x+x',y+y',z+z')
-    a *^ (x,y,z) = (a*x,a*y,a*z)
-    (x,y,z) ^*^ (x',y',z') = x*x' + y*y' + z*z'
+    (!x,!y,!z) ^+^ (!x',!y',!z') = (x+x',y+y',z+z')
+    a *^ (!x,!y,!z) = (a*x,a*y,a*z)
+    (!x,!y,!z) ^*^ (!x',!y',!z') = x*x' + y*y' + z*z'

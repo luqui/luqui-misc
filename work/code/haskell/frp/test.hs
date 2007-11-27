@@ -16,8 +16,8 @@ circlePlacer =
            >>> joinSF                  -- make a list of all created circles
            >>> pure sequence_          -- combine them into one drawing
 
-newCircle :: (Double, Double) -> () :> Draw ()
-newCircle init = proc () -> do
+newCircle :: (Double, Double) -> a :> Draw ()
+newCircle init = proc _ -> do
     mouse <- mousePos -< ()
     rec let u' = mouse ^-^ u
         u  <- (^+^ init) ^<< integral -< u'

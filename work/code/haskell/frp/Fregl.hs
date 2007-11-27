@@ -2,7 +2,7 @@ module Fregl
     ( module Fregl.ArrowCore
     , module Fregl.Draw
     , module Fregl.Vector
-    , module Control.Arrrow
+    , module Control.Arrow
     )
 where
 

@@ -4,6 +4,7 @@ module Fregl.Draw
     ( Draw, runDraw
     , Color
     , regularUnitNGon, unitCircle
+    , rectangle
     , translate, scale, rotate
     , color
     )
@@ -24,9 +25,18 @@ regularUnitNGon sides = Draw $
         mapM_ (\theta -> vertex2d (cos theta) (sin theta))
               $ map ((2*pi/fromIntegral sides)*) [0..fromIntegral sides]
 
-
 unitCircle :: Draw ()
 unitCircle = regularUnitNGon 24
+
+rectangle :: (Double,Double) -> Draw ()
+rectangle (w,h) = Draw $ do
+    let w' = 0.5*w
+        h' = 0.5*h
+    GL.renderPrimitive GL.Quads $ do
+        vertex2d (-w') (-h')
+        vertex2d ( w') (-h')
+        vertex2d ( w') ( h')
+        vertex2d (-w') ( h')
 
 color :: Color -> Draw a -> Draw a
 color c@(r,g,b) subdraw = Draw $ do

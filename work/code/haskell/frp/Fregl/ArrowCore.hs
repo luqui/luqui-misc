@@ -2,7 +2,7 @@
 
 module Fregl.ArrowCore 
     ( Time
-    , SF, (:>)
+    , SF, (:=>)
     , integral
     , time
     , holdSignal
@@ -49,7 +49,7 @@ type Driver = DriveEvent
 newtype SF a b =
     SF { runSF :: a -> (b, Driver -> SF a b) }
 
-type (:>) = SF
+type (:=>) = SF
 
 instance Arrow SF where
     arr f = let r = SF $ \a -> (f a, const r) in r

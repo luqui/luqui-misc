@@ -24,5 +24,5 @@ newCircle init = proc () -> do
 
     big <- keyDown SDL.SDLK_SPACE -< ()
     let scaler = if isJust big then scale 2 2 else id
-    returnA -< translate u $ scaler $ unitCircle
+    returnA -< color (1,0,0) $ translate u $ scaler $ unitCircle
 

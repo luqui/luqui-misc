@@ -4,14 +4,17 @@ module Fregl.Draw
     ( Draw, runDraw
     , regularUnitNGon, unitCircle
     , translate, scale, rotate
+    , color
     )
 where
 
 import qualified Graphics.Rendering.OpenGL as GL
+import qualified Control.Monad.Reader as Reader
+
+type Color = (Double,Double,Double)
 
 newtype Draw a = Draw { runDraw :: IO a }
     deriving (Functor, Monad)
-
 
 regularUnitNGon :: Int -> Draw ()
 regularUnitNGon sides = Draw $
@@ -23,6 +26,14 @@ regularUnitNGon sides = Draw $
 
 unitCircle :: Draw ()
 unitCircle = regularUnitNGon 24
+
+color :: Color -> Draw a -> Draw a
+color c@(r,g,b) subdraw = Draw $ do
+    cur <- GL.get GL.currentColor
+    GL.color (GL.Color3 r g b)
+    result <- runDraw subdraw
+    GL.color cur
+    return result
 
 translate :: (Double,Double) -> Draw a -> Draw a
 translate (x,y) d = Draw $ GL.preservingMatrix $ do

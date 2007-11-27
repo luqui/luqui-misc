@@ -2,6 +2,7 @@
 
 module Fregl.Draw
     ( Draw, runDraw
+    , Color
     , regularUnitNGon, unitCircle
     , translate, scale, rotate
     , color

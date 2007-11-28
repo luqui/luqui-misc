@@ -111,10 +111,8 @@ mousePos = helper (0,0)
     helper (x,y) = self
         where self = SF $ \() -> 
                 ((x,y), \d -> case d of
-                           ExtEvent (SDL.MouseMotion x' y' _ _) -> helper $ stupidTransform (x',y')
-                           _                                    -> self)
-
-stupidTransform (x,y) = (32 * fromIntegral x / 640 - 16, 12 - 24 * fromIntegral y / 480)
+                           MouseMotionEvent x' y' -> helper $ (x',y')
+                           _                      -> self)
 
 foldPulse :: (a -> b -> b) -> b -> SF (Maybe a) b
 foldPulse f b0 = SF $ \ma ->

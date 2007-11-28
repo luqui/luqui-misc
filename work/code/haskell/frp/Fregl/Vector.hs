@@ -2,6 +2,8 @@
 
 module Fregl.Vector where
 
+import Fregl.Differentiable
+
 infixl 6 ^+^, ^-^
 infixl 7 *^, ^*, ^*^, ^/
 
@@ -49,6 +51,11 @@ instance (Num a) => Vector (Vec2 a) where
     a *^ (!x,!y) = (a*x, a*y)
     (!x,!y) ^*^ (!x',!y') = x*x' + y*y'
 
+instance Differentiable (Vec2 Double) where
+    type Derivative (Vec2 Double) = Vec2 Double
+    differentiate dt a b = (b ^-^ a) ^/ dt
+    integrate     dt d a = a ^+^ (dt *^ d)
+
 type Vec3 a = (a,a,a)
 
 instance (Num a) => Vector (Vec3 a) where
@@ -57,3 +64,8 @@ instance (Num a) => Vector (Vec3 a) where
     (!x,!y,!z) ^+^ (!x',!y',!z') = (x+x',y+y',z+z')
     a *^ (!x,!y,!z) = (a*x,a*y,a*z)
     (!x,!y,!z) ^*^ (!x',!y',!z') = x*x' + y*y' + z*z'
+
+instance Differentiable (Vec3 Double) where
+    type Derivative (Vec3 Double) = Vec3 Double
+    differentiate dt a b = (b ^-^ a) ^/ dt
+    integrate     dt d a = a ^+^ (dt *^ d)

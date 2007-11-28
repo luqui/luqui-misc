@@ -21,9 +21,9 @@ balls = mouseButtonDown SDL.ButtonLeft
 
 ball :: Vec -> [Vec] :=> Vec
 ball initpos = proc ballpos -> do
-    rec pos <- (^+^ initpos) ^<< integral -< vel
+    rec pos <- (^+^ initpos) ^<< integral zero -< vel
         vel <- returnA -< impulse ^+^ velBound 50 velFromAccel
-        velFromAccel <- integral -< accel
+        velFromAccel <- integral zero -< accel
         
         let accel = 10 *^ (foldl' (^+^) zero $ map (forceFrom pos) ballpos)
         impulse <- foldPulse (^+^) zero <<< bounce -< (pos,vel)

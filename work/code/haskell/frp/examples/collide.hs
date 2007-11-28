@@ -27,10 +27,10 @@ type Ball = PhysIn :=> PhysOut
 
 newBall :: Vec -> Vec -> Double -> Ball
 newBall ipos ivel mass = proc inp -> do
-    avel <- (^+^ ivel) ^<< integral -< force inp ^/ mass
+    avel <- (^+^ ivel) ^<< integral zero -< force inp ^/ mass
     imvel <- foldPulse (^+^) zero -< fmap (^/ mass) $ impulse inp
     let vel = avel ^+^ imvel
-    pos  <- (^+^ ipos) ^<< integral -< vel
+    pos  <- (^+^ ipos) ^<< integral zero -< vel
     returnA -< PhysOut { position = pos, momentum = mass *^ vel }
 
 collide :: (PhysOut,PhysOut) :=> Maybe (PhysIn,PhysIn)

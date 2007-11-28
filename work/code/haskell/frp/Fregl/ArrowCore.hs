@@ -25,6 +25,7 @@ where
 
 import qualified Fregl.Draw as Draw
 import qualified Fregl.Vector as Vec
+import qualified Fregl.Differentiable as Diff
 import qualified Graphics.UI.SDL as SDL
 import qualified Graphics.Rendering.OpenGL as GL
 import Control.Arrow
@@ -92,17 +93,14 @@ untilSF = SF $ \(a,msfa) ->
             let (a', trans) = runSF sf a
             in (a', \dri -> arr fst >>> trans dri)
 
-integral :: (Vec.Vector v, Fractional (Vec.Field v)) => SF v v
-integral = integral' Vec.zero
-    where
-    integral' q = SF $ \x ->
-        (q, \d -> case d of
-                       TimeStepEvent dt -> integral' (q Vec.^+^ fromDouble dt Vec.*^ x)
-                       _                -> integral' q)
-    fromDouble = fromRational . toRational
+integral :: (Diff.Differentiable d) => d -> SF (Diff.Derivative d) d
+integral x0 = SF $ \x ->
+    (x0, \d -> case d of
+                    TimeStepEvent dt -> integral (Diff.integrate dt x x0)
+                    _                -> integral x0)
 
 time :: SF () Double
-time = constSF 1 >>> integral
+time = constSF 1 >>> integral 0
 
 mousePos :: SF () (Double,Double)
 mousePos = helper (0,0)

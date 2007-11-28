@@ -60,19 +60,20 @@ mapA f = proc inp -> do
             xs' <- mapA f -< xs
             returnA -< (x':xs')
 
-balls :: [PhysIn :=> PhysOut] -> [PhysIn] :=> [PhysOut]
-balls [] = proc _ -> returnA -< []
-balls (b:bs) = proc ~(inp:inps) -> do
-    rec bout  <- b        -< foldl' addIn inp $ map fst collides'
-        bouts <- balls bs -< zipWith addIn inps $ map snd collides'
+insertBall :: PhysIn :=> PhysOut -> [PhysIn] :=> [PhysOut] -> [PhysIn] :=> [PhysOut]
+insertBall b bs = proc ~(inp:inps) -> do
+    rec bout  <- b  -< foldl' addIn inp $ map fst collides'
+        bouts <- bs -< zipWith addIn inps $ map snd collides'
         collides <- mapA collide -< map ((,) bout) bouts
         let collides' = map (fromMaybe (dup $ PhysIn zero Nothing)) collides
     returnA -< (bout:bouts)
 
 
+newBalls :: [PhysIn :=> PhysOut] -> [PhysIn] :=> [PhysOut]
+newBalls = foldr insertBall (constSF [])
 
 game = proc () -> do
-    bs <- balls [newBall (-5,0) (5,0) 1, newBall (5,1) (-1,0) 1] -< [noIn,noIn]
+    bs <- newBalls [newBall (-5,0) (5,0) 1, newBall (5,1) (-1,0) 1] -< [noIn,noIn]
     let positions = map position bs
     returnA -< foldl' (>>) (return ()) 
                       (map (\p -> translate p unitCircle) positions)

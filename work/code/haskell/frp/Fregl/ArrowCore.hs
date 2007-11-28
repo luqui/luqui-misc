@@ -72,7 +72,6 @@ instance ArrowChoice SF where
                         Left b  -> let (c,trans) = f b in (Left c, left . trans)
                         Right d -> (Right d, const r)
 
-
 -- Accepts pulse events containing signals; aggregates into a list of 
 -- signals, newest first (for no good reason).
 joinSF :: SF (Maybe (SF [a] a)) [a]

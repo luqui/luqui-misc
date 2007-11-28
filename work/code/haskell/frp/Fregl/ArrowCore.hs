@@ -111,8 +111,8 @@ mousePos = helper (0,0)
     helper (x,y) = self
         where self = SF $ \() -> 
                 ((x,y), \d -> case d of
-                           MouseMotionEvent x' y' -> helper $ (x',y')
-                           _                      -> self)
+                           MouseMotionEvent (x',y') -> helper $ (x',y')
+                           _                        -> self)
 
 foldPulse :: (a -> b -> b) -> b -> SF (Maybe a) b
 foldPulse f b0 = SF $ \ma ->

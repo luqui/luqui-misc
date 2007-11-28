@@ -3,6 +3,7 @@
 import Fregl
 import Control.Monad
 import Data.Maybe
+import Data.List
 
 type Vec = (Double,Double)
 data PhysIn =
@@ -13,6 +14,14 @@ data PhysOut =
     PhysOut { position :: Vec
             , momentum :: Vec
             }
+
+addIn :: PhysIn -> PhysIn -> PhysIn
+addIn (PhysIn f i) (PhysIn f' i') = PhysIn (f ^+^ f') (addImpulse i i')
+    where
+    addImpulse Nothing  Nothing   = Nothing
+    addImpulse (Just i) Nothing   = Just i
+    addImpulse Nothing  (Just i') = Just i'
+    addImpulse (Just i) (Just i') = Just (i ^+^ i')
 
 type Ball = PhysIn :=> PhysOut
 
@@ -42,12 +51,32 @@ collide = proc ~(a,b) -> do
 
 main = runGame defaultInit game
 
+mapA :: (a :=> b) -> [a] :=> [b]
+mapA f = proc inp -> do
+    case inp of
+         []     -> returnA -< []
+         (x:xs) -> do
+            x'  <- f      -< x
+            xs' <- mapA f -< xs
+            returnA -< (x':xs')
+
+balls :: [PhysIn :=> PhysOut] -> [PhysIn] :=> [PhysOut]
+balls [] = proc _ -> returnA -< []
+balls (b:bs) = proc ~(inp:inps) -> do
+    rec bout  <- b        -< foldl' addIn inp $ map fst collides'
+        bouts <- balls bs -< zipWith addIn inps $ map snd collides'
+        collides <- mapA collide -< map ((,) bout) bouts
+        let collides' = map (fromMaybe (dup $ PhysIn zero Nothing)) collides
+    returnA -< (bout:bouts)
+
+
+
 game = proc () -> do
-    rec balla <- newBall (-5,0) (5,0) 1 -< fst collision'
-        ballb <- newBall (5,1) (-1,0) 1 -< snd collision'
-        collision <- collide -< (balla,ballb)
-        let collision' = fromMaybe (dup $ PhysIn zero Nothing) collision
-    returnA -< translate (position balla) unitCircle
-            >> translate (position ballb) unitCircle
+    bs <- balls [newBall (-5,0) (5,0) 1, newBall (5,1) (-1,0) 1] -< [noIn,noIn]
+    let positions = map position bs
+    returnA -< foldl' (>>) (return ()) 
+                      (map (\p -> translate p unitCircle) positions)
+    where
+    noIn = PhysIn zero Nothing
 
 dup x = (x,x)

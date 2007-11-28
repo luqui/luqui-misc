@@ -73,7 +73,9 @@ newBalls :: [PhysIn :=> PhysOut] -> [PhysIn] :=> [PhysOut]
 newBalls = foldr insertBall (constSF [])
 
 game = proc () -> do
-    bs <- newBalls [newBall (-5,0) (5,0) 1, newBall (5,1) (-1,0) 1] -< [noIn,noIn]
+    bs <- newBalls [ newBall (-5,0) (5,0) 1
+                   , newBall (5,1) (-1,0) 1
+                   , newBall (0,5) (0.5,-2.6) 1] -< [noIn,noIn,noIn]
     let positions = map position bs
     returnA -< foldl' (>>) (return ()) 
                       (map (\p -> translate p unitCircle) positions)

@@ -88,4 +88,6 @@ main = do
         forM_ [1..9] $ \lineno -> do
             forM_ [1..9] $ \colno -> do
                 putChar $ showDig (bd Array.! (colno,lineno))
+                when (colno `mod` 3 == 0) $ putChar ' '
+            when (lineno `mod` 3 == 0) $ putChar '\n'
             putChar '\n'

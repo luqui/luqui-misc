@@ -202,7 +202,7 @@ defaultInit =
          , initViewport   = ((-16,-12), (16,12))
          }
 
-runGame :: Init -> SF () (Draw.Draw ()) -> IO ()
+runGame :: Init -> SF () Draw.Drawing -> IO ()
 runGame init b = do
     SDL.init [SDL.InitVideo]
     let Init { initResolution = (resx,resy)
@@ -228,7 +228,7 @@ runGame init b = do
         let b' = foldl' (flip ($)) b (map (stepDriver . translateEvent . ExtEvent) events)
         
         GL.clear [GL.ColorBuffer]
-        Draw.runDraw (fst (runSF b' ()))
+        Draw.runDrawing (fst (runSF b' ()))
         SDL.glSwapBuffers
         
         postTicks <- SDL.getTicks

@@ -5,13 +5,14 @@ import qualified Graphics.UI.SDL as SDL
 import Data.List (foldl')
 import Debug.Trace
 import Control.Monad
+import Data.Monoid
 
 type Vec = Vec2 Double
 
 main = runGame defaultInit
           $ balls
         >>> arr (map (\p -> translate p unitCircle))
-        >>> arr (foldr (>>) (return ()))
+        >>> arr mconcat
 
 balls :: () :=> [Vec]
 balls = mouseButtonDown SDL.ButtonLeft

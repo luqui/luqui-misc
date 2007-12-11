@@ -4,6 +4,7 @@ import Fregl
 import Control.Monad
 import Data.Maybe
 import Data.List
+import Data.Monoid
 
 type Vec = (Double,Double)
 data PhysIn =
@@ -27,8 +28,9 @@ type Ball = PhysIn :=> PhysOut
 
 newBall :: Vec -> Vec -> Double -> Ball
 newBall ipos ivel mass = proc inp -> do
-    avel <- (^+^ ivel) ^<< integral zero -< force inp ^/ mass
-    imvel <- foldPulse (^+^) zero -< fmap (^/ mass) $ impulse inp
+                                       -- disambig for new phys lib
+    avel <- (^+^ ivel) ^<< integral zero -< Main.force inp ^/ mass
+    imvel <- foldPulse (^+^) zero -< fmap (^/ mass) $ Main.impulse inp
     let vel = avel ^+^ imvel
     pos  <- (^+^ ipos) ^<< integral zero -< vel
     returnA -< PhysOut { position = pos, momentum = mass *^ vel }
@@ -77,8 +79,7 @@ game = proc () -> do
                    , newBall (5,1) (-1,0) 1
                    , newBall (0,5) (0.5,-2.6) 1] -< [noIn,noIn,noIn]
     let positions = map position bs
-    returnA -< foldl' (>>) (return ()) 
-                      (map (\p -> translate p unitCircle) positions)
+    returnA -< mconcat $ map (\p -> translate p unitCircle) positions
     where
     noIn = PhysIn zero Nothing
 

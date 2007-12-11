@@ -35,11 +35,16 @@ instance Arrow SF where
         fmap (fmap shuffleLeft) . runSF f . fmap shuffleRight
 
 instance ArrowLoop SF where
+    -- How this works with the dummy parameter: it strips it off the incoming
+    -- (b) signal, runs the loop with its own dummy (), and then zips the dummy
+    -- back on to the result (c) signal.  That way the dummy is not affected by
+    -- any time distortion done by f.
     loop f = SF $ \sigb -> mdo
+        let (sigbpure, dummy) = (fmap fst &&& fmap snd) $ sigb
+            (sigc, sigd)      = (fmap fst &&& fmap snd) $ fmap fst sigcd
         sigcd <- runSF f sigbd
-        -- hmm, do we use sigb's dummy, or sigcd's?  I think there's a right answer.
-        sigbd <- return $ fmap shuffleLeft (fmap fst sigb `zipSignal` fmap (first snd) sigcd)
-        return $ fmap (first fst) sigcd
+        sigbd <- return $ fmap (flip (,) ()) $ sigbpure `zipSignal` sigd
+        return $ sigc `zipSignal` dummy
 
 
 shuffleLeft (a,(b,c)) = ((a,b),c)

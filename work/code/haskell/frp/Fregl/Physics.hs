@@ -1,4 +1,19 @@
-module Fregl.Physics where
+{-# OPTIONS_GHC -fglasgow-exts #-}
+
+module Fregl.Physics
+    ( BodyID
+    , World
+    , emptyWorld
+    , trajectory
+    , newBody, deleteBody
+    , bodyPosition, bodyVelocity
+    , bodyAngle, bodyAngVel
+    , bodyMass, bodyMoment
+    , force, forceAt
+    , impulse, impulseAt
+    , torque, torqueImpulse
+    )
+where
 
 import Fregl.Vector
 import Fregl.Differentiable

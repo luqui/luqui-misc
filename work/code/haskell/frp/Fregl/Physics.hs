@@ -56,13 +56,19 @@ data Body
 
 instance Differentiable Body where
     type Diff Body = DBody
-    integrate dt d b = b { bState = newState (bState b) }
+    integrate dt d b 
+        | dt == 0   = b { bState = newState0 (bState b) }
+        | otherwise = b { bState = newState  (bState b) }
         where
         newState b = BodyState 
             { bPosition = dt *^ dbPosition d ^+^ bPosition b
             , bVelocity = dt *^ dbVelocity d ^+^ dbLImpulse d ^+^ bVelocity b
             , bRotation = dt *  dbRotation d  +  bRotation b
             , bAngVel   = dt *  dbAngVel d    +  dbAImpulse d  +  bAngVel b 
+            }
+        newState0 b = b
+            { bVelocity = dbLImpulse d ^+^ bVelocity b
+            , bAngVel   = dbAImpulse d  +  bAngVel b
             }
 
 

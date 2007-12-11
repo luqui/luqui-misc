@@ -97,7 +97,7 @@ integral :: (Diff.Differentiable d) => d -> SF (Diff.Diff d) d
 integral x0 = SF $ \x ->
     (x0, \d -> case d of
                     TimeStepEvent dt -> integral (Diff.integrate dt x x0)
-                    _                -> integral x0)
+                    _                -> integral (Diff.integrate 0 x x0))
 
 time :: SF () Double
 time = constSF 1 >>> integral 0

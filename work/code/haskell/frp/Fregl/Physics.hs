@@ -103,6 +103,12 @@ instance Differentiable World where
                     (wMap w) (dwMap dw) 
           }
 
+instance Vector DWorld where
+    type Field DWorld = Double
+    (DWorld a) ^+^ (DWorld b) = DWorld $ Map.unionWith (^+^) a b
+    a *^ (DWorld x)           = DWorld $ Map.map (a *^) x
+    zero                      = DWorld $ Map.empty
+
 emptyWorld = World { wMap = Map.empty
                    , wFreeList = map BodyID [0..]
                    }

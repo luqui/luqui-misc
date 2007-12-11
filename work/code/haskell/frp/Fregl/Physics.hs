@@ -45,8 +45,8 @@ instance Vector DBody where
     -- not sure whether x should scale impulses or not
     -- Probably ill-defined and need to rethink anyway
     x *^ DBody p v li r a ai
-        = DBody (x *^ p) (x *^ v) li
-                (x * r)  (x * a)  ai
+        = DBody (x *^ p) (x *^ v) (x *^ li)
+                (x * r)  (x * a)  (x * ai)
 
 data Body
     = Body { bState  :: BodyState

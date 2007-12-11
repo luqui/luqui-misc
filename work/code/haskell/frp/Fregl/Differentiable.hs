@@ -3,9 +3,9 @@
 module Fregl.Differentiable where
 
 class Differentiable d where
-    type Derivative d :: *
-    integrate     :: Double -> Derivative d -> d -> d
+    type Diff d :: *
+    integrate     :: Double -> Diff d -> d -> d
 
 instance Differentiable Double where
-    type Derivative Double = Double
+    type Diff Double = Double
     integrate     dt d a = a + d*dt

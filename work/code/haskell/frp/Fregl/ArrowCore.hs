@@ -93,7 +93,7 @@ untilSF = SF $ \(a,msfa) ->
             let (a', trans) = runSF sf a
             in (a', \dri -> arr fst >>> trans dri)
 
-integral :: (Diff.Differentiable d) => d -> SF (Diff.Derivative d) d
+integral :: (Diff.Differentiable d) => d -> SF (Diff.Diff d) d
 integral x0 = SF $ \x ->
     (x0, \d -> case d of
                     TimeStepEvent dt -> integral (Diff.integrate dt x x0)

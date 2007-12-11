@@ -12,6 +12,7 @@ module Fregl.Physics
     , force, forceAt
     , impulse, impulseAt
     , torque, torqueImpulse
+    , applyAll
     )
 where
 
@@ -192,3 +193,6 @@ torque w b t = bodyMod b $
 torqueImpulse :: World -> BodyID -> Double -> Diff World
 torqueImpulse w b t = bodyMod b $ 
     zero { dbAImpulse = t ^/ bodyMoment w b }
+
+applyAll :: (BodyID -> Diff World) -> World -> Diff World
+applyAll f w = Map.foldWithKey (\k _ diff -> f k ^+^ diff) zero (wMap w)

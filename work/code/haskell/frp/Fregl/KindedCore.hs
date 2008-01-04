@@ -81,8 +81,14 @@ instance ArrowLoop SF where
 
 
 -- Stream - continuous, demand-driven (reactive) signal
+-- Defined as a transition.  Here is a sample dialog:
+--   You:  Mr. Stream, please give me your value 0.1 seconds from now
+--   Mr. Stream: No, here it is 0.001 seconds from now!
+--   You:  Okay (you haven't much choice here)
+--
+-- For more complex dialogs, see negotiateTrans
 
-newtype Stream a = Stream (Transition (a, Stream a))
+newtype Stream a = Stream { runStream :: Transition (a, Stream a) }
 
 instance Functor Stream where
     fmap f (Stream trans) = Stream (mapTrans (f *** fmap f) trans)

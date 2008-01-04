@@ -15,9 +15,8 @@ import Control.Concurrent.STM
 -- FMonad, the Fregl monad.
 -- Encapsulates non-blocking operations and magic lists.
 
-newtype FMonad a = FMonad (IO a)
+newtype FMonad a = FMonad { runFMonad :: IO a }
     deriving (Functor, Monad, MonadFix)
-
 
 -- MagicList and MagicListWriters come in pairs; a MagicList
 -- is immutable, just a pointer into a list.  MagicListWriter

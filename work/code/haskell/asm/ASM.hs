@@ -9,7 +9,7 @@ import Data.Monoid
 import Data.Maybe
 import Control.Monad
 import Control.Monad.Trans
-import Control.Applicative ((<$>))
+import Control.Applicative
 import qualified Control.Monad.RWS as RWS
 import qualified Control.Monad.Error as Error
 import qualified Data.Map as Map
@@ -99,7 +99,6 @@ logWriteM varid writer v = Action $
 
 data Version a
     = Version { verRead    :: a
-              , verGen     :: Gen
               , verAdvance :: (MonadASM m) => Gen -> m (Version a)
               } 
 
@@ -117,7 +116,7 @@ data SV a
 newSV :: forall a. a -> Action (SV a)
 newSV init = do
     gen <- getGeneration
-    (writer, follower) <- cliftIO $ atomically $ do
+    (writer, follower) <- stm $ do
         (writer, follow) <- newWFQueue (gen,init)
         v <- newTVar follow
         return (writer, v)
@@ -129,7 +128,7 @@ newSV init = do
         svr = do
             gen <- getGeneration
             logReadM varid
-            f <- cliftIO $ atomically $ do
+            f <- stm $ do
                 f' <- advanceFollower =<< readTVar follower
                 writeTVar follower f'
                 return f'
@@ -148,13 +147,12 @@ newSV init = do
     version :: Gen -> TFollower (Gen,a) -> Version a
     version gen follower = Version
         { verRead    = snd $ readFollower follower
-        , verGen     = gen
         , verAdvance = advance follower
         }
 
     advance :: (MonadASM m) => TFollower (Gen,a) -> Gen -> m (Version a)
     advance follower gen = do
-        next <- cliftIO $ atomically $ nextFollower follower
+        next <- stm $ nextFollower follower
         case next of
              Nothing -> return $ version gen follower
              Just f'
@@ -162,6 +160,81 @@ newSV init = do
                      -> return $ version gen follower
                 | otherwise
                      -> advance f' gen
+
+instance Functor Version where
+    fmap f v = Version { verRead = f (verRead v)
+                       , verAdvance = fmap (fmap f) . verAdvance v
+                       }
+
+instance Applicative Version where
+    pure x  = Version { verRead = x
+                      , verAdvance = const (return $ pure x)
+                      }
+    -- this method is dubious, it really only makes
+    -- sense if the two objects represent the same
+    -- version.  As an intermediate to SVR it may
+    -- work though.
+    f <*> v = Version { verRead = verRead f (verRead v)
+                      , verAdvance = \g -> do
+                          f' <- verAdvance f g
+                          v' <- verAdvance v g
+                          return (f' <*> v')
+                      }
+
+instance Functor SVR where
+    fmap f v = SVR { svrRead = fmap (fmap f) $ svrRead v }
+
+instance Applicative SVR where
+    pure x = SVR { svrRead = return (pure x) }
+    f <*> v = SVR { svrRead = do
+                        f' <- svrRead f
+                        v' <- svrRead v
+                        return (f' <*> v')
+                  }
+
+stm :: (MonadASM m) => STM a -> m a
+stm = cliftIO . atomically
+
+temporalFold :: forall v a b. (ReadVar v) => (a -> b -> b) -> b -> v a -> Action (SVR b)
+temporalFold f init v = do
+    gen <- getGeneration
+    buddy <- readVar v
+    (writer,follower) <- stm $ do
+        (writer,follow) <- newWFQueue (gen,init)
+        f <- newTVar follow
+        return (writer,f)
+    let svr :: (MonadASM m) => m (Version b)
+        svr = do
+            gen <- getGeneration
+            f <- stm $ readTVar follower
+            advance gen writer buddy f
+    return $ SVR svr
+    where
+    advance :: (MonadASM m) => Gen -> TWriter (Gen,b) -> Version a -> TFollower (Gen,b) -> m (Version b)
+    advance gen writer buddy follower = do
+        let (gen', v) = readFollower follower
+        if gen' == gen
+           then return $ Version { verRead = v
+                                 , verAdvance = \g -> advance g writer buddy follower
+                                 }
+           else do
+               next <- stm $ nextFollower follower
+               case next of
+                    Just f' -> advance gen writer buddy f'
+                    Nothing -> do
+                        buddy' <- verAdvance buddy (gen'+1)
+                        let newval = f (verRead buddy') v
+                        f' <- stm $ do
+                            next' <- nextFollower follower
+                            case next' of
+                                 Nothing -> appendWriter writer (gen'+1, newval)
+                                 Just f' -> return ()
+                            Just f' <- nextFollower follower
+                            return f'
+                        advance gen writer buddy' f'
+
+integral :: (ReadVar v) => v Double -> Action (SVR Double)
+integral = temporalFold (+) 0
 
 -- ReadVar: allow using readVar on both SVRs and SVs
 

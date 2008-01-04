@@ -14,7 +14,6 @@ instance MonadTrans MaybeT where
     lift mon = MaybeT (mon >>= return . Just)
 
 
-
 guesser :: String -> MaybeT IO ()
 guesser word = do
     lift $ putStr "Guess the word I'm thinking of: "

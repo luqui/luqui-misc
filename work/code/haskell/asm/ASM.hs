@@ -75,7 +75,7 @@ newtype Action a
 -- MonadASM: functionality available in both the Condition and
 -- Action monads
 
-class (Monad m) => MonadASM m where
+class (Functor m, Monad m) => MonadASM m where
     cliftIO :: IO a -> m a  -- like liftIO, but not exported
     getGeneration :: m Gen
     logReadM :: VarID -> m ()
@@ -124,24 +124,27 @@ newSV init = do
 
     varid <- cliftIO $ newUnique
 
-    let svw = \x -> do
-            gen <- getGeneration
-            logWriteM varid writer x
-            cliftIO $ atomically $ do
-                appendWriter writer (gen,x)
-                f <- readTVar follower
-                Just next <- nextFollower f
-                writeTVar follower next
+    let svw = logWriteM varid writer
     let svr :: MonadASM m => m (Version a) 
         svr = do
             gen <- getGeneration
             logReadM varid
-            f <- cliftIO $ atomically $ readTVar follower
+            f <- cliftIO $ atomically $ do
+                f' <- advanceFollower =<< readTVar follower
+                writeTVar follower f'
+                return f'
             return $ version gen f
     return $ SV { svR = SVR svr, svW = SVW svw }
     
     where
-    
+
+    -- advance follower to latest generation
+    advanceFollower f = do
+        next <- nextFollower f
+        case next of
+             Nothing -> return f
+             Just f' -> advanceFollower f'
+
     version :: Gen -> TFollower (Gen,a) -> Version a
     version gen follower = Version
         { verRead    = snd $ readFollower follower
@@ -160,7 +163,6 @@ newSV init = do
                 | otherwise
                      -> advance f' gen
 
-
 -- ReadVar: allow using readVar on both SVRs and SVs
 
 class ReadVar v where
@@ -171,6 +173,13 @@ instance ReadVar SVR where
 
 instance ReadVar SV where
     readVar = svrRead . svR
+
+getVar :: (ReadVar v, MonadASM m) => v a -> m a
+getVar v = do
+    gen <- getGeneration
+    ver <- readVar v
+    ver' <- verAdvance ver gen
+    return (verRead ver')
 
 -- WriteVar: allow using writeVar on both SVWs and SVs
 
@@ -239,7 +248,7 @@ stepASM cxt = do
     let rules = concatMap (\x -> 
                     fmap ((,) x) $ Map.lookup x $ cxtRules cxt)
               $ Set.elems to_execute
-    let gen = cxtGen cxt + 1
+    let gen = cxtGen cxt
 
     -- check and execute each rule, for each one recording
     -- ( the rule id
@@ -263,6 +272,7 @@ stepASM cxt = do
     let violators = [ (getTag xid, getTag yid) 
                     | (xid,xlog) <- updates
                     , (yid,ylog) <- updates
+                    , xid /= yid
                     , let xvars = varsInLog xlog
                     , let yvars = varsInLog ylog
                     , not (Set.null (xvars `Set.intersection` yvars))
@@ -271,11 +281,11 @@ stepASM cxt = do
         fail $ "Update contention in rules: " ++ show violators
 
     -- perform updates
-    atomically $ commitLog gen $ mconcat $ map snd updates
+    atomically $ commitLog (gen+1) $ mconcat $ map snd updates
 
     -- calculate next context
     return $ ASMContext
-        { cxtGen = gen
+        { cxtGen = gen+1
         , cxtRules = cxtRules cxt
         , cxtFired = 
             Set.fromList [ ruleid | (ruleid, True, _, _) <- results ]

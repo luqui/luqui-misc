@@ -7,18 +7,19 @@ main = do {
 
 state <- initAction $ newSV 0;
 
-let stepCond = do {
+let {
+    stepCond = do {
         s <- getVar state;
         return (s < 7);
-    }
+    };
     stepAction = do {
         s <- getVar state;
         naughtyLiftIO $ putStrLn $ "Incrementing s from " 
                                 ++ show s ++ " to " ++ show (s+1);
         writeVar state (s+1);
-    }
-    stepRule = stepCond ==> stepAction
-;
+    };
+    stepRule = stepCond ==> stepAction;
+};
 
 cxt <- newASMContext [stepRule];
 putStrLn "1";

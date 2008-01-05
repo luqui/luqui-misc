@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
-module AGM.ASM 
+module AGM.ASMCore
     ( Condition
     , Action
     , MonadASM, naughtyLiftIO

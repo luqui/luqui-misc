@@ -1,6 +1,21 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
-module ASM where
+module ASM 
+    ( Condition
+    , Action
+    , MonadASM, naughtyLiftIO
+    , SVR, SVW, SV
+    , newSV, temporalFold
+    , ReadVar, WriteVar
+    , getVar, writeVar
+    , Rule
+    , (==>), tag
+    , ASMContext
+    , newASMContext
+    , stepASM
+    , initAction
+    )
+where
 
 import Control.Concurrent.STM
 import WFQueue
@@ -17,7 +32,6 @@ import qualified Data.Set as Set
 
 type Gen = Int
 type VarID = Unique
-
 
 -- Read/Write logs for conditions and actions --
 
@@ -76,17 +90,17 @@ newtype Action a
 -- Action monads
 
 class (Functor m, Monad m) => MonadASM m where
-    cliftIO :: IO a -> m a  -- like liftIO, but not exported
+    naughtyLiftIO :: IO a -> m a  -- like liftIO, but not exported
     getGeneration :: m Gen
     logReadM :: VarID -> m ()
 
 instance MonadASM Condition where
-    cliftIO = Condition . liftIO
+    naughtyLiftIO = Condition . liftIO
     getGeneration = Condition RWS.ask
     logReadM = Condition . RWS.tell . logRead
 
 instance MonadASM Action where
-    cliftIO = Action . liftIO
+    naughtyLiftIO = Action . liftIO
     getGeneration = Action RWS.ask
     logReadM = Action . RWS.tell . logRead
 
@@ -121,7 +135,7 @@ newSV init = do
         v <- newTVar follow
         return (writer, v)
 
-    varid <- cliftIO $ newUnique
+    varid <- naughtyLiftIO $ newUnique
 
     let svw = logWriteM varid writer
     let svr :: MonadASM m => m (Version a) 
@@ -193,16 +207,17 @@ instance Applicative SVR where
                   }
 
 stm :: (MonadASM m) => STM a -> m a
-stm = cliftIO . atomically
+stm = naughtyLiftIO . atomically
 
-temporalFold :: forall v a b. (ReadVar v) => (a -> b -> b) -> b -> v a -> Action (SVR b)
+temporalFold :: forall v a b. (ReadVar v) 
+             => (a -> b -> b) -> b -> v a -> Action (SVR b)
 temporalFold f init v = do
     gen <- getGeneration
-    buddy <- readVar v
     (writer,follower) <- stm $ do
         (writer,follow) <- newWFQueue (gen,init)
         f <- newTVar follow
         return (writer,f)
+    buddy <- readVar v
     let svr :: (MonadASM m) => m (Version b)
         svr = do
             gen <- getGeneration
@@ -225,6 +240,8 @@ temporalFold f init v = do
                         buddy' <- verAdvance buddy (gen'+1)
                         let newval = f (verRead buddy') v
                         f' <- stm $ do
+                            -- this bullshit is to ensure proper behavior
+                            -- in the face of concurrency
                             next' <- nextFollower follower
                             case next' of
                                  Nothing -> appendWriter writer (gen'+1, newval)
@@ -232,9 +249,6 @@ temporalFold f init v = do
                             Just f' <- nextFollower follower
                             return f'
                         advance gen writer buddy' f'
-
-integral :: (ReadVar v) => v Double -> Action (SVR Double)
-integral = temporalFold (+) 0
 
 -- ReadVar: allow using readVar on both SVRs and SVs
 
@@ -274,6 +288,12 @@ data Rule
            , ruleAction    :: Action ()
            }
 
+(==>) :: Condition Bool -> Action () -> Rule
+(==>) = Rule ""
+
+tag :: String -> Rule -> Rule
+tag t r = r { ruleTag = t }
+
 -- Execution Context
 
 type RuleID = Unique
@@ -304,7 +324,7 @@ newASMContext rules = do
     -- look out, cxtGen is preventing multiple ASMs working on the same
     -- set of variables.  Maybe it should be global?
     return $ ASMContext 
-        { cxtGen      = 0
+        { cxtGen      = 1
         , cxtRules    = rulesmap
         -- we say all rules fired so that all rules are checked
         -- upon the first iteration
@@ -405,7 +425,7 @@ runAction gen (Action act) = do
 initAction :: Action a -> IO a
 initAction action = do
     (v, log) <- runAction 0 action
-    atomically $ commitLog 0 log
+    atomically $ commitLog 1 log
     return v
 
 commitLogEntry :: Gen -> WriteLogEntry -> STM ()

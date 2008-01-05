@@ -25,3 +25,5 @@ listSignal step = listSignal' 0
 buffer :: Double -> Signal a -> Signal a
 buffer step = listSignal step . runSignal step
 
+ex :: Signal Double
+ex = buffer 0.05 $ integral 1 ex

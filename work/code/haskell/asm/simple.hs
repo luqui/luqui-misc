@@ -1,4 +1,4 @@
-import ASM
+import AGM.ASMCore
 import Control.Applicative
 import Debug.Trace
 import Control.Monad

@@ -1,4 +1,4 @@
-> module WFQueue
+> module AGM.WFQueue
 >     ( TWriter, TFollower
 >     , newWFQueue, readFollower, nextFollower, appendWriter
 >     )

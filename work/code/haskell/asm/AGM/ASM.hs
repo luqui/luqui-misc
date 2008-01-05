@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
-module ASM 
+module AGM.ASM 
     ( Condition
     , Action
     , MonadASM, naughtyLiftIO
@@ -17,8 +17,8 @@ module ASM
     )
 where
 
+import AGM.WFQueue
 import Control.Concurrent.STM
-import WFQueue
 import Data.Unique
 import Data.Monoid
 import Data.Maybe

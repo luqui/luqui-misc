@@ -12,36 +12,39 @@ data EventVal
     | MouseClickEvent (Double,Double)
     deriving (Show)
 
-newtype Event r a
-    = Event { runEvent :: 
-         WriterT [EventVal -> Event r r] (
+newtype EventT r m a
+    = EventT { runEventT :: 
+         WriterT [EventVal -> EventT r m r] (
             ContT r (
-                ReaderT ((EventVal -> Event r r) -> Event r EventVal) (
-                    IO
+                ReaderT ((EventVal -> EventT r m r) -> EventT r m EventVal) (
+                    m
                 )
             )
          ) a
       }
 
-instance Monad (Event r) where
-    return = Event . return
-    m >>= k = Event $ runEvent m >>= runEvent . k
+instance MonadTrans (EventT r) where
+    lift = EventT . lift . lift . lift
 
-instance MonadCont (Event r) where
+instance (Monad m) => Monad (EventT r m) where
+    return = EventT . return
+    m >>= k = EventT $ runEventT m >>= runEventT . k
+
+instance (Monad m) => MonadCont (EventT r m) where
     -- I don't know how anyone came up with this...
-    callCC f = Event $ callCC $ \c -> runEvent $ f $ Event . c
+    callCC f = EventT $ callCC $ \c -> runEventT $ f $ EventT . c
 
-instance MonadWriter [EventVal -> Event r r] (Event r) where
-    tell   = Event . tell
-    listen = Event . listen . runEvent
-    pass   = Event . pass   . runEvent
+instance (Monad m) => MonadWriter [EventVal -> EventT r m r] (EventT r m) where
+    tell   = EventT . tell
+    listen = EventT . listen . runEventT
+    pass   = EventT . pass   . runEventT
 
-instance MonadReader ((EventVal -> Event r r) -> Event r EventVal) (Event r) where
-    ask     = Event ask
-    local f = Event . local f . runEvent
+instance (Monad m) => MonadReader ((EventVal -> EventT r m r) -> EventT r m EventVal) (EventT r m) where
+    ask     = EventT ask
+    local f = EventT . local f . runEventT
 
 
-type Ev a = Event () a
+type Ev a = EventT () IO a
 
 untilB :: Ev a -> Ev (Ev a) -> Ev (Ev a)
 untilB sig ev = do
@@ -82,7 +85,7 @@ testProg = do
     tmr <- timer
     v <- tmr `untilB` (waitClick >> timer)
     v' <- v
-    Event $ liftIO $ print v'
+    lift $ liftIO $ print v'
 
 
 testEvents = [ TimestepEvent 0.1, TimestepEvent 0.1, TimestepEvent 0.1

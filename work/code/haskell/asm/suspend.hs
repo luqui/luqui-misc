@@ -5,6 +5,7 @@ import Control.Monad.Cont
 import Control.Monad.Trans
 import Control.Monad.Reader
 import Control.Monad.Writer
+import Control.Concurrent.STM
 import Debug.Trace
 
 newtype EventT e r m a
@@ -57,11 +58,13 @@ untilB sig ev = do
 waitEvent :: Ev EventVal
 waitEvent = do
     cont <- ask
-    callCC cont
+    r <- callCC cont
+    return r
 
 waitTimestep :: Ev Double
 waitTimestep = do
     e <- waitEvent
+    lift $ liftIO $ putStrLn "timestep"
     case e of
          TimestepEvent d -> return d
          _ -> waitTimestep
@@ -69,6 +72,7 @@ waitTimestep = do
 waitClick :: Ev (Double,Double)
 waitClick = do
     e <- waitEvent
+    lift $ liftIO $ putStrLn "click"
     case e of
          MouseClickEvent pos -> return pos
          _ -> waitClick
@@ -76,7 +80,7 @@ waitClick = do
 timer :: Ev (Ev Double)
 timer = timer' 0
     where
-    timer' v = return v `untilB` (waitTimestep >>= timer')
+    timer' v = return v `untilB` (waitTimestep >>= timer' . (v+))
 
 
 testProg :: Ev ()
@@ -86,6 +90,24 @@ testProg = do
     v' <- v
     lift $ liftIO $ print v'
 
+mainGame :: TVar [EventVal] -> TVar Bool -> Ev () -> Ev ()
+mainGame hack hack2 m = do
+    ev:evs <- atom $ readTVar hack
+    atom $ writeTVar hack evs
+    atom $ writeTVar hack2 True
+    lift $ liftIO $ putStrLn $ "-- " ++ show ev ++ " --"
+    beef <- atom $ readTVar hack2
+    ((), suspensions) <- listen m
+    beef <- atom $ readTVar hack2
+    when beef $ do
+        atom $ writeTVar hack2 False
+        mapM_ (\s -> lift (liftIO (putStrLn "boobs")) >> s ev) suspensions
+    mainGame hack hack2 m
+    
+    where
+    atom :: STM a -> Ev a
+    atom x = lift $ liftIO $ atomically x
+
 
 testEvents = [ TimestepEvent 0.1, TimestepEvent 0.1, TimestepEvent 0.1
              , MouseClickEvent (0,0)
@@ -94,3 +116,16 @@ testEvents = [ TimestepEvent 0.1, TimestepEvent 0.1, TimestepEvent 0.1
              , TimestepEvent 0.1
              ]
 
+runMainGame :: [EventVal] -> IO ()
+runMainGame evs = do
+    suspvar <- atomically $ newTVar False
+    evvar <- atomically $ newTVar evs
+    let writer = runEventT $ mainGame evvar suspvar testProg
+        cont   = runWriterT writer
+        reader = runContT cont (const $ return ())
+        io     = runReaderT reader $ error "no suspension context"
+    io
+
+
+main = do
+    runMainGame testEvents

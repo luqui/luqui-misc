@@ -7,44 +7,43 @@ import Control.Monad.Reader
 import Control.Monad.Writer
 import Debug.Trace
 
-data EventVal 
-    = TimestepEvent Double
-    | MouseClickEvent (Double,Double)
-    deriving (Show)
-
-newtype EventT r m a
+newtype EventT e r m a
     = EventT { runEventT :: 
-         WriterT [EventVal -> EventT r m r] (
+         WriterT [e -> EventT e r m r] (
             ContT r (
-                ReaderT ((EventVal -> EventT r m r) -> EventT r m EventVal) (
+                ReaderT ((e -> EventT e r m r) -> EventT e r m e) (
                     m
                 )
             )
          ) a
       }
 
-instance MonadTrans (EventT r) where
+instance MonadTrans (EventT e r) where
     lift = EventT . lift . lift . lift
 
-instance (Monad m) => Monad (EventT r m) where
+instance (Monad m) => Monad (EventT e r m) where
     return = EventT . return
     m >>= k = EventT $ runEventT m >>= runEventT . k
 
-instance (Monad m) => MonadCont (EventT r m) where
+instance (Monad m) => MonadCont (EventT e r m) where
     -- I don't know how anyone came up with this...
     callCC f = EventT $ callCC $ \c -> runEventT $ f $ EventT . c
 
-instance (Monad m) => MonadWriter [EventVal -> EventT r m r] (EventT r m) where
+instance (Monad m) => MonadWriter [e -> EventT e r m r] (EventT e r m) where
     tell   = EventT . tell
     listen = EventT . listen . runEventT
     pass   = EventT . pass   . runEventT
 
-instance (Monad m) => MonadReader ((EventVal -> EventT r m r) -> EventT r m EventVal) (EventT r m) where
+instance (Monad m) => MonadReader ((e -> EventT e r m r) -> EventT e r m e) (EventT e r m) where
     ask     = EventT ask
     local f = EventT . local f . runEventT
 
+data EventVal 
+    = TimestepEvent Double
+    | MouseClickEvent (Double,Double)
+    deriving (Show)
 
-type Ev a = EventT () IO a
+type Ev a = EventT EventVal () IO a
 
 untilB :: Ev a -> Ev (Ev a) -> Ev (Ev a)
 untilB sig ev = do

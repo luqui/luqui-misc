@@ -7,7 +7,7 @@ where
 import Control.Monad
 import Control.Monad.Trans
 
-class (Monad m) => MonadSuspend v m where
+class (Monad m) => MonadSuspend v m | m -> v where
     attempt :: m a -> m (Either a (v -> m a))
     suspend :: m v
 

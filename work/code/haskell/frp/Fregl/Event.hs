@@ -33,6 +33,23 @@ instance Applicative Behavior where
 waitEvent :: Event EventVal
 waitEvent = Event suspend
 
+-- occurs the first time the signal becomes Just
+justEvent :: Signal (Maybe a) -> Event a
+justEvent sig = Event $ do
+    val <- liftIO $ atomically $ readSignal sig
+    case val of
+         Just x -> return x
+         Nothing -> do
+             suspend
+             runEvent $ justEvent sig
+
+-- occurs the first time the signal becomes true
+predicateEvent :: Signal Bool -> Event ()
+predicateEvent sig = justEvent (fmap toMaybe sig) >> return ()
+    where
+    toMaybe False = Nothing
+    toMaybe True = Just ()
+
 untilEvent :: Behavior a -> Event (Signal a) -> Behavior a
 untilEvent b ev = Behavior $ Event $ do
     choice <- attempt $ runEvent ev

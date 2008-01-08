@@ -14,6 +14,9 @@ class (Monad m) => MonadSuspend v m where
 newtype SuspendT v m a 
     = SuspendT { runSuspendT :: m (Either a (v -> SuspendT v m a)) }
 
+instance (Monad m) => Functor (SuspendT v m) where
+    fmap = liftM
+
 instance (Monad m) => Monad (SuspendT v m) where
     return x = SuspendT $ return $ Left x
     m >>= k  = SuspendT $ do
@@ -22,10 +25,12 @@ instance (Monad m) => Monad (SuspendT v m) where
              Left a  -> runSuspendT $ k a
              Right cont -> return $ Right $ \v -> cont v >>= k
 
-
 instance MonadTrans (SuspendT v) where
     lift = SuspendT . liftM Left
 
 instance (Monad m) => MonadSuspend v (SuspendT v m) where
     attempt = lift . runSuspendT
     suspend = SuspendT $ return $ Right return
+
+instance (MonadIO m) => MonadIO (SuspendT v m) where
+    liftIO = lift . liftIO

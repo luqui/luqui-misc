@@ -1,4 +1,14 @@
-module Fregl.Event where
+module Fregl.Event 
+    ( Event
+    , Behavior
+    , waitEvent
+    , readSig
+    , untilEvent
+    , newEventCxt
+    , readEventCxt
+    , nextEventCxt
+    )
+where
 
 import Fregl.Suspend
 import Fregl.Signal
@@ -34,22 +44,8 @@ instance Applicative (Behavior v) where
 waitEvent :: Event v v
 waitEvent = Event suspend
 
--- occurs the first time the signal becomes Just
-justEvent :: Signal (Maybe a) -> Event v a
-justEvent sig = Event $ do
-    val <- liftIO $ atomically $ readSignal sig
-    case val of
-         Just x -> return x
-         Nothing -> do
-             suspend
-             runEvent $ justEvent sig
-
--- occurs the first time the signal becomes true
-predicateEvent :: Signal Bool -> Event v ()
-predicateEvent sig = justEvent (fmap toMaybe sig) >> return ()
-    where
-    toMaybe False = Nothing
-    toMaybe True = Just ()
+readSig :: Signal a -> Event v a
+readSig = Event . liftIO . atomically . readSignal
 
 untilEvent :: Behavior v a -> Event v (Signal a) -> Behavior v a
 untilEvent b ev = Behavior $ Event $ do
@@ -84,3 +80,9 @@ newEventCxt b = do
                  Right cont -> return $ cs `mappend` (Endo $ (:) (Event . cont))
         val <- atomically $ readSignal sig
         return $ EventCxt val (contAction sig (mconcat conts'))
+
+readEventCxt :: EventCxt v a -> a
+readEventCxt (EventCxt a _) = a
+
+nextEventCxt :: v -> EventCxt v a -> IO (EventCxt v a)
+nextEventCxt v (EventCxt _ n) = n v

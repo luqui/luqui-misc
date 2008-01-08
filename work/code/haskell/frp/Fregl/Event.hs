@@ -6,35 +6,33 @@ import Control.Monad.Writer
 import Control.Concurrent.STM
 import Control.Applicative
 
-data EventVal
+newtype Event v a
+    = Event { runEvent :: SuspendT v (WriterT [v -> Event v ()] IO) a }
 
-newtype Event a
-    = Event { runEvent :: SuspendT EventVal (WriterT [EventVal -> Event ()] IO) a }
+newtype Behavior v a = Behavior { bindBehavior :: Event v (Signal a) }
 
-newtype Behavior a = Behavior { bindBehavior :: Event (Signal a) }
-
-instance Functor Event where
+instance Functor (Event v) where
     fmap = liftM
 
-instance Monad Event where
+instance Monad (Event v) where
     return = Event . return
     m >>= k = Event $ runEvent m >>= runEvent . k
 
-instance Functor Behavior where
+instance Functor (Behavior v) where
     fmap f = Behavior . fmap (fmap f) . bindBehavior
 
-instance Applicative Behavior where
+instance Applicative (Behavior v) where
     pure = Behavior . return . constSignal 
     b <*> x = Behavior $ do
         b' <- bindBehavior b
         x' <- bindBehavior x
         return (b' <*> x')
 
-waitEvent :: Event EventVal
+waitEvent :: Event v v
 waitEvent = Event suspend
 
 -- occurs the first time the signal becomes Just
-justEvent :: Signal (Maybe a) -> Event a
+justEvent :: Signal (Maybe a) -> Event v a
 justEvent sig = Event $ do
     val <- liftIO $ atomically $ readSignal sig
     case val of
@@ -44,13 +42,13 @@ justEvent sig = Event $ do
              runEvent $ justEvent sig
 
 -- occurs the first time the signal becomes true
-predicateEvent :: Signal Bool -> Event ()
+predicateEvent :: Signal Bool -> Event v ()
 predicateEvent sig = justEvent (fmap toMaybe sig) >> return ()
     where
     toMaybe False = Nothing
     toMaybe True = Just ()
 
-untilEvent :: Behavior a -> Event (Signal a) -> Behavior a
+untilEvent :: Behavior v a -> Event v (Signal a) -> Behavior v a
 untilEvent b ev = Behavior $ Event $ do
     choice <- attempt $ runEvent ev
     case choice of

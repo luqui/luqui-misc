@@ -1,6 +1,7 @@
 module Fregl.Event 
     ( Event
     , Behavior
+    , bindBehavior
     , waitEvent
     , readSig
     , untilEvent

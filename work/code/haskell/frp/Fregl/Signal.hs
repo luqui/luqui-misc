@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fglasgow-exts #-}
+
 module Fregl.Signal
     ( Signal
     , SignalCell
@@ -6,6 +8,7 @@ module Fregl.Signal
     , cellSignal
     , newSignalCell
     , overwriteSignalCell
+    , varSignal
     )
 where
 
@@ -24,6 +27,7 @@ data Signal :: * -> * where
     SigMap   :: (a -> b) -> Signal a -> Signal b
     SigApply :: Signal (a -> b) -> Signal a -> Signal b
     SigCell  :: SignalCell a -> Signal a
+    SigVar   :: TVar a -> Signal a
 
 newtype SignalCell a = SignalCell (TVar (Signal a, SignalTag))
 
@@ -57,11 +61,18 @@ readSignal = liftM fst . readSignal'
              TagEarly -> return (v, Nothing)
              TagLate  -> return (v, Just sig)
 
+    readSignal' (SigVar var) = do
+        val <- readTVar var
+        return (val, Nothing)
+
 constSignal :: a -> Signal a
 constSignal = SigConst
 
 cellSignal :: SignalCell a -> Signal a
 cellSignal = SigCell
+
+varSignal :: TVar a -> Signal a
+varSignal = SigVar
 
 newSignalCell :: Signal a -> STM (SignalCell a)
 newSignalCell a = SignalCell <$> newTVar (a, TagEarly)

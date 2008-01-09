@@ -2,6 +2,7 @@ module Fregl.SDLCore where
 
 import Data.Maybe
 import Control.Monad
+import Control.Applicative
 import qualified Graphics.Rendering.OpenGL.GL as GL
 import qualified Graphics.Rendering.OpenGL.GLU as GLU
 import qualified Graphics.UI.SDL as SDL
@@ -22,6 +23,29 @@ data MouseEvent
 
 type Event    = Fregl.Event.Event EventSDL
 type Behavior = Fregl.Event.Behavior EventSDL
+
+waitTimestep :: Event Double
+waitTimestep = do
+    e <- waitEvent
+    case e of
+         TimestepEvent dt -> return dt
+         _ -> waitTimestep
+
+waitClick :: Event Vec2
+waitClick = do
+    e <- waitEvent
+    case e of
+         MouseEvent (MouseButtonDown _) pos -> return pos
+         _ -> waitClick
+
+integral :: Double -> Signal Double -> Behavior Double
+integral init sig = pure init `untilEvent` wait
+    where
+    wait = do
+        dt <- waitTimestep
+        v <- readSig sig
+        bindBehavior $ integral (init + dt * v) sig
+    
 
 runGame :: Behavior Drawing -> IO ()
 runGame beh = do

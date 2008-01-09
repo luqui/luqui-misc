@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fglasgow-exts #-}
+
 module Fregl.Drawing 
     ( Drawing, runDrawing
     , point, line, regularPoly, circle

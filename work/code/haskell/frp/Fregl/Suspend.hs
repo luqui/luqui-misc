@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fglasgow-exts #-}
+
 module Fregl.Suspend 
     ( MonadSuspend(..)
     , SuspendT, runSuspendT

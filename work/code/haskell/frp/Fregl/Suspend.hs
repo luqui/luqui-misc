@@ -3,6 +3,7 @@
 module Fregl.Suspend 
     ( MonadSuspend(..)
     , SuspendT, runSuspendT
+    , mergeL
     )
 where
 
@@ -36,3 +37,17 @@ instance (Monad m) => MonadSuspend v (SuspendT v m) where
 
 instance (MonadIO m) => MonadIO (SuspendT v m) where
     liftIO = lift . liftIO
+
+mergeL :: (MonadSuspend v m) => m a -> m a -> m a
+mergeL mx my = do
+    x <- attempt mx
+    case x of
+         Left  x' -> return x'
+         Right contx -> do
+             y <- attempt my
+             case y of
+                  Left y' -> return y'
+                  Right conty -> do
+                      v <- suspend
+                      mergeL (contx v) (conty v)
+

@@ -7,7 +7,7 @@ import qualified Graphics.Rendering.OpenGL.GL as GL
 import qualified Graphics.Rendering.OpenGL.GLU as GLU
 import qualified Graphics.UI.SDL as SDL
 import qualified Fregl.Event
-import Fregl.Event hiding (Event, Behavior)
+import Fregl.Event hiding (Event)
 import Fregl.Signal
 import Fregl.Vector
 import Fregl.Drawing
@@ -22,7 +22,6 @@ data MouseEvent
     | MouseMotion
 
 type Event    = Fregl.Event.Event EventSDL
-type Behavior = Fregl.Event.Behavior EventSDL
 
 waitTimestep :: Event Double
 waitTimestep = do
@@ -38,16 +37,16 @@ waitClick = do
          MouseEvent (MouseButtonDown _) pos -> return pos
          _ -> waitClick
 
-integral :: Double -> Signal Double -> Behavior Double
+integral :: Double -> Signal Double -> Event (Signal Double)
 integral init sig = pure init `untilEvent` wait
     where
     wait = do
         dt <- waitTimestep
         v <- readSig sig
-        bindBehavior $ integral (init + dt * v) sig
+        integral (init + dt * v) sig
     
 
-runGame :: Behavior Drawing -> IO ()
+runGame :: Event (Signal Drawing) -> IO ()
 runGame beh = do
     -- set up SDL
     SDL.init [SDL.InitVideo]

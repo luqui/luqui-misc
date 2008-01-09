@@ -1,4 +1,9 @@
-module Fregl.Drawing where
+module Fregl.Drawing 
+    ( Drawing, runDrawing
+    , point, line, regularPoly, circle
+    , translate, rotate, scale
+    )
+where
 
 import Fregl.Vector
 import Data.Monoid

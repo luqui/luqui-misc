@@ -22,7 +22,25 @@ import Control.Applicative
 import Data.Monoid
 import System.Mem.Weak
 
-type ContLog v = Endo [v -> Event v ()]
+newtype Update = Update (STM ())
+
+instance Monoid Update where
+    mempty = Update (return ())
+    mappend (Update a) (Update b) = Update $ a >> b
+
+data ContLog v = ContLog (Endo [v -> Event v ()]) Update
+
+instance Monoid (ContLog v) where
+    mempty = ContLog mempty mempty
+    mappend (ContLog cont up) (ContLog cont' up') = 
+        ContLog (cont `mappend` cont') (up `mappend` up')
+
+writeCont :: (v -> Event v ()) -> ContLog v
+writeCont f = ContLog (Endo $ (:) f) mempty
+
+writeUpdate :: STM () -> ContLog v
+writeUpdate m = ContLog mempty (Update m)
+
 
 newtype Event v a
     = Event { runEvent :: SuspendT v (WriterT (ContLog v) IO) a }
@@ -62,7 +80,7 @@ untilEvent b ev = Behavior $ Event $ do
              cell <- liftIO $ atomically $ newSignalCell sigb
              let writer v = Event $ do
                  sig <- cont v
-                 liftIO $ atomically $ overwriteSignalCell cell sig
+                 lift $ tell $ writeUpdate $ overwriteSignalCell cell sig
              weakWriter <- lift $ liftIO $ mkWeak cell writer Nothing
              tellWeak weakWriter
              return $ cellSignal cell
@@ -74,8 +92,8 @@ loopBehavior init f = Behavior $ do
     let sigout = varSignal var
     sigin <- bindBehavior (f sigout)
     let updater _ = do
-            Event $ liftIO $ atomically $ do
-                writeTVar var =<< readSignal sigin
+            val <- Event $ liftIO $ atomically $ readSignal sigin
+            Event $ lift $ tell $ writeUpdate $ writeTVar var val
             waitEvent >>= updater
     weakUpdater <- Event $ lift $ liftIO $ mkWeak var updater Nothing
     Event $ tellWeak weakUpdater
@@ -84,7 +102,7 @@ loopBehavior init f = Behavior $ do
 
 
 tellWeak weakWriter = do
-    lift $ tell $ Endo $ (:) $ \v -> do
+    lift $ tell $ writeCont $ \v -> do
         w <- Event $ liftIO $ deRefWeak weakWriter
         case w of
              Nothing -> return ()
@@ -102,14 +120,24 @@ newEventCxt b = do
     return $ EventCxt val (contAction sig conts)
     where
     contAction :: Signal a -> ContLog v -> v -> IO (EventCxt v a)
-    contAction sig conts v = do
-        conts' <- forM (appEndo conts []) $ \cont -> do
+    contAction sig contlog v = do
+        -- Here it would be better if we performed updates *after*
+        -- resuming, to be more responsive, but it's sufficiently
+        -- ugly that I'd rather write this sentence explaining
+        -- it than just do it.
+
+        let ContLog (Endo conts) (Update updates) = contlog
+        -- perform updates
+        atomically updates
+
+        -- resume continuations
+        contlog' <- forM (conts []) $ \cont -> do
             (choice, cs) <- runWriterT $ runSuspendT $ runEvent $ cont v
             case choice of
                  Left () -> return cs
-                 Right cont -> return $ cs `mappend` (Endo $ (:) (Event . cont))
+                 Right cont -> return $ cs `mappend` writeCont (Event . cont)
         val <- atomically $ readSignal sig
-        return $ EventCxt val (contAction sig (mconcat conts'))
+        return $ EventCxt val (contAction sig (mconcat contlog'))
 
 readEventCxt :: EventCxt v a -> a
 readEventCxt (EventCxt a _) = a

@@ -34,3 +34,21 @@ regularPoly n = Drawing $ do
 
 circle :: Drawing
 circle = regularPoly 24
+
+translate :: Vec2 -> Drawing -> Drawing
+translate (byx,byy) d = Drawing $ do
+    GL.preservingMatrix $ do
+        GL.translate (GL.Vector3 byx byy 0)
+        runDrawing d
+
+rotate :: Double -> Drawing -> Drawing
+rotate rad d = Drawing $ do
+    GL.preservingMatrix $ do
+        GL.rotate (180 * rad / pi) (GL.Vector3 0 0 1)
+        runDrawing d
+
+scale :: Double -> Double -> Drawing -> Drawing
+scale x y d = Drawing $ do
+    GL.preservingMatrix $ do
+        GL.scale x y 1
+        runDrawing d

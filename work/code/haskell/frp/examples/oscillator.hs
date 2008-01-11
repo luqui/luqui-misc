@@ -2,7 +2,7 @@ import Fregl.SDL
 import qualified Fregl.Drawing as Draw
 
 main = runGameSDL $ \nm -> do
-    e <- loopSignal (0,0) $ \s'' -> do
+    e <- loopSignal $ \s'' -> do
         s' <- integral (0,2) s'' 
         s <- integral (10,0) $ fmap ((-1) *^) s'
         return $ s

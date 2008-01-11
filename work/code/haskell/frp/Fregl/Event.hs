@@ -72,17 +72,19 @@ untilEvent sigb ev = Event $ do
              return $ cellSignal cell
 
 
-loopSignal :: a -> (Signal a -> Event v (Signal a)) -> Event v (Signal a)
-loopSignal init f = do
-    var <- Event $ liftIO $ atomically $ newTVar $ init
+loopSignal :: (Signal a -> Event v (Signal a)) -> Event v (Signal a)
+loopSignal f = Event $ mdo
+    var <- liftIO $ atomically $ newTVar $ init
     let sigout = varSignal var
-    sigin <- f sigout
+    sigin <- runEvent $ f sigout
+    init <- liftIO $ atomically $ readSignal sigin
+
     let updater _ = do
             val <- Event $ liftIO $ atomically $ readSignal sigin
             Event $ lift $ tell $ writeUpdate $ writeTVar var val
             waitEvent >>= updater
-    weakUpdater <- Event $ lift $ liftIO $ mkWeak var updater Nothing
-    Event $ tellWeak weakUpdater
+    weakUpdater <- lift $ liftIO $ mkWeak var updater Nothing
+    tellWeak weakUpdater
     return sigout
 
 

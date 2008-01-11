@@ -9,7 +9,7 @@ mousePos = mousePos' (0,0)
 
 main = runGameSDL $ \_ -> do
     mousepos <- mousePos
-    p <- loopSignal vzero $ \p ->
+    p <- loopSignal $ \p ->
         integral vzero =<< integral vzero (liftA2 force mousepos p)
     return $ Draw.translate <$> p <*> pure Draw.circle
     

@@ -16,6 +16,7 @@ where
 import Control.Monad
 import Control.Applicative
 import Control.Concurrent.STM
+import Fregl.Vector
 
 data SignalTag
     = TagEarly

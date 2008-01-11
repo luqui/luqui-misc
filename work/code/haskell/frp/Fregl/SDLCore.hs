@@ -128,7 +128,7 @@ runGameSDL beh = do
             Just hits -> nub $ concatMap (\(GL.HitRecord _ _ ns) -> ns) hits
 
     convertCoords x y = ( 32 * fromIntegral x / 640 - 16
-                        , 24 * fromIntegral y / 480 - 12
+                        , 24 * (1 - fromIntegral y / 480) - 12
                         )
 
     initGLMatrix = do

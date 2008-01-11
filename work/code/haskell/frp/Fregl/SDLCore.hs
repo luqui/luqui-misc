@@ -119,7 +119,7 @@ runGameSDL beh = do
             viewport <- GL.get GL.viewport
             GL.matrixMode GL.$= GL.Projection
             GL.loadIdentity
-            GLU.pickMatrix (x,y) (1,1) viewport
+            GLU.pickMatrix (x,480-y) (1,1) viewport
             initGLMatrix
             GL.matrixMode GL.$= GL.Modelview 0
             Draw.runDrawing drawing

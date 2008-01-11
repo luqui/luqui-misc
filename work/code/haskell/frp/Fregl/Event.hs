@@ -6,6 +6,7 @@ module Fregl.Event
     , readSig
     , loopSignal
     , untilEvent
+    , unsafeEventIO
     , newEventCxt
     , readEventCxt
     , nextEventCxt
@@ -92,6 +93,9 @@ tellWeak weakWriter = do
         case w of
              Nothing -> return ()
              Just f -> f v
+
+unsafeEventIO :: IO a -> Event v a
+unsafeEventIO = Event . liftIO
 
 -- executing events:
 data EventCxt v a = EventCxt a (v -> IO (EventCxt v a))

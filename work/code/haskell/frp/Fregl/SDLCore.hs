@@ -10,15 +10,17 @@ import qualified Fregl.Event
 import Fregl.Event hiding (Event)
 import Fregl.Signal
 import Fregl.Vector
-import Fregl.Drawing
+import Fregl.LinearSplit
+import qualified Fregl.Drawing as Draw
+import Data.List
 
 data EventSDL
     = TimestepEvent Double
     | MouseEvent MouseEvent Vec2
 
 data MouseEvent
-    = MouseButtonDown SDL.MouseButton
-    | MouseButtonUp   SDL.MouseButton
+    = MouseButtonDown SDL.MouseButton [GL.Name]
+    | MouseButtonUp   SDL.MouseButton [GL.Name]
     | MouseMotion
 
 type Event    = Fregl.Event.Event EventSDL
@@ -34,8 +36,20 @@ waitClick :: Event Vec2
 waitClick = do
     e <- waitEvent
     case e of
-         MouseEvent (MouseButtonDown _) pos -> return pos
+         MouseEvent (MouseButtonDown _ _) pos -> return pos
          _ -> waitClick
+
+waitClickName :: Draw.Name -> Event ()
+waitClickName n = do
+    n' <- unsafeEventIO $ readLinearSplit $ Draw.getName n
+    waitClickName' n'
+    where
+    waitClickName' n' = do
+        e <- waitEvent
+        case e of
+             MouseEvent (MouseButtonDown _ names) _
+                | n' `elem` names -> return ()
+             _ -> waitClickName' n'
 
 integral :: Double -> Signal Double -> Event (Signal Double)
 integral init sig = pure init `untilEvent` wait
@@ -46,20 +60,14 @@ integral init sig = pure init `untilEvent` wait
         integral (init + dt * v) sig
     
 
-runGame :: Event (Signal Drawing) -> IO ()
+runGame :: (Draw.Name -> Event (Signal Draw.Drawing)) -> IO ()
 runGame beh = do
     -- set up SDL
     SDL.init [SDL.InitVideo]
     SDL.setVideoMode 640 480 32 [SDL.OpenGL]
 
-    -- set up OpenGL
-    GL.matrixMode GL.$= GL.Projection
-    GL.loadIdentity
-    GLU.ortho2D (-16) 16 (-12) 12
-    GL.matrixMode GL.$= GL.Modelview 0
-    GL.loadIdentity
-
-    cxt <- newEventCxt beh
+    name <- Draw.makeName
+    cxt <- newEventCxt (beh name)
     pretime <- SDL.getTicks
     mainLoop cxt pretime
     SDL.quit
@@ -70,30 +78,55 @@ runGame beh = do
         let drawing = readEventCxt cxt
         -- draw it
         GL.clear [GL.ColorBuffer]
-        runDrawing drawing
+        GL.matrixMode GL.$= GL.Projection
+        GL.loadIdentity
+        initGLMatrix
+        GL.matrixMode GL.$= GL.Modelview 0
+        Draw.runDrawing drawing
         SDL.glSwapBuffers
 
         -- poll for events
         events <- whileM (/= SDL.NoEvent) SDL.pollEvent
         when (not $ any isQuitEvent events) $ do
-            let events' = catMaybes $ map convertEvent events
+            events' <- catMaybes <$> mapM (convertEvent drawing) events
             cxt' <- foldM (\cx ev -> nextEventCxt ev cx) cxt events'
             posttime <- SDL.getTicks
             let timediff = fromIntegral (posttime - pretime) / 1000
             cxt'' <- nextEventCxt (TimestepEvent timediff) cxt'
             mainLoop cxt'' posttime
 
-    convertEvent (SDL.MouseMotion x y _ _) = 
+    convertEvent _ (SDL.MouseMotion x y _ _) = return $
         Just $ MouseEvent MouseMotion (convertCoords x y)
-    convertEvent (SDL.MouseButtonDown x y but) =
-        Just $ MouseEvent (MouseButtonDown but) (convertCoords x y)
-    convertEvent (SDL.MouseButtonUp x y but) = 
-        Just $ MouseEvent (MouseButtonUp but) (convertCoords x y)
-    convertEvent _ = Nothing
+    convertEvent d (SDL.MouseButtonDown x y but) = do
+        hits <- getHits d (fromIntegral x) (fromIntegral y)
+        return $ Just $ MouseEvent (MouseButtonDown but hits) (convertCoords x y)
+    convertEvent d (SDL.MouseButtonUp x y but) = do
+        hits <- getHits d (fromIntegral x) (fromIntegral y)
+        return $ Just $ MouseEvent (MouseButtonUp but hits) (convertCoords x y)
+    convertEvent _ _ = return $ Nothing
+
+    getHits drawing x y = do
+        ((), recs) <- GL.getHitRecords 64 $ do
+            viewport <- GL.get GL.viewport
+            GL.matrixMode GL.$= GL.Projection
+            GL.loadIdentity
+            GLU.pickMatrix (x,y) (1,1) viewport
+            initGLMatrix
+            GL.matrixMode GL.$= GL.Modelview 0
+            Draw.runDrawing drawing
+        return $ case recs of
+            Nothing -> []
+            Just hits -> nub $ concatMap (\(GL.HitRecord _ _ ns) -> ns) hits
 
     convertCoords x y = ( 32 * fromIntegral x / 640 - 16
                         , 24 * fromIntegral y / 480 - 12
                         )
+
+    initGLMatrix = do
+        mode' <- GL.get GL.matrixMode
+        GL.matrixMode GL.$= GL.Projection
+        GLU.ortho2D (-16) 16 (-12) 12
+        GL.matrixMode GL.$= mode'
 
     isQuitEvent SDL.Quit = True
     isQuitEvent (SDL.KeyDown (SDL.Keysym { SDL.symKey = SDL.SDLK_ESCAPE })) = True

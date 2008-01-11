@@ -4,9 +4,12 @@ module Fregl.Drawing
     ( Drawing, runDrawing
     , point, line, regularPoly, circle
     , translate, rotate, scale
+    , Name, name, getName, makeName
     )
 where
 
+import Fregl.Splittable
+import Fregl.LinearSplit
 import Fregl.Vector
 import Data.Monoid
 import Control.Monad
@@ -18,6 +21,17 @@ newtype Drawing = Drawing { runDrawing :: IO () }
 instance Monoid Drawing where
     mempty = Drawing $ return ()
     mappend (Drawing a) (Drawing b) = Drawing $ a >> b
+
+newtype Name = Name { getName :: LinearSplit GL.Name }
+                deriving Splittable
+
+makeName :: IO Name
+makeName = fmap Name $ newLinearSplit $ map GL.Name [0..]
+
+name :: Name -> Drawing -> Drawing
+name (Name n) d = Drawing $ do
+    n' <- readLinearSplit n
+    GL.withName n' $ runDrawing d
 
 point :: Vec2 -> Drawing
 point (ax,ay) = Drawing $

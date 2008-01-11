@@ -7,4 +7,4 @@ main = runGameSDL $ \nm -> do
         s <- integral (10,0) $ fmap ((-1) *^) s'
         return $ s
     e' <- e `untilEvent` (waitClickName ButtonLeft MouseDown nm >> return (pure vzero))
-    return $ fmap (\x -> Draw.translate x (Draw.name nm Draw.circle)) e'
+    return $ Draw.translate <$> e' <*> pure (Draw.name nm Draw.circle)

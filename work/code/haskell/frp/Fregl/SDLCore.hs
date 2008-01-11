@@ -1,4 +1,8 @@
-module Fregl.SDLCore where
+module Fregl.SDLCore 
+    ( Ev
+    , runGameSDL
+    ) 
+where
 
 import Data.Maybe
 import Control.Monad
@@ -7,10 +11,11 @@ import qualified Graphics.Rendering.OpenGL.GL as GL
 import qualified Graphics.Rendering.OpenGL.GLU as GLU
 import qualified Graphics.UI.SDL as SDL
 import qualified Fregl.Event
-import Fregl.Event hiding (Event)
+import Fregl.Event
 import Fregl.Signal
 import Fregl.Vector
 import Fregl.LinearSplit
+import Fregl.Core
 import qualified Fregl.Drawing as Draw
 import Data.List
 
@@ -19,49 +24,41 @@ data EventSDL
     | MouseEvent MouseEvent Vec2
 
 data MouseEvent
-    = MouseButtonDown SDL.MouseButton [GL.Name]
-    | MouseButtonUp   SDL.MouseButton [GL.Name]
+    = MouseButton MouseButton MouseState [GL.Name]
     | MouseMotion
 
-type Event    = Fregl.Event.Event EventSDL
+type Ev = Fregl.Event.Event EventSDL
 
-waitTimestep :: Event Double
-waitTimestep = do
-    e <- waitEvent
-    case e of
-         TimestepEvent dt -> return dt
-         _ -> waitTimestep
-
-waitClick :: Event Vec2
-waitClick = do
-    e <- waitEvent
-    case e of
-         MouseEvent (MouseButtonDown _ _) pos -> return pos
-         _ -> waitClick
-
-waitClickName :: Draw.Name -> Event ()
-waitClickName n = do
-    n' <- unsafeEventIO $ readLinearSplit $ Draw.getName n
-    waitClickName' n'
-    where
-    waitClickName' n' = do
+instance EventVal EventSDL where
+    wait = waitEvent >> return ()
+    waitTimestep = waitHelper $ \e -> do
+        TimestepEvent dt <- return e  -- fail does Nothing for us...
+        return dt
+    waitMouseMotion = waitHelper $ \e -> do
+        MouseEvent MouseMotion pos <- return e
+        return pos
+    waitClickPos b s = waitHelper $ \e -> do
+        MouseEvent (MouseButton b' s' _) pos <- return e
+        guard $ b == b' && s == s'
+        return pos
+    waitClickName b s n = do
         e <- waitEvent
         case e of
-             MouseEvent (MouseButtonDown _ names) _
-                | n' `elem` names -> return ()
-             _ -> waitClickName' n'
+            MouseEvent (MouseButton b' s' names) pos
+                | b == b' && s == s' -> do
+                    n' <- unsafeEventIO $ readLinearSplit $ Draw.getName n
+                    if n' `elem` names then return pos else waitClickName b s n
+            _ -> waitClickName b s n
 
-integral :: Double -> Signal Double -> Event (Signal Double)
-integral init sig = pure init `untilEvent` wait
-    where
-    wait = do
-        dt <- waitTimestep
-        v <- readSig sig
-        integral (init + dt * v) sig
-    
+waitHelper :: (EventSDL -> Maybe a) -> Ev a
+waitHelper f = do
+    e <- waitEvent
+    case f e of
+         Just x  -> return x
+         Nothing -> waitHelper f
 
-runGame :: (Draw.Name -> Event (Signal Draw.Drawing)) -> IO ()
-runGame beh = do
+runGameSDL :: (Draw.Name -> Ev (Signal Draw.Drawing)) -> IO ()
+runGameSDL beh = do
     -- set up SDL
     SDL.init [SDL.InitVideo]
     SDL.setVideoMode 640 480 32 [SDL.OpenGL]
@@ -99,10 +96,22 @@ runGame beh = do
         Just $ MouseEvent MouseMotion (convertCoords x y)
     convertEvent d (SDL.MouseButtonDown x y but) = do
         hits <- getHits d (fromIntegral x) (fromIntegral y)
-        return $ Just $ MouseEvent (MouseButtonDown but hits) (convertCoords x y)
+        let but' = case but of
+             SDL.ButtonLeft  -> Just ButtonLeft
+             SDL.ButtonRight -> Just ButtonRight
+             _               -> Nothing
+        return $ fmap (\b -> 
+                    MouseEvent (MouseButton b MouseDown hits) (convertCoords x y)
+                 ) but'
     convertEvent d (SDL.MouseButtonUp x y but) = do
         hits <- getHits d (fromIntegral x) (fromIntegral y)
-        return $ Just $ MouseEvent (MouseButtonUp but hits) (convertCoords x y)
+        let but' = case but of
+             SDL.ButtonLeft  -> Just ButtonLeft
+             SDL.ButtonRight -> Just ButtonRight
+             _               -> Nothing
+        return $ fmap (\b -> 
+                    MouseEvent (MouseButton b MouseUp hits) (convertCoords x y)
+                 ) but'
     convertEvent _ _ = return $ Nothing
 
     getHits drawing x y = do

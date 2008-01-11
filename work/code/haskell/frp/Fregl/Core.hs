@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fglasgow-exts #-}
+
 module Fregl.Core 
     ( MouseButton(..)
     , MouseState(..)
@@ -8,6 +10,7 @@ where
 
 import Fregl.Signal
 import Fregl.Event
+import Fregl.Vector
 import qualified Fregl.Drawing as Draw
 import Control.Applicative
 
@@ -34,10 +37,11 @@ class EventVal e where
 
 -- standard combinators
 
-integral :: (EventVal e) => Double -> Signal Double -> Event e (Signal Double)
+integral :: (EventVal e, Vector v, Field v ~ Double) 
+         => v -> Signal v -> Event e (Signal v)
 integral init sig = pure init `untilEvent` nextStep
     where
     nextStep = do
         dt <- waitTimestep
         v <- readSig sig
-        integral (init + dt * v) sig
+        integral (init ^+^ dt *^ v) sig

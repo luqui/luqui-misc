@@ -32,6 +32,14 @@ norm = sqrt . norm2
 normalize :: (InnerProduct v, Floating (Field v)) => v -> v
 normalize v = v ^/ norm v
 
+instance Vector Double where
+    type Field Double = Double
+    vzero = 0
+    (^+^) = (+)
+    (*^) = (*)
+
+instance InnerProduct Double where
+    (^*^) = (*)
 
 type Euclid2 a = (a,a)
 type Vec2 = Euclid2 Double

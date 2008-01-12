@@ -73,27 +73,9 @@ untilEvent sigb ev = Event $ do
 
 
 loopSignal :: (Signal a -> Event v (Signal a)) -> Event v (Signal a)
-loopSignal f = Event $ do
-    (sigin,conts,var,sigout) <- lift $ mdo
-        var <- liftIO $ atomically $ newTVar $ sig0
-        let sigout = varSignal var
-        (choice,conts) <- lift $ runWriterT $ runSuspendT $ runEvent $ f sigout
-        sigin <- case choice of
-             Left a -> return a
-             Right _ -> error "event suspended in loopSignal"
-        sig0 <- liftIO $ atomically $ readSignal sigin
-        return (sigin,conts,var,sigout)
-
-    let updater conts' v = do
-            conts'' <- runConts v conts'
-            val <- Event $ liftIO $ atomically $ readSignal sigin
-            Event $ lift $ tell $ writeUpdate $ writeTVar var val
-            selfcont <- Event $ lift $ liftIO $ mkWeak var (updater conts'') Nothing
-            Event $ tellWeak selfcont
-    weakUpdater <- lift $ liftIO $ mkWeak var (updater conts) Nothing
-    tellWeak weakUpdater
-    return sigout
-
+loopSignal f = Event $ mdo
+    sig <- runEvent $ f sig
+    return sig
 
 
 tellWeak weakWriter = do
@@ -139,16 +121,6 @@ newEventCxt event = do
                  Right cont' -> return $ cs `mappend` writeCont (Event . cont')
         val <- atomically $ readSignal sig
         return $ EventCxt val (contAction sig (mconcat contlog'))
-
-runConts :: v -> ContLog v -> Event v (ContLog v)
-runConts v (ContLog (Dual conts) (Update updates)) = Event $ do
-    lift $ tell $ writeUpdate updates
-    contlog <- forM conts $ \cont -> do
-        (choice, cs) <- lift $ lift $ runWriterT $ runSuspendT $ runEvent $ cont v
-        case choice of
-             Left () -> return cs
-             Right cont' -> return $ cs `mappend` writeCont (Event . cont')
-    return $ mconcat contlog
 
 
 readEventCxt :: EventCxt v a -> a

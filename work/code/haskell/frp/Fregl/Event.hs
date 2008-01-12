@@ -4,7 +4,6 @@ module Fregl.Event
     ( Event
     , waitEvent
     , readSig
-    , loopSignal
     , untilEvent
     , unsafeEventIO
     , newEventCxt
@@ -51,6 +50,9 @@ instance Monad (Event v) where
     return = Event . return
     m >>= k = Event $ runEvent m >>= runEvent . k
 
+instance MonadFix (Event v) where
+    mfix f = Event $ mfix (runEvent . f)
+
 waitEvent :: Event v v
 waitEvent = Event suspend
 
@@ -70,12 +72,6 @@ untilEvent sigb ev = Event $ do
              weakWriter <- lift $ liftIO $ mkWeak cell writer Nothing
              tellWeak weakWriter
              return $ cellSignal cell
-
-
-loopSignal :: (Signal a -> Event v (Signal a)) -> Event v (Signal a)
-loopSignal f = Event $ mdo
-    sig <- runEvent $ f sig
-    return sig
 
 
 tellWeak weakWriter = do

@@ -39,9 +39,9 @@ drawBullet pos = Draw.translate pos $ Draw.scale 0.1 0.1 Draw.circle
 
 drawEnemy pos = Draw.translate pos $ Draw.scale 0.5 0.5 (Draw.regularPoly 4)
 
-makeEnemy initialPos avatar = 
-    loopSignal $ \self -> do
-        integral initialPos (liftA2 dir self avatar)
+makeEnemy initialPos avatar = mdo
+    x <- integral initialPos =<< integral (0,0) (liftA2 dir x avatar)
+    return x
     where
     dir self avatar = normalize (avatar ^-^ self)
 

@@ -1,7 +1,6 @@
 module Fregl.SDL 
     -- event exports 
     ( readSig
-    , loopSignal
     , untilEvent
     -- signal exports
     , Signal

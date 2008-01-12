@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fglasgow-exts #-}
+{-# OPTIONS_GHC -fglasgow-exts -fbang-patterns #-}
 
 module Fregl.Vector where
 
@@ -60,8 +60,8 @@ type Vec3 = Euclid3 Double
 instance (Num a) => Vector (Euclid3 a) where
     type Field (Euclid3 a) = a
     vzero = (0,0,0)
-    (x,y,z) ^+^ (x',y',z') = (x+x', y+y', z+z')
-    a *^ (x,y,z) = (a*x, a*y, a*z)
+    (!x,!y,!z) ^+^ (!x',!y',!z') = (x+x', y+y', z+z')
+    (!a) *^ (!x,!y,!z) = (a*x, a*y, a*z)
 
 instance (Num a) => InnerProduct (Euclid3 a) where
     (x,y,z) ^*^ (x',y',z') = x*x' + y*y' + z*z'

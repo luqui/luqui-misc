@@ -49,4 +49,5 @@ integral init sig = pure init `untilEvent` nextStep
     nextStep = do
         dt <- waitTimestep
         v <- readSig sig
-        integral (init ^+^ dt *^ v) sig
+        let !val = init ^+^ dt *^ v
+        integral val sig

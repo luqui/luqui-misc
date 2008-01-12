@@ -11,6 +11,7 @@ module Fregl.SDL
     , module Fregl.Vector
     , module Fregl.SDLCore
     , module Control.Applicative
+    , module Data.Monoid
     )
 where
 
@@ -22,3 +23,4 @@ import Fregl.Vector
 import Fregl.SDLCore
 import Fregl.Core
 import Control.Applicative
+import Data.Monoid

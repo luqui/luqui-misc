@@ -17,12 +17,13 @@ import Fregl.Event
 import Fregl.Signal
 import Fregl.Vector
 import Fregl.LinearSplit
-import Fregl.Core
+import Fregl.Core hiding (when)
 import qualified Fregl.Drawing as Draw
 import Data.List
 import qualified Data.Set as Set
 import Control.Concurrent.STM
 import System.IO.Unsafe
+import Control.Concurrent
 
 data EventSDL
     = TimestepEvent Double
@@ -115,9 +116,11 @@ mainLoop cxt pretime = do
         events' <- catMaybes <$> mapM (convertEvent drawing) events
         cxt' <- foldM (\cx ev -> nextEventCxt ev cx) cxt events'
         posttime <- SDL.getTicks
-        let timediff = fromIntegral (posttime - pretime) / 1000
+        threadDelay (fromIntegral (1000 * (33 - (posttime - pretime))))
+        posttime' <- SDL.getTicks
+        let timediff = fromIntegral (posttime' - pretime) / 1000
         cxt'' <- nextEventCxt (TimestepEvent timediff) cxt'
-        mainLoop cxt'' posttime
+        mainLoop cxt'' posttime'
 
 convertEvent _ (SDL.MouseMotion x y _ _) = do
     let pos = convertCoords x y

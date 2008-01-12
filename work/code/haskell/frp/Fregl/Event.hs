@@ -98,10 +98,10 @@ newEventCxt event = do
     let susp = runEvent event
     (Left sig, conts) <- runWriterT (runSuspendT susp)
     val <- atomically $ readSignal sig
-    return $ EventCxt val (contAction 1 sig conts)
+    return $ EventCxt val (contAction sig conts)
     where
-    contAction :: Int -> Signal a -> ContLog v -> v -> IO (EventCxt v a)
-    contAction count sig contlog v = do
+    contAction :: Signal a -> ContLog v -> v -> IO (EventCxt v a)
+    contAction sig contlog v = do
         -- Here it would be better if we performed updates *after*
         -- resuming, to be more responsive, but it's sufficiently
         -- ugly that I'd rather write this sentence explaining
@@ -110,10 +110,6 @@ newEventCxt event = do
         let ContLog (Dual conts) (Update updates) = contlog
         -- perform updates
         atomically updates
-        
-        -- garbage collect every 100 frames
-        when (count == 0) $
-           foldl (flip seq) (const undefined) conts `seq` performGC
 
         -- resume continuations
         contlog' <- forM conts $ \cont -> do
@@ -122,7 +118,7 @@ newEventCxt event = do
                  Left () -> return cs
                  Right cont' -> return $ cs `mappend` writeCont (Event . cont')
         val <- atomically $ readSignal sig
-        return $ EventCxt val (contAction ((count + 1) `mod` 100) sig (mconcat contlog'))
+        return $ EventCxt val (contAction sig (mconcat contlog'))
 
 
 readEventCxt :: EventCxt v a -> a

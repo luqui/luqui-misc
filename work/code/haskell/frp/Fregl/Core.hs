@@ -5,6 +5,8 @@ module Fregl.Core
     , MouseState(..)
     , EventVal(..)
     , integral
+    , when
+    , delay
     , module Graphics.UI.SDL.Keysym
     )
 where
@@ -51,3 +53,15 @@ integral init sig = pure init `untilEvent` nextStep
         v <- readSig sig
         let !val = init ^+^ dt *^ v
         integral val sig
+
+when :: (EventVal v) => Signal Bool -> Event v ()
+when cond = do
+    v <- readSig cond
+    if v then return () else wait >> when cond
+
+delay :: (EventVal v) => Double -> Event v ()
+delay seconds
+    | seconds <= 0 = return ()
+    | otherwise = do
+        step <- waitTimestep
+        delay (seconds - step)

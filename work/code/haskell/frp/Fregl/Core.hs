@@ -5,6 +5,7 @@ module Fregl.Core
     , MouseState(..)
     , EventVal(..)
     , integral
+    , module Graphics.UI.SDL.Keysym
     )
 where
 
@@ -14,6 +15,7 @@ import Fregl.Vector
 import qualified Fregl.Drawing as Draw
 import Control.Applicative
 import Debug.Trace
+import Graphics.UI.SDL.Keysym
 
 -- interface for Fregl cores
 
@@ -33,6 +35,8 @@ class EventVal e where
     waitMouseMotion :: Event e (Double,Double)
     waitClickPos    :: MouseButton -> MouseState -> Event e (Double,Double)
     waitClickName   :: MouseButton -> MouseState -> Draw.Name -> Event e (Double,Double)
+    waitKeyDown     :: Event e Keysym
+    waitKeyUp       :: Event e Keysym
 
 
 

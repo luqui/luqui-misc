@@ -22,6 +22,8 @@ import Data.List
 data EventSDL
     = TimestepEvent Double
     | MouseEvent MouseEvent Vec2
+    | KeyDownEvent Keysym
+    | KeyUpEvent Keysym
 
 data MouseEvent
     = MouseButton MouseButton MouseState [GL.Name]
@@ -49,6 +51,12 @@ instance EventVal EventSDL where
                     n' <- unsafeEventIO $ readLinearSplit $ Draw.getName n
                     if n' `elem` names then return pos else waitClickName b s n
             _ -> waitClickName b s n
+    waitKeyDown = waitHelper $ \e -> do
+        KeyDownEvent sym <- return e
+        return sym
+    waitKeyUp = waitHelper $ \e -> do
+        KeyUpEvent sym <- return e
+        return sym
 
 waitHelper :: (EventSDL -> Maybe a) -> Ev a
 waitHelper f = do
@@ -112,6 +120,8 @@ runGameSDL beh = do
         return $ fmap (\b -> 
                     MouseEvent (MouseButton b MouseUp hits) (convertCoords x y)
                  ) but'
+    convertEvent d (SDL.KeyDown sym) = return $ Just $ KeyDownEvent sym
+    convertEvent d (SDL.KeyUp   sym) = return $ Just $ KeyUpEvent sym
     convertEvent _ _ = return $ Nothing
 
     getHits drawing x y = do

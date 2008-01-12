@@ -3,7 +3,6 @@
 import Fregl.SDL
 import qualified Fregl.Drawing as Draw
 import System.Random
-import Debug.Trace
 
 makeAvatar = 
     integral vzero $ 
@@ -42,14 +41,14 @@ drawEnemy pos = Draw.translate pos $ Draw.scale 0.5 0.5 (Draw.regularPoly 4)
 
 makeEnemy initialPos avatar = 
     loopSignal $ \self -> do
-        integral initialPos (liftA2 dir self (pure vzero))
+        integral initialPos (liftA2 dir self avatar)
     where
     dir self avatar = normalize (avatar ^-^ self)
 
 makeEnemies :: [Vec2] -> Signal Vec2 -> Signal [Vec2] -> Ev (Signal [Vec2])
 makeEnemies [] _ _ = return $ pure []
 makeEnemies (r:rs) avatar bullets = pure [] `untilEvent` do
-    delay 10
+    delay 2
     enemy <- makeEnemy r avatar
     rest <- makeEnemies rs avatar bullets
     liftA2 (:) enemy rest `untilEvent` do
@@ -63,7 +62,6 @@ main = runGameSDL $ \_ -> do
     avatar <- makeAvatar
     bullets <- fireBullets avatar
     let rands = randomRs ((-16,-12),(16,12)) $ mkStdGen 42
-    trace (show $ take 10 rands) $ return ()
     enemies <- makeEnemies rands avatar bullets
     let avatarDrawing = drawAvatar <$> avatar
     let bulletDrawings = mconcat <$> (map drawBullet <$> bullets)

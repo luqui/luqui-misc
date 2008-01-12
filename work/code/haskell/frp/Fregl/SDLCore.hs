@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fglasgow-exts #-}
+
 module Fregl.SDLCore 
     ( Ev
     , runGameSDL
@@ -116,7 +118,9 @@ mainLoop cxt pretime = do
         events' <- catMaybes <$> mapM (convertEvent drawing) events
         cxt' <- foldM (\cx ev -> nextEventCxt ev cx) cxt events'
         posttime <- SDL.getTicks
-        threadDelay (fromIntegral (1000 * (33 - (posttime - pretime))))
+        let delay :: Int = 1000 * (33 - (fromIntegral posttime - fromIntegral pretime))
+        when (delay > 0) $
+            threadDelay (fromIntegral delay)
         posttime' <- SDL.getTicks
         let timediff = fromIntegral (posttime' - pretime) / 1000
         cxt'' <- nextEventCxt (TimestepEvent timediff) cxt'

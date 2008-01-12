@@ -37,7 +37,7 @@ drawAvatar pos = Draw.translate pos Draw.circle
 
 drawBullet pos = Draw.translate pos $ Draw.scale 0.1 0.1 Draw.circle
 
-drawEnemy pos = Draw.translate pos $ Draw.scale 0.5 0.5 (Draw.regularPoly 4)
+drawEnemy phase pos = Draw.translate pos $ Draw.scale 0.5 0.5 (Draw.regularPoly $ floor (8 * abs (sin phase)+1))
 
 makeEnemy initialPos avatar = mdo
     x <- integral initialPos =<< integral (0,0) (liftA2 dir x avatar)
@@ -63,10 +63,12 @@ main = runGameSDL $ \_ -> do
     bullets <- fireBullets avatar
     let rands = randomRs ((-16,-12),(16,12)) $ mkStdGen 42
     enemies <- makeEnemies rands avatar bullets
+    t <- time 0
     let avatarDrawing = drawAvatar <$> avatar
     let bulletDrawings = mconcat <$> (map drawBullet <$> bullets)
-    let enemyDrawings = mconcat <$> (map drawEnemy <$> enemies)
+    let enemyDrawings = mconcat <$> (map <$> (drawEnemy <$> t) <*> enemies)
     return $ mconcat <$> liftList [avatarDrawing, bulletDrawings, enemyDrawings]
+
 
 
 -- functions that should be in the library
@@ -74,6 +76,11 @@ main = runGameSDL $ \_ -> do
 liftList :: (Applicative f) => [f a] -> f [a]
 liftList [] = pure []
 liftList (x:xs) = liftA2 (:) x (liftList xs)
+
+time :: Double -> Ev (Signal Double)
+time start = pure start `untilEvent` do
+    dt <- waitTimestep
+    time (dt + start)
 
 instance Random Vec2 where
     random g = let (x,g') = random g

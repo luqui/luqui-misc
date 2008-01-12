@@ -65,3 +65,16 @@ instance (Num a) => Vector (Euclid3 a) where
 
 instance (Num a) => InnerProduct (Euclid3 a) where
     (x,y,z) ^*^ (x',y',z') = x*x' + y*y' + z*z'
+
+
+type Euclid4 a = (a,a,a,a)
+type Vec4 = Euclid4 Double
+
+instance (Num a) => Vector (Euclid4 a) where
+    type Field (Euclid4 a) = a
+    vzero = (0,0,0,0)
+    (!x,!y,!z,!w) ^+^ (!x',!y',!z',!w') = (x+x', y+y', z+z', w+w')
+    (!a) *^ (!x,!y,!z,!w) = (a*x, a*y, a*z, a*w)
+
+instance (Num a) => InnerProduct (Euclid4 a) where
+    (x,y,z,w) ^*^ (x',y',z',w') = x*x' + y*y' + z*z' + w*w'

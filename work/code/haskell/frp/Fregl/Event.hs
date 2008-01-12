@@ -78,9 +78,7 @@ tellWeak weakWriter = do
     lift $ tell $ writeCont $ \v -> do
         w <- Event $ liftIO $ deRefWeak weakWriter
         case w of
-             Nothing -> do
-                 Event $ liftIO $ putStrLn "euthenized orphan signal"
-                 return ()
+             Nothing -> return ()
              Just f -> f v
 
 unsafeEventIO :: IO a -> Event v a

@@ -37,7 +37,10 @@ drawAvatar pos = Draw.translate pos Draw.circle
 
 drawBullet pos = Draw.translate pos $ Draw.scale 0.1 0.1 Draw.circle
 
-drawEnemy phase pos = Draw.translate pos $ Draw.scale 0.5 0.5 (Draw.regularPoly $ floor (8 * abs (sin phase)+1))
+drawEnemy phase pos = Draw.color (1,0,0,1)
+                    $ Draw.translate pos 
+                    $ Draw.scale 0.5 0.5 
+                    $ Draw.regularPoly $ floor (8 * abs (sin phase)+1)
 
 makeEnemy initialPos avatar = mdo
     x <- integral initialPos =<< integral (0,0) (liftA2 dir x avatar)

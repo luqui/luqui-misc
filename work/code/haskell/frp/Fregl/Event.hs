@@ -15,11 +15,11 @@ where
 
 import Fregl.Suspend
 import Fregl.Signal
-import Control.Monad.Writer
+import Control.Monad.Writer.Strict
 import Control.Concurrent.STM
-import Control.Applicative
 import Data.Monoid
 import System.Mem.Weak
+import System.Mem
 
 newtype Update = Update (STM ())
 
@@ -27,7 +27,7 @@ instance Monoid Update where
     mempty = Update (return ())
     mappend (Update a) (Update b) = Update $ a >> b
 
-data ContLog v = ContLog (Endo [v -> Event v ()]) Update
+data ContLog v = ContLog (Dual [v -> Event v ()]) Update
 
 instance Monoid (ContLog v) where
     mempty = ContLog mempty mempty
@@ -35,7 +35,7 @@ instance Monoid (ContLog v) where
         ContLog (cont `mappend` cont') (up `mappend` up')
 
 writeCont :: (v -> Event v ()) -> ContLog v
-writeCont f = ContLog (Endo $ (:) f) mempty
+writeCont f = ContLog (Dual [f]) mempty
 
 writeUpdate :: STM () -> ContLog v
 writeUpdate m = ContLog mempty (Update m)
@@ -65,25 +65,32 @@ untilEvent sigb ev = Event $ do
          Right cont -> do
              cell <- liftIO $ atomically $ newSignalCell sigb
              let writer v = Event $ do
-                 sig <- cont v
-                 lift $ tell $ writeUpdate $ overwriteSignalCell cell sig
+                     sig <- cont v
+                     lift $ tell $ writeUpdate $ overwriteSignalCell cell sig
              weakWriter <- lift $ liftIO $ mkWeak cell writer Nothing
              tellWeak weakWriter
              return $ cellSignal cell
 
 
 loopSignal :: (Signal a -> Event v (Signal a)) -> Event v (Signal a)
-loopSignal f = Event $ mdo
-    var <- liftIO $ atomically $ newTVar $ init
-    let sigout = varSignal var
-    sigin <- runEvent $ f sigout
-    init <- liftIO $ atomically $ readSignal sigin
+loopSignal f = Event $ do
+    (sigin,conts,var,sigout) <- lift $ mdo
+        var <- liftIO $ atomically $ newTVar $ sig0
+        let sigout = varSignal var
+        (choice,conts) <- lift $ runWriterT $ runSuspendT $ runEvent $ f sigout
+        sigin <- case choice of
+             Left a -> return a
+             Right _ -> error "event suspended in loopSignal"
+        sig0 <- liftIO $ atomically $ readSignal sigin
+        return (sigin,conts,var,sigout)
 
-    let updater _ = do
+    let updater conts' v = do
+            conts'' <- runConts v conts'
             val <- Event $ liftIO $ atomically $ readSignal sigin
             Event $ lift $ tell $ writeUpdate $ writeTVar var val
-            waitEvent >>= updater
-    weakUpdater <- lift $ liftIO $ mkWeak var updater Nothing
+            selfcont <- Event $ lift $ liftIO $ mkWeak var (updater conts'') Nothing
+            Event $ tellWeak selfcont
+    weakUpdater <- lift $ liftIO $ mkWeak var (updater conts) Nothing
     tellWeak weakUpdater
     return sigout
 
@@ -93,7 +100,9 @@ tellWeak weakWriter = do
     lift $ tell $ writeCont $ \v -> do
         w <- Event $ liftIO $ deRefWeak weakWriter
         case w of
-             Nothing -> return ()
+             Nothing -> do
+                 Event $ liftIO $ putStrLn "euthenized orphan signal"
+                 return ()
              Just f -> f v
 
 unsafeEventIO :: IO a -> Event v a
@@ -104,8 +113,8 @@ data EventCxt v a = EventCxt a (v -> IO (EventCxt v a))
 
 newEventCxt :: forall v a. Event v (Signal a) -> IO (EventCxt v a)
 newEventCxt event = do
-    let suspend = runEvent event
-    (Left sig, conts) <- runWriterT (runSuspendT suspend)
+    let susp = runEvent event
+    (Left sig, conts) <- runWriterT (runSuspendT susp)
     val <- atomically $ readSignal sig
     return $ EventCxt val (contAction sig conts)
     where
@@ -116,18 +125,31 @@ newEventCxt event = do
         -- ugly that I'd rather write this sentence explaining
         -- it than just do it.
 
-        let ContLog (Endo conts) (Update updates) = contlog
+        let ContLog (Dual conts) (Update updates) = contlog
         -- perform updates
         atomically updates
+        
+        foldl (flip seq) (const undefined) conts `seq` performGC
 
         -- resume continuations
-        contlog' <- forM (conts []) $ \cont -> do
+        contlog' <- forM conts $ \cont -> do
             (choice, cs) <- runWriterT $ runSuspendT $ runEvent $ cont v
             case choice of
                  Left () -> return cs
-                 Right cont -> return $ cs `mappend` writeCont (Event . cont)
+                 Right cont' -> return $ cs `mappend` writeCont (Event . cont')
         val <- atomically $ readSignal sig
         return $ EventCxt val (contAction sig (mconcat contlog'))
+
+runConts :: v -> ContLog v -> Event v (ContLog v)
+runConts v (ContLog (Dual conts) (Update updates)) = Event $ do
+    lift $ tell $ writeUpdate updates
+    contlog <- forM conts $ \cont -> do
+        (choice, cs) <- lift $ lift $ runWriterT $ runSuspendT $ runEvent $ cont v
+        case choice of
+             Left () -> return cs
+             Right cont' -> return $ cs `mappend` writeCont (Event . cont')
+    return $ mconcat contlog
+
 
 readEventCxt :: EventCxt v a -> a
 readEventCxt (EventCxt a _) = a

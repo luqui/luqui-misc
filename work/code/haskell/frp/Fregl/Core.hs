@@ -13,6 +13,7 @@ import Fregl.Event
 import Fregl.Vector
 import qualified Fregl.Drawing as Draw
 import Control.Applicative
+import Debug.Trace
 
 -- interface for Fregl cores
 

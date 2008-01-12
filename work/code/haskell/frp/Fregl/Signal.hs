@@ -16,7 +16,6 @@ where
 import Control.Monad
 import Control.Applicative
 import Control.Concurrent.STM
-import Fregl.Vector
 
 data SignalTag
     = TagEarly
@@ -47,9 +46,9 @@ readSignal = liftM fst . readSignal'
         (a, repla) <- readSignal' siga
         let repl = case (replf, repla) of
                 (Nothing, Nothing)     -> Nothing
-                (Nothing, Just siga)   -> Just $ sigf <*> siga
-                (Just sigf, Nothing)   -> Just $ sigf <*> siga
-                (Just sigf, Just siga) -> Just $ sigf <*> siga
+                (Nothing, Just siga')   -> Just  $ sigf  <*> siga'
+                (Just sigf', Nothing)   -> Just  $ sigf' <*> siga
+                (Just sigf', Just siga') -> Just $ sigf' <*> siga'
         return (f a, repl)
     
     readSignal' (SigCell (SignalCell cell)) = do

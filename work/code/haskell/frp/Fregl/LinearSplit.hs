@@ -35,7 +35,7 @@ readLinearSplit :: LinearSplit a -> IO a
 readLinearSplit (LinearSplit _ act) = act
 
 linearSplit :: LinearSplit a -> IO (LinearSplit a, LinearSplit a)
-linearSplit (LinearSplit xsvar act) = do
+linearSplit (LinearSplit xsvar _) = do
     a <- makeReader xsvar
     b <- makeReader xsvar
     return (LinearSplit xsvar a, LinearSplit xsvar b)

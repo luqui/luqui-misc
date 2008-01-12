@@ -46,11 +46,11 @@ line (ax,ay) (bx,by) = Drawing $ do
 
 regularPoly :: Int -> Drawing
 regularPoly n = Drawing $ do
-    let scale = 2 * pi / fromIntegral n
+    let scaler :: Double = 2 * pi / fromIntegral n
     GL.renderPrimitive GL.TriangleFan $ do
         GL.vertex $ (GL.Vertex2 0 0 :: GL.Vertex2 Double)
         forM_ [0..n] $ \s -> do
-            let theta :: Double = scale * fromIntegral s
+            let theta = scaler * fromIntegral s
             GL.vertex $ GL.Vertex2 (cos theta) (sin theta)
 
 circle :: Drawing

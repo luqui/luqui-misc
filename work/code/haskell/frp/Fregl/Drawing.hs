@@ -6,6 +6,7 @@ module Fregl.Drawing
     , translate, rotate, scale
     , Name, name, getName, makeName
     , Color, color, colorFunc
+    , imageToSprite, sprite
     )
 where
 
@@ -17,6 +18,11 @@ import Control.Monad
 import Control.Monad.Reader
 import qualified Graphics.Rendering.OpenGL.GL as GL
 import qualified Graphics.Rendering.OpenGL.GLU as GLU
+import qualified Graphics.UI.SDL as SDL
+import qualified Graphics.UI.SDL.Image as Image
+import System.Mem.Weak
+import Data.IORef 
+import System.IO.Unsafe
 
 type Color = Vec4
 
@@ -105,3 +111,78 @@ colorFunc cf d = Drawing $ do
 
 color :: Color -> Drawing -> Drawing
 color c = colorFunc (const c)
+
+--
+
+data Sprite = Sprite { spriteObject :: GL.TextureObject }
+
+-- FUUUUUUUUUCKKK Why doesn't glGenTextures work!!??
+-- Anyway here is me hacking around it...
+textureHack :: IORef [GL.GLuint]
+textureHack = unsafePerformIO $ newIORef [1..]
+
+allocateTexture :: IO GL.TextureObject
+allocateTexture = do
+    {- -- This is how it *should* be done.  wtf is going on!?
+    [obj] <- GL.genObjectNames 1
+    good <- GL.isObjectName obj
+    unless good $ fail "Failed to generate valid object wtf!"
+    return obj
+    -}
+    b <- atomicModifyIORef textureHack (\(x:xs) -> (xs,x))
+    return $ GL.TextureObject b
+
+freeTexture :: GL.TextureObject -> IO ()
+freeTexture (GL.TextureObject b) = do
+    GL.deleteObjectNames [GL.TextureObject b]
+    modifyIORef textureHack (b:)
+
+
+surfaceToSprite :: SDL.Surface -> IO Sprite
+surfaceToSprite surf = do
+    unless (isPowerOf2 (SDL.surfaceGetWidth  surf) 
+         && isPowerOf2 (SDL.surfaceGetHeight surf)) $ do
+             fail "Image's area is not a power of two!"
+    obj <- allocateTexture
+    oldtex <- GL.get (GL.textureBinding GL.Texture2D)
+    GL.textureBinding GL.Texture2D GL.$= Just obj
+    pixels <- SDL.surfaceGetPixels surf
+    bytesPerPixel <- SDL.pixelFormatGetBytesPerPixel (SDL.surfaceGetPixelFormat surf)
+    let pixelFormat = case bytesPerPixel of
+                        3 -> GL.RGB
+                        4 -> GL.RGBA
+    GL.textureFunction GL.$= GL.Modulate
+    GL.textureFilter GL.Texture2D GL.$= ((GL.Linear', Nothing), GL.Linear')
+    GL.textureWrapMode GL.Texture2D GL.S GL.$= (GL.Mirrored, GL.Repeat)
+    GL.textureWrapMode GL.Texture2D GL.T GL.$= (GL.Mirrored, GL.Repeat)
+    GL.texImage2D Nothing GL.NoProxy 0 (GL.RGBA')  -- ? proxy level internalformat
+                  (GL.TextureSize2D 
+                    (fromIntegral $ SDL.surfaceGetWidth surf)
+                    (fromIntegral $ SDL.surfaceGetHeight surf))
+                  0 -- border
+                  (GL.PixelData pixelFormat GL.UnsignedByte pixels)
+    GL.textureBinding GL.Texture2D GL.$= oldtex
+    let sprite = Sprite obj
+    addFinalizer sprite $ do
+        freeTexture obj
+    return sprite
+    where
+    isPowerOf2 x = x == (last $ takeWhile (<= x) $ iterate (*2) 1)
+
+imageToSprite :: FilePath -> IO Sprite
+imageToSprite path = Image.load path >>= surfaceToSprite
+
+sprite :: Sprite -> Drawing
+sprite spr = Drawing $ liftIO $ do
+    oldtex <- GL.get (GL.textureBinding GL.Texture2D)
+    GL.textureBinding GL.Texture2D GL.$= (Just $ spriteObject spr)
+    GL.renderPrimitive GL.Quads $ do
+        tex 0 0  >>  vertex (-0.5)   0.5
+        tex 1 0  >>  vertex   0.5    0.5
+        tex 1 1  >>  vertex   0.5  (-0.5)
+        tex 0 1  >>  vertex (-0.5) (-0.5)
+    GL.textureBinding GL.Texture2D GL.$= oldtex
+    where
+    tex x y = GL.texCoord (GL.TexCoord2 x (y :: Double))
+    vertex x y = GL.vertex (GL.Vertex2 x (y :: Double))
+

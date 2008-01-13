@@ -92,7 +92,12 @@ runGameSDL :: (Draw.Name -> Ev (Signal Draw.Drawing)) -> IO ()
 runGameSDL beh = do
     -- set up SDL
     SDL.init [SDL.InitVideo]
-    SDL.setVideoMode 640 480 32 [SDL.OpenGL]
+    SDL.setVideoMode 640 480 0 [SDL.OpenGL]
+
+    -- set up OpenGL
+    GL.texture GL.Texture2D GL.$= GL.Enabled
+    GL.blend GL.$= GL.Enabled
+    GL.blendFunc GL.$= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
 
     name <- Draw.makeName
     cxt <- newEventCxt (beh name)
@@ -112,8 +117,13 @@ mainLoop cxt pretime = do
     Draw.runDrawing drawing
     SDL.glSwapBuffers
 
+    errors <- GL.get GLU.errors
+    unless (null errors) $
+        fail $ "OpenGL errors: " ++ show errors
+ 
     -- poll for events
     events <- whileM (/= SDL.NoEvent) SDL.pollEvent
+
     when (not $ any isQuitEvent events) $ do
         events' <- catMaybes <$> mapM (convertEvent drawing) events
         cxt' <- foldM (\cx ev -> nextEventCxt ev cx) cxt events'

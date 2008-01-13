@@ -62,11 +62,11 @@ makeEnemies (r:rs) avatar bullets = pure [] `untilEvent` do
     hit enemy bullet = norm (enemy ^-^ bullet) < 0.6
 
 main = runGameSDL $ \_ -> do
+    let rands = randomRs ((-16,-12),(16,12)) $ mkStdGen 42
     fromSF $ proc () -> do
         avatar  <- sf_ makeAvatar  -< ()
         bullets <- sf fireBullets -< avatar
-        let rands = randomRs ((-16,-12),(16,12)) $ mkStdGen 42
-        enemies <- sf $ uncurry $ makeEnemies rands -< (avatar,bullets)
+        enemies <- sf (makeEnemies rands) <<^ uncurry -< (avatar,bullets)
         t <- time 0 -< ()
         let bulletDrawings = mconcat (map drawBullet bullets)
         let enemyDrawings = mconcat (map (drawEnemy t) enemies)

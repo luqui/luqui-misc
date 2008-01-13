@@ -1,7 +1,7 @@
 all:
 
 %: %.hs dummy
-	ghc --make $@ Fregl/RTSHook.c
+	ghc --make $@ Fregl/RTSHook.c -lSDL_image
 
 dummy:
 

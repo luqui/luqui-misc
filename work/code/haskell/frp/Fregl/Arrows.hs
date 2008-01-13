@@ -2,7 +2,7 @@
 
 module Fregl.Arrows 
     ( SP, runSP, sigSP, fromSP
-    , SF, runSF, sf, sigSF, fromSF
+    , SF, runSF, sf, sf_, sigSF, fromSF
     ) 
 where
 
@@ -53,6 +53,9 @@ instance ArrowLoop (SF v) where
 
 sf :: (Signal b -> Event v (Signal c)) -> SF v b c
 sf = SF
+
+sf_ :: Event v (Signal c) -> SF v () c
+sf_ = SF . const
 
 sigSF :: Signal c -> SF v () c
 sigSF sig = SF $ const (return sig)

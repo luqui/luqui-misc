@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# OPTIONS -fglasgow-exts -farrows #-}
 
 import Fregl.SDL
 import qualified Fregl.Drawing as Draw
@@ -62,15 +62,15 @@ makeEnemies (r:rs) avatar bullets = pure [] `untilEvent` do
     hit enemy bullet = norm (enemy ^-^ bullet) < 0.6
 
 main = runGameSDL $ \_ -> do
-    avatar <- makeAvatar
-    bullets <- fireBullets avatar
-    let rands = randomRs ((-16,-12),(16,12)) $ mkStdGen 42
-    enemies <- makeEnemies rands avatar bullets
-    t <- time 0
-    let avatarDrawing = drawAvatar <$> avatar
-    let bulletDrawings = mconcat <$> (map drawBullet <$> bullets)
-    let enemyDrawings = mconcat <$> (map <$> (drawEnemy <$> t) <*> enemies)
-    return $ mconcat <$> liftList [avatarDrawing, bulletDrawings, enemyDrawings]
+    fromSF $ proc () -> do
+        avatar  <- sf_ makeAvatar  -< ()
+        bullets <- sf fireBullets -< avatar
+        let rands = randomRs ((-16,-12),(16,12)) $ mkStdGen 42
+        enemies <- sf $ uncurry $ makeEnemies rands -< (avatar,bullets)
+        t <- time 0 -< ()
+        let bulletDrawings = mconcat (map drawBullet bullets)
+        let enemyDrawings = mconcat (map (drawEnemy t) enemies)
+        returnA -< mconcat [drawAvatar avatar, bulletDrawings, enemyDrawings]
 
 
 

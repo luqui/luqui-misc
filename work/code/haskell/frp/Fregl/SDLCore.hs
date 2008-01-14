@@ -14,6 +14,7 @@ import Control.Applicative
 import qualified Graphics.Rendering.OpenGL.GL as GL
 import qualified Graphics.Rendering.OpenGL.GLU as GLU
 import qualified Graphics.UI.SDL as SDL
+import qualified Graphics.UI.SDL.TTF as TTF
 import qualified Fregl.Event
 import Fregl.Event
 import Fregl.Signal
@@ -99,10 +100,14 @@ runGameSDL beh = do
     GL.blend GL.$= GL.Enabled
     GL.blendFunc GL.$= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
 
+    -- set up ttf
+    TTF.init
+
     name <- Draw.makeName
     cxt <- newEventCxt (beh name)
     pretime <- SDL.getTicks
     mainLoop cxt pretime
+    TTF.quit
     SDL.quit
 
 

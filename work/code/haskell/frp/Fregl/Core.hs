@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fglasgow-exts #-}
+{-# OPTIONS_GHC -fglasgow-exts -fbang-patterns #-}
 
 module Fregl.Core 
     ( MouseButton(..)
@@ -7,6 +7,7 @@ module Fregl.Core
     , integral
     , when
     , delay
+    , time
     , module Graphics.UI.SDL.Keysym
     )
 where
@@ -65,3 +66,8 @@ delay seconds
     | otherwise = do
         step <- waitTimestep
         delay (seconds - step)
+
+time :: (EventVal v) => Event v (Signal Double)
+time = time' 0
+    where
+    time' (!t) = pure t `untilEvent` (waitTimestep >>= time' . (+t))

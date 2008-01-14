@@ -7,6 +7,7 @@ module Fregl.Drawing
     , Name, name, getName, makeName
     , Color, color, colorFunc
     , imageToSprite, sprite
+    , Font, openFont, text, fontText
     )
 where
 
@@ -113,7 +114,7 @@ colorFunc cf d = Drawing $ do
 color :: Color -> Drawing -> Drawing
 color c = colorFunc (const c)
 
---
+-- Images and Sprites
 
 data Sprite = Sprite { spriteObject :: GL.TextureObject
                      , spriteWidthRat :: Double
@@ -186,6 +187,7 @@ padSurface surf
     | newWidth == oldWidth && newHeight == oldHeight = return surf
     | otherwise = do
         surf' <- SDL.createRGBSurfaceEndian [] newWidth newHeight 32
+        SDL.setAlpha surf [] 0xff
         SDL.blitSurface surf Nothing surf' Nothing
         return surf'
     where
@@ -213,3 +215,27 @@ sprite spr = Drawing $ liftIO $ do
         GL.texCoord $ GL.TexCoord2 0 yrat
         GL.vertex   $ GL.Vertex2 (-xofs) (-yofs)
     GL.textureBinding GL.Texture2D GL.$= oldtex
+
+-- Text
+
+data Font = Font { getFont :: TTF.Font }
+
+openFont :: String -> Int -> IO Font
+openFont path res = do
+    font <- TTF.openFont path res
+    let font' = Font font
+    return font'
+
+textSprite :: Font -> String -> IO Sprite
+textSprite font str = do
+    surf <- TTF.renderTextBlended (getFont font) str (SDL.Color 255 255 255)
+    surfaceToSprite surf
+
+defaultFont :: Font
+defaultFont = unsafePerformIO $ openFont "res/joshsfont.ttf" 72
+
+text :: String -> Drawing
+text = fontText defaultFont
+
+fontText :: Font -> String -> Drawing
+fontText font str = sprite $ unsafePerformIO $ textSprite font str

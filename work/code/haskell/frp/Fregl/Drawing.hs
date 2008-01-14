@@ -20,6 +20,7 @@ import qualified Graphics.Rendering.OpenGL.GL as GL
 import qualified Graphics.Rendering.OpenGL.GLU as GLU
 import qualified Graphics.UI.SDL as SDL
 import qualified Graphics.UI.SDL.Image as Image
+import qualified Graphics.UI.SDL.TTF as TTF
 import System.Mem.Weak
 import Data.IORef 
 import System.IO.Unsafe
@@ -114,7 +115,12 @@ color c = colorFunc (const c)
 
 --
 
-data Sprite = Sprite { spriteObject :: GL.TextureObject }
+data Sprite = Sprite { spriteObject :: GL.TextureObject
+                     , spriteWidthRat :: Double
+                     , spriteHeightRat :: Double
+                     , spriteWidth :: Double
+                     , spriteHeight :: Double
+                     }
 
 -- FUUUUUUUUUCKKK Why doesn't glGenTextures work!!??
 -- Anyway here is me hacking around it...
@@ -137,17 +143,14 @@ freeTexture (GL.TextureObject b) = do
     GL.deleteObjectNames [GL.TextureObject b]
     modifyIORef textureHack (b:)
 
-
 surfaceToSprite :: SDL.Surface -> IO Sprite
 surfaceToSprite surf = do
-    unless (isPowerOf2 (SDL.surfaceGetWidth  surf) 
-         && isPowerOf2 (SDL.surfaceGetHeight surf)) $ do
-             fail "Image's area is not a power of two!"
+    surf' <- padSurface surf
     obj <- allocateTexture
     oldtex <- GL.get (GL.textureBinding GL.Texture2D)
     GL.textureBinding GL.Texture2D GL.$= Just obj
-    pixels <- SDL.surfaceGetPixels surf
-    bytesPerPixel <- SDL.pixelFormatGetBytesPerPixel (SDL.surfaceGetPixelFormat surf)
+    pixels <- SDL.surfaceGetPixels surf'
+    bytesPerPixel <- SDL.pixelFormatGetBytesPerPixel (SDL.surfaceGetPixelFormat surf')
     let pixelFormat = case bytesPerPixel of
                         3 -> GL.RGB
                         4 -> GL.RGBA
@@ -157,17 +160,39 @@ surfaceToSprite surf = do
     GL.textureWrapMode GL.Texture2D GL.T GL.$= (GL.Mirrored, GL.Repeat)
     GL.texImage2D Nothing GL.NoProxy 0 (GL.RGBA')  -- ? proxy level internalformat
                   (GL.TextureSize2D 
-                    (fromIntegral $ SDL.surfaceGetWidth surf)
-                    (fromIntegral $ SDL.surfaceGetHeight surf))
+                    (fromIntegral $ SDL.surfaceGetWidth surf')
+                    (fromIntegral $ SDL.surfaceGetHeight surf'))
                   0 -- border
                   (GL.PixelData pixelFormat GL.UnsignedByte pixels)
     GL.textureBinding GL.Texture2D GL.$= oldtex
-    let sprite = Sprite obj
+    let (w,w') = (SDL.surfaceGetWidth  surf, SDL.surfaceGetWidth  surf')
+        (h,h') = (SDL.surfaceGetHeight surf, SDL.surfaceGetHeight surf')
+    let sprite = Sprite { spriteObject = obj
+                        , spriteWidthRat  = fromIntegral w / fromIntegral w'
+                        , spriteHeightRat = fromIntegral h / fromIntegral h'
+                        , spriteWidth  = fromIntegral w / fromIntegral (max w h)
+                        , spriteHeight = fromIntegral h / fromIntegral (max w h)
+                        }
+                            
     addFinalizer sprite $ do
         freeTexture obj
     return sprite
+
+nextPowerOf2 x = head $ dropWhile (< x) $ iterate (*2) 1
+isPowerOf2 x = x == nextPowerOf2 x
+
+padSurface :: SDL.Surface -> IO SDL.Surface
+padSurface surf 
+    | newWidth == oldWidth && newHeight == oldHeight = return surf
+    | otherwise = do
+        surf' <- SDL.createRGBSurfaceEndian [] newWidth newHeight 32
+        SDL.blitSurface surf Nothing surf' Nothing
+        return surf'
     where
-    isPowerOf2 x = x == (last $ takeWhile (<= x) $ iterate (*2) 1)
+    oldWidth  = SDL.surfaceGetWidth surf
+    oldHeight = SDL.surfaceGetHeight surf
+    newWidth  = nextPowerOf2 oldWidth
+    newHeight = nextPowerOf2 oldHeight
 
 imageToSprite :: FilePath -> IO Sprite
 imageToSprite path = Image.load path >>= surfaceToSprite
@@ -177,12 +202,14 @@ sprite spr = Drawing $ liftIO $ do
     oldtex <- GL.get (GL.textureBinding GL.Texture2D)
     GL.textureBinding GL.Texture2D GL.$= (Just $ spriteObject spr)
     GL.renderPrimitive GL.Quads $ do
-        tex 0 0  >>  vertex (-0.5)   0.5
-        tex 1 0  >>  vertex   0.5    0.5
-        tex 1 1  >>  vertex   0.5  (-0.5)
-        tex 0 1  >>  vertex (-0.5) (-0.5)
+        let (xofs, yofs) = (0.5 * spriteWidth spr, 0.5 * spriteHeight spr)
+            (xrat, yrat) = (spriteWidthRat spr, spriteHeightRat spr)
+        GL.texCoord $ GL.TexCoord2 0 (0 :: Double)
+        GL.vertex   $ GL.Vertex2 (-xofs) yofs
+        GL.texCoord $ GL.TexCoord2 xrat 0
+        GL.vertex   $ GL.Vertex2 xofs yofs
+        GL.texCoord $ GL.TexCoord2 xrat yrat
+        GL.vertex   $ GL.Vertex2 xofs (-yofs)
+        GL.texCoord $ GL.TexCoord2 0 yrat
+        GL.vertex   $ GL.Vertex2 (-xofs) (-yofs)
     GL.textureBinding GL.Texture2D GL.$= oldtex
-    where
-    tex x y = GL.texCoord (GL.TexCoord2 x (y :: Double))
-    vertex x y = GL.vertex (GL.Vertex2 x (y :: Double))
-

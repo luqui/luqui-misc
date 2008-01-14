@@ -51,11 +51,6 @@ instance ArrowLoop (SF v) where
         let sigbd = liftA2 (,) sigb (fmap snd sigcd)
         return (fmap fst sigcd)
 
-instance ArrowApply (SF v) where
-    app = SF $ \sigabb -> do
-        arrow <- readSig $ fmap fst sigabb
-        runSF arrow (fmap snd sigabb)
-
 sf :: (Signal b -> Event v (Signal c)) -> SF v b c
 sf = SF
 

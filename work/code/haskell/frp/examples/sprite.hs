@@ -5,4 +5,6 @@ import Fregl.Event
 main = do
     runGameSDL $ \_ -> do
         stick <- unsafeEventIO $ Draw.imageToSprite "res/turquoise_stick.png"
-        return $ pure $ Draw.sprite stick
+        reddy <- unsafeEventIO $ Draw.imageToSprite "res/red_on_white.png"
+        return $ pure $ Draw.sprite stick 
+              `mappend` Draw.translate (4,0) (Draw.sprite reddy)

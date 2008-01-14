@@ -66,8 +66,8 @@ main = runGameSDL $ \_ -> do
     fromSF $ proc () -> do
         avatar  <- sf_ makeAvatar  -< ()
         bullets <- sf fireBullets -< avatar
-        enemies <- sf (makeEnemies rands) <<^ uncurry -< (avatar,bullets)
-        t <- time 0 -< ()
+        enemies <- sf (sfUncurry2 $ makeEnemies rands) -< (avatar,bullets)
+        t <- sf_ $ time 0 -< ()
         let bulletDrawings = mconcat (map drawBullet bullets)
         let enemyDrawings = mconcat (map (drawEnemy t) enemies)
         returnA -< mconcat [drawAvatar avatar, bulletDrawings, enemyDrawings]
@@ -93,3 +93,6 @@ instance Random Vec2 where
         let (x,g') = randomR (minx,maxx) g
             (y,g'') = randomR (miny,maxy) g'
         in ((x,y),g'')
+
+sfUncurry2 :: (Signal a -> Signal b -> Ev (Signal c)) -> (Signal (a,b) -> Ev (Signal c))
+sfUncurry2 f = uncurry f . (fmap fst &&& fmap snd)

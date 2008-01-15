@@ -144,8 +144,13 @@ freeTexture (GL.TextureObject b) = do
     GL.deleteObjectNames [GL.TextureObject b]
     modifyIORef textureHack (b:)
 
-surfaceToSprite :: SDL.Surface -> IO Sprite
-surfaceToSprite surf = do
+data SpriteScaling
+    = ScaleMax
+    | ScaleWidth
+    | ScaleHeight
+
+surfaceToSprite :: SpriteScaling -> SDL.Surface -> IO Sprite
+surfaceToSprite scaling surf = do
     surf' <- padSurface surf
     obj <- allocateTexture
     oldtex <- GL.get (GL.textureBinding GL.Texture2D)
@@ -168,16 +173,28 @@ surfaceToSprite surf = do
     GL.textureBinding GL.Texture2D GL.$= oldtex
     let (w,w') = (SDL.surfaceGetWidth  surf, SDL.surfaceGetWidth  surf')
         (h,h') = (SDL.surfaceGetHeight surf, SDL.surfaceGetHeight surf')
+    let (scalew, scaleh) = scaleFunc w h
     let sprite = Sprite { spriteObject = obj
                         , spriteWidthRat  = fromIntegral w / fromIntegral w'
                         , spriteHeightRat = fromIntegral h / fromIntegral h'
-                        , spriteWidth  = fromIntegral w / fromIntegral (max w h)
-                        , spriteHeight = fromIntegral h / fromIntegral (max w h)
+                        , spriteWidth  = scalew
+                        , spriteHeight = scaleh
                         }
                             
     addFinalizer sprite $ do
         freeTexture obj
     return sprite
+
+    where
+    scaleFunc w h =
+        case scaling of
+             ScaleMax ->
+                 ( fromIntegral w / fromIntegral (max w h)
+                 , fromIntegral h / fromIntegral (max w h) )
+             ScaleWidth ->
+                 ( 1, fromIntegral h / fromIntegral w )
+             ScaleHeight ->
+                 ( fromIntegral w / fromIntegral h, 1 )
 
 nextPowerOf2 x = head $ dropWhile (< x) $ iterate (*2) 1
 isPowerOf2 x = x == nextPowerOf2 x
@@ -197,7 +214,7 @@ padSurface surf
     newHeight = nextPowerOf2 oldHeight
 
 imageToSprite :: FilePath -> IO Sprite
-imageToSprite path = Image.load path >>= surfaceToSprite
+imageToSprite path = Image.load path >>= surfaceToSprite ScaleMax
 
 sprite :: Sprite -> Drawing
 sprite spr = Drawing $ liftIO $ do
@@ -229,7 +246,7 @@ openFont path res = do
 textSprite :: Font -> String -> IO Sprite
 textSprite font str = do
     surf <- TTF.renderTextBlended (getFont font) str (SDL.Color 255 255 255)
-    surfaceToSprite surf
+    surfaceToSprite ScaleHeight surf
 
 defaultFont :: Font
 defaultFont = unsafePerformIO $ openFont "res/joshsfont.ttf" 72

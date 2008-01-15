@@ -6,6 +6,8 @@ module Fregl.Event
     , readSig
     , untilEvent
     , unsafeEventIO
+    , eitherEvent
+    , firstOfEvents
     , newEventCxt
     , readEventCxt
     , nextEventCxt
@@ -83,6 +85,14 @@ tellWeak weakWriter = do
 
 unsafeEventIO :: IO a -> Event v a
 unsafeEventIO = Event . liftIO
+
+eitherEvent :: Event v a -> Event v a -> Event v a
+eitherEvent a b = Event $ runEvent a `mergeL` runEvent b
+
+firstOfEvents :: [Event v a] -> Event v a
+firstOfEvents [] = error "empty list"
+firstOfEvents [e] = e
+firstOfEvents (e:es) = eitherEvent e (firstOfEvents es)
 
 -- executing events:
 data EventCxt v a = EventCxt a (v -> IO (EventCxt v a))

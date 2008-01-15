@@ -6,8 +6,8 @@ import Fregl.Event
 
 main = do
     runGameSDL $ \_ -> do
-        stick <- unsafeEventIO $ Draw.imageToSprite "res/turquoise_stick.png"
-        reddy <- unsafeEventIO $ Draw.imageToSprite "res/red_on_white.png"
+        stick <- loadImage "res/turquoise_stick.png"
+        reddy <- loadImage "res/red_on_white.png"
         time' <- time
         return $ fromSP $ proc () -> do
             t <- sigSP time' -< ()

@@ -8,6 +8,7 @@ module Fregl.Core
     , when
     , delay
     , time
+    , loadImage
     , module Graphics.UI.SDL.Keysym
     )
 where
@@ -71,3 +72,6 @@ time :: (EventVal v) => Event v (Signal Double)
 time = time' 0
     where
     time' (!t) = pure t `untilEvent` (waitTimestep >>= time' . (+t))
+
+loadImage :: (EventVal v) => FilePath -> Event v Draw.Sprite
+loadImage = unsafeEventIO . Draw.imageToSprite

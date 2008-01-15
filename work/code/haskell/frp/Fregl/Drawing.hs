@@ -6,7 +6,7 @@ module Fregl.Drawing
     , translate, rotate, scale
     , Name, name, getName, makeName
     , Color, color, colorFunc
-    , imageToSprite, sprite
+    , Sprite, imageToSprite, sprite
     , Font, openFont, text, fontText
     )
 where

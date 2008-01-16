@@ -1,6 +1,6 @@
 module Fregl.SDL 
     -- event exports 
-    ( readSig
+    ( sample
     , untilEvent
     -- signal exports
     , Signal

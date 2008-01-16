@@ -36,29 +36,29 @@ fromSP sp = runSP sp <*> pure ()
 
 -- arrow for unrestricted signal composition
 -- (like AFRP, but we also have the rest of Fregl :-)
-newtype SF v b c = SF { runSF :: Signal b -> Event v (Signal c) }
+newtype SF b c = SF { runSF :: Signal b -> Event (Signal c) }
 
-instance Arrow (SF v) where
+instance Arrow SF where
     arr f   = SF $ return . fmap f
     first f = SF $ \sigbd -> do
         sigc <- runSF f (fmap fst sigbd)
         return $ liftA2 (,) sigc (fmap snd sigbd)
     f >>> g = SF $ \sigb -> runSF f sigb >>= runSF g
 
-instance ArrowLoop (SF v) where
+instance ArrowLoop SF where
     loop f = SF $ \sigb -> mdo
         sigcd <- runSF f sigbd
         let sigbd = liftA2 (,) sigb (fmap snd sigcd)
         return (fmap fst sigcd)
 
-sf :: (Signal b -> Event v (Signal c)) -> SF v b c
+sf :: (Signal b -> Event (Signal c)) -> SF b c
 sf = SF
 
-sf_ :: Event v (Signal c) -> SF v () c
+sf_ :: Event (Signal c) -> SF () c
 sf_ = SF . const
 
-sigSF :: Signal c -> SF v () c
+sigSF :: Signal c -> SF () c
 sigSF sig = SF $ const (return sig)
 
-fromSF :: SF v () c -> Event v (Signal c)
+fromSF :: SF () c -> Event (Signal c)
 fromSF f = runSF f (pure ())

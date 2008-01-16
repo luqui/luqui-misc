@@ -15,6 +15,7 @@ makeAvatar =
     where
     dir k d = (\down -> if down then d else vzero) <$> keyState k
 
+makeBullet :: Vec2 -> Vec2 -> Ev (Signal Vec2)
 makeBullet src dest = 
     integral src (pure dir)
     where
@@ -22,11 +23,11 @@ makeBullet src dest =
 
 fireBullets avatar = pure [] `untilEvent` do
     pos <- waitClickPos ButtonLeft MouseDown
-    av <- readSig avatar
+    av <- sample avatar
     bullet <- makeBullet av pos
     rest <- fireBullets avatar
     liftA2 (:) bullet rest `untilEvent` do
-        bpos <- readSig bullet
+        bpos <- sample bullet
         when (not . inRange <$> bullet)
         return rest
     where
@@ -51,7 +52,7 @@ makeEnemy initialPos avatar = mdo
 makeEnemies :: [Vec2] -> Signal Vec2 -> Signal [Vec2] -> Ev (Signal [Vec2])
 makeEnemies [] _ _ = return $ pure []
 makeEnemies (r:rs) avatar bullets = pure [] `untilEvent` do
-    delay 2
+    delay 0.7
     enemy <- makeEnemy r avatar
     rest <- makeEnemies rs avatar bullets
     liftA2 (:) enemy rest `untilEvent` do

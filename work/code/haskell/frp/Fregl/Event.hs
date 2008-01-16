@@ -52,14 +52,18 @@ sample = Event . liftIO  . atomically . readSignal
 untilEvent :: Signal a -> Event (Signal a) -> Event (Signal a)
 untilEvent siga ev = Event $ do
     cell <- liftIO $ atomically $ newSignalCell siga
+    weak <- liftIO $ mkWeak cell cell Nothing
     let thread = do
             sigb <- runEvent ev
-            liftIO $ atomically $ overwriteSignalCell cell sigb
+            cell' <- liftIO $ deRefWeak weak
+            case cell' of
+                 Nothing -> return ()
+                 Just cell -> 
+                    liftIO $ atomically $ overwriteSignalCell cell sigb
     r <- ask
-    weak <- liftIO $ mkWeak cell thread Nothing
     tdata <- liftIO $ duplicate (threadData r)
     let tdval = ThreadData tdata (Just weak)
-    liftIO $ forkIO $ runReaderT thread tdval
+    threadid <- liftIO $ forkIO $ runReaderT thread tdval
     return $ cellSignal cell
 
 unsafeEventIO :: IO a -> Event a
@@ -69,12 +73,19 @@ eitherEvent :: Event a -> Event a -> Event a
 eitherEvent a b = Event $ do
     result <- liftIO $ atomically $ newTVar Nothing
     r <- ask
+    ThreadData rdr target <- return r
+    dupa <- liftIO $ duplicate $ rdr
+    dupb <- liftIO $ duplicate $ rdr
     tida <- liftIO $ forkIO $ do
-        x <- runReaderT (runEvent a) r
-        atomically $ writeTVar result (Just x)
+        x <- runReaderT (runEvent a) (ThreadData dupa target)
+        atomically $ do
+            unsafeWFAssignReader (ewait rdr) (ewait dupa)
+            writeTVar result (Just x)
     tidb <- liftIO $ forkIO $ do
-        x <- runReaderT (runEvent b) r
-        atomically $ writeTVar result (Just x)
+        x <- runReaderT (runEvent b) (ThreadData dupb target)
+        atomically $ do
+            unsafeWFAssignReader (ewait rdr) (ewait dupb)
+            writeTVar result (Just x)
     liftIO $ atomically $ do
         res <- readTVar result
         maybe retry return res
@@ -87,7 +98,7 @@ firstOfEvents (e:es) = eitherEvent e (firstOfEvents es)
 
 timeDiffSec :: ClockTime -> ClockTime -> Double
 timeDiffSec (TOD sec pic) (TOD sec' pic') =
-    fromIntegral (sec - sec') + pico * fromIntegral (pic - pic')
+    fromIntegral (sec' - sec) + pico * fromIntegral (pic' - pic)
     where
     pico = 1.0e-12
 
@@ -112,14 +123,15 @@ checkTarget = Event $ do
          Just w -> do
              v <- liftIO $ deRefWeak w
              case v of
-                  Nothing -> liftIO (killThread =<< myThreadId)
+                  Nothing -> liftIO (putStrLn "euthenized orphan" >> (killThread =<< myThreadId))
                   Just _  -> return ()
 
 -- atomic events
 waitTimestep :: Double -> Event Double
 waitTimestep dt = Event $ do
+    runEvent $ checkTarget
     pretime <- liftIO $ getClockTime
-    liftIO $ threadDelay $ floor dt
+    liftIO $ threadDelay $ floor (1.0e6 * dt)
     posttime <- liftIO $ getClockTime
     return (timeDiffSec pretime posttime)
 

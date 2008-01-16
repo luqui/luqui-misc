@@ -5,13 +5,13 @@ module Fregl.Menu where
 import Fregl.Core
 import Fregl.Splittable
 import Fregl.Event
+import Fregl.EventVal
 import Data.Monoid
 import qualified Fregl.Drawing as Draw
 
-menu :: forall v a. (EventVal v) 
-     => Draw.Name  -- a supply of drawing names
-     -> [ (String, Event v a) ] -- the menu items
-     -> (Draw.Drawing, Event v a)
+menu :: forall a. Draw.Name  -- a supply of drawing names
+     -> [ (String, Event a) ] -- the menu items
+     -> (Draw.Drawing, Event a)
 menu name items =
 
     let (drawings, events) = 
@@ -20,8 +20,8 @@ menu name items =
 
     where
     
-    makeItem :: Draw.Name -> Int -> (String, Event v a)
-             -> (Draw.Drawing, Event v a)
+    makeItem :: Draw.Name -> Int -> (String, Event a)
+             -> (Draw.Drawing, Event a)
     makeItem name pos (text,ev) = 
         ( menuItem name pos text
         , waitClickName ButtonLeft MouseDown name >> ev

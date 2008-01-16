@@ -8,6 +8,7 @@ module Fregl.WFQueue
     , makeWFReader
     , readWFReader
     , dupWFReader
+    , unsafeWFAssignReader
     )
 where
 
@@ -52,3 +53,7 @@ dupWFReader :: TReader a -> STM (TReader a)
 dupWFReader (TReader v) = do
     follower <- readTVar v
     makeWFReader follower
+
+unsafeWFAssignReader :: TReader a -> TReader a -> STM ()
+unsafeWFAssignReader (TReader old) (TReader new) = do
+    writeTVar old =<< readTVar new

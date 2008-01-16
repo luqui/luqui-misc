@@ -20,8 +20,6 @@ import Fregl.Event
 import Fregl.Signal
 import Fregl.Vector
 import Fregl.LinearSplit
-import Fregl.EventVal
-import Fregl.WFQueue
 import Fregl.Core hiding (when)
 import qualified Fregl.Drawing as Draw
 import Data.List
@@ -30,7 +28,51 @@ import Control.Concurrent.STM
 import System.IO.Unsafe
 import Control.Concurrent
 
-type Ev = Fregl.Event.Event
+data EventSDL
+    = TimestepEvent Double
+    | MouseEvent MouseEvent Vec2
+    | KeyDownEvent Keysym
+    | KeyUpEvent Keysym
+
+data MouseEvent
+    = MouseButton MouseButton MouseState [GL.Name]
+    | MouseMotion
+
+type Ev = Fregl.Event.Event EventSDL
+
+instance EventVal EventSDL where
+    wait = waitEvent >> return ()
+    waitTimestep = waitHelper $ \e -> do
+        TimestepEvent dt <- return e  -- fail does Nothing for us...
+        return dt
+    waitMouseMotion = waitHelper $ \e -> do
+        MouseEvent MouseMotion pos <- return e
+        return pos
+    waitClickPos b s = waitHelper $ \e -> do
+        MouseEvent (MouseButton b' s' _) pos <- return e
+        guard $ b == b' && s == s'
+        return pos
+    waitClickName b s n = do
+        e <- waitEvent
+        case e of
+            MouseEvent (MouseButton b' s' names) pos
+                | b == b' && s == s' -> do
+                    n' <- unsafeEventIO $ readLinearSplit $ Draw.getName n
+                    if n' `elem` names then return pos else waitClickName b s n
+            _ -> waitClickName b s n
+    waitKeyDown = waitHelper $ \e -> do
+        KeyDownEvent sym <- return e
+        return sym
+    waitKeyUp = waitHelper $ \e -> do
+        KeyUpEvent sym <- return e
+        return sym
+
+waitHelper :: (EventSDL -> Maybe a) -> Ev a
+waitHelper f = do
+    e <- waitEvent
+    case f e of
+         Just x  -> return x
+         Nothing -> waitHelper f
 
 mousePosVar :: TVar (Double,Double)
 mousePosVar = unsafePerformIO $ newTVarIO (0,0)
@@ -61,20 +103,16 @@ runGameSDL beh = do
     -- set up ttf
     TTF.init
 
-    -- event channel
-    (writer, follower) <- atomically $ newWFQueue
-    reader <- atomically $ makeWFReader follower
-
     name <- Draw.makeName
-    sig <- execEvent reader (beh name)
+    cxt <- newEventCxt (beh name)
     pretime <- SDL.getTicks
-    mainLoop writer sig pretime
+    mainLoop cxt pretime
     TTF.quit
     SDL.quit
 
 
-mainLoop writer sig pretime = do
-    drawing <- atomically $ readSignal sig
+mainLoop cxt pretime = do
+    let drawing = readEventCxt cxt
     -- draw it
     GL.clear [GL.ColorBuffer]
     GL.matrixMode GL.$= GL.Projection
@@ -93,19 +131,20 @@ mainLoop writer sig pretime = do
 
     when (not $ any isQuitEvent events) $ do
         events' <- catMaybes <$> mapM (convertEvent drawing) events
-        forM_ events' $ atomically . writeWFQueue writer 
+        cxt' <- foldM (\cx ev -> nextEventCxt ev cx) cxt events'
         posttime <- SDL.getTicks
         let delay :: Int = 1000 * (33 - (fromIntegral posttime - fromIntegral pretime))
         when (delay > 0) $
             threadDelay (fromIntegral delay)
         posttime' <- SDL.getTicks
-        mainLoop writer sig posttime'
+        let timediff = fromIntegral (posttime' - pretime) / 1000
+        cxt'' <- nextEventCxt (TimestepEvent timediff) cxt'
+        mainLoop cxt'' posttime'
 
-convertEvent d (SDL.MouseMotion x y _ _) = do
+convertEvent _ (SDL.MouseMotion x y _ _) = do
     let pos = convertCoords x y
     atomically $ writeTVar mousePosVar pos
-    hits <- getHits d (fromIntegral x) (fromIntegral y)
-    return $ Just $ MouseEvent MouseMotion pos hits
+    return $ Just $ MouseEvent MouseMotion pos
 convertEvent d (SDL.MouseButtonDown x y but) = do
     hits <- getHits d (fromIntegral x) (fromIntegral y)
     let but' = case but of
@@ -113,7 +152,7 @@ convertEvent d (SDL.MouseButtonDown x y but) = do
          SDL.ButtonRight -> Just ButtonRight
          _               -> Nothing
     return $ fmap (\b -> 
-                MouseEvent (MouseButton b MouseDown) (convertCoords x y) hits
+                MouseEvent (MouseButton b MouseDown hits) (convertCoords x y)
              ) but'
 convertEvent d (SDL.MouseButtonUp x y but) = do
     hits <- getHits d (fromIntegral x) (fromIntegral y)
@@ -122,7 +161,7 @@ convertEvent d (SDL.MouseButtonUp x y but) = do
          SDL.ButtonRight -> Just ButtonRight
          _               -> Nothing
     return $ fmap (\b -> 
-                MouseEvent (MouseButton b MouseUp) (convertCoords x y) hits
+                MouseEvent (MouseButton b MouseUp hits) (convertCoords x y)
              ) but'
 convertEvent d (SDL.KeyDown sym) = do
     atomically $ do 

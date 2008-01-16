@@ -2,181 +2,134 @@
 
 module Fregl.Event 
     ( Event
-    , execEvent
-    , sample
+    , waitEvent
+    , readSig
     , untilEvent
     , unsafeEventIO
     , eitherEvent
     , firstOfEvents
-    , waitTimestep
-    , waitMouseMotion
-    , waitMouseOver
-    , waitMouseOut
-    , waitClickPos
-    , waitClickName
-    , waitKeyUp
-    , waitKeyDown
+    , newEventCxt
+    , readEventCxt
+    , nextEventCxt
     )
 where
 
 import Fregl.Suspend
 import Fregl.Signal
-import Fregl.EventVal
-import Fregl.WFQueue
-import Fregl.LinearSplit
-import qualified Fregl.Drawing as Draw
-import Control.Monad.Reader
-import Control.Concurrent
+import Control.Monad.Writer.Strict
 import Control.Concurrent.STM
-import Control.Concurrent.STM.TChan
+import Data.Monoid
 import System.Mem.Weak
-import System.Time
-import Graphics.UI.SDL.Keysym
+import System.Mem
 
-data ThreadData
-    = forall a. ThreadData { threadData   :: EventWait
-                           , threadTarget :: Maybe (Weak a)
-                           }
+newtype Update = Update (STM ())
 
-newtype Event a
-    = Event { runEvent :: ReaderT ThreadData IO a }
-    deriving (Functor, Monad, MonadFix)
+instance Monoid Update where
+    mempty = Update (return ())
+    mappend (Update a) (Update b) = Update $ a >> b
 
-execEvent :: TReader EventVal -> Event a -> IO a
-execEvent r e = do
-    runReaderT (runEvent e) (ThreadData (EventWait r) Nothing)
+data ContLog v = ContLog (Dual [v -> Event v ()]) Update
 
-sample :: Signal a -> Event a
-sample = Event . liftIO  . atomically . readSignal
+instance Monoid (ContLog v) where
+    mempty = ContLog mempty mempty
+    mappend (ContLog cont up) (ContLog cont' up') = 
+        ContLog (cont `mappend` cont') (up `mappend` up')
 
-untilEvent :: Signal a -> Event (Signal a) -> Event (Signal a)
-untilEvent siga ev = Event $ do
-    cell <- liftIO $ atomically $ newSignalCell siga
-    weak <- liftIO $ mkWeak cell cell Nothing
-    let thread = do
-            sigb <- runEvent ev
-            cell' <- liftIO $ deRefWeak weak
-            case cell' of
-                 Nothing -> return ()
-                 Just cell -> 
-                    liftIO $ atomically $ overwriteSignalCell cell sigb
-    r <- ask
-    tdata <- liftIO $ duplicate (threadData r)
-    let tdval = ThreadData tdata (Just weak)
-    threadid <- liftIO $ forkIO $ runReaderT thread tdval
-    return $ cellSignal cell
+writeCont :: (v -> Event v ()) -> ContLog v
+writeCont f = ContLog (Dual [f]) mempty
 
-unsafeEventIO :: IO a -> Event a
+writeUpdate :: STM () -> ContLog v
+writeUpdate m = ContLog mempty (Update m)
+
+
+newtype Event v a
+    = Event { runEvent :: SuspendT v (WriterT (ContLog v) IO) a }
+
+instance Functor (Event v) where
+    fmap = liftM
+
+instance Monad (Event v) where
+    return = Event . return
+    m >>= k = Event $ runEvent m >>= runEvent . k
+
+instance MonadFix (Event v) where
+    mfix f = Event $ mfix (runEvent . f)
+
+waitEvent :: Event v v
+waitEvent = Event suspend
+
+readSig :: Signal a -> Event v a
+readSig = Event . liftIO . atomically . readSignal
+
+untilEvent :: Signal a -> Event v (Signal a) -> Event v (Signal a)
+untilEvent sigb ev = Event $ do
+    choice <- attempt $ runEvent ev
+    case choice of
+         Left sig -> return sig
+         Right cont -> do
+             cell <- liftIO $ atomically $ newSignalCell sigb
+             let writer v = Event $ do
+                     sig <- cont v
+                     lift $ tell $ writeUpdate $ overwriteSignalCell cell sig
+             weakWriter <- lift $ liftIO $ mkWeak cell writer Nothing
+             tellWeak weakWriter
+             return $ cellSignal cell
+
+
+tellWeak weakWriter = do
+    lift $ tell $ writeCont $ \v -> do
+        w <- Event $ liftIO $ deRefWeak weakWriter
+        case w of
+             Nothing -> return ()
+             Just f -> f v
+
+unsafeEventIO :: IO a -> Event v a
 unsafeEventIO = Event . liftIO
 
-eitherEvent :: Event a -> Event a -> Event a
-eitherEvent a b = Event $ do
-    result <- liftIO $ atomically $ newTVar Nothing
-    r <- ask
-    ThreadData rdr target <- return r
-    dupa <- liftIO $ duplicate $ rdr
-    dupb <- liftIO $ duplicate $ rdr
-    tida <- liftIO $ forkIO $ do
-        x <- runReaderT (runEvent a) (ThreadData dupa target)
-        atomically $ do
-            unsafeWFAssignReader (ewait rdr) (ewait dupa)
-            writeTVar result (Just x)
-    tidb <- liftIO $ forkIO $ do
-        x <- runReaderT (runEvent b) (ThreadData dupb target)
-        atomically $ do
-            unsafeWFAssignReader (ewait rdr) (ewait dupb)
-            writeTVar result (Just x)
-    liftIO $ atomically $ do
-        res <- readTVar result
-        maybe retry return res
+eitherEvent :: Event v a -> Event v a -> Event v a
+eitherEvent a b = Event $ runEvent a `mergeL` runEvent b
 
-firstOfEvents :: [Event a] -> Event a
+firstOfEvents :: [Event v a] -> Event v a
 firstOfEvents [] = error "empty list"
 firstOfEvents [e] = e
 firstOfEvents (e:es) = eitherEvent e (firstOfEvents es)
 
+-- executing events:
+data EventCxt v a = EventCxt a (v -> IO (EventCxt v a))
 
-timeDiffSec :: ClockTime -> ClockTime -> Double
-timeDiffSec (TOD sec pic) (TOD sec' pic') =
-    fromIntegral (sec' - sec) + pico * fromIntegral (pic' - pic)
+newEventCxt :: forall v a. Event v (Signal a) -> IO (EventCxt v a)
+newEventCxt event = do
+    let susp = runEvent event
+    (Left sig, conts) <- runWriterT (runSuspendT susp)
+    val <- atomically $ readSignal sig
+    return $ EventCxt val (contAction 1 sig conts)
     where
-    pico = 1.0e-12
+    contAction gccount sig contlog v = do
+        -- Here it would be better if we performed updates *after*
+        -- resuming, to be more responsive, but it's sufficiently
+        -- ugly that I'd rather write this sentence explaining
+        -- it than just do it.
 
-waitEvent :: Event EventVal
-waitEvent = Event $ do
-    runEvent checkTarget
-    r <- ask
-    liftIO $ atomically $ readWFReader $ ewait (threadData r)
+        let ContLog (Dual conts) (Update updates) = contlog
+        -- perform updates
+        atomically updates
 
-waitHelper :: (EventVal -> Maybe a) -> Event a
-waitHelper f = do
-    ev <- waitEvent
-    case f ev of
-         Nothing -> waitHelper f
-         Just x  -> return x
+        when (gccount == 0) $
+            length conts `seq` performGC
+        
+        -- resume continuations
+        contlog' <- forM conts $ \cont -> do
+            (choice, cs) <- runWriterT $ runSuspendT $ runEvent $ cont v
+            case choice of
+                 Left () -> return cs
+                 Right cont' -> return $ cs `mappend` writeCont (Event . cont')
+        val <- atomically $ readSignal sig
+        let newct = (gccount + 1) `mod` 250
+        return $ EventCxt val (contAction newct sig (mconcat contlog'))
 
-checkTarget :: Event ()
-checkTarget = Event $ do
-    ThreadData _ r <- ask
-    case r of
-         Nothing -> return ()
-         Just w -> do
-             v <- liftIO $ deRefWeak w
-             case v of
-                  Nothing -> liftIO (putStrLn "euthenized orphan" >> (killThread =<< myThreadId))
-                  Just _  -> return ()
 
--- atomic events
-waitTimestep :: Double -> Event Double
-waitTimestep dt = Event $ do
-    runEvent $ checkTarget
-    pretime <- liftIO $ getClockTime
-    liftIO $ threadDelay $ floor (1.0e6 * dt)
-    posttime <- liftIO $ getClockTime
-    return (timeDiffSec pretime posttime)
+readEventCxt :: EventCxt v a -> a
+readEventCxt (EventCxt a _) = a
 
-waitMouseMotion :: Event (Double,Double)
-waitMouseMotion = waitHelper $ \e -> do
-    MouseEvent MouseMotion pos _ <- return e
-    return pos
-
-waitMouseOver :: Draw.Name -> Event (Double,Double)
-waitMouseOver name = do
-    n <- Event $ liftIO $ readLinearSplit (Draw.getName name)
-    waitHelper $ \e -> do
-        MouseEvent MouseMotion pos names <- return e
-        guard $ n `elem` names
-        return pos
-
-waitMouseOut :: Draw.Name -> Event (Double,Double)
-waitMouseOut name = do
-    n <- Event $ liftIO $ readLinearSplit (Draw.getName name)
-    waitHelper $ \e -> do
-        MouseEvent MouseMotion pos names <- return e
-        guard $ not $ n `elem` names
-        return pos
-
-waitClickPos :: MouseButton -> MouseState -> Event (Double,Double)
-waitClickPos but state = waitHelper $ \e -> do
-    MouseEvent (MouseButton but' state') pos _ <- return e
-    guard $ but == but' && state == state'
-    return pos
-
-waitClickName :: MouseButton -> MouseState -> Draw.Name -> Event (Double,Double)
-waitClickName but state name = do
-    n <- Event $ liftIO $ readLinearSplit (Draw.getName name)
-    waitHelper $ \e -> do
-        MouseEvent (MouseButton but' state') pos names <- return e
-        guard $ but == but' && state == state'
-        guard $ n `elem` names
-        return pos
-
-waitKeyUp :: Event Keysym
-waitKeyUp = waitHelper $ \e -> do
-    KeyUpEvent sym <- return e
-    return sym
-
-waitKeyDown :: Event Keysym
-waitKeyDown = waitHelper $ \e -> do
-    KeyDownEvent sym <- return e
-    return sym
+nextEventCxt :: v -> EventCxt v a -> IO (EventCxt v a)
+nextEventCxt v (EventCxt _ n) = n v

@@ -15,7 +15,6 @@ makeAvatar =
     where
     dir k d = (\down -> if down then d else vzero) <$> keyState k
 
-makeBullet :: Vec2 -> Vec2 -> Ev (Signal Vec2)
 makeBullet src dest = 
     integral src (pure dir)
     where
@@ -23,11 +22,11 @@ makeBullet src dest =
 
 fireBullets avatar = pure [] `untilEvent` do
     pos <- waitClickPos ButtonLeft MouseDown
-    av <- sample avatar
+    av <- readSig avatar
     bullet <- makeBullet av pos
     rest <- fireBullets avatar
     liftA2 (:) bullet rest `untilEvent` do
-        bpos <- sample bullet
+        bpos <- readSig bullet
         when (not . inRange <$> bullet)
         return rest
     where
@@ -52,7 +51,7 @@ makeEnemy initialPos avatar = mdo
 makeEnemies :: [Vec2] -> Signal Vec2 -> Signal [Vec2] -> Ev (Signal [Vec2])
 makeEnemies [] _ _ = return $ pure []
 makeEnemies (r:rs) avatar bullets = pure [] `untilEvent` do
-    delay 0.7
+    delay 2
     enemy <- makeEnemy r avatar
     rest <- makeEnemies rs avatar bullets
     liftA2 (:) enemy rest `untilEvent` do
@@ -68,7 +67,7 @@ main = runGameSDL $ \_ -> do
         avatar  <- sf_ makeAvatar  -< ()
         bullets <- sf fireBullets -< avatar
         enemies <- sf (sfUncurry2 $ makeEnemies rands) -< (avatar,bullets)
-        t <- sf_ $ time -< ()
+        t <- sf_ $ time 0 -< ()
         let bulletDrawings = mconcat (map drawBullet bullets)
         let enemyDrawings = mconcat (map (drawEnemy t) enemies)
         returnA -< mconcat [drawAvatar avatar, bulletDrawings, enemyDrawings]
@@ -80,6 +79,11 @@ main = runGameSDL $ \_ -> do
 liftList :: (Applicative f) => [f a] -> f [a]
 liftList [] = pure []
 liftList (x:xs) = liftA2 (:) x (liftList xs)
+
+time :: Double -> Ev (Signal Double)
+time start = pure start `untilEvent` do
+    dt <- waitTimestep
+    time (dt + start)
 
 instance Random Vec2 where
     random g = let (x,g') = random g

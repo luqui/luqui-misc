@@ -7,5 +7,5 @@ dummy:
 
 
 clean:
-	rm -f Fregl/*.o Fregl/*.hi examples/*.o examples/*.hi
+	rm -f Fregl/*.o Fregl/*.hi examples/*.o examples/*.hi Malbono/*.o Malbono/*.hi *.o *.hi
 

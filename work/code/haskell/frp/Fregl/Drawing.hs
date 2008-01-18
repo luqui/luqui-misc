@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fglasgow-exts #-}
 
 module Fregl.Drawing 
-    ( Drawing, runDrawing
+    ( Drawing, runDrawing, unsafeDraw
     , point, line, regularPoly, circle
     , translate, rotate, scale
     , Name, name, getName, makeName
@@ -32,6 +32,9 @@ newtype Drawing = Drawing { unDrawing :: ReaderT DrawCxt IO () }
 
 runDrawing :: Drawing -> IO ()
 runDrawing d = runReaderT (unDrawing d) initDrawCxt
+
+unsafeDraw :: IO () -> Drawing
+unsafeDraw = Drawing . lift
 
 data DrawCxt 
     = DrawCxt { colorTrans :: Color -> Color }

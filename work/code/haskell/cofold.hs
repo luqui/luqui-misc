@@ -14,8 +14,7 @@ nil  = Nil   -- exposed
 
 listFold :: b                  -- nil case
          -> (a -> b -> b)      -- cons case
-         -> List a             -- object
-         -> b
+         -> (List a -> b)      -- resulting total function
 listFold nf cf Nil = nf
 listFold nf cf (Cons x xs) = cf x (listFold nf cf xs)
 
@@ -36,7 +35,9 @@ sTail (Stream _ as) = as  -- exposed
 -- exposes the following constructor which guarantees (lazy) 
 -- destructibility.
 
-streamUnfold :: (b -> (a, b)) -> b -> Stream a
+                   -- (sHead case, sTail case)
+streamUnfold :: (b -> (a         , b         )) 
+             -> (b -> Stream a)  -- resulting total function
 streamUnfold f x = let (a,b) = f x in Stream a (streamUnfold f b)
 
 -- as an example, here is map defined for streams

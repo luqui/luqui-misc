@@ -13,11 +13,11 @@ nil  = Nil   -- exposed
 -- it exposes the following destructor which guarantees halting.
 
 listFold :: b                  -- nil case
-         -> (a -> List a -> b) -- cons case
+         -> (a -> b -> b)      -- cons case
          -> List a             -- object
          -> b
 listFold nf cf Nil = nf
-listFold nf cf (Cons x xs) = cf x xs
+listFold nf cf (Cons x xs) = cf x (listFold nf cf xs)
 
 -- as an example, here is map defined for lists
 
@@ -36,12 +36,9 @@ sTail (Stream _ as) = as  -- exposed
 -- exposes the following constructor which guarantees (lazy) 
 -- destructibility.
 
-streamFold :: (a -> b)        -- sHead case
-           -> (a -> Stream b) -- sTail case
-           -> a
-           -> Stream b
-streamFold hf tf x = Stream (hf x) (tf x)
+streamUnfold :: (b -> (a, b)) -> b -> Stream a
+streamUnfold f x = let (a,b) = f x in Stream a (streamUnfold f b)
 
 -- as an example, here is map defined for streams
 
-streamMap f = streamFold (f . sHead) (streamMap f . sTail)
+streamMap f = streamUnfold (\s -> (f (sHead s), sTail s))

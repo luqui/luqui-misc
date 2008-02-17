@@ -19,13 +19,16 @@ const double DIVIDE_TIME = 8;
 const double DIVIDE_VAR = 1;
 const double MASS_PER_PARTICLE = 0.9;
 const double PARTICLE_MOMENTUM = 0.8;
+const int INIT_PARTICLES = 5;
 const int MAX_INCUBATE = 10;
 double ENEMY_GROW_RATE = 0;
-double INITIAL_SIZE = 1;
-const double ENEMY_INIT_RATE = 0.01;
-const double ENEMY_GROW_RATE_RATE = 0.003;
+const double REALLY_INITIAL_SIZE = 1.5;
+double INITIAL_SIZE = REALLY_INITIAL_SIZE;
+const double ENEMY_INIT_RATE = 0.1;
+const double ENEMY_GROW_RATE_RATE = 0;
 double ENEMY_SPAWN_RATE = 0.05;
-const double ENEMY_SPAWN_RATE_RATE = 0.001;
+const double ENEMY_SPAWN_RATE_RATE = 0.003;
+const double MAX_ENEMY_RADIUS_RATIO = 1;
 bool MOUSE_DOWN = false;
 bool RIGHT_MOUSE_DOWN = false;
 const int HISTORY_SIZE = 15;
@@ -34,7 +37,7 @@ double TIME = 0;
 double DT = 1/30.0;
 SoyInit INIT;
 
-Viewport VIEW(vec2(48, 36), vec2(96, 72));
+Viewport VIEW = Viewport::from_center_dim(vec2(48, 36), vec2(96, 72));
 vec2 MOUSE;
 
 struct Particle {
@@ -56,7 +59,7 @@ struct Enemy {
 
 typedef std::list<Particle> particles_t;
 particles_t PARTICLES;
-int NPARTICLES = 0;
+int SCORE = 0;
 typedef std::list<Enemy> enemies_t;
 enemies_t ENEMIES;
 
@@ -123,7 +126,8 @@ void draw()
 	}
 
 	for (enemies_t::iterator i = ENEMIES.begin(); i != ENEMIES.end(); ++i) {
-		glColor3f(i->particles/36.0,i->particles/6.0,1);
+        float neardeath = sqrt(MAX_ENEMY_RADIUS_RATIO * INITIAL_SIZE) - i->radius;
+		glColor3f(i->particles/36.0+(1-neardeath),i->particles/6.0*neardeath, 1*neardeath);
 		glBegin(GL_TRIANGLE_FAN);
 			glVertex2f(i->pos.x, i->pos.y);
 			for (int n = 0; n <= 24; n++) {
@@ -142,7 +146,7 @@ void draw()
 		}
 	glEnd();
 
-	draw_score(NPARTICLES);
+	draw_score(SCORE);
 }
 
 void events()
@@ -163,6 +167,7 @@ void events()
 
 	int x, y;
 	Uint8 buts = SDL_GetMouseState(&x, &y);
+    y = 900 - y;
 	MOUSE = coord_convert(INIT.pixel_view(), VIEW, vec2(x,y));
 	MOUSE_DOWN = !!(buts & SDL_BUTTON(1));
 	RIGHT_MOUSE_DOWN = !!(buts & SDL_BUTTON(3));
@@ -197,6 +202,7 @@ void step()
 
 		for (enemies_t::iterator j = ENEMIES.begin(); j != ENEMIES.end();) {
 			bool kill = false;
+            bool release = true;
 			if ((i->pos - j->pos).norm() < j->radius) {
 				double newr2 = j->radius*j->radius - POWER;
 				if (newr2 < 0) { kill = true; }
@@ -209,13 +215,19 @@ void step()
 				killparticle = true;
 			}
 
+            if (j->radius > sqrt(MAX_ENEMY_RADIUS_RATIO * INITIAL_SIZE)) { 
+                kill = true; 
+                release = false; 
+            }
+
 			if (kill) {
-				for (int n = 0; n < j->particles; n++) {
-					vec2 offs(randrange(-1,1), randrange(-1,1));
-					PARTICLES.push_back(Particle(j->pos + offs, 10*offs));
-				}
-				//NPARTICLES += j->particles - j->init_particles;
-				NPARTICLES++;
+                if (release) {
+                    for (int n = 0; n < j->particles; n++) {
+                        vec2 offs(randrange(-1,1), randrange(-1,1));
+                        PARTICLES.push_back(Particle(j->pos + offs, 10*offs));
+                    }
+                    SCORE++;
+                }
 				enemies_t::iterator k = j;
 				++j;
 				ENEMIES.erase(k);
@@ -280,10 +292,11 @@ int main()
 	Timer timer;
 	srand(time(NULL));
 	init_sdl();
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < INIT_PARTICLES; i++) {
 		PARTICLES.push_back(Particle(vec2(randrange(32,64),randrange(24,48)), vec2(0,0)));
 	}
-	float spawn_timer = 3.0/20.0;
+	//float spawn_timer = 3.0/20.0;
+    float spawn_timer = -5;
 	timer.init();
 	while (true) {
 		events();
@@ -296,7 +309,7 @@ int main()
 		while (spawn_timer < 0) {
 			double r = 30 * ENEMY_SPAWN_RATE;
 			vec2 speed(randrange(-r,r),randrange(-r,r));
-			ENEMIES.push_back(Enemy(vec2(randrange(16,80),randrange(12,60)), speed, sqrt(INITIAL_SIZE)));
+			ENEMIES.push_back(Enemy(vec2(randrange(16,80),randrange(12,60)), speed, sqrt(randrange(REALLY_INITIAL_SIZE, INITIAL_SIZE))));
 			spawn_timer += 1;
 		}
 		

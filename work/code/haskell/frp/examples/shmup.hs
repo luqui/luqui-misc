@@ -67,7 +67,7 @@ main = runGameSDL $ \_ -> do
         avatar  <- sf_ makeAvatar  -< ()
         bullets <- sf fireBullets -< avatar
         enemies <- sf (sfUncurry2 $ makeEnemies rands) -< (avatar,bullets)
-        t <- sf_ $ time 0 -< ()
+        t <- sf_ $ time -< ()
         let bulletDrawings = mconcat (map drawBullet bullets)
         let enemyDrawings = mconcat (map (drawEnemy t) enemies)
         returnA -< mconcat [drawAvatar avatar, bulletDrawings, enemyDrawings]
@@ -79,11 +79,6 @@ main = runGameSDL $ \_ -> do
 liftList :: (Applicative f) => [f a] -> f [a]
 liftList [] = pure []
 liftList (x:xs) = liftA2 (:) x (liftList xs)
-
-time :: Double -> Ev (Signal Double)
-time start = pure start `untilEvent` do
-    dt <- waitTimestep
-    time (dt + start)
 
 instance Random Vec2 where
     random g = let (x,g') = random g

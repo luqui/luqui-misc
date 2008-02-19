@@ -2,7 +2,7 @@
 
 module Main where {
 
-import CallByFuture;
+import CallByFuture
 
 $(cbfProgram [d| 
 

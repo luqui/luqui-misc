@@ -30,7 +30,7 @@ cbfProgram q = do
     return ret
 
 cv (AppE a b)       = AppE (AppE ?parApp (cv a)) (cv b)
-cv (InfixE e op e') = InfixE (fmap cv e) op (fmap cv e')
+cv (InfixE (Just e) op (Just e')) = cv (AppE (AppE (InfixE Nothing op Nothing) e) e')
 cv (LamE ps e)      = LamE ps (cv e)
 cv (TupE es)        = TupE (map cv es)
 cv (CondE c t f)    = CondE (cv c) (cv t) (cv f)

@@ -20,7 +20,7 @@ listFold nf cf (Cons x xs) = cf x (listFold nf cf xs)
 
 -- as an example, here is map defined for lists
 
-listMap f = listFold nil (\x xs -> cons (f x) (listMap f xs))
+listMap f = listFold nil (\x xs -> cons (f x) xs)
 
 
 data Stream a

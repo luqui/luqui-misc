@@ -28,7 +28,7 @@ instance Show Exp where
     show (EApp e e') = "(" ++ show e ++ " " ++ show e' ++ ")"
     show (EPi v t b)
         | free v b  = "(" ++ show t ++ " -> " ++ show b ++ ")"
-        | otherwise = "(" ++ v ++ ":" ++ show t ++ " -> " ++ show b ++ ")"
+        | otherwise = "(*" ++ v ++ ":" ++ show t ++ ". " ++ show b ++ ")"
     show (ESet 0) = "Set"
     show (ESet i) = "Set" ++ show i
 

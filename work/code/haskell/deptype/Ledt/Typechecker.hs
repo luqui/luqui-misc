@@ -90,6 +90,9 @@ equal e e' = do
     equal' be be'
     where
     equal' (EVar v) (EVar v') = return $ v == v'
+    -- Note how there is no ELam case.  That's an intuitive decision:
+    -- we don't check alpha equality of lambdas, just pis.  If not 
+    -- enough programs are typechecking, try adding this case.
     equal' (EPi v typ body) (EPi v' typ' body') = do
         typEq  <- equal typ typ'
         fresh  <- newVar
@@ -101,10 +104,11 @@ equal e e' = do
 typecheck :: Exp -> TC Val
 typecheck (EVar v) = Map.lookup v =<< ask
 typecheck (ELam v typ body) = do
-    typecheck typ
+    order typ >> typecheck typ
     bodytyp <- local (Map.insert v typ) $ typecheck body
     return $ EPi v typ bodytyp
 typecheck (EPi v typ body) = do
+    order typ
     typord <- order =<< typecheck typ
     bodyord <- order =<< local (Map.insert v typ) (typecheck body)
     return $ ESet (max typord bodyord)
@@ -122,7 +126,11 @@ order e = do
     e' <- eval e
     order' e'
     where
-    order' (EVar v) = order =<< Map.lookup v =<< ask
+    order' (EVar v) = do
+        ty <- eval =<< Map.lookup v =<< ask
+        case ty of
+             ESet _ -> return 0
+             _      -> fail $ v ++ " is not necessarily a type, when checking its universe order"
     order' l@(ELam {}) = fail $ show l ++ " is not a type, when trying to check its universe order"
     order' (EPi v typ body) = succ <$> (max <$> order typ <*> local (Map.insert v typ) (order body))
     order' (EApp {}) = fail "That's impossible, eval was supposed to reduce to WHNF or not terminate!"

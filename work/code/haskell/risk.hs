@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fbang-patterns #-}
+
 import System.Environment (getArgs)
 import qualified List
 
@@ -23,10 +25,15 @@ cases a d = do
 	ds <- dicen d
 	return $ riskSort as ds
 
+avg :: [Int] -> Double
+avg = avg' 0 0
+    where
+    avg' :: Integer -> Integer -> [Int] -> Double
+    avg' tot ct [] = fromIntegral tot / fromIntegral ct
+    avg' (!tot) (!ct) (x:xs) = avg' (tot+fromIntegral x) (ct+1) xs
+
 prob :: Int -> Int -> Double
-prob a d = fromIntegral (sum cs) / fromIntegral (length cs)
-	where
-	cs = cases a d
+prob a d = avg (cases a d)
 
 main :: IO ()
 main = do

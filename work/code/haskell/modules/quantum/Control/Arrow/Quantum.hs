@@ -16,6 +16,7 @@ where
 import Control.Arrow
 import Data.Complex
 import System.Random
+import Control.Monad.State
 
 -- |Representation of a probability amplitude
 type Amp = Complex Double

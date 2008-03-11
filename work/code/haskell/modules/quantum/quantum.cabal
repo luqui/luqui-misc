@@ -1,8 +1,9 @@
-Name: quantum
+Name: quantum-arrow
 Version: 0.0.1
-Description: A toy embedding of quantum computation as a Haskell arrow
+Description: An embedding of quantum computation as a Haskell arrow
 License: LGPL
 License-file: LICENSE
 Author: Luke Palmer
 Maintainer: lrpalmer@gmail.com
-Build-Depends: base arrows
+Build-Depends: base, mtl, random
+Exposed-modules: Control.Arrow.Quantum

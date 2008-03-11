@@ -177,14 +177,14 @@ runOperator (Op f) sts = do
 -- So the variables become entangled with each other in order to
 -- maintain consistency of the computation. 
 newtype Quantum b c
-    -- |It is implemented by a "choice" over the Operator arrow.
-    -- The Left states represent values in the current "branch" 
-    -- (think if statements, so eg. the "then" branch) computation,
-    -- and the Right is states elsewhere.  If we decide to collapse,
-    -- we need to collapse into a single branch.  If we chose the
-    -- Left branch, we prune out all Right states from the input.
-    -- If we chose the Right branch, we prune all Left states
-    -- (thus "aborting" the current branch).
+--       |It is implemented by a "choice" over the Operator arrow.
+--       The Left states represent values in the current "branch" 
+--       (think if statements, so eg. the "then" branch) computation,
+--       and the Right is states elsewhere.  If we decide to collapse,
+--       we need to collapse into a single branch.  If we chose the
+--       Left branch, we prune out all Right states from the input.
+--       If we chose the Right branch, we prune all Left states
+--       (thus "aborting" the current branch).
     = Q (forall d. Operator (Either b d) (Either c d))
 
 instance Arrow Quantum where

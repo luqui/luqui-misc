@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fglasgow-exts -farrows #-}
 
-module Quantum
+module Control.Arrow.Quantum
     ( Quantum
     , entangle
     , qIO
@@ -16,7 +16,6 @@ where
 import Control.Arrow
 import Data.Complex
 import System.Random
-import Control.Monad.State
 
 -- |Representation of a probability amplitude
 type Amp = Complex Double
@@ -54,7 +53,7 @@ instance Functor QState where
 -- input to 1, whatever the output of this computation was has to
 -- be collapsed to "foo" simultaneously.  The dummy parameter
 -- implements entanglement!
-data Operator b c 
+newtype Operator b c 
     = Op (forall d. QStateVec (b,d) -> IO (QStateVec (c,d)))
 
 instance Arrow Operator where
@@ -176,7 +175,7 @@ runOperator (Op f) sts = do
 --
 -- So the variables become entangled with each other in order to
 -- maintain consistency of the computation. 
-data Quantum b c
+newtype Quantum b c
     -- |It is implemented by a "choice" over the Operator arrow.
     -- The Left states represent values in the current "branch" 
     -- (think if statements, so eg. the "then" branch) computation,

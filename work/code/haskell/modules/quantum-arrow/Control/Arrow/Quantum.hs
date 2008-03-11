@@ -3,9 +3,8 @@
 module Control.Arrow.Quantum
     ( Quantum
     , entangle
-    , qIO
-    , qIO_
-    , cheatInspect
+    , qLift
+    , qLift_
     , observeWith
     , observe
     , runQuantum
@@ -17,6 +16,7 @@ import Control.Arrow
 import Data.Complex
 import System.Random
 import Control.Monad.State
+import Control.Monad.Random
 
 -- |Representation of a probability amplitude
 type Amp = Complex Double
@@ -37,8 +37,8 @@ instance Functor QState where
 -- choice in a "pure" way; that is, if you have:
 --
 -- > if x > 0
--- >     then opIO print -< "Hello"
--- >     else opIO print -< "Goodbye"
+-- >     then opLift print -< "Hello"
+-- >     else opLift print -< "Goodbye"
 --
 -- Then if x represents a superposition of both positive and
 -- negative numbers, both "Hello" and "Goodbye" will be printed
@@ -47,27 +47,27 @@ instance Functor QState where
 -- arrow to do proper branch collapsation.
 --
 -- It is implemented as a function from quantum states to quantum
--- states (plus IO to do, well, I/O).  But the states are augmented
+-- states (under some MonadRandom for selection).  But the states are augmented
 -- by a dummy parameter 'd' to keep track of the relationship between
 -- the input and the output.  So if the value |1> generated the value
 -- |"foo"> in the output, then we know that when we collapse the
 -- input to 1, whatever the output of this computation was has to
 -- be collapsed to "foo" simultaneously.  The dummy parameter
 -- implements entanglement!
-newtype Operator b c 
-    = Op (forall d. QStateVec (b,d) -> IO (QStateVec (c,d)))
+newtype Operator m b c 
+    = Op (forall d. QStateVec (b,d) -> m (QStateVec (c,d)))
 
-instance Arrow Operator where
+instance (Monad m) => Arrow (Operator m) where
     arr f             = 
         Op (return . mapStateVec f)
     (Op f) >>> (Op g) = 
         Op (\sts -> f sts >>= g)
     first (Op f)      = 
-        Op (fmap (map (fmap shuffleLeftPair)) -- move it back
+        Op (liftM (map (fmap shuffleLeftPair)) -- move it back
           . f 
           . map (fmap shuffleRightPair))      -- move the fixed argument to the dummy parameter
 
-instance ArrowChoice Operator where
+instance (Monad m) => ArrowChoice (Operator m) where
     left (Op f) = Op $ \sts -> do
         -- Our QStateVecs represent a sum, so the list is commutative.
         -- So let's just split up the input based on what we want
@@ -84,12 +84,12 @@ instance ArrowChoice Operator where
 -- space into equivalence classes based on f, and then randomly chooses
 -- one based on the probablity sum of each class.  The output is
 -- the chosen class.
-opObserveWith :: (a -> a -> Bool) -> Operator a a
+opObserveWith :: (MonadRandom m) => (a -> a -> Bool) -> Operator m a a
 opObserveWith eq = Op $ \sts -> do
     let cls = classify eq sts
     if null cls
         then return []
-        else fmap snd $ pick (classify eq sts)
+        else liftM snd $ pick (classify eq sts)
 
 -- |classify is a helper function for opObserveWith which splits the input into
 -- equivalence classes, finding the sum of the amplitudes of the states in each
@@ -112,13 +112,13 @@ classify eq xs = execState (classify' xs) []
 -- |pick is a helper function for opObserveWith which takes a state vector and
 -- chooses an element from it at random based on the argument squared of the 
 -- probability amplitudes.
-pick :: QStateVec a -> IO a
+pick :: (MonadRandom m) => QStateVec a -> m a
 pick sts = pick' 0 (error "empty state") sts
     where
     pick' accum cur [] = return cur
     pick' accum cur (QState x p : xs) = do
         let prob = magnitude p^2
-        rand <- randomRIO (0, accum + prob)
+        rand <- getRandomR (0, accum + prob)
         pick' (accum + prob)
               (if rand <= prob then x else cur)
               xs
@@ -126,35 +126,26 @@ pick sts = pick' 0 (error "empty state") sts
     
 -- |opEntangle is an Operator arrow which takes a list of eigenstates and 
 -- amplitudes and constructs a state vector out of them. 
-opEntangle :: Operator [(a,Amp)] a
+opEntangle :: (Monad m) => Operator m [(a,Amp)] a
 opEntangle = Op $ \sts ->
     return [ QState (a,d) (p*p') 
              | QState (st,d) p <- sts
              , (a,p') <- st ]
     
--- |opIO takes an IO action and converts it into a quantum arrow.  The
--- arrow observes the input to the action, collapsing the state, before
--- performing the action.
-opIO :: (Eq a) => (a -> IO b) -> Operator a b
-opIO f = opObserveWith (==) >>> Op (\sts -> do
+-- |opLift takes an action in the underlying monad and converts it into 
+-- a quantum arrow.  The arrow observes the input to the action, collapsing 
+-- the state, before performing the action.
+opLift :: (Eq a, MonadRandom m) => (a -> m b) -> Operator m a b
+opLift f = opObserveWith (==) >>> Op (\sts -> do
     case sts of
         (s:_) -> do
             result <- f $ fst $ qsValue s
             return [ QState (result,d) p | QState (_,d) p <- sts ]
         [] -> return [])
-
--- |opCheatInspect is an arrow which prints the state vector of the
--- value passed in to standard output.  Using this is like observing
--- a quantum state without measuring it, so if you use it, you should
--- feel dirty.
-opCheatInspect :: (Eq b, Show b) => Operator b ()
-opCheatInspect = Op $ \sts -> do
-    print [ (st,p) | QState (st,_) p <- classify (==) sts ]
-    return [ QState ((),d) p | QState (_,d) p <- sts ]
  
 -- |runOperator takes an input state vector, runs it through the given
 -- Operator arrow, and returns a state vector of outputs.
-runOperator :: Operator a b -> [(a,Amp)] -> IO [(b,Amp)]
+runOperator :: (Monad m) => Operator m a b -> [(a,Amp)] -> m [(b,Amp)]
 runOperator (Op f) sts = do
     ret <- f [ QState (st,()) p | (st,p) <- sts ]
     return [ (st,p) | QState (st,()) p <- ret ]
@@ -163,20 +154,20 @@ runOperator (Op f) sts = do
 -- |The Quantum arrow represents a quantum computation with observation.
 -- You can give a quantum computation a superposition of values, and
 -- it will operate over them, returning you a superposition back.  If
--- ever you do I/O (using the qIO or qIO_ functions), the system
--- collapses to an eigenstate of what you did I/O on.
+-- ever you observe (using the qLift or qLift_ functions), the system
+-- collapses to an eigenstate of what you observed.
 --
 -- > x <- entangle -< [(1, 1 :+ 0), (2, 1 :+ 0)]
 -- > -- x is in state |1> + |2>; i.e. 1 or 2 with equal probability
 -- > let y = x + 1
 -- > -- y is in state |2> + |3>
--- > qIO print -< y    -- will print either 2 or 3; let's say it printed 2
+-- > qLift print -< y    -- will print either 2 or 3; let's say it printed 2
 -- > -- state collapses here, y in state |2>
--- > qIO print -< x    -- prints 1 (assuming 2 was printed earlier)
+-- > qLift print -< x    -- prints 1 (assuming 2 was printed earlier)
 --
 -- So the variables become entangled with each other in order to
 -- maintain consistency of the computation. 
-newtype Quantum b c
+newtype Quantum m b c
 --       |It is implemented by a "choice" over the Operator arrow.
 --       The Left states represent values in the current "branch" 
 --       (think if statements, so eg. the "then" branch) computation,
@@ -185,14 +176,14 @@ newtype Quantum b c
 --       Left branch, we prune out all Right states from the input.
 --       If we chose the Right branch, we prune all Left states
 --       (thus "aborting" the current branch).
-    = Q (forall d. Operator (Either b d) (Either c d))
+    = Q (forall d. Operator m (Either b d) (Either c d))
 
-instance Arrow Quantum where
+instance (Monad m) => Arrow (Quantum m) where
     arr f           = Q (left (arr f))
     (Q f) >>> (Q g) = Q (f >>> g)
     first (Q f)     = Q (eitherToTuple ^>> first f >>^ tupleToEither)
 
-instance ArrowChoice Quantum where
+instance (Monad m) => ArrowChoice (Quantum m) where
     left (Q f) = Q (shuffleRightEither ^>> f >>^ shuffleLeftEither)
 
 -- |observeBranch forces the computation to collapse into a 
@@ -207,7 +198,7 @@ instance ArrowChoice Quantum where
 -- This is /the/ function for which the two-stage Operator/Quantum
 -- distinction was written, to be able to collapse conditionals
 -- "after they happen" rather than "as they happen".
-observeBranch :: Quantum a a
+observeBranch :: (MonadRandom m) => Quantum m a a
 observeBranch = Q (opObserveWith sameSide)
 
 -- |entangle takes as input a list of values and probability 
@@ -216,25 +207,25 @@ observeBranch = Q (opObserveWith sameSide)
 --
 -- > x <- entangle -< [(1, 1 :+ 0), (2, 0 :+ 1)]
 -- > -- x is now |1> + i|2>
--- > qIO print -< x    -- prints 1 or 2 with equal probability
-entangle :: Quantum [(a,Amp)] a
+-- > qLift print -< x    -- prints 1 or 2 with equal probability
+entangle :: (Monad m) => Quantum m [(a,Amp)] a
 entangle = Q (left opEntangle)
 
--- |@qIO f -< x@ first collapses @x@ to an eigenstate (using observe) then
--- executes @f x@ in the IO monad.  All conditionals up to this point are 
+-- |@qLift f -< x@ first collapses @x@ to an eigenstate (using observe) then
+-- executes @f x@ in the underlying monad.  All conditionals up to this point are 
 -- collapsed to an eigenstate (True or False) so a "current branch" of 
 -- the computation is selected.
-qIO :: (Eq a) => (a -> IO b) -> Quantum a b
-qIO f = observeBranch >>> Q (left (opIO f))
+qLift :: (Eq a, MonadRandom m) => (a -> m b) -> Quantum m a b
+qLift f = observeBranch >>> Q (left (opLift f))
 
--- |qIO_ is just qIO which doesn't take an input.  eg.
+-- |qLift_ is just qIO which doesn't take an input.  eg.
 --
--- > qIO_ $ print "hello world" -< ()
+-- > qLift_ $ print "hello world" -< ()
 --
 -- All conditionals up to this point are collapsed to an eigenstate 
 -- (True or False) so a "current branch" of the computation is selected.
-qIO_ :: IO b -> Quantum () b
-qIO_ = qIO . const
+qLift_ :: (MonadRandom m) => m b -> Quantum m () b
+qLift_ = qLift . const
 
 -- |@observeWith f@ takes an equivalence relation f, breaks the state
 -- space into eigenstates of that relation, and collapses to one.  
@@ -245,28 +236,23 @@ qIO_ = qIO . const
 --
 -- Will collapse @x@ to be either even or odd, but make no finer
 -- decisions than that.
-observeWith :: (a -> a -> Bool) -> Quantum a a
+observeWith :: (MonadRandom m) => (a -> a -> Bool) -> Quantum m a a
 observeWith f = Q (left (opObserveWith f))
 
 -- |observe is just observeWith on equality.
-observe :: (Eq a) => Quantum a a
+observe :: (Eq a, MonadRandom m) => Quantum m a a
 observe = observeWith (==)
 
 -- |runQuantum takes an input state vector, runs it through the given
 -- Quantum arrow, and returns a state vector of outputs.
-runQuantum :: Quantum a b -> [(a,Amp)] -> IO [(b,Amp)]
+runQuantum :: (Monad m) => Quantum m a b -> [(a,Amp)] -> m [(b,Amp)]
 runQuantum (Q q) = runOperator (Left ^>> q >>^ either id undefined)
 
 -- |@execQuantum q x@ passes the state |x> through q, collapses q's
 -- output to an eigenstate, and returns it.
-execQuantum :: (Eq b) => Quantum a b -> a -> IO b
+execQuantum :: (Eq b, MonadRandom m) => Quantum m a b -> a -> m b
 execQuantum q a = 
-    fmap (fst . head) $ runQuantum (q >>> observeWith (==)) [(a, 1 :+ 0)]
-
--- |@cheatInspect x@ shows the current state of x as a linear
--- combination of its eigenstates.
-cheatInspect :: (Eq b, Show b) => Quantum b ()
-cheatInspect = Q (left opCheatInspect)
+    liftM (fst . head) $ runQuantum (q >>> observeWith (==)) [(a, 1 :+ 0)]
 
 
 mapStateVec :: (a -> b) -> QStateVec (a,d) -> QStateVec (b,d)

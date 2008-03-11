@@ -1,7 +1,8 @@
-{-# OPTIONS_GHC -fglasgow-exts -farrows #-}
+{-# LANGUAGE Arrows, RankNTypes #-}
 
 module Control.Arrow.Quantum
     ( Quantum
+    , Amp
     , entangle
     , qLift
     , qLift_

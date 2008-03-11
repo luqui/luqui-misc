@@ -7,5 +7,5 @@ Category: Control
 Author: Luke Palmer
 Maintainer: lrpalmer@gmail.com
 Build-Type: Simple
-Build-Depends: base, mtl, random, MonadRandom
+Build-Depends: base, mtl, random, MonadRandom, QuickCheck < 2.0
 Exposed-modules: Control.Arrow.Quantum

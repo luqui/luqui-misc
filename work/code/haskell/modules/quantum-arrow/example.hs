@@ -20,7 +20,7 @@ detangle = proc () -> do
     x <- makeStates -< ()
     qIO print -< x
 
--- This will only ever output 3, because 4^2 == (-4)^2 and
+-- This will only ever output 9, because 4^2 == (-4)^2 and
 -- their probability amplitudes (1 and -1, resp.) cancel each
 -- other out.
 detangle2 :: Quantum () ()

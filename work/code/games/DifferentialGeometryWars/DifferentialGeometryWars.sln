@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual C# Express 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DifferentialGeometryWars", "DifferentialGeometryWars\DifferentialGeometryWars.csproj", "{87DD1444-F29D-404B-BD5A-AE184EEA1ADC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{87DD1444-F29D-404B-BD5A-AE184EEA1ADC}.Debug|x86.ActiveCfg = Debug|x86
+		{87DD1444-F29D-404B-BD5A-AE184EEA1ADC}.Debug|x86.Build.0 = Debug|x86
+		{87DD1444-F29D-404B-BD5A-AE184EEA1ADC}.Release|x86.ActiveCfg = Release|x86
+		{87DD1444-F29D-404B-BD5A-AE184EEA1ADC}.Release|x86.Build.0 = Release|x86
+		{37B07B22-52D2-4FB6-8A40-122C32DB4011}.Debug|x86.ActiveCfg = Debug|x86
+		{37B07B22-52D2-4FB6-8A40-122C32DB4011}.Release|x86.ActiveCfg = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

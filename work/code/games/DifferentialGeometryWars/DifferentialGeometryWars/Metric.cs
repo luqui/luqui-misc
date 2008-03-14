@@ -106,68 +106,60 @@ namespace DifferentialGeometryWars
 
         private Vector2 extrap(Vector2[,] map, float dx, float dy, int x, int y, int dirx, int diry) {
             Vector2 src = map[x+dirx,y+diry];
-            return src + lookup(src).transform(new Vector2(-dx * dirx, -dy * diry));
+            return src + lookup(src).inverseTransform(new Vector2(-dx * dirx, -dy * diry));
         }
 
-        public Vector2[,] getEuclideanMap(Vector2 mll, Vector2 mur, int w, int h, int iters) {
+        struct LocIndex
+        {
+            public LocIndex(int xx, int yy) { x = xx; y = yy; }
+            public int x;
+            public int y;
+        };
+
+        public Vector2[,] getEuclideanMap(Vector2 mll, Vector2 mur, int w, int h, int x0, int y0, Vector2 m0) {
             float dx = (mur.X - mll.X) / (float) w;
             float dy = (mur.Y - mll.Y) / (float) h;
 
             Vector2[,] map  = new Vector2[w, h];
-            Vector2[,] back = new Vector2[w, h];
+            bool[,] mark = new bool[w, h];
+
+            map[x0, y0] = m0;
+            Queue<LocIndex> q = new Queue<LocIndex>();
+            q.Enqueue(new LocIndex(x0, y0));
+
+            while (q.Count > 0) {
+                LocIndex idx = q.Dequeue();
+                if (mark[idx.x,idx.y]) { continue; }
+
+                Vector2 accum = new Vector2();
+                int neighbors = 0;
+                if (idx.x > 0) {
+                    if (mark[idx.x - 1, idx.y]) { neighbors++; accum += extrap(map, dx, dy, idx.x, idx.y, -1, 0); }
+                    else { q.Enqueue(new LocIndex(idx.x-1, idx.y)); };
+                }
+                if (idx.x < w-1) {
+                    if (mark[idx.x + 1, idx.y]) { neighbors++; accum += extrap(map, dx, dy, idx.x, idx.y, 1, 0); }
+                    else { q.Enqueue(new LocIndex(idx.x+1, idx.y)); };
+                }
+                if (idx.y > 0) {
+                    if (mark[idx.x, idx.y - 1]) { neighbors++; accum += extrap(map, dx, dy, idx.x, idx.y, 0, -1); }
+                    else { q.Enqueue(new LocIndex(idx.x, idx.y-1)); };
+                }
+                if (idx.y < h-1) {
+                    if (mark[idx.x, idx.y + 1]) { neighbors++; accum += extrap(map, dx, dy, idx.x, idx.y, 0, 1); }
+                    else { q.Enqueue(new LocIndex(idx.x, idx.y+1)); };
+                }
+               
+
+                if (neighbors > 0) {
+                    map[idx.x,idx.y] = accum / neighbors;
+                }
+                // if neighbors == 0 then we are the center point...
+                mark[idx.x,idx.y] = true;
+            }
+
 
             Vector2 dummy = new Vector2();
-            // initialize the map to the identity
-            for (int i = 0; i < w; i++) {
-                float srcx = mll.X + i * dx;
-                for (int j = 0; j < h; j++) {
-                    float srcy = mll.Y + j * dy;
-                    Vector2 src = new Vector2(srcx, srcy);
-                    map[i, j] = src;
-                }
-            }
-
-            for (int iter = 0; iter < iters; iter++) {
-                // relax the map based on the metric
-                for (int i = 1; i < w-1; i++) {
-                    for (int j = 1; j < h - 1; j++) {
-                        back[i, j] = 0.25f * (extrap(map, dx, dy, i, j, -1, 0)
-                                            + extrap(map, dx, dy, i, j, 1, 0)
-                                            + extrap(map, dx, dy, i, j, 0, -1)
-                                            + extrap(map, dx, dy, i, j, 0, 1));
-                    }
-                }
-                // edges
-                for (int i = 1; i < w - 1; i++) {
-                    back[i, 0] = (1.0f / 3.0f) * (extrap(map, dx, dy, i, 0, -1, 0)
-                                                + extrap(map, dx, dy, i, 0, 1, 0)
-                                                + extrap(map, dx, dy, i, 0, 0, 1));
-                    back[i, h-1] = (1.0f / 3.0f) * (extrap(map, dx, dy, i, h-1, -1, 0)
-                                                  + extrap(map, dx, dy, i, h-1, 1, 0)
-                                                  + extrap(map, dx, dy, i, h-1, 0, -1));
-                }
-                for (int j = 1; j < h - 1; j++) {
-                    back[0, j] = (1.0f / 3.0f) * (extrap(map, dx, dy, 0, j, 0, -1)
-                                                + extrap(map, dx, dy, 0, j, 0, 1)
-                                                + extrap(map, dx, dy, 0, j, 1, 0));
-                    back[w - 1, j] = (1.0f / 3.0f) * (extrap(map, dx, dy, w - 1, j, 0, -1)
-                                                    + extrap(map, dx, dy, w - 1, j, 0, 1)
-                                                    + extrap(map, dx, dy, w - 1, j, -1, 0));
-                                              
-                }
-                // corners
-                back[0, 0] = 0.5f * (extrap(map, dx, dy, 0, 0, 1, 0) + extrap(map, dx, dy, 0, 0, 0, 1));
-                back[0, h - 1] = 0.5f * (extrap(map, dx, dy, 0, h - 1, 1, 0) + extrap(map, dx, dy, 0, h - 1, 0, -1));
-                back[w - 1, 0] = 0.5f * (extrap(map, dx, dy, w - 1, 0, -1, 0) + extrap(map, dx, dy, w - 1, 0, 0, 1));
-                back[w - 1, h - 1] = 0.5f * (extrap(map, dx, dy, w - 1, h - 1, -1, 0) + extrap(map, dx, dy, w - 1, h - 1, 0, -1));
-
-                // flip buffers
-                Vector2[,] tmp = map;
-                map = back;
-                back = tmp;
-            }
-
-            // transform buffer according to the topology
             for (int i = 0; i < w; i++) {
                 for (int j = 0; j < h; j++) {
                     topology.Canonicalize(ref map[i, j], ref dummy);

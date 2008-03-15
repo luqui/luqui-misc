@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace DifferentialGeometryWars
 {
@@ -16,6 +17,11 @@ namespace DifferentialGeometryWars
                 }
                 cptr = cptr.Next;
             }
+        }
+
+        public static Vector2 RotateVector(float theta, Vector2 v) {
+            return new Vector2( (float)Math.Cos(theta) * v.X - (float)Math.Sin(theta) * v.Y
+                              , (float)Math.Sin(theta) * v.X + (float)Math.Cos(theta) * v.Y);
         }
     }
 }

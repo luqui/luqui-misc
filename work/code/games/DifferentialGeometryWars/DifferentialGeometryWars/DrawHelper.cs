@@ -11,6 +11,7 @@ namespace DifferentialGeometryWars
         GraphicsDeviceManager graphics;
         Effect effect;
         EffectTechnique techniqueBasicTexturedRender;
+        EffectTechnique techniqueBasicColorRender;
         EffectParameter paramViewMatrix;
         EffectParameter paramBoundTexture;
         public Matrix ortho;
@@ -19,6 +20,7 @@ namespace DifferentialGeometryWars
             graphics = ingraphics;
             effect = ineffect;
             techniqueBasicTexturedRender = effect.Techniques["BasicTexturedRender"];
+            techniqueBasicColorRender = effect.Techniques["BasicColorRender"];
             paramBoundTexture = effect.Parameters["xBoundTexture"];
             paramViewMatrix = effect.Parameters["xViewMatrix"];
             ortho = Matrix.CreateOrthographicOffCenter(0, 1, 0, 1, -1, 1);
@@ -36,6 +38,25 @@ namespace DifferentialGeometryWars
                 pass.Begin();
                 graphics.GraphicsDevice.VertexDeclaration = new VertexDeclaration(graphics.GraphicsDevice, VertexPositionTexture.VertexElements);
                 graphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, drawBox, 0, 2);
+                pass.End();
+            }
+            effect.End();
+        }
+
+        public void DrawLine(Matrix view, Vector2 start, Vector2 end, Color color) {
+            VertexPositionColor[] vs = new VertexPositionColor[2];
+            vs[0].Position = new Vector3(start, 0);
+            vs[1].Position = new Vector3(end, 0);
+            vs[0].Color = color;
+            vs[1].Color = color;
+
+            effect.CurrentTechnique = techniqueBasicColorRender;
+            paramViewMatrix.SetValue(view);
+            effect.Begin();
+            foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
+                pass.Begin();
+                graphics.GraphicsDevice.VertexDeclaration = new VertexDeclaration(graphics.GraphicsDevice, VertexPositionColor.VertexElements);
+                graphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vs, 0, 1);
                 pass.End();
             }
             effect.End();

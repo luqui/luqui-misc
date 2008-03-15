@@ -11,6 +11,10 @@ namespace DifferentialGeometryWars
         public abstract Vector2 MinBound { get; }
         public abstract Vector2 MaxBound { get; }
 
+        // XXX this needs a different interface because we need to canonicalize
+        // the turret as well.  Maybe:
+        //  Vector2 CanonicalizePosition(Vector2 pos)
+        //  Vector2 CanonicalizeVector(Vector2 pos, Vector2 v)
         public abstract void Canonicalize(ref Vector2 v, ref Vector2 dv);
     }
 

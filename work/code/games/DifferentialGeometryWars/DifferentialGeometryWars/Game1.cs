@@ -31,6 +31,8 @@ namespace DifferentialGeometryWars
 
         VertexPositionColor[] grid;
 
+        float enemyTimer = -10.0f;
+
         public Game1() {
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferWidth = 1440;
@@ -55,14 +57,12 @@ namespace DifferentialGeometryWars
 
             player = new PlayerShip(PlayerIndex.One, metric, new Vector2(0.5f, 0.5f));
             enemies = new LinkedList<Enemy>();
-            for (int i = 0; i < 10; i++) {
-                enemies.AddLast(new RandomMotionEnemy(metric, new Vector2((float)Tweaks.RAND.NextDouble(), (float)Tweaks.RAND.NextDouble()))) ;
-            }
+
 
             renderTarget = new RenderTarget2D(graphics.GraphicsDevice, Tweaks.SOURCE_RESX, Tweaks.SOURCE_RESY, 0, SurfaceFormat.Color);
-            double theta = Math.PI / 2;
-            metric.modifyCircle(new Metric.TangentSpace((float)Math.Cos(theta), -(float)Math.Sin(theta), (float)Math.Sin(theta), (float)Math.Cos(theta)), new Vector2(0.4f, 0.4f), 0.4f);
-            //metric.modifyCircle(new Metric.TangentSpace(-1.0f, 0.0f, 0.0f, -1.0f), new Vector2(0.75f, 0.75f), 0.2f);
+            double theta = 0.5 * Math.PI;
+            metric.modifyCircle(new Metric.TangentSpace(0.4f*(float)Math.Cos(theta), -0.4f*(float)Math.Sin(theta), 0.4f*(float)Math.Sin(theta), 0.4f*(float)Math.Cos(theta)), new Vector2(0.5f, 0.5f), 0.2f);
+            //metric.modifyCircle(new Metric.TangentSpace(-1.0f, 0.0f, 0.0f, -1.0f), new Vector2(0.9f, 0.9f), 0.5f);
             ReloadDistortionMap();
 
             {
@@ -81,7 +81,7 @@ namespace DifferentialGeometryWars
         private void ReloadDistortionMap() {
             if (euclideanMap != null) { euclideanMap.Dispose(); }
             euclideanMap = new Texture2D(graphics.GraphicsDevice, Tweaks.DISTORTION_RESX, Tweaks.DISTORTION_RESY, 0, TextureUsage.None, SurfaceFormat.Rg32);
-            Vector2[,] mapData = metric.getEuclideanMap(new Vector2(-0.5f, -0.5f), new Vector2(1.5f, 1.5f), Tweaks.DISTORTION_RESX, Tweaks.DISTORTION_RESY, Tweaks.DISTORTION_RESX / 2, Tweaks.DISTORTION_RESY / 2, new Vector2(0.5f, 0.5f));
+            Vector2[,] mapData = metric.getEuclideanMap(new Vector2(-0.3f, -0.3f), new Vector2(1.3f, 1.3f), Tweaks.DISTORTION_RESX, Tweaks.DISTORTION_RESY, Tweaks.DISTORTION_RESX / 2, Tweaks.DISTORTION_RESY / 2, new Vector2(0.5f, 0.5f));
             Rg32[] pixBuffer = new Rg32[Tweaks.DISTORTION_RESX * Tweaks.DISTORTION_RESY];
             int ix = 0;
             for (int j = 0; j < Tweaks.DISTORTION_RESX; j++) {
@@ -105,10 +105,24 @@ namespace DifferentialGeometryWars
                 this.Exit();
 
             player.Update(dt);
-            foreach (Enemy e in enemies) {
-                e.Update(dt);
-            }
 
+            Utils.IterateWithDeath(enemies, new Utils.DeathCond<Enemy>(delegate(Enemy e) {
+                e.Update(dt);
+                bool death = false;
+                foreach (Bullet b in player.Bullets) {
+                    if ((b.Position - e.Position).Length() < 0.02f) {
+                        death = true;
+                        break;
+                    }
+                }
+                return death;
+            }));
+
+            enemyTimer -= dt;
+            while (enemyTimer <= 0) {
+                enemies.AddLast(new RandomMotionEnemy(metric, new Vector2((float) Tweaks.RAND.NextDouble(), (float) Tweaks.RAND.NextDouble())));
+                enemyTimer += 1;
+            }
 
             /*
             for (int i = 0; i < bullets.Count; i++) {
@@ -160,17 +174,7 @@ namespace DifferentialGeometryWars
             }
             effect.End();
 
-            Utils.IterateWithDeath(enemies, new Utils.DeathCond<Enemy>(delegate(Enemy e) {
-                e.Draw(draw);
-                bool death = false;
-                foreach (Bullet b in player.Bullets) {
-                    if ((b.Position - e.Position).Length() < 0.02f) {
-                        death = true;
-                        break;
-                    }
-                }
-                return death;
-            }));
+
             foreach (Enemy e in enemies) {
                 e.Draw(draw);
             }
@@ -181,6 +185,11 @@ namespace DifferentialGeometryWars
             // Grab scene texture
             graphics.GraphicsDevice.SetRenderTarget(0, null);
             targetTexture = renderTarget.GetTexture();
+            Vector2 v = new Vector2(0,0);
+            foreach (Bullet b in player.Bullets) {
+                v = b.Position;
+                break;
+            }
             
             VertexPositionTexture[] drawBox = draw.MakeBox(new Vector2(0, 0), new Vector2(1, 1));
             effect.CurrentTechnique = effect.Techniques["DistortionMapRender"];

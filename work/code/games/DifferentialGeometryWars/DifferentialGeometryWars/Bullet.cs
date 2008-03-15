@@ -10,7 +10,7 @@ namespace DifferentialGeometryWars
     class Bullet : SpatialObject
     {
         Texture2D bulletTexture;
-        float timeout;
+        public float timeout;
 
         public Bullet(Metric metric, float intimeout, Vector2 pos, Vector2 vel)
             : base(pos, vel, metric) {

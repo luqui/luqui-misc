@@ -20,13 +20,15 @@ namespace DifferentialGeometryWars
         public const int DISTORTION_RESX = 512;
         public const int DISTORTION_RESY = 512;
         // Control responsiveness
-        public const float TURN_RESPONSE = 0.33f;
-        public const float ACCEL_RESPONSE = 1.0f;
-        public const float MAX_SPEED = 0.4f;
+        public const float TURN_RESPONSE = 0.7f;
+        public const float ACCEL_RESPONSE = 0.1f;
+        public const float MAX_SPEED = 0.15f;
         // Bullets
         public const float BULLET_VEL = 0.6f;
         public const float BULLET_COOLDOWN = 0.2f;
         public const float BULLET_DECAY = 2.0f;
+        // Turret
+        public const float TURRET_RESPONSE = 4.9f;
 
         public static Random RAND = new Random();
         public static ContentManager CONTENT;

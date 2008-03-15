@@ -25,11 +25,17 @@ namespace DifferentialGeometryWars
             metric.topology.Canonicalize(ref position, ref velocity);
         }
 
+        protected Matrix GetTranslationMatrix() {
+            return Matrix.CreateTranslation(new Vector3(position.X, position.Y, 0.0f));
+        }
+
+        protected Matrix GetVectorMatrix(Vector2 v) {
+            Vector2 logVel = metric.lookup(position).inverseTransform(v);
+            return Matrix.CreateRotationZ((float) (Math.Atan2(logVel.Y, logVel.X) - Math.PI / 2));
+        }
+
         protected Matrix GetDrawMatrix() {
-            Matrix trans = Matrix.CreateTranslation(new Vector3(position.X, position.Y, 0.0f));
-            Vector2 logVel = metric.lookup(position).inverseTransform(velocity);
-            Matrix rot = Matrix.CreateRotationZ((float) (Math.Atan2(logVel.Y, logVel.X) - Math.PI / 2));
-            return rot * trans;
+            return GetVectorMatrix(velocity) * GetTranslationMatrix();
         }
     }
 }

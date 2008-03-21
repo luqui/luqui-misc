@@ -1,0 +1,97 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+\DeclareMathOperator{\eval}{eval}
+\DeclareMathOperator{\dom}{dom}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem*{theorem*}{Theorem}
+\newtheorem*{corollary*}{Corollary}
+
+\newcommand{\arr}[0]{\rightarrow}
+
+\begin{document}
+\noindent Luke Palmer \\
+ECEN 5023 \\
+Homework 1
+
+\begin{description}
+\item[(1)]
+ Define the family of relations $(\arr^k)$ as follows:
+
+ \begin{itemize}
+  \item $x \arr^0 y$ iff $x = y$.
+  \item $x \arr^1 y$ iff $x \arr y$.
+  \item $x \arr^{k+1} y$ iff there is a $z$ such that $x \arr^k z \arr y$.
+ \end{itemize}
+   
+ \begin{lemma}
+  \label{lemma-partialfunction}
+  For any $k$, $(\arr^k)$ is a partial function.
+ \end{lemma}
+  \begin{proof}
+   By induction on $k$.  $k = 0$ is trivial. 
+
+   If $a \arr^{k+1} b$ and $a \arr^{k+1} b'$, then there exist $z,z'$
+   such that $a \arr^k z \arr b$ and $a \arr^k z' \arr b'$.  By the
+   induction hypothesis $z = z'$, and by the determinacy of single-step
+   evaluation $b = b'$.
+  \end{proof}
+ 
+ \begin{lemma}
+  \label{lemma-normalform}
+  If $t \arr^k u$ and $u$ is in normal form, then $t \not\arr^n x$ for
+  any $n > k$.
+ \end{lemma}
+  \begin{proof}
+   When $n = k+1$, $t \arr^k z \arr u$.  But by Lemma
+   \ref{lemma-partialfunction}, $z = u$, and since $u$ is in normal
+   form, $u \not\arr u$, a contradiction.
+
+   When $n = k+a+1$ ($a>0$), $t \arr^{k+a} z \arr u$, but by the induction
+   hypothesis, $t \not\arr^{k+a} z$ in the first place.
+  \end{proof}
+
+ It is straightforward to show $(\arr^*) = \bigcup\limits_{i\in\omega}{(\arr^i)}$.  
+
+ \begin{theorem*}
+  (Uniqueness of Normal Forms) If $t \arr^* u$ and $t \arr^*
+  u'$, where $u$ and $u'$ are both normal forms, then $u = u'$.
+ \end{theorem*}
+  \begin{proof}
+   There exist $k,l$ with $t \arr^k u$ and $t \arr^l u'$.  Wolog suppose
+   $k \le l$.  But $u$ is in normal form, so by Lemma
+   \ref{lemma-normalform}, $t \not\arr^n x$ for any $n > k$.  Therefore
+   $k = l$, and since $(\arr^k)$ is a partial function, $u = u'$.
+  \end{proof}
+
+\item[(2)]
+  \begin{theorem*}
+   (Progress) For every term $t$, either $t \in \{\mathtt{true},
+   \mathtt{false} \}$ or there exists a $t'$ with $t \arr t'$.
+  \end{theorem*}
+   \begin{proof}
+    By structural induction on $t$:
+    \begin{itemize}
+     \item \texttt{true,false}: We're done.
+     \item \texttt{if true then $a$ else $b$}: $t \arr a$ by
+     \textsc{E-IfTrue}.
+     \item \texttt{if false then $a$ else $b$}: $t \arr b$ by
+     \textsc{E-IfFalse}.
+     \item \texttt{if $c$ then $a$ else $b$} where $c \not\in
+     \{\mathtt{true}, \mathtt{false}\}$: By the induction hypothesis,
+     there is a $c'$ with $c \arr c'$, so $t \arr $ \texttt{if $c'$ then
+     $a$ else $b$} by \texttt{E-If}.
+    \end{itemize}
+   \end{proof}
+
+\item[(3)]
+   There is no Progress theorem for the full language.  For example,
+   \texttt{succ true} is not a value but there is no rule that applies
+   to it.
+
+\end{description}
+\end{document}

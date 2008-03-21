@@ -1,0 +1,77 @@
+Goal: facilitate real-world programming in a Haskellish way,
+      but allow embedding of proofs into the source code.
+Design: mostly like Agda, except without the versatile syntax
+      nightmare.  Syntax should be close to haskell, but should
+      facilitate proof writing.
+
+Assumptions: implicit arguments taken by a function, filled
+      in at compile time.  Because of the passing semantics,
+      these are for proofs, not for data values.
+Lemmas: like assumptions, but constructed out of available data.
+Passing semantics: when a function is called and not explicitly
+      given an assumption, the typechecker looks through available
+      assumptions, parameters, and lemmas for something to pass.
+      If it found nothing or multiple things, an error results.
+      (Possibly: if it found multiple things, it just picks one.
+      Since these are for proofs, that might be okay.)
+
+
+
+Type inference:
+---------------
+
+Let's be optimistic.  Let's say we can infer something like this:
+
+    app f x = f x
+
+The type of this needs assumptions.  Namely:
+
+    app : (*x:a. b x) -> (*x:a. b x)
+        given (a : Set) (b : a -> Set)
+
+Or equivalently:
+
+    app : suppose (a : Set) (b : a -> Set)
+          in (*x:a. b x) -> (*x:a. b x)
+
+Cool.  Now... how do we do it?  First convert to lambda syntax.
+
+    app = \f. \x. f x
+
+Annotate with free type variables.
+
+    app = \f:1. \x:2. f x
+
+Now in the application f x we unify the type of f (1) with 
+*z:2. 3 z.  Now we have the body of the inner lambda:
+
+    app = \f:(*z:2. 3 z). \x:2. (f x : 3 x)
+
+There are still external type variables (2 & 3), so we don't
+generalize.  Now we can get to the body of the outer lambda.
+
+    app = \f:(*z:2. 3 z). (\x:2. f x : *x:2. 3 x)
+
+Again, there are still external type variables (2 & 3), so again
+we don't generalize.  And finally to the outer lambda itself.
+
+    app = \f:(*z:2. 3 z). \x:2. f x : (*z:2. 3 z) -> (*z:2. 3 z)
+
+The type variables 2 & 3 are now internal, so we go into the
+generalization phase.  Our goal is to generalize the type:
+
+    (*z:2. 3 z) -> (*z:2. 3 z)
+
+Use a writer pattern, walking the tree for constraints, giving:
+
+    3 = *w:2. 4
+
+And generalize the remaining variables to ... Set?
+
+    (2 : Set) (3 : 2 -> Set)
+
+And then the extremely difficult renaming phase:
+
+    (a : Set) (b : a -> Set)
+
+I do wonder how we get to Set1, etc.  Maybe it's a constraint.

@@ -33,8 +33,11 @@ inferExp (EApp a b) = do
     tell [ adom :~: btype ]
     return acod
 inferExp (EType t e) = do
+    -- XXX need more here, but it's unclear how to make this
+    -- work with the introspection procedures.  Putting off
+    -- for now.
     etype <- inferExp e
-    tell [ etype :~: t ]
+    tell [ etype :~: t ]  -- < this is the wrong line
     return t
 inferExp EHole = lift $ lift newFree
 
@@ -100,6 +103,28 @@ freeFrees (TVar v) = Set.empty
 freeFrees (TFree i) = Set.singleton i
 freeFrees (TPi v t) = freeFrees t
 freeFrees (TApp a b) = freeFrees a `Set.union` freeFrees b
+
+getHoleCxt :: Env     -- top level environment
+           -> ExpZip  -- hole location 
+           -> Supply (Type, Type, Env) 
+                  -- (top-level type, hole type, hole environment)
+getHoleCxt env z = do
+    fv <- alloc
+    let exp = EType (TFree fv) EHole
+    let prog = unzipExp z exp
+    (t,eqs) <- runWriterT (runReaderT (inferExp prog) env)
+    sub <- solveEquations eqs
+    return ( substFree sub t          -- top type
+           , substFree sub (TFree fv) -- hole type
+           , Map.map (substFree sub) (getHoleEnv z) -- hole environment
+           )
+
+getHoleEnv :: ExpZip -> Env
+getHoleEnv ZTop = Map.empty
+getHoleEnv (ZLambda v t z) = Map.insert v t (getHoleEnv z)
+getHoleEnv (ZAppL z r) = getHoleEnv z
+getHoleEnv (ZAppR l z) = getHoleEnv z
+getHoleEnv (ZType t z) = getHoleEnv z
 
 generalize :: Type -> Supply Type
 generalize t = do

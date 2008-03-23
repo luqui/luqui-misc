@@ -34,6 +34,27 @@ data ExpZip
     | ZType   Type ExpZip
     deriving Show
 
+alphaEquiv :: Type -> Type -> Supply Bool
+alphaEquiv (TVar v) (TVar w)     = return $ v == w
+alphaEquiv (TFree i) (TFree j)   = return $ i == j
+alphaEquiv (TPi v t) (TPi v' t') = do
+    -- XXX need support for reordering of pis
+    fv <- liftM TFree alloc
+    alphaEquiv (typeSubstVar v fv t) (typeSubstVar v' fv t')
+alphaEquiv (TApp a b) (TApp a' b') = do
+    c1 <- alphaEquiv a a'
+    if not c1
+       then return False
+       else alphaEquiv b b'
+
+typeSubstVar :: String -> Type -> Type -> Type
+typeSubstVar v with t = 
+    case t of
+         TVar v'  | v == v' -> with
+         TPi v' b | v /= v' -> TPi v' (typeSubstVar v with b)
+         TApp t u           -> TApp (typeSubstVar v with t) (typeSubstVar v with u)
+         t                  -> t
+
 unzipExp :: ExpZip -> Exp -> Exp
 unzipExp ZTop e = e
 unzipExp (ZLambda v t z) e = unzipExp z (ELambda v t e)
@@ -69,8 +90,9 @@ elam' t f = do
     body <- f (return $ EVar varname)
     return $ ELambda varname t body
 
-eapp :: Supply Exp -> Supply Exp -> Supply Exp
-eapp e e' = liftM2 EApp e e'
+infixl 9 %
+(%) :: Supply Exp -> Supply Exp -> Supply Exp
+(%) e e' = liftM2 EApp e e'
 
 etype :: Type -> Supply Exp -> Supply Exp
 etype t e = liftM (EType t) e

@@ -26,30 +26,23 @@ data Exp
     | EHole
     deriving Show
 
-data ExpZip
-    = ZTop
-    | ZLambda Var Type ExpZip
-    | ZAppL   ExpZip Exp
-    | ZAppR   Exp ExpZip
-    | ZType   Type ExpZip
+data DExp
+    = DLambda Var Type
+    | DAppL   Exp
+    | DAppR   Exp
+    | DType   Type
     deriving Show
 
-unzipExp :: ExpZip -> Exp -> Exp
-unzipExp ZTop e = e
-unzipExp (ZLambda v t z) e = unzipExp z (ELambda v t e)
-unzipExp (ZAppL z r) e = unzipExp z (EApp e r)
-unzipExp (ZAppR l z) e = unzipExp z (EApp l e)
-unzipExp (ZType t z) e = unzipExp z (EType t e)
+type ExpCxt = [DExp]
 
-findHoles :: Exp -> [ExpZip]
-findHoles e = findHoles' e ZTop
-    where
-    findHoles' (EVar v) cx = []
-    findHoles' (ELambda v t e) cx = findHoles' e (ZLambda v t cx)
-    findHoles' (EApp a b) cx = findHoles' a (ZAppL cx b) 
-                            ++ findHoles' b (ZAppR a cx)
-    findHoles' (EType t e) cx = findHoles' e (ZType t cx)
-    findHoles' EHole cx = [cx]
+unzipExp :: ExpCxt -> Exp -> Exp
+unzipExp cx e = foldl (\es dexp -> integrate dexp es) e cx
+
+integrate :: DExp -> Exp -> Exp
+integrate (DLambda v t) e = ELambda v t e
+integrate (DAppL r) e = EApp e r
+integrate (DAppR l) e = EApp l e
+integrate (DType t) e = EType t e
 
 makeArrow :: Type -> Type -> Type
 makeArrow dom cod = TApp (TApp (TVar "->") dom) cod

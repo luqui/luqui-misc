@@ -105,7 +105,7 @@ freeFrees (TPi v t) = freeFrees t
 freeFrees (TApp a b) = freeFrees a `Set.union` freeFrees b
 
 getHoleCxt :: Env     -- top level environment
-           -> ExpZip  -- hole location 
+           -> ExpCxt  -- hole location 
            -> Supply (Type, Type, Env) 
                   -- (top-level type, hole type, hole environment)
 getHoleCxt env z = do
@@ -119,12 +119,10 @@ getHoleCxt env z = do
            , Map.map (substFree sub) (getHoleEnv z) -- hole environment
            )
 
-getHoleEnv :: ExpZip -> Env
-getHoleEnv ZTop = Map.empty
-getHoleEnv (ZLambda v t z) = Map.insert v t (getHoleEnv z)
-getHoleEnv (ZAppL z r) = getHoleEnv z
-getHoleEnv (ZAppR l z) = getHoleEnv z
-getHoleEnv (ZType t z) = getHoleEnv z
+getHoleEnv :: ExpCxt -> Env
+getHoleEnv [] = Map.empty
+getHoleEnv (DLambda v t : cs) = Map.insert v t (getHoleEnv cs)
+getHoleEnv (_ : cs) = getHoleEnv cs
 
 generalize :: Type -> Supply Type
 generalize t = do

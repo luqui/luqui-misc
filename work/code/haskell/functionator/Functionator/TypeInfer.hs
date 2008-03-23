@@ -3,6 +3,7 @@ module Functionator.TypeInfer where
 import Functionator.Supply
 import Functionator.AST
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import Control.Monad.State
 import Control.Monad.Writer
 import Control.Monad.Reader
@@ -53,8 +54,8 @@ solveEquations eqs = execStateT (runEquations eqs) Map.empty
         | v == w    = return ()
         | otherwise = writeSubst v (TFree w)
     solve (TFree v :~: t)
-        | occurs v t  = fail $ "Can't construct infinite type: " ++ show v ++ " = " ++ show t
-        | otherwise = writeSubst v t
+        | occurs v t = fail $ "Can't construct infinite type: " ++ show v ++ " = " ++ show t
+        | otherwise  = writeSubst v t
     solve (t :~: u@(TFree {})) = solve (u :~: t)
 
     -- the rest are "opaque"
@@ -67,7 +68,9 @@ solveEquations eqs = execStateT (runEquations eqs) Map.empty
 
     writeEquation eq = tell [eq]
 
-    writeSubst v t = modify (Map.insert v t)
+    writeSubst v t = do
+        modify $ Map.map (substFree (Map.singleton v t))
+        modify $ Map.insert v t
 
     occurs i (TFree i') = i == i'
     occurs i (TPi v t) = occurs i t
@@ -79,16 +82,37 @@ solveEquations eqs = execStateT (runEquations eqs) Map.empty
     substVar v with (TApp t u) = TApp (substVar v with t) (substVar v with u)
     substVar v with t = t
 
-    substFree sub (TFree i) = 
-        case Map.lookup i sub of
-            Just t  -> t
-            Nothing -> TFree i
-    substFree sub (TPi v t) = TPi v (substFree sub t)
-    substFree sub (TApp t u) = TApp (substFree sub t) (substFree sub u)
-    substFree sub (TVar v) = TVar v
-
     runEquations [] = return ()
     runEquations ((a :~: b):es) = do
         sub <- get
         (_, nexts) <- runWriterT (solve (substFree sub a :~: substFree sub b))
         runEquations $ nexts ++ es
+
+substFree sub (TFree i) = 
+    case Map.lookup i sub of
+        Just t  -> t
+        Nothing -> TFree i
+substFree sub (TPi v t) = TPi v (substFree sub t)
+substFree sub (TApp t u) = TApp (substFree sub t) (substFree sub u)
+substFree sub (TVar v) = TVar v
+
+freeFrees (TVar v) = Set.empty
+freeFrees (TFree i) = Set.singleton i
+freeFrees (TPi v t) = freeFrees t
+freeFrees (TApp a b) = freeFrees a `Set.union` freeFrees b
+
+generalize :: Type -> Supply Type
+generalize t = do
+    (sub,pfx) <- foldM makeName (Map.empty,id) (Set.elems $ freeFrees t)
+    return $ pfx $ substFree sub t
+    where
+    makeName (sub,pfx) i = do
+        nameid <- alloc
+        let name = "t" ++ show nameid
+        return (Map.insert i (TVar name) sub, TPi name . pfx)
+
+findType :: Exp -> Supply Type
+findType e = do
+    (t,eqs) <- runWriterT (runReaderT (inferExp e) Map.empty)
+    sub <- solveEquations eqs
+    generalize $ substFree sub t

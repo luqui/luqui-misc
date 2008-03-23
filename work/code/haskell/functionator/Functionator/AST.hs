@@ -2,9 +2,14 @@ module Functionator.AST where
 
 type Var = String
 
+data Kind
+    = KStar
+    | KArr Kind Kind
+
 data Type
     = TVar Var
-    | TΠ   Var  Type
+    | TArr Type Type
+    | TΠ   Var Kind Type
     | TApp Type Type
 
 data Exp

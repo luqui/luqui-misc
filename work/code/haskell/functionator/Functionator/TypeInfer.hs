@@ -111,8 +111,8 @@ generalize t = do
         let name = "t" ++ show nameid
         return (Map.insert i (TVar name) sub, TPi name . pfx)
 
-findType :: Exp -> Supply Type
-findType e = do
-    (t,eqs) <- runWriterT (runReaderT (inferExp e) Map.empty)
+findType :: Env -> Exp -> Supply Type
+findType env e = do
+    (t,eqs) <- runWriterT (runReaderT (inferExp e) env)
     sub <- solveEquations eqs
     generalize $ substFree sub t

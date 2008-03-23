@@ -28,12 +28,28 @@ data Exp
 
 data ExpZip
     = ZTop
-    | Zλ    Var Type ExpZip
-    | ZAppL ExpZip Exp
-    | ZAppR Exp ExpZip
-    | ZType Type ExpZip
+    | ZLambda Var Type ExpZip
+    | ZAppL   ExpZip Exp
+    | ZAppR   Exp ExpZip
+    | ZType   Type ExpZip
     deriving Show
 
+unzipExp :: ExpZip -> Exp -> Exp
+unzipExp ZTop e = e
+unzipExp (ZLambda v t z) e = unzipExp z (ELambda v t e)
+unzipExp (ZAppL z r) e = unzipExp z (EApp e r)
+unzipExp (ZAppR l z) e = unzipExp z (EApp l e)
+unzipExp (ZType t z) e = unzipExp z (EType t e)
+
+findHoles :: Exp -> [ExpZip]
+findHoles e = findHoles' e ZTop
+    where
+    findHoles' (EVar v) cx = []
+    findHoles' (ELambda v t e) cx = findHoles' e (ZLambda v t cx)
+    findHoles' (EApp a b) cx = findHoles' a (ZAppL cx b) 
+                            ++ findHoles' b (ZAppR a cx)
+    findHoles' (EType t e) cx = findHoles' e (ZType t cx)
+    findHoles' EHole cx = [cx]
 
 makeArrow :: Type -> Type -> Type
 makeArrow dom cod = TApp (TApp (TVar "->") dom) cod

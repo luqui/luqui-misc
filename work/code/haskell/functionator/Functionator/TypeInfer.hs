@@ -1,5 +1,6 @@
 module Functionator.TypeInfer where
 
+import Functionator.Supply
 import Functionator.AST
 import qualified Data.Map as Map
 import Control.Monad.State
@@ -12,16 +13,10 @@ data Equation
 
 type Env = Map.Map Var Type
 
-newtype Supply a = Supply (State Int a)
-    deriving (Functor, Monad)
-
 type Infer a = ReaderT Env (WriterT [Equation] Supply) a
 
 newFree :: Supply Type
-newFree = Supply $ do
-    ret <- get
-    put $! ret+1
-    return $ TFree ret
+newFree = fmap TFree alloc
 
 inferExp :: Exp -> Infer Type
 inferExp (EVar v) = asks (Map.! v)

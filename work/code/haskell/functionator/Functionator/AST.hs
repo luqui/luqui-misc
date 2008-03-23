@@ -35,6 +35,22 @@ data DExp
 
 type ExpCxt = [DExp]
 
+updateCxt :: ExpCxt -> Exp -> ExpCxt -> Maybe ExpCxt
+updateCxt loc repl target = fmap reverse $ merge' (reverse loc) (reverse target)
+    where
+    merge' _  [] = Nothing  -- entered my hole!
+    merge' [] _  = Nothing  -- replaced a parent node of mine
+       -- could compare for equality, but why
+    merge' (DLambda v t : xs) (DLambda v' t' : ys) = fmap (DLambda v t :) $ merge' xs ys
+    merge' (DAppL e : xs)     (DAppL e' : ys)      = fmap (DAppL e' :)    $ merge' xs ys
+    merge' (DAppR e : xs)     (DAppR e' : ys)      = fmap (DAppR e' :)    $ merge' xs ys
+    merge' (DType t : xs)     (DType t' : ys)      = fmap (DType t :)     $ merge' xs ys
+
+    merge' (DAppL re : xs) (DAppR le : ys) = Just $ DAppR (unzipExp (reverse xs) repl) : ys
+    merge' (DAppR le : xs) (DAppL re : ys) = Just $ DAppL (unzipExp (reverse xs) repl) : ys
+
+    merge' _ _ = error "Two contexts are not compatible during merge"
+
 unzipExp :: ExpCxt -> Exp -> Exp
 unzipExp cx e = foldl (\es dexp -> integrate dexp es) e cx
 

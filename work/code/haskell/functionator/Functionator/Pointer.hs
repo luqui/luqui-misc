@@ -10,6 +10,9 @@ data Pointer
               , pExp :: Exp
               }
 
+instance Show Pointer where
+    show p = show (pCxt p) ++ " |- " ++ show (pExp p)
+
 freeSubstitutePointer :: Supply Int -> Int -> Type -> Pointer -> Pointer
 freeSubstitutePointer s i t p =
     Pointer { pEnv  = snd $ Map.mapAccum accumFunc s1 (pEnv p)
@@ -34,6 +37,12 @@ unify s (TApp a b) (TApp a' b') p =
     unify (supplyLeft s) a a' $ unify (supplyRight s) b b' p
 unify _ a b _ = error $ "Can't unify " ++ show a ++ " with " ++ show b
 
+newPointer :: Map.Map Var Type -> Type -> Pointer
+newPointer env typ =
+    Pointer { pEnv = env
+            , pCxt = []
+            , pExp = EHole typ
+            }
 
 makeApp :: Supply Int -> Pointer -> Pointer
 makeApp s p
@@ -56,8 +65,28 @@ makeLambda s v p
 
 makeVar :: Supply Int -> Var -> Pointer -> Pointer
 makeVar s v p
-    | Just varType <- Map.lookup v (pEnv p)
+    | Just varType <- Map.lookup v (cxtEnv (pCxt p) `Map.union` pEnv p)
     , EHole resultType <- pExp p =
         unify s varType resultType $ p { pExp = EVar v }
     | otherwise = error $ "Expression not empty (" ++ show (pExp p)
                        ++ ") or variable (" ++ show v ++ ") not in environment"
+
+cxtEnv :: ExpCxt -> Map.Map Var Type
+cxtEnv (DLambda v t : cxs) = Map.insert v t (cxtEnv cxs)
+cxtEnv (_ : cxs)     = cxtEnv cxs
+
+goAppL :: Pointer -> Pointer
+goAppL p
+    | EApp l r <- pExp p = p { pExp = l, pCxt = DAppL r : pCxt p }
+    | otherwise = error "Not an App"
+
+goAppR :: Pointer -> Pointer
+goAppR p
+    | EApp l r <- pExp p = p { pExp = r, pCxt = DAppR l : pCxt p }
+    | otherwise = error "Not an App"
+
+goLambda :: Pointer -> Pointer
+goLambda p
+    | ELambda v t e <- pExp p =  
+        p { pExp = e, pCxt = DLambda v t : pCxt p }
+    | otherwise = error "Not a Lambda"

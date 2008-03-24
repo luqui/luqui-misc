@@ -66,6 +66,26 @@ freeSubstitute s i t (TApp t1 t2) =
          (freeSubstitute (supplyRight s) i t t2)
 freeSubstitute _ _ _ t = t
 
+freeSubstituteExp :: Supply Int -> Int -> Type -> Exp -> Exp
+freeSubstituteExp s i t (ELambda v t' e) = 
+    ELambda v (freeSubstitute (supplyLeft s) i t t') 
+              (freeSubstituteExp (supplyRight s) i t e)
+freeSubstituteExp s i t (EApp a b) =
+    EApp (freeSubstituteExp (supplyLeft s) i t a) 
+         (freeSubstituteExp (supplyRight s) i t b)
+freeSubstituteExp s i t (EType t' e) = 
+    EType (freeSubstitute (supplyLeft s) i t t')
+          (freeSubstituteExp (supplyRight s) i t e)
+freeSubstituteExp s i t (EHole t') = EHole (freeSubstitute s i t t')
+freeSubstituteExp _ _ _ a = a
+
+freeSubstituteDExp :: Supply Int -> Int -> Type -> DExp -> DExp
+freeSubstituteDExp s i t (DLambda v t')
+    = DLambda v (freeSubstitute s i t t')
+freeSubstituteDExp s i t (DType t')
+    = DType (freeSubstitute s i t t')
+freeSubstituteDExp _ _ _ a = a
+
 varSubstitute :: Supply Int -> Var -> Type -> Type -> Type
 varSubstitute s v t (TVar v') | v == v' = t
 varSubstitute s v t (TPi v' t') | v /= v' = 

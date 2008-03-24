@@ -58,9 +58,9 @@ freeSubstitute :: Supply Int -> Int -> Type -> Type -> Type
 freeSubstitute s i t (TFree j) | i == j = t
 freeSubstitute s i t (TPi v t') = 
     -- avoiding free variable capture
-    let fv = TVar ("_t" ++ show (supplyValue s))
-    in  TPi v (freeSubstitute (supplyLeft s) i 
-                  (varSubstitute (supplyRight s) v fv t) t')
+    let fv = "_t" ++ show (supplyValue s)
+    in  TPi fv (freeSubstitute (supplyLeft s) i t
+                  (varSubstitute (supplyRight s) v (TVar fv) t'))
 freeSubstitute s i t (TApp t1 t2) = 
     TApp (freeSubstitute (supplyLeft  s) i t t1)
          (freeSubstitute (supplyRight s) i t t2)
@@ -70,9 +70,9 @@ varSubstitute :: Supply Int -> Var -> Type -> Type -> Type
 varSubstitute s v t (TVar v') | v == v' = t
 varSubstitute s v t (TPi v' t') | v /= v' = 
     -- avoid free variable caputre, as above
-    let fv = TVar ("_t" ++ show (supplyValue s))
-    in  TPi v (varSubstitute (supplyLeft s) v 
-                  (varSubstitute (supplyRight s) v' fv t) t')
+    let fv = "_t" ++ show (supplyValue s)
+    in  TPi fv (varSubstitute (supplyLeft s) v t
+                  (varSubstitute (supplyRight s) v' (TVar fv) t'))
 varSubstitute s v t (TApp a b) = 
     TApp (varSubstitute (supplyLeft  s) v t a) 
          (varSubstitute (supplyRight s) v t b)

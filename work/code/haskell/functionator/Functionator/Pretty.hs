@@ -1,4 +1,4 @@
-module Functionator.Pretty where
+module Functionator.Pretty (formatExp, formatType) where
 
 import Text.PrettyPrint
 import Functionator.AST

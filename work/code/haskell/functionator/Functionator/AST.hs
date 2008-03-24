@@ -1,7 +1,7 @@
 module Functionator.AST where
 
-import Functionator.Supply
-import Control.Monad
+import Data.Supply
+import Control.Monad.Reader
 
 type Var = String
 
@@ -48,6 +48,24 @@ updateCxt loc repl target = fmap reverse $ merge' (reverse loc) (reverse target)
 unzipExp :: ExpCxt -> Exp -> Exp
 unzipExp cx e = foldl (\es dexp -> integrate dexp es) e cx
 
+freeOccurs :: Int -> Type -> Bool
+freeOccurs i (TVar v) = False
+freeOccurs i (TFree j) = i == j
+freeOccurs i (TPi v t) = freeOccurs i t
+freeOccurs i (TApp a b) = freeOccurs i a || freeOccurs i b
+
+freeSubstitute :: Int -> Type -> Type -> Type
+freeSubstitute i t (TFree j) | i == j = t
+freeSubstitute i t (TPi v t') = TPi v (freeSubstitute i t t')  -- XXX need to avoid fv capture
+freeSubstitute i t (TApp t1 t2) = TApp (freeSubstitute i t t1) (freeSubstitute i t t2)
+freeSubstitute _ _ t = t
+
+varSubstitute :: Var -> Type -> Type -> Type
+varSubstitute v t (TVar v') | v == v' = t
+varSubstitute v t (TPi v' t') | v /= v' = TPi v' (varSubstitute v t t')
+varSubstitute v t (TApp a b) = TApp (varSubstitute v t a) (varSubstitute v t b)
+varSubstitute _ _ t = t
+
 integrate :: DExp -> Exp -> Exp
 integrate (DLambda v t) e = ELambda v t e
 integrate (DAppL r) e = EApp e r
@@ -57,29 +75,29 @@ integrate (DType t) e = EType t e
 makeArrow :: Type -> Type -> Type
 makeArrow dom cod = TApp (TApp (TVar "->") dom) cod
 
-elam :: (Supply Exp -> Supply Exp) -> Supply Exp
-elam f = do
-    varid <- alloc
-    let varname = "v" ++ show varid
-    fv    <- liftM TFree alloc
-    body  <- f (return $ EVar varname)
-    return $ ELambda varname fv body
+type SExp = Supply Int -> Exp
 
-elam' :: Type -> (Supply Exp -> Supply Exp) -> Supply Exp
-elam' t f = do
-    varid <- alloc
-    let varname = "v" ++ show varid
-    body <- f (return $ EVar varname)
-    return $ ELambda varname t body
+elam :: (SExp -> SExp) -> SExp
+elam f s = 
+    let varid   = supplyValue s
+        varname = "v" ++ show varid
+        fv      = TFree (supplyValue (supplyLeft s))
+        body    = f (const $ EVar varname) (supplyRight s)
+    in ELambda varname fv body
+
+elam' :: Type -> (SExp -> SExp) -> SExp
+elam' t f s = 
+    let varid   = supplyValue s
+        varname = "v" ++ show varid
+        body    = f (const $ EVar varname) (supplyRight s)
+    in ELambda varname t body
 
 infixl 9 %
-(%) :: Supply Exp -> Supply Exp -> Supply Exp
-(%) e e' = liftM2 EApp e e'
+(%) :: SExp -> SExp -> SExp
+(%) e e' s = EApp (e (supplyLeft s)) (e (supplyRight s))
 
-etype :: Type -> Supply Exp -> Supply Exp
-etype t e = liftM (EType t) e
+etype :: Type -> SExp -> SExp
+etype t e s = EType t (e s)
 
-ehole :: Supply Exp
-ehole = do
-    varid <- alloc
-    return (EHole $ TFree varid)
+ehole :: SExp
+ehole s = EHole $ TFree $ supplyValue s

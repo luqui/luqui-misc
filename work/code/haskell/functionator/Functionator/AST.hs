@@ -59,17 +59,24 @@ freeSubstitute s i t (TFree j) | i == j = t
 freeSubstitute s i t (TPi v t') = 
     -- avoiding free variable capture
     let fv = TVar ("_t" ++ show (supplyValue s))
-    in  TPi v (freeSubstitute (supplyLeft s) i (varSubstitute v fv t) t')
+    in  TPi v (freeSubstitute (supplyLeft s) i 
+                  (varSubstitute (supplyRight s) v fv t) t')
 freeSubstitute s i t (TApp t1 t2) = 
     TApp (freeSubstitute (supplyLeft  s) i t t1)
          (freeSubstitute (supplyRight s) i t t2)
 freeSubstitute _ _ _ t = t
 
-varSubstitute :: Var -> Type -> Type -> Type
-varSubstitute v t (TVar v') | v == v' = t
-varSubstitute v t (TPi v' t') | v /= v' = TPi v' (varSubstitute v t t')
-varSubstitute v t (TApp a b) = TApp (varSubstitute v t a) (varSubstitute v t b)
-varSubstitute _ _ t = t
+varSubstitute :: Supply Int -> Var -> Type -> Type -> Type
+varSubstitute s v t (TVar v') | v == v' = t
+varSubstitute s v t (TPi v' t') | v /= v' = 
+    -- avoid free variable caputre, as above
+    let fv = TVar ("_t" ++ show (supplyValue s))
+    in  TPi v (varSubstitute (supplyLeft s) v 
+                  (varSubstitute (supplyRight s) v' fv t) t')
+varSubstitute s v t (TApp a b) = 
+    TApp (varSubstitute (supplyLeft  s) v t a) 
+         (varSubstitute (supplyRight s) v t b)
+varSubstitute _ _ _ t = t
 
 integrate :: DExp -> Exp -> Exp
 integrate (DLambda v t) e = ELambda v t e

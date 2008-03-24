@@ -84,8 +84,8 @@ freeSubstituteDExp s i t (DLambda v t')
     = DLambda v (freeSubstitute s i t t')
 freeSubstituteDExp s i t (DType t')
     = DType (freeSubstitute s i t t')
-freeSubstituteDExp s i t (AppL e) = AppL $ freeSubstituteExp s i t e
-freeSubstituteDExp s i t (AppR e) = AppR $ freeSubstituteExp s i t e
+freeSubstituteDExp s i t (DAppL e) = DAppL $ freeSubstituteExp s i t e
+freeSubstituteDExp s i t (DAppR e) = DAppR $ freeSubstituteExp s i t e
 
 freeSubstituteExpCxt :: Supply Int -> Int -> Type -> ExpCxt -> ExpCxt
 freeSubstituteExpCxt s i t =

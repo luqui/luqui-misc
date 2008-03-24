@@ -18,6 +18,7 @@ mockEnv = Map.fromList
     , "cons"    .:: TPi "a" (TVar "a" --> TVar "[]" %% TVar "a" --> TVar "[]" %% TVar "a")
     , "nil"     .:: TPi "a" (TVar "[]" %% TVar "a")
     , "map"     .:: TPi "a" (TPi "b" ((TVar "a" --> TVar "b") --> TVar "[]" %% TVar "a" --> TVar "[]" %% TVar "b"))
+    , "fix"     .:: TPi "a" ((TVar "a" --> TVar "a") --> TVar "a")
     ]
     where
     infixr 8 -->

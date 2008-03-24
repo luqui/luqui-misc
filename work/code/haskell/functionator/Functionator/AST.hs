@@ -86,6 +86,10 @@ freeSubstituteDExp s i t (DType t')
     = DType (freeSubstitute s i t t')
 freeSubstituteDExp _ _ _ a = a
 
+freeSubstituteExpCxt :: Supply Int -> Int -> Type -> ExpCxt -> ExpCxt
+freeSubstituteExpCxt s i t =
+    zipWith (\s' -> freeSubstituteDExp s' i t) (split s)
+
 varSubstitute :: Supply Int -> Var -> Type -> Type -> Type
 varSubstitute s v t (TVar v') | v == v' = t
 varSubstitute s v t (TPi v' t') | v /= v' = 

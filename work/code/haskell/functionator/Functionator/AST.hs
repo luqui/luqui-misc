@@ -54,11 +54,16 @@ freeOccurs i (TFree j) = i == j
 freeOccurs i (TPi v t) = freeOccurs i t
 freeOccurs i (TApp a b) = freeOccurs i a || freeOccurs i b
 
-freeSubstitute :: Int -> Type -> Type -> Type
-freeSubstitute i t (TFree j) | i == j = t
-freeSubstitute i t (TPi v t') = TPi v (freeSubstitute i t t')  -- XXX need to avoid fv capture
-freeSubstitute i t (TApp t1 t2) = TApp (freeSubstitute i t t1) (freeSubstitute i t t2)
-freeSubstitute _ _ t = t
+freeSubstitute :: Supply Int -> Int -> Type -> Type -> Type
+freeSubstitute s i t (TFree j) | i == j = t
+freeSubstitute s i t (TPi v t') = 
+    -- avoiding free variable capture
+    let fv = TVar ("_t" ++ show (supplyValue s))
+    in  TPi v (freeSubstitute (supplyLeft s) i (varSubstitute v fv t) t')
+freeSubstitute s i t (TApp t1 t2) = 
+    TApp (freeSubstitute (supplyLeft  s) i t t1)
+         (freeSubstitute (supplyRight s) i t t2)
+freeSubstitute _ _ _ t = t
 
 varSubstitute :: Var -> Type -> Type -> Type
 varSubstitute v t (TVar v') | v == v' = t

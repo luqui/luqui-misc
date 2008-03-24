@@ -11,13 +11,6 @@ data Type
     | TPi   Var Type
     | TApp  Type Type
 
-instance Show Type where
-    show (TVar v) = v
-    show (TFree i) = "^" ++ show i
-    show (TPi v t) = "\\/" ++ v ++ ". " ++ show t
-    show (TApp (TApp (TVar "->") a) b) = "(" ++ show a ++ " -> " ++ show b ++ ")"
-    show (TApp a b) = "(" ++ show a ++ " " ++ show b ++ ")"
-
 data Exp
     = EVar    Var
     | ELambda Var Type Exp

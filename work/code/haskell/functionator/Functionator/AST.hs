@@ -10,13 +10,14 @@ data Type
     | TFree Int
     | TPi   Var Type
     | TApp  Type Type
+    deriving Show
 
 data Exp
     = EVar    Var
     | ELambda Var Type Exp
     | EApp    Exp Exp
     | EType   Type Exp
-    | EHole
+    | EHole   Type
     deriving Show
 
 data DExp
@@ -79,4 +80,6 @@ etype :: Type -> Supply Exp -> Supply Exp
 etype t e = liftM (EType t) e
 
 ehole :: Supply Exp
-ehole = return EHole
+ehole = do
+    varid <- alloc
+    return (EHole $ TFree varid)

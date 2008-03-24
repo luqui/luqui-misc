@@ -35,7 +35,7 @@ prettyExp pf (EApp a b) = par (parenApp pf) $
     prettyExp (ExpParenFlag False True) a <+> prettyExp (ExpParenFlag True True) b
 prettyExp pf (EType t e) = parens $
     prettyExp (ExpParenFlag False True) e <+> text ":" <+> prettyType (TypeParenFlag False False) t
-prettyExp pf EHole = text "[__]"
+prettyExp pf (EHole _) = text "[__]"
 
 prettyType :: TypeParenFlag -> Type -> Doc
 prettyType pf (TVar v)  = text v

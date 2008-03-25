@@ -1,3 +1,5 @@
+{-# LANGUAGE PatternGuards #-}
+
 module Functionator.Pointer where
 
 import Data.Supply

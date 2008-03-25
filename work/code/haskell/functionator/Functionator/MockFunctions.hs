@@ -9,6 +9,9 @@ mockEnv = Map.fromList
     [ "(+)"     .:: TVar "Int" --> TVar "Int" --> TVar "Int"
     , "(-)"     .:: TVar "Int" --> TVar "Int" --> TVar "Int"
     , "(*)"     .:: TVar "Int" --> TVar "Int" --> TVar "Int"
+    , "0"       .:: TVar "Int"
+    , "succ"    .:: TVar "Int" --> TVar "Int"
+    , "pred"    .:: TVar "Int" --> TVar "Int"
     , "even"    .:: TVar "Int" --> TVar "Bool"
     , "odd"     .:: TVar "Int" --> TVar "Bool"
     , "if"      .:: TPi "a" (TVar "Bool" --> TVar "a" --> TVar "a" --> TVar "a")

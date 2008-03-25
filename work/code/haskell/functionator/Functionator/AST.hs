@@ -1,7 +1,7 @@
 module Functionator.AST where
 
-import Functionator.Supply
-import Control.Monad
+import Data.Supply
+import Control.Monad.Reader
 
 type Var = String
 
@@ -10,92 +10,131 @@ data Type
     | TFree Int
     | TPi   Var Type
     | TApp  Type Type
-
-instance Show Type where
-    show (TVar v) = v
-    show (TFree i) = "^" ++ show i
-    show (TPi v t) = "\\/" ++ v ++ ". " ++ show t
-    show (TApp (TApp (TVar "->") a) b) = "(" ++ show a ++ " -> " ++ show b ++ ")"
-    show (TApp a b) = "(" ++ show a ++ " " ++ show b ++ ")"
+    deriving Show
 
 data Exp
     = EVar    Var
     | ELambda Var Type Exp
     | EApp    Exp Exp
     | EType   Type Exp
-    | EHole
+    | EHole   Type
     deriving Show
 
-data ExpZip
-    = ZTop
-    | ZLambda Var Type ExpZip
-    | ZAppL   ExpZip Exp
-    | ZAppR   Exp ExpZip
-    | ZType   Type ExpZip
+data DExp
+    = DLambda Var Type
+    | DAppL   Exp
+    | DAppR   Exp
+    | DType   Type
     deriving Show
 
-alphaEquiv :: Type -> Type -> Supply Bool
-alphaEquiv (TVar v) (TVar w)     = return $ v == w
-alphaEquiv (TFree i) (TFree j)   = return $ i == j
-alphaEquiv (TPi v t) (TPi v' t') = do
-    -- XXX need support for reordering of pis
-    fv <- liftM TFree alloc
-    alphaEquiv (typeSubstVar v fv t) (typeSubstVar v' fv t')
-alphaEquiv (TApp a b) (TApp a' b') = do
-    c1 <- alphaEquiv a a'
-    if not c1
-       then return False
-       else alphaEquiv b b'
+type ExpCxt = [DExp]
 
-typeSubstVar :: String -> Type -> Type -> Type
-typeSubstVar v with t = 
-    case t of
-         TVar v'  | v == v' -> with
-         TPi v' b | v /= v' -> TPi v' (typeSubstVar v with b)
-         TApp t u           -> TApp (typeSubstVar v with t) (typeSubstVar v with u)
-         t                  -> t
-
-unzipExp :: ExpZip -> Exp -> Exp
-unzipExp ZTop e = e
-unzipExp (ZLambda v t z) e = unzipExp z (ELambda v t e)
-unzipExp (ZAppL z r) e = unzipExp z (EApp e r)
-unzipExp (ZAppR l z) e = unzipExp z (EApp l e)
-unzipExp (ZType t z) e = unzipExp z (EType t e)
-
-findHoles :: Exp -> [ExpZip]
-findHoles e = findHoles' e ZTop
+updateCxt :: ExpCxt -> Exp -> ExpCxt -> Maybe ExpCxt
+updateCxt loc repl target = fmap reverse $ merge' (reverse loc) (reverse target)
     where
-    findHoles' (EVar v) cx = []
-    findHoles' (ELambda v t e) cx = findHoles' e (ZLambda v t cx)
-    findHoles' (EApp a b) cx = findHoles' a (ZAppL cx b) 
-                            ++ findHoles' b (ZAppR a cx)
-    findHoles' (EType t e) cx = findHoles' e (ZType t cx)
-    findHoles' EHole cx = [cx]
+    merge' _  [] = Nothing  -- entered my hole!
+    merge' [] _  = Nothing  -- replaced a parent node of mine
+       -- could compare for equality, but why
+    merge' (DLambda v t : xs) (DLambda v' t' : ys) = fmap (DLambda v t :) $ merge' xs ys
+    merge' (DAppL e : xs)     (DAppL e' : ys)      = fmap (DAppL e' :)    $ merge' xs ys
+    merge' (DAppR e : xs)     (DAppR e' : ys)      = fmap (DAppR e' :)    $ merge' xs ys
+    merge' (DType t : xs)     (DType t' : ys)      = fmap (DType t :)     $ merge' xs ys
+
+    merge' (DAppL re : xs) (DAppR le : ys) = Just $ DAppR (unzipExp (reverse xs) repl) : ys
+    merge' (DAppR le : xs) (DAppL re : ys) = Just $ DAppL (unzipExp (reverse xs) repl) : ys
+
+    merge' _ _ = error "Two contexts are not compatible during merge"
+
+unzipExp :: ExpCxt -> Exp -> Exp
+unzipExp cx e = foldl (\es dexp -> integrate dexp es) e cx
+
+freeOccurs :: Int -> Type -> Bool
+freeOccurs i (TVar v) = False
+freeOccurs i (TFree j) = i == j
+freeOccurs i (TPi v t) = freeOccurs i t
+freeOccurs i (TApp a b) = freeOccurs i a || freeOccurs i b
+
+freeSubstitute :: Supply Int -> Int -> Type -> Type -> Type
+freeSubstitute s i t (TFree j) | i == j = t
+freeSubstitute s i t (TPi v t') = 
+    -- avoiding free variable capture
+    let fv = "_t" ++ show (supplyValue s)
+    in  TPi fv (freeSubstitute (supplyLeft s) i t
+                  (varSubstitute (supplyRight s) v (TVar fv) t'))
+freeSubstitute s i t (TApp t1 t2) = 
+    TApp (freeSubstitute (supplyLeft  s) i t t1)
+         (freeSubstitute (supplyRight s) i t t2)
+freeSubstitute _ _ _ t = t
+
+freeSubstituteExp :: Supply Int -> Int -> Type -> Exp -> Exp
+freeSubstituteExp s i t (ELambda v t' e) = 
+    ELambda v (freeSubstitute (supplyLeft s) i t t') 
+              (freeSubstituteExp (supplyRight s) i t e)
+freeSubstituteExp s i t (EApp a b) =
+    EApp (freeSubstituteExp (supplyLeft s) i t a) 
+         (freeSubstituteExp (supplyRight s) i t b)
+freeSubstituteExp s i t (EType t' e) = 
+    EType (freeSubstitute (supplyLeft s) i t t')
+          (freeSubstituteExp (supplyRight s) i t e)
+freeSubstituteExp s i t (EHole t') = EHole (freeSubstitute s i t t')
+freeSubstituteExp _ _ _ a = a
+
+freeSubstituteDExp :: Supply Int -> Int -> Type -> DExp -> DExp
+freeSubstituteDExp s i t (DLambda v t')
+    = DLambda v (freeSubstitute s i t t')
+freeSubstituteDExp s i t (DType t')
+    = DType (freeSubstitute s i t t')
+freeSubstituteDExp s i t (DAppL e) = DAppL $ freeSubstituteExp s i t e
+freeSubstituteDExp s i t (DAppR e) = DAppR $ freeSubstituteExp s i t e
+
+freeSubstituteExpCxt :: Supply Int -> Int -> Type -> ExpCxt -> ExpCxt
+freeSubstituteExpCxt s i t =
+    zipWith (\s' -> freeSubstituteDExp s' i t) (split s)
+
+varSubstitute :: Supply Int -> Var -> Type -> Type -> Type
+varSubstitute s v t (TVar v') | v == v' = t
+varSubstitute s v t (TPi v' t') | v /= v' = 
+    -- avoid free variable caputre, as above
+    let fv = "_t" ++ show (supplyValue s)
+    in  TPi fv (varSubstitute (supplyLeft s) v t
+                  (varSubstitute (supplyRight s) v' (TVar fv) t'))
+varSubstitute s v t (TApp a b) = 
+    TApp (varSubstitute (supplyLeft  s) v t a) 
+         (varSubstitute (supplyRight s) v t b)
+varSubstitute _ _ _ t = t
+
+integrate :: DExp -> Exp -> Exp
+integrate (DLambda v t) e = ELambda v t e
+integrate (DAppL r) e = EApp e r
+integrate (DAppR l) e = EApp l e
+integrate (DType t) e = EType t e
 
 makeArrow :: Type -> Type -> Type
 makeArrow dom cod = TApp (TApp (TVar "->") dom) cod
 
-elam :: (Supply Exp -> Supply Exp) -> Supply Exp
-elam f = do
-    varid <- alloc
-    let varname = "v" ++ show varid
-    fv    <- liftM TFree alloc
-    body  <- f (return $ EVar varname)
-    return $ ELambda varname fv body
+type SExp = Supply Int -> Exp
 
-elam' :: Type -> (Supply Exp -> Supply Exp) -> Supply Exp
-elam' t f = do
-    varid <- alloc
-    let varname = "v" ++ show varid
-    body <- f (return $ EVar varname)
-    return $ ELambda varname t body
+elam :: (SExp -> SExp) -> SExp
+elam f s = 
+    let varid   = supplyValue s
+        varname = "v" ++ show varid
+        fv      = TFree (supplyValue (supplyLeft s))
+        body    = f (const $ EVar varname) (supplyRight s)
+    in ELambda varname fv body
+
+elam' :: Type -> (SExp -> SExp) -> SExp
+elam' t f s = 
+    let varid   = supplyValue s
+        varname = "v" ++ show varid
+        body    = f (const $ EVar varname) (supplyRight s)
+    in ELambda varname t body
 
 infixl 9 %
-(%) :: Supply Exp -> Supply Exp -> Supply Exp
-(%) e e' = liftM2 EApp e e'
+(%) :: SExp -> SExp -> SExp
+(%) e e' s = EApp (e (supplyLeft s)) (e (supplyRight s))
 
-etype :: Type -> Supply Exp -> Supply Exp
-etype t e = liftM (EType t) e
+etype :: Type -> SExp -> SExp
+etype t e s = EType t (e s)
 
-ehole :: Supply Exp
-ehole = return EHole
+ehole :: SExp
+ehole s = EHole $ TFree $ supplyValue s

@@ -4,6 +4,7 @@ module Functionator.Pointer where
 
 import Data.Supply
 import Functionator.AST
+import Debug.Trace
 import qualified Data.Map as Map
 
 data Pointer
@@ -11,9 +12,6 @@ data Pointer
               , pCxt :: ExpCxt
               , pExp :: Exp
               }
-
-instance Show Pointer where
-    show p = show (pCxt p) ++ " |- " ++ show (pExp p)
 
 freeSubstitutePointer :: Supply Int -> Int -> Type -> Pointer -> Pointer
 freeSubstitutePointer s i t p =
@@ -36,7 +34,7 @@ unify s (TPi v body) t p =
 unify s t t'@(TPi {}) p = unify s t' t p
 unify s (TVar v) (TVar v') p | v == v'   = p
 unify s (TApp a b) (TApp a' b') p = 
-    unify (supplyLeft s) a a' $ unify (supplyRight s) b b' p
+    unify (supplyLeft s) b b' $ unify (supplyRight s) a a' p
 unify _ a b _ = error $ "Can't unify " ++ show a ++ " with " ++ show b
 
 newPointer :: Map.Map Var Type -> Type -> Pointer
@@ -49,10 +47,8 @@ newPointer env typ =
 makeApp :: Supply Int -> Pointer -> Pointer
 makeApp s p
     | EHole resultType <- pExp p =
-        let s1:s2:_ = split s
-            t1 = TFree (supplyValue s1)
-            t2 = TFree (supplyValue s2)
-        in p { pExp = EApp (EHole (makeArrow t1 resultType)) (EHole t2) }
+        let t = TFree (supplyValue s)
+        in p { pExp = EApp (EHole (makeArrow t resultType)) (EHole t) }
     | otherwise = error $ "Expression not empty: " ++ show (pExp p)
 
 makeLambda :: Supply Int -> Var -> Pointer -> Pointer
@@ -75,7 +71,8 @@ makeVar s v p
 
 cxtEnv :: ExpCxt -> Map.Map Var Type
 cxtEnv (DLambda v t : cxs) = Map.insert v t (cxtEnv cxs)
-cxtEnv (_ : cxs)     = cxtEnv cxs
+cxtEnv (_ : cxs)           = cxtEnv cxs
+cxtEnv []                  = Map.empty
 
 goAppL :: Pointer -> Pointer
 goAppL p
@@ -92,3 +89,8 @@ goLambda p
     | ELambda v t e <- pExp p =  
         p { pExp = e, pCxt = DLambda v t : pCxt p }
     | otherwise = error "Not a Lambda"
+
+goUp :: Pointer -> Pointer
+goUp p
+    | cx:cxs <- pCxt p = p { pExp = integrate cx (pExp p), pCxt = cxs }
+    | otherwise = error "No context to go up on"

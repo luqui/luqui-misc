@@ -1,4 +1,4 @@
-module Functionator.Main where
+module Main where
 
 import Functionator.CrappyConsoleUI
 

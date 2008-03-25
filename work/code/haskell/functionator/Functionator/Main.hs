@@ -1,5 +1,5 @@
 module Functionator.Main where
 
-import Functionator.ConsoleUI
+import Functionator.CrappyConsoleUI
 
 main = consoleUI

@@ -1,7 +1,7 @@
-{-# OPTIONS_GHC -fglasgow-exts -fth #-}
+{-# LANGUAGE TemplateHaskell, CPP #-}
 
 -- |This module provides a simple abstract data type for
--- a "piece" of a data stucture that can be read from and
+-- a piece of a data stucture that can be read from and
 -- written to.  It provides an automatic Template Haskell
 -- routine to scour data type definitions and generate
 -- accessor objects for them automatically.
@@ -73,16 +73,17 @@ modA a f = liftM f (getA a) >>= putA a
 -- of the data type, and for each field ending in an underscore
 -- generates an accessor of the same name without the underscore.
 --
--- It is @nameDeriveAccessors n f@ where @f@ satisfies 
+-- It is "nameDeriveAccessors" n f where @f@ satisfies 
+--
 -- > f (s ++ "_") = Just s
--- > f x          = Nothing   -- otherwise
+-- > f x          = x       -- otherwise
 --
 -- For example, given the data type:
 --
 -- > data Score = Score { p1Score_ :: Int
---                      , p2Score_ :: Int
---                      , rounds   :: Int
---                      }
+-- >                    , p2Score_ :: Int
+-- >                    , rounds   :: Int
+-- >                    }
 --
 -- @deriveAccessors@ will generate the following objects:
 --
@@ -90,6 +91,7 @@ modA a f = liftM f (getA a) >>= putA a
 -- > p1Score = Accessor p1Score_ (\x s -> s { p1Score_ = x })
 -- > p2Score :: Accessor Score Int
 -- > p2Score = Accessor p2Score_ (\x s -> s { p2Score_ = x })
+--
 deriveAccessors :: Name -> Q [Dec]
 deriveAccessors n = nameDeriveAccessors n transformName
     where
@@ -127,6 +129,9 @@ nameDeriveAccessors t namer = do
             Nothing -> return Nothing
             Just n -> liftM Just $ makeAcc name n
 
+    -- haddock doesn't grok TH
+#ifndef __HADDOCK__
+
     makeAcc :: Name -> Name -> Q Dec
     makeAcc name accName = do
         body <- [|
@@ -136,3 +141,5 @@ nameDeriveAccessors t namer = do
                      }
                 |]
         return $ ValD (VarP accName) (NormalB body) []
+
+#endif

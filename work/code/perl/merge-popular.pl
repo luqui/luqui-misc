@@ -32,14 +32,15 @@ sub get_commits {
 foreach my $player (@players) {
     my %commits = get_commits("heads/$player");
     for (keys %commits) {
-        $counts{$_}++;
+        push @{$counts{$_}}, $player;
         $desc{$_} ||= $commits{$_};
     }
 }
 
 my @merges;
 for my $k (keys %counts) {
-    if ($counts{$k} > @players/2 && !$already{$k}) {
+    if (@{$counts{$k}} > @players/2 && !$already{$k}) {
+        print "Supported by @{$counts{$k}}:\n";
         print $desc{$k};
         push @merges, $k;
     }

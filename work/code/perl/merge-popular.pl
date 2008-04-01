@@ -1,8 +1,13 @@
 #!/usr/bin/perl
 
+# For the git revolution game.  Scans all branches
+# in @players and finds the commits which are in a
+# majority of the branches, and merges them into 
+# the master.
+
 use strict;
 
-my @players = qw{luke namaste travis};
+my @players = die "Fill in the list of players (and branches)";
 my %counts;
 my %already;
 my %desc;

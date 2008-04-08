@@ -8,11 +8,10 @@ Version: 0.1
 Stability: experimental
 Synopsis: A functional interface to 2D drawing in OpenGL
 License: LGPL
-License-file: LICENSE
 Category: Graphics
 Author: Luke Palmer
 Maintainer: lrpalmer@gmail.com
 Build-Type: Simple
-Build-Depends: base, mtl, sdl, sdl-image, sdl-ttf
+Build-Depends: base, mtl, SDL, SDL-ttf, SDL-image, OpenGL
 Exposed-Modules: Graphics.DrawingCombinators
 Extra-Source-Files: example.hs

@@ -92,7 +92,9 @@ instance Monoid Drawing where
     mappend (Drawing a) (Drawing b) = Drawing $ a >> b
 
 
--- Initialization
+{----------------
+  Initialization
+----------------}
 
 -- |Perform initialization of the library.  This can fail.
 init :: IO ()
@@ -103,7 +105,9 @@ init = do
         when (not success) $ fail "SDL_ttf initialization failed"
 
 
--- Geometric Primitives
+{----------------
+  Geometric Primitives
+-----------------}
 
 -- | Draw a single pixel at the specified point.
 point :: Vec2 -> Drawing
@@ -134,7 +138,9 @@ circle :: Drawing
 circle = regularPoly 24
 
 
--- Transformations
+{-----------------
+  Transformations
+------------------}
 
 -- | Translate the given drawing by the given amount.
 translate :: Vec2 -> Drawing -> Drawing
@@ -162,6 +168,10 @@ scale x y d = Drawing $ do
         GL.scale x y 1
         runReaderT (unDrawing d) r
 
+{------------
+  Colors
+-------------}
+
 -- | @colorFunc f d@ modifies all colors appearing in @d@ with
 -- the function @f@.  For example:
 --
@@ -187,7 +197,9 @@ color :: Color -> Drawing -> Drawing
 color c = colorFunc (const c)
 
 
--- Images and Sprites
+{-------------------------
+  Sprites (bitmap images)
+-------------------------}
 
 -- | A sprite represents a bitmap image.
 data Sprite = Sprite { spriteObject :: GL.TextureObject
@@ -220,9 +232,12 @@ freeTexture (GL.TextureObject b) = do
 
 -- | Indicate how a nonrectangular image is to be mapped to a sprite.
 data SpriteScaling
-    = ScaleMax    -- |^ ScaleMax will set the maximum of the height and width of the image to 1.
-    | ScaleWidth  -- |^ ScaleWidth will set the width of the image to 1, and scale the height appropriately.
-    | ScaleHeight -- |^ ScaleHeight will set the height of the image to 1, and scale the width appropriately.
+    -- | ScaleMax will set the maximum of the height and width of the image to 1.
+    = ScaleMax    
+    -- | ScaleWidth will set the width of the image to 1, and scale the height appropriately.
+    | ScaleWidth  
+    -- | ScaleHeight will set the height of the image to 1, and scale the width appropriately. 
+    | ScaleHeight
 
 -- | Convert an SDL.Surface to a Sprite.
 surfaceToSprite :: SpriteScaling -> SDL.Surface -> IO Sprite
@@ -311,8 +326,9 @@ sprite spr = Drawing $ liftIO $ do
         GL.vertex   $ GL.Vertex2 (-xofs) (-yofs)
     GL.textureBinding GL.Texture2D GL.$= oldtex
 
-
--- Text
+{---------
+ Text
+---------}
 
 data Font = Font { getFont :: TTF.Font }
 

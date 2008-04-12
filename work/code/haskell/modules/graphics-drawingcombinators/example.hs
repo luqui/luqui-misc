@@ -9,7 +9,7 @@ initScreen = do
     return ()
 
 
-drawing :: Draw.Drawing
+drawing :: Draw.Draw ()
 drawing = Draw.translate (0.0,0.2) $ Draw.scale 0.3 0.3 $ Draw.color (1,0,0,0) Draw.circle
 
 main :: IO ()

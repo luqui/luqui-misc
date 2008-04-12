@@ -22,7 +22,9 @@
 module Graphics.DrawingCombinators
     (
     -- * Basic types
-      Drawing, runDrawing, draw, unsafeDraw, Vec2
+      Draw, runDrawing, draw, Vec2
+    -- * Combinators
+    , over, empty
     -- * Initialization
     , init
     -- * Geometric Primitives
@@ -54,42 +56,49 @@ import System.IO.Unsafe
 type Vec2 = (Double,Double)
 type Color = (Double,Double,Double,Double)
 
--- |Drawing is the main type built by combinators in this module.
--- It represents a picture that can be drawn using @draw@ 
--- after possibly being transformed.
---
--- The Monoid instance drawings works as follows: a `mappend` b
--- draws b "on top of" a.
-newtype Drawing = Drawing { unDrawing :: ReaderT DrawCxt IO () }
+type DrawM = ReaderT DrawCxt IO ()
+
+data Draw a where
+    DrawGL      :: DrawM -> Draw ()
+    TransformGL :: (DrawM -> DrawM) -> Draw a -> Draw a
+    Empty       :: Draw a
+    Over        :: Draw a -> Draw a -> Draw a
+    FMap        :: (a -> b) -> Draw a -> Draw b
 
 -- |Draw a Drawing on the screen in the current OpenGL coordinate
 -- system (which, in absense of information, is (-1,-1) in the
 -- lower left and (1,1) in the upper right.
-runDrawing :: Drawing -> IO ()
-runDrawing d = runReaderT (unDrawing d) initDrawCxt
+runDrawing :: Draw a -> IO ()
+runDrawing d = runReaderT (run' d) initDrawCxt
+    where
+    run' :: Draw a -> DrawM
+    run' (DrawGL m) = m
+    run' (TransformGL f m) = f (run' m)
+    run' (Over a b) = run' b >> run' a
+    run' (FMap f d) = run' d
 
 -- |Like runDrawing, but clears the screen first.  This is so
 -- you can use this module and pretend that OpenGL doesn't
 -- exist at all.
-draw :: Drawing -> IO ()
+draw :: Draw a -> IO ()
 draw d = do
     GL.clear [GL.ColorBuffer]
     runDrawing d
-
--- |Convert an IO action into a drawing, for when you need
--- some OpenGL capabilities that are not implemented in this
--- module.  If you use this, please behave.
-unsafeDraw :: IO () -> Drawing
-unsafeDraw = Drawing . lift
 
 data DrawCxt 
     = DrawCxt { colorTrans :: Color -> Color }
 
 initDrawCxt = DrawCxt { colorTrans = id }
 
-instance Monoid Drawing where
-    mempty = Drawing $ return ()
-    mappend (Drawing a) (Drawing b) = Drawing $ a >> b
+over :: Draw a -> Draw a -> Draw a
+over = Over
+
+empty :: Draw a
+empty = Empty
+
+instance Monoid (Draw a) where
+    mempty = empty
+    mappend = over
 
 
 {----------------
@@ -110,21 +119,21 @@ init = do
 -----------------}
 
 -- | Draw a single pixel at the specified point.
-point :: Vec2 -> Drawing
-point (ax,ay) = Drawing $ lift $
+point :: Vec2 -> Draw ()
+point (ax,ay) = DrawGL $ lift $
     GL.renderPrimitive GL.Points $
         GL.vertex $ GL.Vertex2 ax ay
 
 -- | Draw a line connecting the two given points.
-line :: Vec2 -> Vec2 -> Drawing
-line (ax,ay) (bx,by) = Drawing $ lift $ 
+line :: Vec2 -> Vec2 -> Draw ()
+line (ax,ay) (bx,by) = DrawGL $ lift $ 
     GL.renderPrimitive GL.Lines $ do
         GL.vertex $ GL.Vertex2 ax ay
         GL.vertex $ GL.Vertex2 bx by
 
 -- | Draw a regular polygon centered at the origin with n sides.
-regularPoly :: Int -> Drawing
-regularPoly n = Drawing $ lift $ do
+regularPoly :: Int -> Draw ()
+regularPoly n = DrawGL $ lift $ do
     let scaler = 2 * pi / fromIntegral n :: Double
     GL.renderPrimitive GL.TriangleFan $ do
         GL.vertex $ (GL.Vertex2 0 0 :: GL.Vertex2 Double)
@@ -134,7 +143,7 @@ regularPoly n = Drawing $ lift $ do
 
 -- | Draw a unit circle centered at the origin.  This is equivalent
 -- to @regularPoly 24@.
-circle :: Drawing
+circle :: Draw ()
 circle = regularPoly 24
 
 
@@ -143,30 +152,30 @@ circle = regularPoly 24
 ------------------}
 
 -- | Translate the given drawing by the given amount.
-translate :: Vec2 -> Drawing -> Drawing
-translate (byx,byy) d = Drawing $ do
+translate :: Vec2 -> Draw a -> Draw a
+translate (byx,byy) = TransformGL $ \d -> do
     r <- ask
     lift $ GL.preservingMatrix $ do
         GL.translate (GL.Vector3 byx byy 0)
-        runReaderT (unDrawing d) r
+        runReaderT d r
 
 -- | Rotate the given drawing counterclockwise by the
 -- given number of radians.
-rotate :: Double -> Drawing -> Drawing
-rotate rad d = Drawing $ do
+rotate :: Double -> Draw a -> Draw a
+rotate rad = TransformGL $ \d -> do
     r <- ask
     lift $ GL.preservingMatrix $ do
         GL.rotate (180 * rad / pi) (GL.Vector3 0 0 1)
-        runReaderT (unDrawing d) r
+        runReaderT d r
 
 -- | @scale x y d@ scales @d@ by a factor of @x@ in the
 -- horizontal direction and @y@ in the vertical direction.
-scale :: Double -> Double -> Drawing -> Drawing
-scale x y d = Drawing $ do
+scale :: Double -> Double -> Draw a -> Draw a
+scale x y = TransformGL $ \d -> do
     r <- ask
     lift $ GL.preservingMatrix $ do
         GL.scale x y 1
-        runReaderT (unDrawing d) r
+        runReaderT d r
 
 {------------
   Colors
@@ -179,21 +188,21 @@ scale x y d = Drawing $ do
 --
 -- Will draw d at greater transparency, regardless of the calls
 -- to color within.
-colorFunc :: (Color -> Color) -> Drawing -> Drawing
-colorFunc cf d = Drawing $ do
+colorFunc :: (Color -> Color) -> Draw a -> Draw a
+colorFunc cf = TransformGL $ \d -> do
     r <- ask
     let trans    = colorTrans r
         newtrans = trans . cf
         oldcolor = trans (1,1,1,1)
         newcolor = newtrans (1,1,1,1)
     setColor newcolor
-    local (const (r { colorTrans = newtrans })) $ unDrawing d
+    local (const (r { colorTrans = newtrans })) d
     setColor oldcolor
     where
     setColor (r,g,b,a) = lift $ GL.color $ GL.Color4 r g b a
 
 -- | @color c d@ sets the color of the drawing to exactly @c@.
-color :: Color -> Drawing -> Drawing
+color :: Color -> Draw a -> Draw a
 color c = colorFunc (const c)
 
 
@@ -309,8 +318,8 @@ imageToSprite :: SpriteScaling -> FilePath -> IO Sprite
 imageToSprite scaling path = Image.load path >>= surfaceToSprite scaling
 
 -- | Draw a sprite at the origin.
-sprite :: Sprite -> Drawing
-sprite spr = Drawing $ liftIO $ do
+sprite :: Sprite -> Draw ()
+sprite spr = DrawGL $ liftIO $ do
     oldtex <- GL.get (GL.textureBinding GL.Texture2D)
     GL.textureBinding GL.Texture2D GL.$= (Just $ spriteObject spr)
     GL.renderPrimitive GL.Quads $ do
@@ -345,5 +354,5 @@ textSprite font str = do
     surfaceToSprite ScaleHeight surf
 
 -- | Draw a string using a font.  The resulting string will have height 1.
-text :: Font -> String -> Drawing
+text :: Font -> String -> Draw ()
 text font str = sprite $ unsafePerformIO $ textSprite font str

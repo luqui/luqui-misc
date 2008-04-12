@@ -74,6 +74,7 @@ runDrawing d = runReaderT (run' d) initDrawCxt
     run' :: Draw a -> DrawM
     run' (DrawGL m) = m
     run' (TransformGL f m) = f (run' m)
+    run' Empty = return ()
     run' (Over a b) = run' b >> run' a
     run' (FMap f d) = run' d
 
@@ -95,6 +96,9 @@ over = Over
 
 empty :: Draw a
 empty = Empty
+
+instance Functor Draw where
+    fmap = FMap
 
 instance Monoid (Draw a) where
     mempty = empty

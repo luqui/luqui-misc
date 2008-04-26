@@ -56,11 +56,11 @@ import System.IO.Unsafe
 type Vec2 = (Double,Double)
 type Color = (Double,Double,Double,Double)
 
-type DrawM = ReaderT DrawCxt IO ()
+type DrawM a = ReaderT DrawCxt IO a
 
 data Draw a where
-    DrawGL      :: DrawM -> Draw ()
-    TransformGL :: (DrawM -> DrawM) -> Draw a -> Draw a
+    DrawGL      :: DrawM () -> Draw ()
+    TransformGL :: (forall x. DrawM x -> DrawM x) -> Draw a -> Draw a
     Empty       :: Draw a
     Over        :: Draw a -> Draw a -> Draw a
     FMap        :: (a -> b) -> Draw a -> Draw b
@@ -71,7 +71,7 @@ data Draw a where
 runDrawing :: Draw a -> IO ()
 runDrawing d = runReaderT (run' d) initDrawCxt
     where
-    run' :: Draw a -> DrawM
+    run' :: Draw a -> DrawM ()
     run' (DrawGL m) = m
     run' (TransformGL f m) = f (run' m)
     run' Empty = return ()
@@ -200,8 +200,9 @@ colorFunc cf = TransformGL $ \d -> do
         oldcolor = trans (1,1,1,1)
         newcolor = newtrans (1,1,1,1)
     setColor newcolor
-    local (const (r { colorTrans = newtrans })) d
+    result <- local (const (r { colorTrans = newtrans })) d
     setColor oldcolor
+    return result
     where
     setColor (r,g,b,a) = lift $ GL.color $ GL.Color4 r g b a
 

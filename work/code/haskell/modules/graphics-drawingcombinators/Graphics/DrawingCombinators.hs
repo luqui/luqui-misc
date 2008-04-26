@@ -1,3 +1,5 @@
+{-# LANGUAGE GADTs, RankNTypes #-}
+
 --------------------------------------------------------------
 -- | 
 -- Module      : Graphics.DrawingCombinators
@@ -23,6 +25,8 @@ module Graphics.DrawingCombinators
     (
     -- * Basic types
       Draw, runDrawing, draw, Vec2
+    -- * Selection
+    , selectRegion, click
     -- * Combinators
     , over, empty
     -- * Initialization
@@ -52,6 +56,8 @@ import qualified Graphics.UI.SDL.TTF as TTF
 import System.Mem.Weak
 import Data.IORef 
 import System.IO.Unsafe
+import qualified Data.Set as Set
+import Debug.Trace
 
 type Vec2 = (Double,Double)
 type Color = (Double,Double,Double,Double)
@@ -67,7 +73,7 @@ data Draw a where
 
 -- |Draw a Drawing on the screen in the current OpenGL coordinate
 -- system (which, in absense of information, is (-1,-1) in the
--- lower left and (1,1) in the upper right.
+-- lower left and (1,1) in the upper right).
 runDrawing :: Draw a -> IO ()
 runDrawing d = runReaderT (run' d) initDrawCxt
     where
@@ -85,6 +91,49 @@ draw :: Draw a -> IO ()
 draw d = do
     GL.clear [GL.ColorBuffer]
     runDrawing d
+
+
+selectRegion :: Vec2 -> Vec2 -> Draw a -> IO (Maybe a)
+selectRegion ll ur drawing = do
+    ((), recs) <- GL.getHitRecords 64 $ do -- XXX hard coded crap
+        GL.preservingMatrix $ do
+            GLU.ortho2D (fst ll) (fst ur) (snd ll) (snd ur)
+            runReaderT (draw' 0 drawing) initDrawCxt
+            return ()
+    let nameList = concatMap (\(GL.HitRecord _ _ ns) -> ns) (maybe [] id recs)
+    let nameSet  = Set.fromList $ map (\(GL.Name n) -> n) nameList
+    return $ fst $ lookupName 0 nameSet drawing
+    where
+    draw' :: GL.GLuint -> Draw a -> DrawM GL.GLuint
+    draw' n (DrawGL m) = do
+        r <- ask
+        lift $ GL.withName (GL.Name n) $ runReaderT m r
+        return $! n+1
+    draw' n (TransformGL f m) = f (draw' n m)
+    draw' n Empty = return n
+    draw' n (Over a b) = do
+        n' <- draw' n b
+        draw' n' a
+    draw' n (FMap f d) = draw' n d
+    
+    lookupName :: GL.GLuint -> Set.Set GL.GLuint -> Draw a -> (Maybe a, GL.GLuint)
+    lookupName n names (DrawGL m)
+        | n `Set.member` names = (Just (), n + 1)
+        | otherwise            = (Nothing, n + 1)
+    lookupName n names (TransformGL _ m) = lookupName n names m
+    lookupName n names Empty = (Nothing, n)
+    lookupName n names (Over a b) =
+        let (lb, n')  = lookupName n  names b
+            (la, n'') = lookupName n' names a
+        in (la `mplus` lb, n'')
+    lookupName n names (FMap f d) = 
+        let (l, n') = lookupName n names d
+        in (fmap f l, n')
+
+click :: Vec2 -> Draw a -> IO (Maybe a)
+click (px,py) = selectRegion (px-e,py-e) (px+e,py+e)
+    where
+    e = 1/1024
 
 data DrawCxt 
     = DrawCxt { colorTrans :: Color -> Color }

@@ -13,7 +13,11 @@ initScreen = do
 
 
 drawing :: Draw.Draw ()
-drawing = Draw.translate (0.0,0.2) $ Draw.scale 0.3 0.3 $ Draw.color (1,0,0,0) Draw.circle
+drawing = Draw.translate (0.0,0.2) 
+        $ Draw.scale 0.3 0.3 
+        $ Draw.color (1,0,0,0) 
+        $ Draw.convexPoly
+            [(1,1),(1,-1),(-1,-1),(-1,1)]
 
 main :: IO ()
 main = do

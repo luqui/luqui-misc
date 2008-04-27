@@ -8,7 +8,7 @@
 --
 -- Maintainer  : Luke Palmer <lrpalmer@gmail.com>
 -- Stability   : experimental
--- Portability : presumably portable
+-- Portability : needs GADTs and rank n types
 --
 -- Drawing combinators as a functional interface to OpenGL
 -- (for 2D drawings only... for now).
@@ -32,7 +32,7 @@ module Graphics.DrawingCombinators
     -- * Initialization
     , init
     -- * Geometric Primitives
-    , point, line, regularPoly, circle
+    , point, line, regularPoly, circle, convexPoly
     -- * Transformations
     , translate, rotate, scale
     -- * Colors 
@@ -64,6 +64,8 @@ type Color = (Double,Double,Double,Double)
 
 type DrawM a = ReaderT DrawCxt IO a
 
+-- | @Draw a@ represents a drawing which returns a value of type
+-- a when selected.
 data Draw a where
     DrawGL      :: DrawM () -> Draw ()
     TransformGL :: (forall x. DrawM x -> DrawM x) -> Draw a -> Draw a
@@ -92,7 +94,9 @@ draw d = do
     GL.clear [GL.ColorBuffer]
     runDrawing d
 
-
+-- | Given a bounding box, lower left and upper right in the default coordinate
+-- system (-1,-1) to (1,1), return the topmost drawing's value (with respect to
+-- @`over`@) intersecting that bounding box.
 selectRegion :: Vec2 -> Vec2 -> Draw a -> IO (Maybe a)
 selectRegion ll ur drawing = do
     ((), recs) <- GL.getHitRecords 64 $ do -- XXX hard coded crap
@@ -199,6 +203,12 @@ regularPoly n = DrawGL $ lift $ do
 circle :: Draw ()
 circle = regularPoly 24
 
+-- | Draw a convex polygon given by the list of points.
+convexPoly :: [Vec2] -> Draw ()
+convexPoly points = DrawGL $ lift $ do
+    GL.renderPrimitive GL.Polygon $ do
+        forM_ points $ \(x,y) -> do
+            GL.vertex $ GL.Vertex2 x y
 
 {-----------------
   Transformations

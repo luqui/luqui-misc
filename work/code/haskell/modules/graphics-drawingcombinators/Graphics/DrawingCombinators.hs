@@ -19,6 +19,8 @@
 --
 -- It is recommended that you use this module in combination
 -- with SDL; it has not been tested in any other environments.
+-- For some reason the selection stuff ("selectRegion", "click")
+-- crashes GHCi, but it works okay compiled.
 --------------------------------------------------------------
 
 module Graphics.DrawingCombinators

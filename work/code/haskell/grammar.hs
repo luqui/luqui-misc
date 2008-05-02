@@ -8,8 +8,8 @@ data Symbol a
 testGrammar = s
     where
     s = Nonterminal [[addExpr]]
-    addExpr = Nonterminal [[mulExpr], [mulExpr, Terminal '+', addExpr]]
-    mulExpr = Nonterminal [[term], [term, Terminal '*', mulExpr]]
+    addExpr = Nonterminal [[mulExpr], [addExpr, Terminal '+', mulExpr]]
+    mulExpr = Nonterminal [[term], [mulExpr, Terminal '*', term]]
     term = Nonterminal [[number], [Terminal '(', s, Terminal ')']]
 
     digit = Nonterminal $ map (return . Terminal . head . show) [0..9]

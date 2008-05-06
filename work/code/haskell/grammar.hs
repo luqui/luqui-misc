@@ -12,8 +12,7 @@ testGrammar = s
     mulExpr = Nonterminal [[term], [mulExpr, Terminal '*', term]]
     term = Nonterminal [[number], [Terminal '(', s, Terminal ')']]
 
-    digit = Nonterminal $ map (return . Terminal . head . show) [0..9]
-    number = Nonterminal [[digit], [digit, number]]
+    number = Nonterminal $ map (map Terminal . show) [0..]
 
 
 enumerate = runOmega . enumerate'

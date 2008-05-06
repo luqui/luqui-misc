@@ -44,19 +44,15 @@ import qualified Data.Traversable as Traversable
 -- a list of lists with the property that for every x y 
 -- there is an n such that @xs !! x !! y == diagonal xs !! n@.
 diagonal :: [[a]] -> [a]
-diagonal = diagonal' 0
+diagonal = concat . stripe
     where
-    diagonal' _ [] = []
-    diagonal' n xss =
-        let (str, xss') = stripe n xss
-        in str ++ diagonal' (n+1) xss'
+    stripe [] = []
+    stripe ([]:xss) = stripe xss
+    stripe ((x:xs):xss) = [x] : zipCons xs (stripe xss)
 
-    stripe 0 xss          = ([],xss)
-    stripe n []           = ([],[])
-    stripe n ([]:xss)     = stripe n xss
-    stripe n ((x:xs):xss) = 
-        let (nstripe, nlists) = stripe (n-1) xss
-        in (x:nstripe, xs:nlists)
+    zipCons [] ys = ys
+    zipCons xs [] = map (:[]) xs
+    zipCons (x:xs) (y:ys) = (x:y) : zipCons xs ys
 
 newtype Omega a = Omega { runOmega :: [a] }
 

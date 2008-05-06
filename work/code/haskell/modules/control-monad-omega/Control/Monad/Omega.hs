@@ -9,25 +9,24 @@
 -- Portability : portable
 --
 -- A monad for enumerating sets: like the list monad, but
--- \"breadth-first\".
+-- impervious to infinite descent.
 --
--- It addresses the problem seen when trying to generate
--- the list of all pairs of naturals with
--- @[ (x,y) | x <- [0..], y <- [0..] ]@, which is broken
--- since the first element of every reachable pair will
--- be 0.
+-- A depth-first search of a data structure can fail to give a full traversal
+-- if it has an infinitely deep path.  Likewise, a breadth-first search of a
+-- data structure can fall short if it has an infinitely branching node.
+-- Omega addresses this problem by using a \"diagonal\" traversal
+-- that gracefully dissolves such data.
 --
--- Using Omega this can be written
--- 
--- > pairs = runOmega $ do
--- >     x <- each [0..]
--- >     y <- each [0..]
--- >     return (x,y)
+-- So while @liftM2 (,) [0..] [0..]@ gets \"stuck\" generating tuples whose
+-- first element is zero, @"runOmega" $ liftM2 (,) ("each" [0..]) ("each"
+-- [0..])@ generates all pairs of naturals.
 --
 -- More precisely, if @x@ appears at a finite index in
 -- @xs@, and @y@ appears at a finite index in @f x@,
--- then @y@ will appear at a finite index in
--- @each xs >>= f@. 
+-- then @y@ will appear at a finite index in @each xs >>= f@. 
+--
+-- This monad gets its name because it is a monad over sets of order type
+-- omega.
 ----------------------------------------------
 
 module Control.Monad.Omega 
@@ -41,8 +40,9 @@ import qualified Data.Traversable as Traversable
 
 -- | This is the hinge algorithm of the Omega monad,
 -- exposed because it can be useful on its own.  Joins 
--- a list of lists with the property that for every x y 
--- there is an n such that @xs !! x !! y == diagonal xs !! n@.
+-- a list of lists with the property that for every i j 
+-- there is an n such that @xs !! i !! j == diagonal xs !! n@.
+-- In particular, @n <= (i+j)*(i+j+1)/2 + j@.
 diagonal :: [[a]] -> [a]
 diagonal = concat . stripe
     where

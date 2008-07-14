@@ -15,7 +15,7 @@ where
 
 import Control.Monad
 import Control.Applicative
-import Control.Concurrent.STM
+import Data.IORef
 
 data SignalTag
     = TagEarly
@@ -27,14 +27,14 @@ data Signal :: * -> * where
     SigMap   :: (a -> b) -> Signal a -> Signal b
     SigApply :: Signal (a -> b) -> Signal a -> Signal b
     SigCell  :: SignalCell a -> Signal a
-    SigVar   :: TVar a -> Signal a
+    SigVar   :: IORef a -> Signal a
 
-newtype SignalCell a = SignalCell (TVar (Signal a, SignalTag))
+newtype SignalCell a = SignalCell (IORef (Signal a, SignalTag))
 
-readSignal :: Signal a -> STM a
+readSignal :: Signal a -> IO a
 readSignal = liftM fst . readSignal'
     where
-    readSignal' :: Signal a -> STM (a, Maybe (Signal a))
+    readSignal' :: Signal a -> IO (a, Maybe (Signal a))
     readSignal' (SigConst x) = return (x, Nothing)
 
     readSignal' (SigMap f siga) = do
@@ -52,17 +52,17 @@ readSignal = liftM fst . readSignal'
         return (f a, repl)
     
     readSignal' (SigCell (SignalCell cell)) = do
-        (sig, tag) <- readTVar cell
+        (sig, tag) <- readIORef cell
         (v, repl) <- readSignal' sig
         case repl of
              Nothing -> return ()
-             Just c -> writeTVar cell (c, tag)
+             Just c -> writeIORef cell (c, tag)
         case tag of
              TagEarly -> return (v, Nothing)
              TagLate  -> return (v, Just sig)
 
     readSignal' (SigVar var) = do
-        val <- readTVar var
+        val <- readIORef var
         return (val, Nothing)
 
 constSignal :: a -> Signal a
@@ -71,17 +71,17 @@ constSignal = SigConst
 cellSignal :: SignalCell a -> Signal a
 cellSignal = SigCell
 
-varSignal :: TVar a -> Signal a
+varSignal :: IORef a -> Signal a
 varSignal = SigVar
 
-newSignalCell :: Signal a -> STM (SignalCell a)
-newSignalCell a = SignalCell <$> newTVar (a, TagEarly)
+newSignalCell :: Signal a -> IO (SignalCell a)
+newSignalCell a = SignalCell <$> newIORef (a, TagEarly)
 
-overwriteSignalCell :: SignalCell a -> Signal a -> STM ()
+overwriteSignalCell :: SignalCell a -> Signal a -> IO ()
 overwriteSignalCell (SignalCell cell) a = do
-    (_,tag) <- readTVar cell
+    (_,tag) <- readIORef cell
     case tag of
-         TagEarly -> writeTVar cell (a, TagLate)
+         TagEarly -> writeIORef cell (a, TagLate)
          TagLate  -> fail "attempt to overwrite late signal"
 
 instance Functor Signal where
@@ -92,5 +92,3 @@ instance Functor Signal where
 instance Applicative Signal where
     pure = SigConst
     (<*>) = SigApply
-
-

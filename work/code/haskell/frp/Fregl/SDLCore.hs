@@ -24,7 +24,7 @@ import Fregl.Core hiding (when)
 import qualified Fregl.Drawing as Draw
 import Data.List
 import qualified Data.Set as Set
-import Control.Concurrent.STM
+import Data.IORef
 import System.IO.Unsafe
 import Control.Concurrent
 
@@ -74,14 +74,14 @@ waitHelper f = do
          Just x  -> return x
          Nothing -> waitHelper f
 
-mousePosVar :: TVar (Double,Double)
-mousePosVar = unsafePerformIO $ newTVarIO (0,0)
+mousePosVar :: IORef (Double,Double)
+mousePosVar = unsafePerformIO $ newIORef (0,0)
 
 mousePos :: Signal (Double,Double)
 mousePos = varSignal mousePosVar
 
-keyStateVar :: TVar (Set.Set SDLKey)
-keyStateVar = unsafePerformIO $ newTVarIO Set.empty
+keyStateVar :: IORef (Set.Set SDLKey)
+keyStateVar = unsafePerformIO $ newIORef Set.empty
 
 keyStateSig :: Signal (Set.Set SDLKey)
 keyStateSig = varSignal keyStateVar
@@ -143,7 +143,7 @@ mainLoop cxt pretime = do
 
 convertEvent _ (SDL.MouseMotion x y _ _) = do
     let pos = convertCoords x y
-    atomically $ writeTVar mousePosVar pos
+    writeIORef mousePosVar pos
     return $ Just $ MouseEvent MouseMotion pos
 convertEvent d (SDL.MouseButtonDown x y but) = do
     hits <- getHits d (fromIntegral x) (fromIntegral y)
@@ -164,14 +164,12 @@ convertEvent d (SDL.MouseButtonUp x y but) = do
                 MouseEvent (MouseButton b MouseUp hits) (convertCoords x y)
              ) but'
 convertEvent d (SDL.KeyDown sym) = do
-    atomically $ do 
-        s <- readTVar keyStateVar
-        writeTVar keyStateVar $! Set.insert (symKey sym) s
+    do  s <- readIORef keyStateVar
+        writeIORef keyStateVar $! Set.insert (symKey sym) s
     return $ Just $ KeyDownEvent sym
 convertEvent d (SDL.KeyUp   sym) = do
-    atomically $ do
-        s <- readTVar keyStateVar
-        writeTVar keyStateVar $! Set.delete (symKey sym) s
+    do  s <- readIORef keyStateVar
+        writeIORef keyStateVar $! Set.delete (symKey sym) s
     return $ Just $ KeyUpEvent sym
 convertEvent _ _ = return $ Nothing
 

@@ -17,12 +17,11 @@ where
 import Fregl.Suspend
 import Fregl.Signal
 import Control.Monad.Writer.Strict
-import Control.Concurrent.STM
 import Data.Monoid
 import System.Mem.Weak
 import System.Mem
 
-newtype Update = Update (STM ())
+newtype Update = Update (IO ())
 
 instance Monoid Update where
     mempty = Update (return ())
@@ -38,7 +37,7 @@ instance Monoid (ContLog v) where
 writeCont :: (v -> Event v ()) -> ContLog v
 writeCont f = ContLog (Dual [f]) mempty
 
-writeUpdate :: STM () -> ContLog v
+writeUpdate :: IO () -> ContLog v
 writeUpdate m = ContLog mempty (Update m)
 
 
@@ -59,7 +58,7 @@ waitEvent :: Event v v
 waitEvent = Event suspend
 
 readSig :: Signal a -> Event v a
-readSig = Event . liftIO . atomically . readSignal
+readSig = Event . liftIO . readSignal
 
 untilEvent :: Signal a -> Event v (Signal a) -> Event v (Signal a)
 untilEvent sigb ev = Event $ do
@@ -67,7 +66,7 @@ untilEvent sigb ev = Event $ do
     case choice of
          Left sig -> return sig
          Right cont -> do
-             cell <- liftIO $ atomically $ newSignalCell sigb
+             cell <- liftIO $ newSignalCell sigb
              let writer v = Event $ do
                      sig <- cont v
                      lift $ tell $ writeUpdate $ overwriteSignalCell cell sig
@@ -101,7 +100,7 @@ newEventCxt :: forall v a. Event v (Signal a) -> IO (EventCxt v a)
 newEventCxt event = do
     let susp = runEvent event
     (Left sig, conts) <- runWriterT (runSuspendT susp)
-    val <- atomically $ readSignal sig
+    val <- readSignal sig
     return $ EventCxt val (contAction 1 sig conts)
     where
     contAction gccount sig contlog v = do
@@ -112,7 +111,7 @@ newEventCxt event = do
 
         let ContLog (Dual conts) (Update updates) = contlog
         -- perform updates
-        atomically updates
+        updates
 
         when (gccount == 0) $
             length conts `seq` performGC
@@ -123,7 +122,7 @@ newEventCxt event = do
             case choice of
                  Left () -> return cs
                  Right cont' -> return $ cs `mappend` writeCont (Event . cont')
-        val <- atomically $ readSignal sig
+        val <- readSignal sig
         let newct = (gccount + 1) `mod` 250
         return $ EventCxt val (contAction newct sig (mconcat contlog'))
 

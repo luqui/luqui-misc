@@ -85,7 +85,7 @@ tellWeak weakWriter = do
     lift $ tell $ writeCont $ \v -> do
         w <- Event $ liftIO $ deRefWeak weakWriter
         case w of
-             Nothing -> Event (liftIO (putStrLn "Death!")) >> return ()
+             Nothing -> return ()
              Just f -> f v
 
 unsafeEventIO :: IO a -> Event v a

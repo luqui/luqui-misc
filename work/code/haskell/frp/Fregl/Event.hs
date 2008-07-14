@@ -54,6 +54,12 @@ instance Monad (Event v) where
 instance MonadFix (Event v) where
     mfix f = Event $ mfix (runEvent . f)
 
+instance Monoid (Event v a) where
+    mempty = Event $ do
+        forever (suspend >> return ())
+        return undefined
+    mappend = eitherEvent
+
 waitEvent :: Event v v
 waitEvent = Event suspend
 
@@ -79,7 +85,7 @@ tellWeak weakWriter = do
     lift $ tell $ writeCont $ \v -> do
         w <- Event $ liftIO $ deRefWeak weakWriter
         case w of
-             Nothing -> return ()
+             Nothing -> Event (liftIO (putStrLn "Death!")) >> return ()
              Just f -> f v
 
 unsafeEventIO :: IO a -> Event v a
@@ -112,9 +118,11 @@ newEventCxt event = do
         let ContLog (Dual conts) (Update updates) = contlog
         -- perform updates
         updates
-
+        
+        {-
         when (gccount == 0) $
             length conts `seq` performGC
+        -}
         
         -- resume continuations
         contlog' <- forM conts $ \cont -> do

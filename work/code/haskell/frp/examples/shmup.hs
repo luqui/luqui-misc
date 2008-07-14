@@ -55,11 +55,13 @@ makeEnemies (r:rs) avatar bullets = pure [] `untilEvent` do
     enemy <- makeEnemy r avatar
     rest <- makeEnemies rs avatar bullets
     liftA2 (:) enemy rest `untilEvent` do
-        when (liftA2 testHit enemy bullets)
+        when (liftA2 testHit enemy bullets) 
+            `mappend` when (liftA (not . inRange) enemy)
         return rest
     where
     testHit enemy bullets = any (hit enemy) bullets
     hit enemy bullet = norm (enemy ^-^ bullet) < 0.6
+    inRange (x,y) = x > -16 && x < 16 && y > -12 && y < 12
 
 main = runGameSDL $ \_ -> do
     let rands = randomRs ((-16,-12),(16,12)) $ mkStdGen 42

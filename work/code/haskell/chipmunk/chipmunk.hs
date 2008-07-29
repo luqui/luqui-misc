@@ -1,10 +1,11 @@
 import qualified Graphics.UI.SDL as SDL
 import Graphics.Rendering.OpenGL.GL as GL
 import Graphics.Rendering.OpenGL.GLU as GLU
-import qualified Physics.Hipmunk as CM
+import qualified Physics.Hipmunk as CP
 import System.Random
 import Control.Monad
 import Debug.Trace
+import Control.Applicative
 
 bounds = ((-16.0,-12.0),(16.0,12.0))
 
@@ -18,60 +19,58 @@ initGfx = do
     GL.matrixMode $= GL.Modelview 0
     GL.loadIdentity
 
-    CM.initChipmunk
+    CP.initChipmunk
 
-rand ((lx,ly),(hx,hy)) = do
-    x <- randomRIO (lx,hx) 
-    y <- randomRIO (ly,hy)
-    return (x,y)
 
 main = do
     initGfx
 
-    space <- CM.newSpace
-    CM.setIterations space 4
-    CM.setElasticIterations space 4
-    CM.resizeActiveHash space 1 500
+    space <- CP.newSpace
+    CP.setIterations space 2
+    CP.setElasticIterations space 2
+    CP.resizeActiveHash space 1 500
 
     addWall space (-16,-12) ( 16,-12)
     addWall space ( 16,-12) ( 16, 12)
     addWall space ( 16, 12) (-16, 12)
     addWall space (-16, 12) (-16,-12)
 
-    balls <- forM [1..3000] $ \_ -> do
-        body <- CM.newBody 1 1 -- mass, inertia
+    balls <- forM [1..2000] $ \_ -> do
+        body <- CP.newBody 1 1 -- mass, inertia
         (x,y) <- rand ((-4,0),(4,12))
-        CM.setPosition body (CM.Vector x y)
-        shape <- CM.newShape body (CM.Circle { CM.radius = 0.1 }) (CM.Vector 0 0)
-        CM.setElasticity shape 0.99
-        CM.applyForce body (CM.Vector 0 (-1)) (CM.Vector 0 0)
-        CM.spaceAdd space body
-        CM.spaceAdd space shape
+        CP.setPosition body (CP.Vector x y)
+        shape <- CP.newShape body (CP.Circle { CP.radius = 0.1 }) (CP.Vector 0 0)
+        CP.setElasticity shape 0.99
+        CP.applyForce body (CP.Vector 0 (-1)) (CP.Vector 0 0)
+        CP.spaceAdd space body
+        CP.spaceAdd space shape
         return body
 
     forever $ do
         GL.clear [GL.ColorBuffer]
+        GL.pointSize $= 2
         GL.renderPrimitive GL.Points $ do
             forM balls $ \ball -> do
-                CM.Vector x y <- CM.getPosition ball
+                CP.Vector x y <- CP.getPosition ball
                 GL.vertex (GL.Vertex2 x y)
         SDL.glSwapBuffers
-        CM.step space (1/30)
+        CP.step space (1/30)
 
+
+staticShape typ origin = do
+    dummy <- CP.newBody CP.infinity CP.infinity
+    CP.setPosition dummy (CP.Vector 0 0)
+    CP.newShape dummy typ origin
 
 
 addWall space (x1,y1) (x2,y2) = do
-    dummy <- CM.newBody CM.infinity CM.infinity
-    let pos = CM.Vector ((x1+x2)/2) ((y1+y2)/2)
-    CM.setPosition dummy $ CM.Vector 0 0
-    shape <- CM.newShape dummy (CM.LineSegment { 
-                                 CM.start = CM.Vector x1 y1,
-                                 CM.end   = CM.Vector x2 y2,
-                                 CM.thickness = 0.1
-                               }) (CM.Vector 0 0)
-    CM.setElasticity shape 0.99
-    CM.spaceAdd space dummy
-    CM.spaceAdd space (CM.Static shape)
+    shape <- staticShape (CP.LineSegment {
+                   CP.start = CP.Vector x1 y1,
+                   CP.end   = CP.Vector x2 y2,
+                   CP.thickness = 0.1
+                }) (CP.Vector 0 0)
+    CP.setElasticity shape 0.99
+    CP.spaceAdd space (CP.Static shape)
 
 
 drawCircle (x,y) = GL.preservingMatrix $ do
@@ -81,3 +80,9 @@ drawCircle (x,y) = GL.preservingMatrix $ do
         forM_ [0..12::Double] $ \i -> do
             let theta = 2 * pi * i / 12
             GL.vertex (GL.Vertex2 (0.1 * cos theta) (0.1 * sin theta))
+
+
+rand ((lx,ly),(hx,hy)) = do
+    x <- randomRIO (lx,hx) 
+    y <- randomRIO (ly,hy)
+    return (x,y)

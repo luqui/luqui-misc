@@ -30,7 +30,7 @@ module Graphics.DrawingCombinators
     -- * Selection
     , selectRegion, click
     -- * Combinators
-    , over, empty
+    , over, overlay, empty
     -- * Initialization
     , init
     -- * Geometric Primitives
@@ -72,7 +72,7 @@ data Draw a where
     DrawGL      :: DrawM () -> Draw ()
     TransformGL :: (forall x. DrawM x -> DrawM x) -> Draw a -> Draw a
     Empty       :: Draw a
-    Over        :: Draw a -> Draw a -> Draw a
+    Over        :: (a -> a -> a) -> Draw a -> Draw a -> Draw a
     FMap        :: (a -> b) -> Draw a -> Draw b
 
 -- |Draw a Drawing on the screen in the current OpenGL coordinate
@@ -85,7 +85,7 @@ runDrawing d = runReaderT (run' d) initDrawCxt
     run' (DrawGL m) = m
     run' (TransformGL f m) = f (run' m)
     run' Empty = return ()
-    run' (Over a b) = run' b >> run' a
+    run' (Over f a b) = run' b >> run' a
     run' (FMap f d) = run' d
 
 -- |Like runDrawing, but clears the screen first.  This is so
@@ -117,7 +117,7 @@ selectRegion ll ur drawing = do
         return $! n+1
     draw' n (TransformGL f m) = f (draw' n m)
     draw' n Empty = return n
-    draw' n (Over a b) = do
+    draw' n (Over f a b) = do
         n' <- draw' n b
         draw' n' a
     draw' n (FMap f d) = draw' n d
@@ -128,13 +128,18 @@ selectRegion ll ur drawing = do
         | otherwise            = (Nothing, n + 1)
     lookupName n names (TransformGL _ m) = lookupName n names m
     lookupName n names Empty = (Nothing, n)
-    lookupName n names (Over a b) =
+    lookupName n names (Over f a b) =
         let (lb, n')  = lookupName n  names b
             (la, n'') = lookupName n' names a
-        in (la `mplus` lb, n'')
+        in (joinMaybes f la lb, n'')
     lookupName n names (FMap f d) = 
         let (l, n') = lookupName n names d
         in (fmap f l, n')
+
+joinMaybes :: (a -> a -> a) -> Maybe a -> Maybe a -> Maybe a
+joinMaybes f Nothing x = x
+joinMaybes f x Nothing = x
+joinMaybes f (Just x) (Just y) = Just (f x y)
 
 click :: Vec2 -> Draw a -> IO (Maybe a)
 click (px,py) = selectRegion (px-e,py-e) (px+e,py+e)
@@ -147,7 +152,10 @@ data DrawCxt
 initDrawCxt = DrawCxt { colorTrans = id }
 
 over :: Draw a -> Draw a -> Draw a
-over = Over
+over = overlay const
+
+overlay :: (a -> a -> a) -> Draw a -> Draw a -> Draw a
+overlay = Over
 
 empty :: Draw a
 empty = Empty
@@ -155,9 +163,9 @@ empty = Empty
 instance Functor Draw where
     fmap = FMap
 
-instance Monoid (Draw a) where
+instance (Monoid a) => Monoid (Draw a) where
     mempty = empty
-    mappend = over
+    mappend = overlay mappend
 
 
 {----------------

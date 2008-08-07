@@ -1,5 +1,6 @@
 import qualified Graphics.DrawingCombinators as Draw
 import qualified Graphics.UI.SDL as SDL
+import Data.Monoid
 
 resX = 640
 resY = 480
@@ -12,12 +13,16 @@ initScreen = do
     return ()
 
 
-drawing :: Draw.Draw ()
-drawing = Draw.translate (0.0,0.2) 
+box :: Draw.Draw ()
+box = Draw.translate (0.0,0.2) 
         $ Draw.scale 0.3 0.3 
         $ Draw.color (1,0,0,0) 
         $ Draw.convexPoly
             [(1,1),(1,-1),(-1,-1),(-1,1)]
+
+drawing = fmap (const "A") (Draw.color (0,0,1,0) box)
+          `mappend`
+          fmap (const "B") (Draw.translate (-0.1,0.2) box)
 
 main :: IO ()
 main = do
@@ -39,7 +44,7 @@ main = do
                  hit <- Draw.click (x',y') drawing
                  case hit of
                       Nothing -> waitClicks
-                      Just () -> putStrLn "Hit!" >> waitClicks
+                      Just xs -> putStrLn xs >> waitClicks
              _ -> waitClicks
 
 untilM :: (Monad m) => (a -> Bool) -> m a -> m a

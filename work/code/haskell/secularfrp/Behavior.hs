@@ -41,4 +41,4 @@ instance Applicative Fun where
     K t    <*> Fun xf  = Fun (\i -> t (xf i))
     K t    <*> K x     = K (t x)
 
-type Behavior i = ReactiveF i :. Fun
+type BehaviorF i = ReactiveF i :. Fun

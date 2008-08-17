@@ -19,6 +19,9 @@ adjust' dt (Write (dt',x) sf) = Write (dt'-dt,x) sf
 adjust :: DTime -> EventF i o -> EventF i o
 adjust dt (EventF e) = EventF (adjust' dt e)
 
+idE :: EventF i i
+idE = EventF (Read (\i -> Write i (runEventF idE)))
+
 merge :: EventF i o -> EventF i o -> EventF i o
 merge (EventF a) (EventF b) = EventF $ go a b
     where

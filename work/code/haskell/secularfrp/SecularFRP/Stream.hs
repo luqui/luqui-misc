@@ -1,4 +1,4 @@
-module Stream where
+module SecularFRP.Stream where
 
 data Stream a
     = a :> Stream a

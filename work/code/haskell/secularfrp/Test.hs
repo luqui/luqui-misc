@@ -1,8 +1,8 @@
 import qualified Graphics.UI.SDL as SDL
 
-import Stream
-import Event
-import Behavior
+import SecularFRP.Stream
+import SecularFRP.Event
+import SecularFRP.Behavior
 
 type Event = EventF SDL.Event
 type Behavior = BehaviorF SDL.Event

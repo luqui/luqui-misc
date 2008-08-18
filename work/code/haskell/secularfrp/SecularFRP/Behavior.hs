@@ -1,9 +1,9 @@
-module Behavior where
+module SecularFRP.Behavior where
 
 import Control.Arrow (second)
 import Control.Applicative
-import Event
-import Stream
+import SecularFRP.Event
+import SecularFRP.Stream
 import Data.Monoid
 import Control.Compose
 

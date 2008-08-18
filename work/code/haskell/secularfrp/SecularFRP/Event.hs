@@ -1,6 +1,6 @@
-module Event where
+module SecularFRP.Event where
 
-import Stream
+import SecularFRP.Stream
 import Control.Arrow (second)
 import Data.Monoid
 import Control.Monad

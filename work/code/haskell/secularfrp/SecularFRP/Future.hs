@@ -61,7 +61,21 @@ orderFutures a@(Unsure lb c) b@(Unsure lb' c')
     = Unsure (min lb lb') (\dt -> orderFutures (c dt) (c' dt))
 
 
-pollFuture :: Time -> Future a -> Either a (Future a)
-pollFuture t' (Exact t a)   | t' >= t = Left a
-pollFuture t' (Unsure lb c) | t' > lb = pollFuture t' (c (t' - lb))
-pollFuture t' fut = Right fut
+-- Can't expose this, because "real time" futures would break RT.
+pollFuturePure :: Time -> Future a -> Either a (Future a)
+pollFuturePure t' (Exact t a)   | t' >= t = Left a
+pollFuturePure t' (Unsure lb c) | t' > lb = pollFuturePure t' (c (t' - lb))
+pollFuturePure t' fut = Right fut
+
+pollFuture :: IO Time -> Future a -> IO (Either a (Future a))
+pollFuture clock = liftFM (fmap pollFuturePure clock)
+
+liftFM :: (Monad m) => m (a -> b) -> (a -> m b)
+liftFM m = ap m . return
+
+maybeFuture :: (Time -> Maybe (Time,a)) -> Future a
+maybeFuture f = Unsure (-infinity) helper
+    where
+    helper t = case f t of
+                    Nothing     -> Unsure t helper
+                    Just (t',x) -> Exact t' x

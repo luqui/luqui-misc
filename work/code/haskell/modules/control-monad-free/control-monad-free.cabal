@@ -9,5 +9,5 @@ Category: Control
 Author: Luke Palmer
 Maintainer: lrpalmer@gmail.com
 Build-Type: Simple
-Build-Depends: base
+Build-Depends: base, mtl
 Exposed-Modules: Control.Monad.Free

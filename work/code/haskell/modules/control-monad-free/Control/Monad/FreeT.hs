@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
+
 module Control.Monad.FreeT (FreeT(..), MonadFree(..)) where
 
 import Control.Applicative

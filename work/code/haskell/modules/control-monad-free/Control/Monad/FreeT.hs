@@ -1,4 +1,4 @@
-module Control.Monad.Free (FreeT(..)) where
+module Control.Monad.FreeT (FreeT(..)) where
 
 import Control.Applicative
 import Control.Monad (liftM)

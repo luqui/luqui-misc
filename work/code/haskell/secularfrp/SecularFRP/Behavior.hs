@@ -10,12 +10,12 @@ import Control.Applicative hiding (Const)
 import Control.Compose ((:.)(..))
 import Data.Monoid
 
-data Reactive a = a `Stepper` Event a
+data Reactive f a = a `Stepper` Event f a
 
-instance Functor Reactive where
+instance (Future f) => Functor (Reactive f) where
     fmap f (a `Stepper` e) = f a `Stepper` fmap f e
 
-instance Applicative Reactive where
+instance (Future f) => Applicative (Reactive f) where
     pure x = x `Stepper` mempty
     (f `Stepper` ef) <*> (x `Stepper` ex) = 
         f x `Stepper` 
@@ -39,23 +39,23 @@ instance Applicative Fun where
     Fun ff  <*> Const x = Fun (ff <*> const x)
     Fun ff  <*> Fun xf  = Fun (ff <*> xf)
 
-newtype Behavior a = Behavior ((Reactive :. Fun) a)
+newtype Behavior f a = Behavior ((Reactive f :. Fun) a)
     deriving (Functor,Applicative)
 
 unBehavior (Behavior (O r)) = r
 
-joinRE :: Event (Reactive a) -> Event a
+joinRE :: (Future f) => Event f (Reactive f a) -> Event f a
 joinRE e = do
     r `Stepper` re <- e
     return r `mappend` re
 
-stepper :: a -> Event a -> Behavior a
+stepper :: (Future f) => a -> Event f a -> Behavior f a
 stepper iv e = Behavior . O . fmap Const $ iv `Stepper` e
 
-switcher :: Behavior a -> Event (Behavior a) -> Behavior a
+switcher :: (Future f) => Behavior f a -> Event f (Behavior f a) -> Behavior f a
 switcher (Behavior (O (f `Stepper` ef))) eb = Behavior . O $
     f `Stepper` (ef `mappend` joinRE (fmap unBehavior eb))
 
 
-unsafeDecomposeBehavior :: Behavior a -> (Fun a, Event (Fun a))
+unsafeDecomposeBehavior :: Behavior f a -> (Fun a, Event f (Fun a))
 unsafeDecomposeBehavior (Behavior (O (r `Stepper` re))) = (r, re)

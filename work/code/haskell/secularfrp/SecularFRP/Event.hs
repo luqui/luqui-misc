@@ -3,39 +3,43 @@ module SecularFRP.Event
 where
 
 import Control.Arrow ((***))
-import Control.Monad (ap)
+import Control.Monad (ap, MonadPlus(..))
 import Control.Applicative
 import Data.Monoid
 import SecularFRP.Future
 
-newtype Event a = Event { runEvent :: Future (a, Event a) }
+newtype Event f a = Event { runEvent :: f (a, Event f a) }
 
-instance Functor Event where
+instance (Future f) => Functor (Event f) where
     fmap f (Event fut) = Event (fmap (f *** fmap f) fut)
 
-instance Monad Event where
+instance (Future f) => Monad (Event f) where
     return x = Event (return (x, mempty))
     m >>= f = joinEvent (fmap f m)
 
-instance Applicative Event where
+instance (Future f) => Applicative (Event f) where
     pure = return
     (<*>) = ap
 
-instance Monoid (Event a) where
-    mempty = Event mempty
-    mappend (Event f) (Event f') = Event $ do
-        ((x,ex), rest) <- orderFutures f f'
-        return (x, ex `mappend` Event rest)
+instance (Future f) => MonadPlus (Event f) where
+    mzero = mempty
+    mplus = mappend
 
-joinEvent :: Event (Event a) -> Event a
+instance (Future f) => Monoid (Event f a) where
+    mempty = Event mzero
+    mappend (Event f) (Event f') = Event $ do
+        ((x,ex), rest) <- order f f'
+        return (x, ex `mplus` Event rest)
+
+joinEvent :: (Future f) => Event f (Event f a) -> Event f a
 joinEvent fut = Event $ do
     (a,ee) <- runEvent fut
     runEvent $ a `mappend` joinEvent ee
 
-iterateEvent :: a -> Event (a -> a) -> Event a
+iterateEvent :: (Future f) => a -> Event f (a -> a) -> Event f a
 iterateEvent iv = Event . fmap next . runEvent
     where
     next (f,e') = let new = f iv in (new, iterateEvent new e')
 
-unsafeRunEvent :: Event a -> Future (a, Event a)
+unsafeRunEvent :: Event f a -> f (a, Event f a)
 unsafeRunEvent = runEvent

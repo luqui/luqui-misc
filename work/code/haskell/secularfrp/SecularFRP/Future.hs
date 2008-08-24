@@ -1,81 +1,17 @@
 module SecularFRP.Future 
     ( Time, DTime, Future
     , exact
-    , orderFutures
-    , pollFuture
+    , order
     )
 where
 
-import Control.Monad (ap)
+import Control.Monad (ap, MonadPlus)
 import Control.Applicative
-import Data.Monoid
 
 type Time = Double
 type DTime = Double
 
-data Future a
-    = Exact Time a
-    -- The first arg here gives a lower bound to when we know it's undefined
-    | Unsure Time (DTime -> Future a)
-
-exact :: Time -> a -> Future a
-exact = Exact
-
-infinity = 1/0 :: Time
-
-instance Functor Future where
-    fmap f (Exact t a) = Exact t (f a)
-    fmap f (Unsure lb c) = Unsure lb (fmap f . c)
-
-instance Monad Future where
-    return = Exact (-infinity)
-    m >>= f = joinFutures (fmap f m)
-
-instance Applicative Future where
-    pure = return
-    (<*>) = ap
-
-instance Monoid (Future a) where
-    mempty = exact infinity (error "Value only defined at infinity. Wait a little longer.")
-    mappend f g = fmap fst (orderFutures f g)
-
-joinFutures :: Future (Future a) -> Future a
-joinFutures (Exact t fut) = adjust t fut
-joinFutures (Unsure lb c) = Unsure lb (joinFutures . c)
-
--- adjust t fut adjusts the occurrence time of fut to at least t
-adjust t' (Exact t a) = Exact (max t t') a
-adjust t' (Unsure lb f) = Unsure lb (adjust t' . f)
-
-orderFutures :: Future a -> Future a -> Future (a, Future a)
-orderFutures a@(Exact t x) b@(Exact t' x')
-    | t <= t'   = Exact t (x, b)
-    | otherwise = Exact t' (x', a)
-orderFutures a@(Exact t x) b@(Unsure lb c)
-    | t <= lb   = Exact t (x, b)
-    | otherwise = Unsure lb (orderFutures a . c)
-orderFutures a@(Unsure lb c) b@(Exact t x)
-    | t <= lb   = Exact t (x, b)
-    | otherwise = Unsure lb (orderFutures b . c)
-orderFutures a@(Unsure lb c) b@(Unsure lb' c')
-    = Unsure (min lb lb') (\dt -> orderFutures (c dt) (c' dt))
-
-
--- Can't expose this, because "real time" futures would break RT.
-pollFuturePure :: Time -> Future a -> Either a (Future a)
-pollFuturePure t' (Exact t a)   | t' >= t = Left a
-pollFuturePure t' (Unsure lb c) | t' > lb = pollFuturePure t' (c (t' - lb))
-pollFuturePure t' fut = Right fut
-
-pollFuture :: IO Time -> Future a -> IO (Either a (Future a))
-pollFuture clock = liftFM (fmap pollFuturePure clock)
-
-liftFM :: (Monad m) => m (a -> b) -> (a -> m b)
-liftFM m = ap m . return
-
-maybeFuture :: (Time -> Maybe (Time,a)) -> Future a
-maybeFuture f = Unsure (-infinity) helper
-    where
-    helper t = case f t of
-                    Nothing     -> Unsure t helper
-                    Just (t',x) -> Exact t' x
+class (Functor f, Applicative f, Monad f, MonadPlus f) 
+        => Future f where
+    exact :: Time -> a -> f a
+    order :: f a -> f a -> f (a, f a)

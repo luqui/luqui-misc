@@ -1,4 +1,4 @@
-module Control.Monad.FreeT (FreeT(..)) where
+module Control.Monad.FreeT (FreeT(..), MonadFree(..)) where
 
 import Control.Applicative
 import Control.Monad (liftM)
@@ -24,3 +24,10 @@ instance (Functor f, Monad m) => Monad (FreeT f m) where
 
 instance (Functor f) => MonadTrans (FreeT f) where
     lift = FreeT . liftM Left
+
+
+class (Functor f, Monad m) => MonadFree f m where
+    free :: m a -> m (Either a (f (m a)))
+
+instance (Functor f, Monad m) => MonadFree f (FreeT f m) where
+    free = lift . runFreeT

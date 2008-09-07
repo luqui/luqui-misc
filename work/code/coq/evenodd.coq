@@ -1,6 +1,3 @@
-Require Import Arith.
-Require Import ArithRing.
-
 Definition even x := exists y, x=2*y.
 Definition odd x := exists y, x=2*y+1.
 

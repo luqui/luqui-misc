@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fglasgow-exts #-}
+{-# OPTIONS_GHC -fglasgow-exts -fno-monomorphism-restriction #-}
 
 import Data.Typeable
 import Data.Array
@@ -7,6 +7,9 @@ import qualified Data.Set as Set
 import Control.Monad.State
 import Control.Arrow
 import Data.Unique
+import Control.Monad.Writer
+import Control.Monad
+import Data.List
 
 
 infixl 9 :*
@@ -80,4 +83,52 @@ linearize (f :* x) = do
         return $ TSplit :* TVar v :* (TAbs v1 $ TAbs v2 $ r)
 linearize e = return e
 
+type Output = String
+type Compile = WriterT Output Supply
 
+output = tell
+
+forM_ = flip mapM_
+intercalate s = concat . intersperse s
+
+compile :: Term m -> Compile String
+compile (TLit s) = return s
+compile (TVar v) = return v
+compile (TAbs v t) = do
+    stname <- lift $ fresh "C_"
+    body <- compile t
+    let freevars = Set.toList (Set.delete v (freeVars t))
+    output $ "struct " ++ stname ++ " : public Closure {\n"
+          ++ "    Val* call(Val* " ++ v ++ ") {\n"
+          ++ "        Val* _result = " ++ body ++ ";\n"
+          ++ "        delete this;\n"
+          ++ "        return result;\n"
+          ++ "    }\n"
+          ++ "    void clone(Val*& _L, Val*& _R) {\n"
+    forM_ freevars $ \v -> do
+        output $ "        Val* " ++ v ++ "_L; Val* " ++ v ++ "_R;\n"
+              ++ "        " ++ v ++ "->clone(" ++ v ++ "_L, " ++ v ++ "_R);\n"
+    output $ "        _L = new " ++ stname ++ "(" ++ intercalate "," (map (++ "_L") freevars) ++ ");\n"
+          ++ "        _R = new " ++ stname ++ "(" ++ intercalate "," (map (++ "_R") freevars) ++ ");\n"
+          ++ "    }\n"
+          ++ "    void destroy() {\n"
+    forM_ freevars $ \v -> do
+          output $  "        " ++ v ++ "->destroy();\n"
+    output $ "        delete this;\n"
+          ++ "    }\n"
+    forM_ freevars $ \v -> do
+        output $ "    Val* " ++ v ++ ";\n"
+    output $ "    " ++ stname ++ "(" ++ intercalate "," (map (\v -> "Val* " ++ v) freevars) ++ ")\n"
+          ++ "      : " ++ intercalate "," (map (\v -> v ++ "(" ++ v ++ ")") freevars) ++ "\n"
+          ++ "    { }\n"
+          ++ "};\n\n"
+    return $ "(new " ++ stname ++ "(" ++ intercalate "," freevars ++ "))"
+compile (f :* x) = do
+    f' <- compile f
+    x' <- compile x
+    return $ "((Closure*)" ++ f' ++ ")->call(" ++ x' ++ ")"
+compile TSplit = return "SPLIT"
+compile TDestroy = return "DESTROY"
+
+runCompile :: Term m -> String
+runCompile t = t' <- compile t

@@ -57,7 +57,7 @@ fresh :: String -> Supply String
 fresh pfx = do
     c <- get
     put $! c+1
-    return $ pfx ++ "~" ++ show c
+    return $ pfx ++ "_" ++ show c
 
 linearize :: Term m -> Supply (Term m)
 linearize v@(TVar _) = return v
@@ -79,4 +79,5 @@ linearize (f :* x) = do
         r <- elim vs (subst v (TVar v1) f, subst v (TVar v2) x)
         return $ TSplit :* TVar v :* (TAbs v1 $ TAbs v2 $ r)
 linearize e = return e
+
 

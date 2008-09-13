@@ -102,7 +102,7 @@ compile (TAbs v t) = do
           ++ "    Val* call(Val* " ++ v ++ ") {\n"
           ++ "        Val* _result = " ++ body ++ ";\n"
           ++ "        delete this;\n"
-          ++ "        return result;\n"
+          ++ "        return _result;\n"
           ++ "    }\n"
           ++ "    void clone(Val*& _L, Val*& _R) {\n"
     forM_ freevars $ \v -> do
@@ -119,8 +119,9 @@ compile (TAbs v t) = do
     forM_ freevars $ \v -> do
         output $ "    Val* " ++ v ++ ";\n"
     output $ "    " ++ stname ++ "(" ++ intercalate "," (map (\v -> "Val* " ++ v) freevars) ++ ")\n"
-          ++ "      : " ++ intercalate "," (map (\v -> v ++ "(" ++ v ++ ")") freevars) ++ "\n"
-          ++ "    { }\n"
+    when (not (null freevars)) $
+        output $ "      : " ++ intercalate "," (map (\v -> v ++ "(" ++ v ++ ")") freevars) ++ "\n"
+    output $ "    { }\n"
           ++ "};\n\n"
     return $ "(new " ++ stname ++ "(" ++ intercalate "," freevars ++ "))"
 compile (f :* x) = do
@@ -131,4 +132,10 @@ compile TSplit = return "SPLIT"
 compile TDestroy = return "DESTROY"
 
 runCompile :: Term m -> String
-runCompile t = t' <- compile t
+runCompile t = "#include \"prelude.h\"\n"
+            ++ head
+            ++ "int main () {\n"
+            ++ "    std::cout << ((Int*)" ++ main ++ ")->getdata() << \"\\n\";\n"
+            ++ "    return 0;\n"
+            ++ "}\n"
+    where (main,head) = evalState (runWriterT (compile t)) 0

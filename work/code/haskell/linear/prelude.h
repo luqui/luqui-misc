@@ -6,6 +6,7 @@
 
 struct Val {
     virtual ~Val() { }
+    virtual void clone(Val*&, Val*&) = 0;
 };
 
 struct Closure : public Val {
@@ -15,6 +16,10 @@ struct Closure : public Val {
 
 struct Int : public Val {
     Int(int d) : data(d) { }
+    void clone(Val*& x, Val*& y) {
+        x = this;
+        y = new Int (data);
+    }
     int data;
 };
 

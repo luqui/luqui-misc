@@ -106,9 +106,9 @@ compile (TAbs v t) = do
           ++ "    }\n"
           ++ "    void clone(Val*& _L, Val*& _R) {\n"
     forM_ freevars $ \v -> do
-        output $ "        Val* " ++ v ++ "_L; Val* " ++ v ++ "_R;\n"
-              ++ "        " ++ v ++ "->clone(" ++ v ++ "_L, " ++ v ++ "_R);\n"
-    output $ "        _L = new " ++ stname ++ "(" ++ intercalate "," (map (++ "_L") freevars) ++ ");\n"
+        output $ "        Val* " ++ v ++ "_R;\n"
+              ++ "        " ++ v ++ "->clone(" ++ v ++ ", " ++ v ++ "_R);\n"
+    output $ "        _L = this;\n"
           ++ "        _R = new " ++ stname ++ "(" ++ intercalate "," (map (++ "_R") freevars) ++ ");\n"
           ++ "    }\n"
           ++ "    void destroy() {\n"
@@ -138,4 +138,11 @@ runCompile t = "#include \"prelude.h\"\n"
             ++ "    std::cout << ((Int*)" ++ main ++ ")->getdata() << \"\\n\";\n"
             ++ "    return 0;\n"
             ++ "}\n"
-    where (main,head) = evalState (runWriterT (compile t)) 0
+    where (main,head) = evalState (runWriterT (compile =<< lift (linearize t))) 0
+
+
+
+
+fixT = TAbs "f" $ TAbs "x" (TVar "f" :* (TVar "x" :* TVar "x")) :* TAbs "x" (TVar "f" :* TVar "x" :* TVar "x")
+idT = TAbs "x" (TVar "x")
+constT = TAbs "x" $ TAbs "y" $ TVar "x"

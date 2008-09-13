@@ -16,14 +16,18 @@ struct Closure : public Val {
 };
 
 struct Int : public Val {
-    Int(int d) : data(d) { }
+    Int(int d) : data(d) {
+        std::cout << "Create " << data << " (" << this << ")\n";
+    }
     void clone(Val*& x, Val*& y) {
         x = this;
         y = new Int (data);
+        std::cout << "Clone " << data << " (" << this << " --> " << this << ", " << y << ")\n";
     }
-    void destroy() { delete this; }
+    void destroy() { std::cout << "Destroy " << data << " (" << this << ")\n"; delete this; }
     int getdata() {
         int r = data;
+        std::cout << "Retrieve " << data << "\n";
         delete this;
         return r;
     }

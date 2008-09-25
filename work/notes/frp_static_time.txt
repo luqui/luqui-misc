@@ -1,0 +1,30 @@
+Here's an idea sketch:  mark behaviors on the type level with an 
+indicator about how they will be accessed.  For example, this
+function is completely fine:
+
+    \b -> liftA2 (+) b b
+
+The nonlinearity here is not important becaused both arguments
+are both accessed in the same pattern.
+
+First impression: 'Behavior t a' is a function from [t,inf) -> a.
+
+So we'd have, for example:
+
+    pure :: a -> B t a
+        -- not dependent on time (in any interval you like)
+
+    (<*>) :: B t (a -> b) -> B t a -> B t b
+        -- in order to access the result at time t, you need only
+        -- look at the arguments at time t
+
+    integral :: (Vec a) => B t a -> B t (B t' a)
+        -- To find the integral of b from t to t', you need only
+        -- look as far back as t in the input.  t' > t is covered
+        -- by the observance condition (I hope we don't need to
+        -- encode that in the type system).
+
+    -- or if we do:
+    integral :: (Vec a, t :< t') => B t a -> B t (B t' a)
+    -- or
+    integral :: (Vec a) => t :< t' -> B t a -> B t (B t' a)

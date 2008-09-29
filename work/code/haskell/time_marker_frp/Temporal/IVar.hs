@@ -2,6 +2,7 @@ module Temporal.IVar
     ( IVar, new, write
     , Reader, read, merge
     , nonblocking, blocking, combination
+    , timed
     )
 where
 
@@ -9,6 +10,7 @@ import Prelude hiding (read)
 import Control.Concurrent
 import Control.Applicative
 import Control.Monad (ap)
+import System.Time
 
 newtype IVar a = IVar (MVar a)
 
@@ -77,3 +79,23 @@ nonblocking r = do
 blocking :: Reader a -> IO a
 blocking r = either return id =<< combination r
 
+never :: Reader a
+never = Reader . return . Right $ takeMVar =<< newEmptyMVar
+
+-- A bit of a hack -- this doesn't belong in this module
+-- Represents an IVar which is empty before the given time,
+-- and full with the given value after it.  This *could*
+-- be done using a thread that waits and then writes,
+-- but it can be done more efficiently directly in terms
+-- of the representation.
+timed :: ClockTime -> a -> Reader a
+timed t x = Reader $ do
+    now <- getClockTime
+    if now >= t
+        then return $ Left x
+        else return . Right $ do
+            now' <- getClockTime
+            let (TOD tsecs tpico, TOD nowsecs nowpico) = (t,now')
+            let delaypico = 10^12 * (tsecs - nowsecs) + (tpico - nowpico)
+            threadDelay . fromIntegral $ 1+(delaypico `div` 10^6)
+            return x

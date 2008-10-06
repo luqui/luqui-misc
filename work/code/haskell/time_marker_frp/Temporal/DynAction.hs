@@ -5,9 +5,12 @@ module Temporal.DynAction
 where
 
 import Control.Arrow hiding (pure)
+import Control.Applicative
 import Control.Monad.ST.Lazy
 import Data.STRef.Lazy
 import Data.IORef
+import Control.Monad (liftM)
+import Control.Monad.Fix
 
 newtype DynAction m a b = DynAction { runDynAction :: a -> m (b, DynAction m a b) }
 
@@ -16,8 +19,8 @@ newtype DynAction m a b = DynAction { runDynAction :: a -> m (b, DynAction m a b
 mkDynAction :: (Monad m) => (a -> m (b, DynAction m a b)) -> DynAction m a b
 mkDynAction = DynAction
 
-instance (Functor m) => Functor (DynAction m a) where
-    fmap f (DynAction a) = DynAction (fmap (fmap (f *** fmap f)) a)
+instance (Monad m) => Functor (DynAction m a) where
+    fmap f (DynAction a) = DynAction (fmap (liftM (f *** fmap f)) a)
 
 instance (Monad m) => Arrow (DynAction m) where
     arr f = let r = DynAction $ \a -> return (f a, r) in r
@@ -42,6 +45,27 @@ instance (Monad m) => ArrowApply (DynAction m) where
     app = DynAction $ \(~(sub,a)) -> do
               ~(b,_) <- runDynAction sub a  -- forgets the optimization.  use cache to remember it.
               return (b, app)
+
+instance (MonadFix m) => ArrowLoop (DynAction m) where
+    loop (DynAction f) = DynAction $ \b -> mdo
+        ((c,d),f') <- f (b,d)
+        return (c, loop f')
+
+instance (Monad m) => Applicative (DynAction m a) where
+    pure = arr . const
+    DynAction f <*> DynAction x = DynAction $ \a -> do
+        ~(b, f') <- f a
+        ~(c, x') <- x a
+        return (b c, f' <*> x')
+
+instance (Monad m) => Monad (DynAction m a) where
+    return = pure
+    m >>= f = ((m >>> arr f) &&& arr id) >>> app
+
+instance (MonadFix m) => MonadFix (DynAction m a) where
+    mfix f = DynAction $ \t -> mdo
+        (a, fa') <- runDynAction (f a) t
+        return (a, fa')
 
 
 cacheST :: DynAction (ST s) a b -> ST s (DynAction (ST s) a b)

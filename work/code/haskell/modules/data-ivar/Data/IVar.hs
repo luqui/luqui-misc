@@ -46,7 +46,6 @@ import Control.Concurrent.MVar
 import Control.Applicative
 import Data.IORef
 import Data.Monoid
-import Control.Compose
 import Control.Monad
 import Data.Unique
 import qualified Data.Map as Map

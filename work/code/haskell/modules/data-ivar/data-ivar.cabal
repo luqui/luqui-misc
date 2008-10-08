@@ -11,5 +11,6 @@ Category: Data, Concurrency
 Author: Luke Palmer
 Maintainer: lrpalmer@gmail.com
 Build-Type: Simple
-Build-Depends: base
+Build-Depends: base, containers
 Exposed-Modules: Data.IVar
+Extensions: ExistentialQuantification

@@ -29,15 +29,15 @@
 -- > main = do
 -- >    iv <- IVar.new
 -- >    iv' <- IVar.new
--- >    forkIO $ threadDelay 10000000 >> writeIVar iv' "my spoon is too big"
+-- >    forkIO $ threadDelay 10000000 >> IVar.write iv' "my spoon is too big"
 -- >    let merger = IVar.read iv `mplus` IVar.read iv'
 -- >    print =<< IVar.nonblocking merger   -- most likely "Nothing"
 -- >    print =<< IVar.blocking merger      -- waits a while, then prints
--- >    writeIVar iv' "i am a banana"       -- throws error "IVar written twice"
+-- >    IVar.write iv' "i am a banana"      -- throws error "IVar written twice"
 
 module Data.IVar 
     ( IVar, new, write, read
-    , Reader, nonblocking, blocking
+    , Reader, nonblocking, blocking, combo
     )
 where
 
@@ -62,7 +62,7 @@ new :: IO (IVar a)
 new = IVar <$> newIORef (NoValue Map.empty)
 
 -- | Write a value to an IVar.  If the IVar already has a value, 
--- throws an error "Attempt to write to an IVar twice".
+-- throws an error \"Attempt to write to an IVar twice\".
 write :: IVar a -> a -> IO ()
 write (IVar ref) x = do
     b <- atomicModifyIORef ref $ \v ->
@@ -120,7 +120,7 @@ instance Functor LogEntry where
 --
 -- The MonadPlus and Monoid instances for Reader are equivalent.
 -- It tries the left action ; if it blocks, then it tries the
--- right action ; if *it* blocks, then the whole action blocks
+-- right action ; if /it/ blocks, then the whole action blocks
 -- until one of the two is available.
 newtype Reader a = Reader { runReader :: IO (Either a [LogEntry (Reader a)]) }
 
@@ -160,8 +160,8 @@ instance MonadPlus Reader where
     mplus = mappend
 
 
--- | Run a reader nonblocking.  Returns Just x if a value x is
--- available, Nothing otherwise.
+-- | Run a reader nonblocking.  Returns @Just x@ if a value @x@ is
+-- available, @Nothing@ otherwise.
 nonblocking :: Reader a -> IO (Maybe a)
 nonblocking reader = do
     r <- runReader reader
@@ -176,10 +176,24 @@ blocking reader = do
     r <- runReader reader
     case r of
         Left x -> return x
-        Right log -> do
-            blocker <- newEmptyMVar
-            cleanup <- forM log $ \(LogEntry var action) -> do
-                ident <- addAction var (\v -> tryPutMVar blocker (action v) >> return ())
-                return $ deleteAction var ident
-            blocking =<< takeMVar blocker
+        Right log -> primBlocking log
 
+primBlocking :: [LogEntry (Reader a)] -> IO a
+primBlocking log = do
+    blocker <- newEmptyMVar
+    cleanup <- forM log $ \(LogEntry var action) -> do
+        ident <- addAction var (\v -> tryPutMVar blocker (action v) >> return ())
+        return $ deleteAction var ident
+    blocking =<< takeMVar blocker
+
+-- | Combination nonblocking and blocking read.  @combo r@ 
+-- Returns @Left x@ if the value is available now, otherwise 
+-- returns @Right (blocking r)@.  This is more efficient than
+-- using nonblocking and blocking in sequence (it only evaluates
+-- the Reader once).
+combo :: Reader a -> IO (Either a (IO a))
+combo reader = do
+    r <- runReader reader
+    case r of
+        Left x -> return (Left x)
+        Right log -> return . Right $ primBlocking log

@@ -1,6 +1,7 @@
 import qualified System
 import qualified Control.Monad.State as State
 import qualified Data.Map as Map
+import qualified Data.MemoCombinators as Memo
 
 type FibState a = State.State (Map.Map Integer Integer) a
 
@@ -28,8 +29,29 @@ doFib r = do
 fib :: Integer -> Integer
 fib n = State.evalState (doFib n) Map.empty
 
+fib' :: Integer -> Integer
+fib' = Memo.integral go
+    where
+    go 0 = 0
+    go 1 = 1
+    go r = if r `mod` 2 == 0
+            then let n = (r `div` 2) - 1
+                     fibn = fib' n
+                     fibn1 = fib' (n+1)
+                 in fibn1^2 + 2 * fibn1 * fibn
+            else fib' (r-1) + fib' (r-2)
+
 main :: IO ()
 main = do
     args <- System.getArgs
-    let nums = if null args then [0..] else map read args
-    mapM_ print $ flip State.evalState Map.empty $ mapM doFib nums
+    case args of
+        ("state":args) -> statemain args
+        ("memo":args)  -> memomain args
+        _ -> fail "Bad argument, expecting state or memo"
+    where
+    statemain args = do
+        let nums = if null args then [0..] else map read args
+        mapM_ print $ flip State.evalState Map.empty $ mapM doFib nums
+    memomain args = do
+        let nums = if null args then [0..] else map read args
+        mapM_ (print . fib') nums

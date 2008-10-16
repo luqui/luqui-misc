@@ -11,6 +11,8 @@ import qualified Graphics.UI.SDL as SDL
 
 type DTime = Double
 
+type Drawing = D.Draw ()
+
 data Behavior :: * -> * where
     Behavior :: s -> (DTime -> s -> (a,s)) -> Behavior a
 
@@ -54,7 +56,7 @@ sdlEvent = EventP $ do
         runEventP $ suspend $ PrimEvents { sdlEventE = \p -> EventP (cc p) }
 
 
-testProg :: (MonadIO m) => EventP SDLEvents r m D.Drawing
+testProg :: (MonadIO m) => EventP SDLEvents r m Drawing
 testProg = go (0,0)
     where
     go p = do
@@ -65,7 +67,7 @@ testProg = go (0,0)
              _ -> go p
 
 
-frpMain :: EventP SDLEvents D.Drawing IO D.Drawing -> IO ()
+frpMain :: EventP SDLEvents Drawing IO Drawing -> IO ()
 frpMain ev = do
     D.init
     SDL.init [SDL.InitVideo]

@@ -3,7 +3,7 @@ Description:
     Write-once variables, with the ability to block
     on the first of a set of variables to become 
     available.
-Version: 0.20
+Version: 0.30
 Stability: experimental
 Synopsis: Write-once variables with concurrency support
 License: BSD3

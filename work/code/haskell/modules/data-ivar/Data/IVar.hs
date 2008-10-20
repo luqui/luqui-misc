@@ -48,6 +48,7 @@ import Data.IORef
 import Data.Monoid
 import Control.Monad
 import Data.Unique
+import Control.Exception
 import qualified Data.Map as Map
 
 data State a
@@ -64,7 +65,7 @@ new = IVar <$> newIORef (NoValue Map.empty)
 -- | Write a value to an IVar.  If the IVar already has a value, 
 -- throws an error \"Attempt to write to an IVar twice\".
 write :: IVar a -> a -> IO ()
-write (IVar ref) x = do
+write (IVar ref) x = block $ do
     b <- atomicModifyIORef ref $ \v ->
         case v of
             Value a -> (v, Nothing)
@@ -83,14 +84,17 @@ read var@(IVar ref) = Reader $ do
         Value x -> Left x
         NoValue _ -> Right [LogEntry var (\x -> Reader (return (Left x)))]
 
+-- Actions will be called in a blocked state; they must unblock themselves.
+-- This is because it is impossible to achieve the exception safety of
+-- and action t'other way round.
+
 addAction :: IVar a -> (a -> IO ()) -> IO Unique
 addAction (IVar ref) action = do
     actionid <- newUnique
-    boink <- atomicModifyIORef ref $ \v -> 
+    block . join . atomicModifyIORef ref $ \v -> 
         case v of
             Value x -> (v, action x)
             NoValue blockers -> (NoValue (Map.insert actionid action blockers), return ())
-    boink
     return actionid
 
 deleteAction :: IVar a -> Unique -> IO ()
@@ -102,8 +106,8 @@ deleteAction (IVar ref) actionid = do
                 -- This is strict so that we *actually* clean up
                 -- after ourselves; otherwise ivars that get waited
                 -- on but never filled could cause memory leaks
-                let m = Map.delete actionid blockers in
-                    m `seq` (NoValue m, ())
+                let m = Map.delete actionid blockers
+                in m `seq` (NoValue m, ())
 
 -- Reader is a free monad over (lists of) this functor; i.e. 
 -- it either returns a value or says "here is the variable 
@@ -181,7 +185,7 @@ blocking reader = do
 primBlocking :: [LogEntry (Reader a)] -> IO a
 primBlocking log = do
     blocker <- newEmptyMVar
-    cleanup <- forM log $ \(LogEntry var action) -> do
+    cleanup <- block . forM log $ \(LogEntry var action) -> do
         ident <- addAction var (\v -> tryPutMVar blocker (action v) >> return ())
         return $ deleteAction var ident
     blocking =<< takeMVar blocker

@@ -28,6 +28,7 @@
 
 module Data.MemoCombinators 
     ( Memo
+    , wrap
     , memo2, memo3, memoSecond, memoThird
     , bool, list, boundedList, either, maybe, unit, pair
     , switch, integral, bits, unsignedBits
@@ -42,6 +43,11 @@ import qualified Data.Array as Array
 
 -- | The type of a memo table for functions of a.
 type Memo a = forall r. (a -> r) -> (a -> r)
+
+-- | Given a memoizer for a and an isomorphism between a and b, build
+-- a memoizer for b. 
+wrap :: (a -> b) -> (b -> a) -> Memo a -> Memo b
+wrap i j m f = m (f . i) . j
 
 -- | Memoize a two argument function (just apply the table directly for
 -- single argument functions).

@@ -30,7 +30,7 @@ module Data.MemoCombinators
     ( Memo
     , wrap
     , memo2, memo3, memoSecond, memoThird
-    , bool, list, boundedList, either, maybe, unit, pair
+    , bool, char, list, boundedList, either, maybe, unit, pair
     , switch, integral, bits, unsignedBits
     , RangeMemo
     , arrayRange, unsafeArrayRange, chunks
@@ -40,6 +40,7 @@ where
 import Prelude hiding (either, maybe)
 import Data.Bits
 import qualified Data.Array as Array
+import Data.Char (ord,chr)
 
 -- | The type of a memo table for functions of a.
 type Memo a = forall r. (a -> r) -> (a -> r)
@@ -77,6 +78,9 @@ list m f = table (f []) (m (\x -> list m (f . (x:))))
     where
     table nil cons [] = nil
     table nil cons (x:xs) = cons x xs
+
+char :: Memo Char
+char = wrap chr ord integral
 
 -- | Build a table which memoizes all lists of less than the given length.
 boundedList :: Int -> Memo a -> Memo [a]

@@ -1,6 +1,7 @@
+{-# LANGUAGE IncoherentInstances #-}
+
 module HeteroMap 
-    ( (:>>), then_refl, then_trans
-    , Ref, HeteroMap
+    ( Ref, HeteroMap
     , empty, newRef, readRef, writeRef
     )
 where
@@ -12,28 +13,25 @@ import Unsafe.Coerce (unsafeCoerce)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Maybe (fromJust)
 
-data s :>> s' = FakeThen
-
-then_refl :: s :>> s
-then_refl = FakeThen
-
-then_trans :: s :>> s' -> s' :>> s'' -> s :>> s''
-then_trans FakeThen FakeThen = FakeThen
+class Then a b
+instance Then () ()
+instance Then xs ys => Then (x,xs) (y,ys)
+instance Then xs ys => Then xs (y,ys)
 
 newtype Ref s a = Ref Unique
 newtype HeteroMap s = HeteroMap (Map.Map Unique Any)
 
-empty :: (forall s. HeteroMap s -> b) -> b
-empty cc = cc (HeteroMap Map.empty)
+empty :: HeteroMap ()
+empty = HeteroMap Map.empty
 
-newRef :: a -> HeteroMap s -> (forall s'. s :>> s' -> (Ref s' a, HeteroMap s') -> b) -> b
-newRef x0 (HeteroMap m) cc = cc FakeThen (Ref refid, HeteroMap (Map.insert refid (unsafeCoerce x0) m))
+newRef :: a -> HeteroMap s -> (forall s'. Ref (s',s) a -> HeteroMap (s',s) -> b) -> b
+newRef x0 (HeteroMap m) cc = cc (Ref refid) (HeteroMap (Map.insert refid (unsafeCoerce x0) m))
     where
     {-# NOINLINE refid #-}
     refid = unsafePerformIO newUnique
 
-readRef :: s :>> s' -> Ref s a -> HeteroMap s' -> a
-readRef FakeThen (Ref refid) (HeteroMap m) = unsafeCoerce (fromJust $ Map.lookup refid m)
+readRef :: Then s s' => Ref s a -> HeteroMap s' -> a
+readRef (Ref refid) (HeteroMap m) = unsafeCoerce (fromJust $ Map.lookup refid m)
 
-writeRef :: s :>> s' -> Ref s a -> a -> HeteroMap s' -> HeteroMap s'
-writeRef FakeThen (Ref refid) x (HeteroMap m) = HeteroMap (Map.insert refid (unsafeCoerce x) m)
+writeRef :: Then s s' => Ref s a -> a -> HeteroMap s' -> HeteroMap s'
+writeRef (Ref refid) x (HeteroMap m) = HeteroMap (Map.insert refid (unsafeCoerce x) m)

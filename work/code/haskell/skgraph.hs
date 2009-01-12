@@ -67,7 +67,7 @@ unless' z True  m = return z
 unless' z False m = m
 
 mkGraphM :: Set.Set TermOrd -> WriterT [Edge] (State (Set.Set Term)) ()
-mkGraphM terms = do
+mkGraphM terms = 
     case Set.minView terms of
         Nothing -> return ()
         Just (TermOrd _ term, rest) -> do

@@ -6,6 +6,7 @@
 import qualified Data.Map as Map
 import Control.Monad.State
 import Control.Concurrent
+import Data.Function (on)
 
 type Sym = Int
 type MState = Char
@@ -26,6 +27,12 @@ data Tape
            , tapeHere  :: Sym
            , tapeRight :: [Sym]
            }
+
+tapeSyms :: Tape -> [Sym]
+tapeSyms (Tape ps h ns) = reverse ps ++ [h] ++ ns
+
+tapeEq :: Tape -> Tape -> Bool
+tapeEq = (==) `on` tapeSyms
 
 showTape :: Bool -> Tape -> IO ()
 showTape showHead (Tape ls h rs) = do
@@ -54,16 +61,18 @@ data World
 stepMachine :: (MonadState World m) => Machine -> m ()
 stepMachine machine = do
     World mstate tape <- get
-    Rule { ruleSym = sym, ruleMove = move, ruleState = state } 
-        <- Map.lookup (mstate, tapeHere tape) machine
+    Just (Rule { ruleSym = sym, ruleMove = move, ruleState = state })
+        <- return $ Map.lookup (mstate, tapeHere tape) machine
     put $ World state (moveTape move . writeTape sym $ tape)
 
 traceMachine :: (MonadState World m, MonadIO m) => Machine -> m ()
 traceMachine machine = do
+    World _ tape <- get
     stepMachine machine
-    World mstate tape <- get
-    liftIO $ showTape True tape
-    liftIO $ threadDelay 100000
+    World mstate tape' <- get
+    when (not $ tapeEq tape tape') $ do
+        liftIO $ showTape False tape
+        liftIO $ threadDelay 10000
     when (mstate /= 'H') $ traceMachine machine
 
 runMachine :: (MonadState World m, MonadIO m) => Machine -> m ()

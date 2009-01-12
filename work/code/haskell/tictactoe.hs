@@ -3,6 +3,7 @@ import Control.Monad.State
 import Data.Maybe
 import Data.List
 import System.IO
+import Data.Function (on)
 
 type Move  = (XO, Int)
 
@@ -21,16 +22,15 @@ data Board = Board (Array Int (Maybe XO))
 
 instance Show Board where
     show (Board b) = "+---+---+---+\n"
-                  ++ "| " ++ (p(b!1)) ++ " | " ++ (p(b!2)) ++ " | " ++ (p(b!3)) ++ " |\n"
+                  ++ "| " ++ p 1 ++ " | " ++ p 2 ++ " | " ++ p 3 ++ " |\n"
                   ++ "+---+---+---+\n"
-                  ++ "| " ++ (p(b!4)) ++ " | " ++ (p(b!5)) ++ " | " ++ (p(b!6)) ++ " |\n"
+                  ++ "| " ++ p 4 ++ " | " ++ p 5 ++ " | " ++ p 6 ++ " |\n"
                   ++ "+---+---+---+\n"
-                  ++ "| " ++ (p(b!7)) ++ " | " ++ (p(b!8)) ++ " | " ++ (p(b!9)) ++ " |\n"
+                  ++ "| " ++ p 7 ++ " | " ++ p 8 ++ " | " ++ p 9 ++ " |\n"
                   ++ "+---+---+---+\n"
         where
-            p :: Maybe XO -> String
-            p (Just x) = show x
-            p Nothing  = " "
+            p :: Int -> String
+            p ix = maybe " " show (b!ix)
 
 emptyBoard = Board (array (1,9) $ zip [1..9] (repeat Nothing))
 
@@ -55,7 +55,7 @@ win board = foldr mplus Nothing $
                                      (3,5,7)]
 
 full :: Board -> Bool
-full (Board board) = and $ map (maybe False (const True)) (elems board)
+full (Board board) = all isJust (elems board)
 
 move :: Move -> Board -> Maybe Board
 move (pl, s) (Board board)
@@ -66,9 +66,7 @@ move (pl, s) (Board board)
 
 
 wins :: XO -> Board -> Bool
-wins pl board = maybe False
-                      (\winner -> winner == pl)
-                      (win board)
+wins pl = maybe False (== pl) . win
 
 allBoards :: XO -> Board -> [Board]
 allBoards pl board = 
@@ -81,7 +79,7 @@ data Player = AI
 act :: Player -> XO -> Board -> IO (Maybe Board)
 act player@(Human name) pl board = do
     putStr $ "Your move, " ++ name ++ " (" ++ show pl ++ "): "
-    space <- readLn :: IO Int
+    space <- readLn
     maybe (do putStrLn "Invalid move"
               act player pl board)
           (return . Just)
@@ -126,14 +124,12 @@ makeRating pl board def
     | otherwise             = def
 
 maxRating :: (Board -> Rating) -> [Board] -> Board
-maxRating f as = maximumBy
-                    (\l r -> f l `compare` f r)
-                    as
+maxRating f = maximumBy (compare `on` f)
 
 aiMakeMove :: XO -> Board -> Maybe Board
 aiMakeMove pl board = 
     let boards = allBoards pl board in
-    if length boards == 0
+    if null boards
         then Nothing
         else Just $ maxRating (aiMove pl) boards 
 
@@ -143,7 +139,7 @@ aiMakeMove pl board =
 playGame :: (Player,Player) -> StateT (XO,Board) IO (Maybe XO)
 playGame (cur,oth) = do
     (pl, board) <- get
-    liftIO $ putStrLn $ show board
+    liftIO $ print board
     maybe (if full board
                 then return Nothing
                 else (do mnextboard <- liftIO $ act cur pl board
@@ -162,10 +158,10 @@ makePlayer name = Human name
 main :: IO ()
 main = do
     hSetBuffering stdout NoBuffering
-    putStr $ "Player 1: "
+    putStr "Player 1: "
     p1 <- getLine
-    putStr $ "Player 2: "
+    putStr "Player 2: "
     p2 <- getLine
     (mwinner,(_,finalboard)) <- runStateT (playGame (makePlayer p1, makePlayer p2)) (X,emptyBoard)
     putStrLn $ maybe "No winner" (\winner -> show winner ++ " wins!") mwinner
-    putStrLn $ show finalboard
+    print finalboard

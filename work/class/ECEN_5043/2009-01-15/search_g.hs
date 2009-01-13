@@ -1,15 +1,10 @@
 import Data.Array
+import Data.Foldable (toList)
 import System.Random
 import System
 
-class Searchable s where
-    search :: (Eq a) => s a -> a -> Bool
 
-instance Searchable [] where
-    search = flip elem
-
-instance (Ix ix) => Searchable (Array ix) where
-    search = search . elems
+search arr x = x `elem` toList arr
 
 bench iters max coll = do
     gen <- newStdGen
@@ -17,7 +12,7 @@ bench iters max coll = do
                             , search coll r ]
     putStrLn $ show found ++ " elements found"
 
-main = do
+main' = do
     [mode, sizeS, maxS, itersS] <- getArgs
     let size = read sizeS ; max = read maxS ; iters = read itersS
     gen <- newStdGen
@@ -28,3 +23,7 @@ main = do
         "list" -> do
             let list = take size (randomRs (0::Int, max-1) gen)
             bench iters max list
+
+-- hax!!1
+main = catch main' $ \e -> do
+    putStrLn "Usage: search_g <array|list> size max iters"
